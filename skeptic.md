@@ -1,100 +1,83 @@
-# Skeptic V1.0.0 — Detect, Reason, Fix, Verify
+# Skeptic - Detect, Reason, Fix, Verify
 
-AI-executable framework for safe, correct system improvement.
+AI-executable framework for safe system improvement.
 
-Core rule:
-Correct action over fast action.
+Rules:
+- Correct action over fast action.
+- If detection confidence is insufficient, do not act.
+- Add process only when it prevents a known failure mode.
 
-Safety rule:
-If detection confidence is insufficient, do not act.
-
-Complexity rule:
-Do not add process unless it prevents a known failure mode.
-
-Primary flow:
+Flow:
 GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
 
 ---
 
 ## 0. Gate
 
-Proceed only if all are true:
+Proceed only when:
 - DONE is testable
 - scope is tractable
-- cost of a wrong answer is acceptable
+- wrong-answer cost is acceptable
 
-If DONE is not testable:
-- STOP
-
-If scope is large but clear:
-- DECOMPOSE
-
-If ambiguity makes action unsafe:
-- CONFLICT
+If not:
+- undefined DONE -> STOP
+- too large but clear -> DECOMPOSE
+- unsafe ambiguity -> CONFLICT
 
 ---
 
-## 0.5. Fundamental Scan — Top-Down First
+## 0.5. Fundamental Scan
 
-Before broad detection, check what can invalidate all later work.
-
-Focus only on:
+Before broad detection, check what can invalidate later work:
 - system purpose
 - architecture shape
-- major boundaries
+- boundaries
 - ownership
 - source of truth
-- main data flows
-- major interfaces and coupling
-- high-risk or recently changed areas
-- suspected areas from task context
+- main flows
+- interfaces / coupling
+- high-risk, recent, or suspected areas
 
 Rules:
-- Fundamental Scan is still detection only.
-- Do not fix during Fundamental Scan.
-- Do not assume clean top-down scan proves safety.
-- If a structural issue is found, prioritize it and expand around it first.
-- Mark downstream or local findings PROVISIONAL if a fundamental issue may invalidate them.
-- If no structural issue is found, continue to MAP.
-- Later sampling or confidence checks are still required.
-
-Decision effect:
-- architecture, ownership, source of truth, boundary, and interface issues outrank local fixes.
-- local work that depends on unresolved fundamental issues must wait, decompose, or become CONFLICT.
+- detect only; do not fix
+- clean scan is not proof of safety
+- structural issues outrank local fixes
+- downstream findings are PROVISIONAL if fundamentals may invalidate them
+- if no structural issue appears, continue to MAP
 
 ---
 
-## 1. Map — Detect Only
+## 1. Map - Detect Only
 
-MAP records raw findings and unknowns only.
-No fixes. No final decisions.
-MAP starts from the Fundamental Scan context, then expands as needed.
+Record findings before deciding.
+Start from Fundamental Scan context, then expand as needed.
 
-Apply in order:
+Apply:
 1. Universal Questions
 2. Thinkers
 3. Structural Checks
 4. Relevant Domain Checks
-5. Artifact-specific Razor patterns when useful
+5. Artifact patterns / external question banks when useful
 
-MAP must output:
+Output:
 - findings
 - unknowns
 - assumptions
 - evidence strength
-- skipped or uncertain areas
+- skipped/uncertain areas
+
+No fixes. No final decisions.
 
 ---
 
 ## 2. Universal Questions
 
-Apply to every entity:
+For every meaningful entity:
 file, module, function, config, doc, test, system, process, requirement, decision.
 
 - What is this?
 - What is it for?
-- What does it depend on?
-- What depends on it?
+- What depends on it, and what does it depend on?
 - What must always be true?
 - What breaks it?
 - How do we know it works?
@@ -103,103 +86,74 @@ file, module, function, config, doc, test, system, process, requirement, decisio
 
 ## 3. Thinkers
 
-First mention uses full name and abbreviation. Later use abbreviation only.
+Use full name + abbreviation first; abbreviation after.
 
-### Charlie Munger (CH) — Systems, Dependencies, Failure
+### Charlie Munger (CH) - Systems, Dependencies, Failure
 - What depends on this?
 - What does this constrain?
-- What breaks downstream if this fails?
-- Is failure bounded or unbounded?
-- Who bears the cost of failure?
-- What must remain connected?
-- What must not be connected?
+- What breaks downstream?
+- Is failure bounded?
+- Who bears failure cost?
+- What must/must not stay connected?
 - Is coupling necessary or accidental?
-- What would guarantee failure if left unchanged?
+- What would guarantee failure if unchanged?
 
-### Occam's Razor (OM) — Necessity, Simplicity, Boundaries
-- Remove this: what concrete thing breaks?
+### Occam's Razor (OM) - Necessity, Simplicity, Boundaries
+- Remove this: what breaks?
 - Is this necessary?
-- What is missing that should exist?
+- What is missing?
 - Can this be simpler?
-- Does it do the simplest thing that can work?
 - Is complexity justified?
 - Are concerns mixed?
 - Is the boundary clear?
 - What should move in or out?
 
-### Richard Feynman (FE) — Honesty, Explanation, Reality
-- Is this actually true now?
+### Richard Feynman (FE) - Honesty, Explanation, Reality
+- Is this true now?
 - Can it be explained simply?
-- Does every non-obvious choice explain why, not just what?
-- When was this last verified against reality?
-- Do tests prove behavior, or only implementation?
+- Does each non-obvious choice explain why?
+- When was it last verified?
+- Do tests prove behavior, not implementation?
 - Was the test ever red?
 
-### Karl Popper (PO) — Falsification, Contradiction, Unsafe Change
+### Karl Popper (PO) - Falsification, Contradiction, Unsafe Change
 - What would prove this wrong?
-- What would make this change unsafe?
+- What would make this unsafe?
 - What fails silently?
-- What failure mode has no test and no monitor?
-- Does any rule or assumption contradict another?
+- What has no test or monitor?
+- Do rules or assumptions contradict?
 - Can failure be detected before damage spreads?
 
-### Immanuel Kant (KT) — Universalizability
-- Would I want this pattern everywhere, in every module, by every contributor?
-- If not, should the pattern be removed, narrowed, replaced, or explicitly bounded?
+### Immanuel Kant (KT) - Universalizability
+- Would I want this pattern everywhere, by every contributor?
+- If not, should it be removed, narrowed, replaced, or bounded?
+
+### Saffi (SH) - Sharp Trade-off Heuristics
+- What are the real forces/sides, and what middle is trying to combine them?
+- Is the middle creating real friction? If no, SH stops.
+- Is the middle a real integration, or just a compromise that keeps both costs?
+- Should Side A or Side B dominate as default?
+- What narrow exception protects the other side?
+- If no side should dominate and the middle is not valid, what conflict must be explicit?
 
 ---
 
 ## 4. Structural Checks
 
-Run for every meaningful entity.
-
-### Role and Ownership
-- What responsibility does it own?
-- What responsibility should it not own?
-- Who owns it or is allowed to change it?
-- Is it doing its role correctly?
-
-### Boundaries and Concerns
-- What is inside?
-- What is outside?
-- Are unrelated concerns mixed?
-- Would a new contributor understand the boundary?
-
-### Interfaces and Connections
-- What must connect?
-- What must not connect?
-- What link is missing, accidental, or implicit?
-- What relationship exists but is not written down?
-- Is the contract explicit and correct?
-
-### Coupling
-- Is this necessary domain coupling or accidental implementation coupling?
-- Should this be more coupled or more decoupled?
-- What breaks if weakened?
-- What replaces a removed link?
-- What must stay coupled?
-
-### Source of Truth and Data Flow
-- Where is truth authored?
-- Is it unique where required?
-- Are there competing copies?
-- Who updates it?
-- How often is it updated relative to reality?
-- Who consumes it?
-- What data or coordination must still flow after change?
-
-### Change Safety
-- Can the change be reverted?
-- Can it be retried safely?
-- What signal proves failure before damage spreads?
-- If verification fails, can the system return to known-good state?
+For meaningful entities, check:
+- role and ownership
+- boundaries and concern split
+- interfaces, required links, forbidden links, implicit links, contracts
+- necessary vs accidental coupling
+- source of truth and competing copies
+- data/control flow, update timing, consumers
+- reversibility, retry safety, and failure signal
 
 ---
 
 ## 5. Domain Checks
 
-Apply selectively.
-
+Apply selectively:
 - SEC: security, inputs, auth, secrets, permissions, exposure
 - CPX: complexity, coupling, state, mental load
 - REL: reliability, monitoring, scale, ownership, operations
@@ -208,218 +162,121 @@ Apply selectively.
 - CFT: tests, errors, mocks, craft
 
 Rules:
-- Do not apply all domains blindly.
-- If relevance is unclear, sample likely domains.
-- If a finding touches another domain, expand.
-- If risk is high, expand coverage.
-- Controlled redundancy is allowed when risk is high.
+- do not apply all domains blindly
+- sample likely domains when unsure
+- expand when findings cross domains or risk is high
+- controlled redundancy is allowed for high risk
+- use `skeptic-questions.md` for expanded SEC/CPX/REL/DAT/ARC/CFT questions when runtime detail is not enough
 
 ---
 
-## 6. Confidence Gate
+## 6. Detection Confidence
 
-Before stabilization, verify detection coverage.
+Before STABILIZE/DECIDE, verify:
+- Fundamental Scan completed
+- Universal, Thinker, Structural, Domain, and artifact checks applied where relevant
+- important conclusions have evidence
+- unknowns and skipped areas are listed
 
-Check:
-- Fundamental Scan completed?
-- Universal Questions applied?
-- Relevant Thinkers applied?
-- Structural Checks applied?
-- Relevant Domains applied?
-- Artifact patterns considered when useful?
-- Important conclusions supported by evidence?
-- Unknowns explicitly listed?
+Track unknowns:
+- owner, source of truth, contract, dependency
+- behavior, risk boundary, revert path, test path
+- acceptance criteria
 
-Blind spot indicators:
-- unknown owner
-- unknown source of truth
-- unknown contract
-- implicit connection unresolved
-- required connection unclear
-- behavior unverified
-- weak test evidence
+Blind spots:
+- unresolved ownership / SoT / contract / interface
+- implicit or required connection unclear
+- unverified behavior or weak tests
 - missing failure signal
-- suspiciously few findings in high-risk scope
+- suspiciously clean result
 - local area skipped because top-down scan looked clean
-- downstream work depends on unresolved architecture, ownership, SoT, boundary, or interface issue
+- downstream work depends on unresolved fundamentals
 
 If confidence is weak:
-- expand MAP
-- run another pass
+- expand MAP only where evidence requires it
 - sample adjacent domains
-- record unknowns
-- do not STABILIZE yet
-
-If uncertainty remains after reasonable expansion:
-- CONFLICT
-
----
-
-## 7. Unknowns Register
-
-Track unknowns explicitly.
-
-Unknown types:
-- owner unknown
-- source of truth unknown
-- contract unknown
-- dependency unknown
-- behavior unverified
-- risk unbounded
-- revert path unknown
-- test path unknown
-- acceptance criteria unknown
-
-Rules:
-- UNKNOWN must be resolved, decomposed, or escalated before FIX.
-- UNKNOWN may remain only if irrelevant to the chosen action and explicitly justified.
-- High-risk UNKNOWN defaults to CONFLICT.
-
----
-
-## 8. Suspicious Clean Result
-
-A clean result is not proof of safety.
-
-If scope is non-trivial and MAP finds:
-- no conflicts
-- no source-of-truth concerns
-- no coupling concerns
-- no unknowns
-- no failure modes
-
-Then:
-- rerun MAP with CH and PO emphasis
-- sample relevant domains
-- verify at least one known-bad or edge case
-- record why confidence is adequate
-
----
-
-## 9. Multi-Pass Detection
-
-Use multiple passes when:
-- scope is high risk
-- findings are sparse
-- ownership or source of truth is unclear
-- change affects multiple components
-- initial pass suggests major refactor
-
-Passes:
-1. Fundamental pass: architecture, ownership, SoT, boundaries, interfaces.
-2. Broad pass: Universal, Thinkers, Structural.
-3. Focused pass: Relevant Domains and artifact patterns.
-4. Adversarial pass: CH and PO.
-
-Stop when:
-- coverage is adequate
-- unknowns are resolved or escalated
-- no new high-risk findings emerge
+- run CH/PO adversarial pass if clean result is suspicious
+- resolve, decompose, or escalate high-risk UNKNOWNs
+- CONFLICT if confidence cannot reasonably improve
 
 Do not loop indefinitely.
-If repeated passes do not improve confidence, CONFLICT.
 
 ---
 
-## 10. Stabilize
+## 7. Stabilize
 
 Do not decide on raw findings.
 
-Before DECIDE:
+Merge findings sharing:
+- data, boundary, responsibility, interface
+- source of truth, failure mode, root cause
 
-1. Collect all findings and unknowns.
+Classify root cause:
+- local bug
+- missing test
+- missing contract
+- unclear ownership
+- source-of-truth issue
+- accidental coupling
+- stale assumption
+- systemic rule issue
+- detection confidence issue
 
-2. Merge findings that share:
-   - same data
-   - same boundary
-   - same responsibility
-   - same interface
-   - same source of truth
-   - same failure mode
-   - same root cause
+Check:
+- overlapping, conflicting, or redundant fixes
+- one finding explaining another
+- unknowns blocking action
+- local/systemic risk
+- reversibility, blast radius, ownership clarity, confidence
 
-3. Classify root cause:
-   - local bug
-   - missing test
-   - missing contract
-   - unclear ownership
-   - source-of-truth issue
-   - accidental coupling
-   - stale assumption
-   - systemic rule issue
-   - detection confidence issue
-
-4. Check interactions:
-   - do proposed fixes overlap?
-   - do proposed fixes conflict?
-   - does one fix make another unnecessary?
-   - does one finding explain another?
-   - does an unknown block action?
-
-5. Re-evaluate risk:
-   - local or systemic?
-   - reversible or irreversible?
-   - low or high blast radius?
-   - clear or ambiguous ownership?
-   - confidence adequate or weak?
-
-Output:
-- stabilized issues, not raw findings
-
-Findings remain PROVISIONAL until stabilized.
+Output stabilized issues.
+Raw findings remain PROVISIONAL until stabilized.
 
 ---
 
-## Evidence Levels
+## 8. Evidence Levels
 
 Classify every finding before DECIDE.
 
-### OBSERVED
-Directly seen in code, tests, config, docs, or runtime behavior.
-
-### REPRODUCED
-Confirmed with a failing test, probe, command, or execution.
-
-### HISTORICAL
-Confirmed by external issue, changelog, CVE, advisory, maintainer note, or release note.
-Use only after local analysis is complete and findings are frozen.
-
-### INFERRED RISK
-Plausible from structure, parser boundary, security surface, ownership gap, missing tests, or weak evidence, but not reproduced.
+- OBSERVED: directly seen in code, tests, config, docs, or runtime behavior.
+- REPRODUCED: confirmed with failing test, probe, command, or execution.
+- HISTORICAL: confirmed by issue, changelog, CVE, advisory, maintainer note, or release note.
+- INFERRED RISK: plausible from structure, boundary, exposure, missing tests, or weak evidence, but not reproduced.
 
 Rules:
-- Do not report INFERRED RISK as a confirmed bug.
+- Do not report INFERRED RISK as confirmed bug.
 - Security/parser/sanitizer INFERRED RISK becomes PROVISIONAL ACTION or CONFLICT.
 - FIX requires OBSERVED evidence and a verification path.
-- Confirmed vulnerability or historical-bug claim requires REPRODUCED or HISTORICAL evidence.
-- HANDLED output must include evidence level.
-- CONFLICTS must include which evidence is missing.
+- Confirmed vulnerability/history claim requires REPRODUCED or HISTORICAL evidence.
+- HANDLED must include evidence level.
+- CONFLICTS must include missing evidence.
 
 ---
 
-## 11. Decide
+## 9. Decide
 
-Choose exactly one path per stabilized issue.
+Choose one path per stabilized issue.
 
 ### FIX
 Use when:
-- root cause is clear
-- structure is understood
-- source of truth is known or irrelevant
-- required connections are known
+- root cause, structure, required connections, and source of truth are clear or irrelevant
 - unknowns are resolved or irrelevant
 - change is reversible, testable, retryable
-- risk is low or medium
-- detection confidence is adequate
+- risk is low/medium
+- confidence and verification path are adequate
+- fix justification is complete
+
+Before FIX, state:
+- what is wrong
+- why it is wrong
+- why this fix is correct
+- what would prove it wrong
+- how to verify and revert
 
 ### DECOMPOSE
-Use when:
-- risk or scope is high
-- structure is clear enough to split safely
-- no fundamental conflict exists
-- smaller steps reduce risk or improve detection confidence
+Use when scope/risk is high but structure is clear enough to split safely.
 
-Decompose by:
+Split by:
 - responsibility
 - interface
 - source of truth
@@ -428,132 +285,86 @@ Decompose by:
 - reversible step
 - unknown to resolve
 
-Each decomposed step returns to GATE.
+Each step returns to GATE.
 
 ### CONFLICT
 Use when:
 - multiple valid designs exist
-- ownership is unclear
-- source of truth is unclear
-- required connection is unclear
-- implicit contract cannot be resolved locally
-- product or architecture intent is required
-- change is not reversible and cannot be made reversible
+- owner, source of truth, connection, or contract is unclear
+- product/architecture intent is required
+- change cannot be made reversible
 - decomposition does not remove ambiguity
-- detection confidence remains inadequate after reasonable expansion
+- confidence remains inadequate
 
-Pure conflict must be escalated.
-Do not decompose a pure conflict to avoid escalation.
-
----
-
-## 12. Fix Justification
-
-Before FIX, state:
-
-- what is wrong
-- why it is wrong
-- why this fix is correct
-- what would prove the fix wrong
-- how it will be verified
-- how it will be reverted
-
-If this cannot be stated:
-- do not FIX
-- DECOMPOSE or CONFLICT
+Do not decompose pure conflict to avoid escalation.
 
 ---
 
-## 13. Action Trigger
+## 10. Act
 
-Act only if all are true:
-- DONE is testable
-- issue is stabilized
-- root cause is identified
-- structure is understood
-- required connections are known
-- source of truth is known or irrelevant
-- unknowns are resolved or irrelevant
-- detection confidence is adequate
-- change is reversible
-- verification path exists
-- fix justification is complete
-
-If false:
-- DECOMPOSE when large but clear
-- CONFLICT when ambiguous or confidence remains weak
-- STOP when DONE is undefined
-
----
-
-## 14. Act
-
-Every change must be safe.
+Act only after DECIDE says FIX.
 
 Required process:
-1. Snapshot or preserve previous state.
+1. Preserve previous state.
 2. Apply the smallest reversible change.
 3. Verify immediately.
-4. If verification fails, revert immediately.
-5. Retry only if the next attempt is safer or better informed.
-6. If safe retry is not possible, escalate.
+4. Revert immediately if verification fails.
+5. Retry only if safer or better informed.
+6. Escalate if safe retry is impossible.
 
 Rules:
-- no partial or unknown state
+- no partial/unknown state
 - no hidden-state reliance
 - no implementation on unresolved conflict in the same area
 - no link removal without replacement or explicit coupling decision
 - no silent failure acceptance
-- no broad refactor when a smaller verified slice can reduce risk first
+- no broad refactor when a smaller verified slice reduces risk
 
 ---
 
-## 15. Verify
+## 11. Verify
 
 Use evidence, not confidence.
 
-Required checks:
-- Red -> Green for bug fixes when possible.
-- Spot-check 3 to 5 items.
-- Trace end-to-end from entry point to output.
-- Check constraints: correctness, safety, performance, cost, context, maintainability.
-- Pre-mortem: list 3 concrete failure modes before action and verify the plan addresses them.
-- Regression: confirm previously working behavior still works.
-- Known-bad or edge-case check when results are suspiciously clean.
+Check:
+- red -> green for bug fixes when possible
+- 3-5 manual spot checks
+- end-to-end trace from entry to output
+- constraints: correctness, safety, performance, cost, context, maintainability
+- pre-mortem: 3 concrete failure modes addressed before action
+- regression: previously working behavior still works
+- known-bad/edge case when results are suspiciously clean
 
 A test that was never red is weak evidence.
 
 ---
 
-## 16. Learn
+## 12. Learn
 
 Trigger DOUBLE-LOOP when:
-- same fix category appears 3 or more times
-- same conflict appears 2 or more times
+- same fix category appears 3+ times
+- same conflict appears 2+ times
 - following a rule worsens outcomes
 - expectation feels arbitrary
-- local fixes repeatedly reveal the same structure problem
-- repeated misses show detection coverage was insufficient
+- local fixes repeatedly reveal same structure problem
+- repeated misses show detection coverage failure
 
 Single-loop:
-- implementation is wrong -> fix and re-verify
+- implementation wrong -> fix and re-verify
 
 Double-loop:
 - rule, expectation, design, or detection method may be wrong -> CONFLICT unless obvious, reversible, and low risk
 
 ---
 
-## 17. Output
+## 13. Output
 
-Final output has two sections.
+Every task ends as HANDLED or CONFLICT.
 
 ### HANDLED
-Use for:
-- verified fixes
-- completed decomposed steps
-- low-risk logged issues with rationale
+Use for verified fixes, completed decomposed steps, or low-risk logged issues.
 
-Each item must include:
+Each item includes:
 - issue
 - root cause
 - action
@@ -563,36 +374,23 @@ Each item must include:
 - residual risk, if any
 
 ### CONFLICTS
-Use for:
-- unresolved tradeoff
-- unclear owner
-- unclear source of truth
-- unclear contract
-- non-reversible change
-- systemic rule issue
-- unresolved unknown
-- inadequate detection confidence
+Use for unresolved tradeoff, unclear owner/SoT/contract, non-reversible change, systemic rule issue, unresolved unknown, or inadequate confidence.
 
-Each item must include:
+Each item includes:
 - issue
 - thesis
 - antithesis
 - tradeoffs
-- unknowns blocking action
+- blocking unknowns
 - missing evidence
-- recommendation, if safe
+- safe recommendation, if any
 - decision needed
-
-Every task must end as HANDLED or CONFLICT.
 
 ---
 
-## 18. Razor — Read-Only Diagnostic
+## 14. Razor - Read-Only Diagnostic
 
-Razor detects, classifies, and recommends.
-Razor never changes files.
-
-Use Razor for review-only mode.
+Razor detects, classifies, and recommends. It never changes files.
 
 Tests:
 - OM: remove -> what breaks?
@@ -605,12 +403,12 @@ Temporal checks:
 - forward: what does this constrain?
 - staleness: when was it last verified?
 
-Razor output:
+Output:
 - PASS
 - ACTION
 - CONFLICT
 
-Severity order:
+Severity:
 1. CH: dangerous failure
 2. KT: harmful pattern
 3. PO: unproven or stale
@@ -625,62 +423,33 @@ Date what you claim.
 
 ---
 
-## 19. Artifact Guide
+## 15. Artifact Guide / External Questions
 
 Use after Universal Questions and Structural Checks.
-These patterns are detection aids, not exhaustive rules.
+Patterns are detection aids, not exhaustive rules.
 
-### Code
-- OM: unused functions, unused imports, one-use abstractions, forwarding wrappers
-- KT: bare except, magic numbers, inconsistent error handling, string-built SQL/commands
-- PO: no coverage, tests never red, tautological assertions, mocked-to-death tests
-- CH: no timeout, no retry/circuit-breaker, catch-and-ignore, missing cleanup, silent success on wrong input
+External reference:
+- `skeptic-questions.md` contains expanded domain questions.
+- Runtime core is authoritative.
+- External questions expand detection only; they do not add mandatory process.
 
-### Tests
-- OM: test does not catch behavior
-- KT: shared mutable state, order-dependent tests, OS-dependent pattern
-- PO: test never red, broken code still passes
-- CH: removing this test permits critical regression
-
-### Configuration
-- OM: dead fields, constants disguised as config
-- KT: inconsistent names, types, units
-- PO: config not validated against current system
-- CH: bad defaults, invalid config accepted silently
-
-### Agent Instructions
-- OM: rule has no why, incident, or test
-- KT: context-specific rule written as universal, contradictions
-- PO: stale model/tool behavior, moved files
-- CH: suppresses errors, skips verification, causes inaction
-
-### Human Docs
-- OM: repeats code/help text
-- KT: new user cannot follow it
-- PO: steps not recently tested
-- CH: hidden prerequisites, silent command failure
-
-### Design Decisions
-- OM: simpler design satisfies same constraints
-- KT: locks future contributors without escape hatch
-- PO: not validated against real use
-- CH: implicit dependency, no observability, single point of failure
-
-### Requirements
-- OM: no real user need
-- KT: not testable by someone else
-- PO: not revalidated with user
-- CH: solution without problem, no acceptance criteria
+- Code: dead code, weak abstractions, bare except, magic values, string-built SQL/commands, no coverage, no timeout/retry/cleanup, silent wrong-input success.
+- Tests: behavior vs implementation, shared state, order/OS dependence, test never red, critical regression gap.
+- Config: dead fields, constants disguised as config, inconsistent names/types/units, stale paths/services, bad defaults, missing validation.
+- Agent instructions: no why, over-broad rule, contradiction, stale tool/model behavior, suppresses errors, skips verification, causes inaction.
+- Human docs: repeats code/help, missing prerequisites, untested steps, hidden assumptions, silent command failure.
+- Design decisions: over-generalization, lock-in, hidden assumptions, unvalidated design, implicit dependency, no observability, single point of failure.
+- Requirements: no user need, untestable, not revalidated, solution without problem, no acceptance criteria.
 
 ---
 
-## 20. Expert Review
+## 16. Expert Review
 
 One reviewer, one domain, one report.
 
 Procedure:
 1. Scope domain and files.
-2. Apply Razor, structural checks, relevant domain checks, and Confidence Gate.
+2. Apply Razor, structural checks, relevant domains, and Confidence Gate.
 3. Report ACTIONS and CONFLICTS.
 4. Do not modify files unless explicitly asked to fix.
 
@@ -688,22 +457,22 @@ Read-only by default.
 
 ---
 
-## 21. CID
+## 17. CID
 
 CID orchestrates expert reviews.
 
 Phases:
 1. ASSESS: run relevant expert reviews.
-2. CONSOLIDATE: merge duplicates and root causes.
+2. CONSOLIDATE: merge duplicates/root causes.
 3. CONFIDENCE: check unknowns and detection confidence.
-4. FIX: only when explicitly approved; safe-change rules apply.
+4. FIX: only with explicit approval; safe-change rules apply.
 5. VERIFY: run full verification.
 
 CID is read-only unless explicitly told to fix.
 
 ---
 
-## 22. QID Legend
+## 18. QID Legend
 
 Thinkers:
 - CH: Charlie Munger
@@ -711,6 +480,7 @@ Thinkers:
 - FE: Richard Feynman
 - PO: Karl Popper
 - KT: Immanuel Kant
+- SH: Saffi; includes Follett-style integration vs compromise check
 
 Domains:
 - SEC: Security
@@ -726,13 +496,13 @@ Notation:
 - CH1->SEC2 = thinker surfaced a domain issue
 
 Rules:
-- Use only current QIDs.
-- QIDs indicate reasoning origin, not severity.
-- Multiple QIDs can apply to one finding.
+- use only current QIDs
+- QIDs indicate reasoning origin, not severity
+- multiple QIDs can apply to one finding
 
 ---
 
-## 23. Invariants
+## 19. Invariants
 
 - Never act without DONE.
 - Never act before stabilization.
@@ -755,21 +525,6 @@ Rules:
 
 ---
 
-## Judge Notes
-
-added top-down Fundamental Scan to reduce wasted work and prevent local fixes before structural issues are understood.
-
-Risk:
-- top-down bias can miss local critical bugs.
-
-Mitigation:
-- confidence gate, suspicious clean result rule, and later sampling remain mandatory.
-
----
-
 ## One-Line Summary
 
 Gate -> Fundamental Scan -> Map -> Confidence -> Stabilize -> Evidence -> Decide -> Act Safely -> Verify -> Learn
-
-
----
