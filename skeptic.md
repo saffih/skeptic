@@ -10,11 +10,9 @@ Rules:
 Flow:
 GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
 
----
-
 ## 0. Gate
 
-Proceed only when:
+Proceed when:
 - DONE is testable
 - scope is tractable
 - wrong-answer cost is acceptable
@@ -23,8 +21,6 @@ If not:
 - undefined DONE -> STOP
 - too large but clear -> DECOMPOSE
 - unsafe ambiguity -> CONFLICT
-
----
 
 ## 0.5. Fundamental Scan
 
@@ -45,12 +41,10 @@ Rules:
 - downstream findings are PROVISIONAL if fundamentals may invalidate them
 - if no structural issue appears, continue to MAP
 
----
-
 ## 1. Map - Detect Only
 
 Record findings before deciding.
-Start from Fundamental Scan context, then expand as needed.
+Start from Fundamental Scan; expand as needed.
 
 Apply:
 1. Universal Questions
@@ -68,8 +62,6 @@ Output:
 
 No fixes. No final decisions.
 
----
-
 ## 2. Universal Questions
 
 For every meaningful entity:
@@ -82,11 +74,9 @@ file, module, function, config, doc, test, system, process, requirement, decisio
 - What breaks it?
 - How do we know it works?
 
----
-
 ## 3. Thinkers
 
-Use full name + abbreviation first; abbreviation after.
+Use full name + abbreviation first; then abbreviation.
 
 ### Charlie Munger (CH) - Systems, Dependencies, Failure
 - What depends on this?
@@ -136,11 +126,9 @@ Use full name + abbreviation first; abbreviation after.
 - What narrow exception protects the other side?
 - If no side should dominate and the middle is not valid, what conflict must be explicit?
 
----
-
 ## 4. Structural Checks
 
-For meaningful entities, check:
+Check meaningful entities for:
 - role and ownership
 - boundaries and concern split
 - interfaces, required links, forbidden links, implicit links, contracts
@@ -148,8 +136,6 @@ For meaningful entities, check:
 - source of truth and competing copies
 - data/control flow, update timing, consumers
 - reversibility, retry safety, and failure signal
-
----
 
 ## 5. Domain Checks
 
@@ -168,11 +154,9 @@ Rules:
 - controlled redundancy is allowed for high risk
 - use `skeptic-questions.md` for expanded SEC/CPX/REL/DAT/ARC/CFT questions when runtime detail is not enough
 
----
-
 ## 6. Detection Confidence
 
-Before STABILIZE/DECIDE, verify:
+Before STABILIZE/DECIDE, check:
 - Fundamental Scan completed
 - Universal, Thinker, Structural, Domain, and artifact checks applied where relevant
 - important conclusions have evidence
@@ -200,8 +184,6 @@ If confidence is weak:
 - CONFLICT if confidence cannot reasonably improve
 
 Do not loop indefinitely.
-
----
 
 ## 7. Stabilize
 
@@ -232,11 +214,9 @@ Check:
 Output stabilized issues.
 Raw findings remain PROVISIONAL until stabilized.
 
----
-
 ## 8. Evidence Levels
 
-Classify every finding before DECIDE.
+Before DECIDE, classify every finding.
 
 - OBSERVED: directly seen in code, tests, config, docs, or runtime behavior.
 - REPRODUCED: confirmed with failing test, probe, command, or execution.
@@ -250,8 +230,6 @@ Rules:
 - Confirmed vulnerability/history claim requires REPRODUCED or HISTORICAL evidence.
 - HANDLED must include evidence level.
 - CONFLICTS must include missing evidence.
-
----
 
 ## 9. Decide
 
@@ -298,13 +276,11 @@ Use when:
 
 Do not decompose pure conflict to avoid escalation.
 
----
-
 ## 10. Act
 
 Act only after DECIDE says FIX.
 
-Required process:
+Process:
 1. Preserve previous state.
 2. Apply the smallest reversible change.
 3. Verify immediately.
@@ -319,8 +295,6 @@ Rules:
 - no link removal without replacement or explicit coupling decision
 - no silent failure acceptance
 - no broad refactor when a smaller verified slice reduces risk
-
----
 
 ## 11. Verify
 
@@ -337,8 +311,6 @@ Check:
 
 A test that was never red is weak evidence.
 
----
-
 ## 12. Learn
 
 Trigger DOUBLE-LOOP when:
@@ -354,8 +326,6 @@ Single-loop:
 
 Double-loop:
 - rule, expectation, design, or detection method may be wrong -> CONFLICT unless obvious, reversible, and low risk
-
----
 
 ## 13. Output
 
@@ -385,8 +355,6 @@ Each item includes:
 - missing evidence
 - safe recommendation, if any
 - decision needed
-
----
 
 ## 14. Razor - Read-Only Diagnostic
 
@@ -421,8 +389,6 @@ Falsify what you test.
 Invert what you ship.
 Date what you claim.
 
----
-
 ## 15. Artifact Guide / External Questions
 
 Use after Universal Questions and Structural Checks.
@@ -431,7 +397,7 @@ Patterns are detection aids, not exhaustive rules.
 External reference:
 - `skeptic-questions.md` contains expanded domain questions.
 - Runtime core is authoritative.
-- External questions expand detection only; they do not add mandatory process.
+- External questions expand detection only; no mandatory process.
 
 - Code: dead code, weak abstractions, bare except, magic values, string-built SQL/commands, no coverage, no timeout/retry/cleanup, silent wrong-input success.
 - Tests: behavior vs implementation, shared state, order/OS dependence, test never red, critical regression gap.
@@ -440,8 +406,6 @@ External reference:
 - Human docs: repeats code/help, missing prerequisites, untested steps, hidden assumptions, silent command failure.
 - Design decisions: over-generalization, lock-in, hidden assumptions, unvalidated design, implicit dependency, no observability, single point of failure.
 - Requirements: no user need, untestable, not revalidated, solution without problem, no acceptance criteria.
-
----
 
 ## 16. Expert Review
 
@@ -455,8 +419,6 @@ Procedure:
 
 Read-only by default.
 
----
-
 ## 17. CID
 
 CID orchestrates expert reviews.
@@ -469,8 +431,6 @@ Phases:
 5. VERIFY: run full verification.
 
 CID is read-only unless explicitly told to fix.
-
----
 
 ## 18. QID Legend
 
@@ -500,8 +460,6 @@ Rules:
 - QIDs indicate reasoning origin, not severity
 - multiple QIDs can apply to one finding
 
----
-
 ## 19. Invariants
 
 - Never act without DONE.
@@ -522,8 +480,6 @@ Rules:
 - Never treat repeated local fixes as local forever.
 - Every completed task must have an outcome.
 - Every task ends as HANDLED or CONFLICT.
-
----
 
 ## One-Line Summary
 
