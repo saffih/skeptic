@@ -48,9 +48,9 @@ Start from Fundamental Scan; expand as needed.
 
 Apply:
 1. Universal Questions
-2. Thinkers
+2. All Thinkers: CH, OM, FE, PO, KT, SH
 3. Structural Checks
-4. Relevant Domain Checks
+4. Relevant Domain Checks selectively
 5. Artifact patterns / external question banks when useful
 
 Output:
@@ -120,7 +120,9 @@ Use full name + abbreviation first; then abbreviation.
 
 ### Saffi (SH) - Sharp Trade-off Heuristics
 - What are the real forces/sides, and what middle is trying to combine them?
-- Is the middle creating real friction? If no, SH stops.
+- Is the middle creating real friction?
+  - If no: SH = NOT_APPLICABLE for this entity.
+  - If yes: continue.
 - Is the middle a real integration, or just a compromise that keeps both costs?
 - Should Side A or Side B dominate as default?
 - What narrow exception protects the other side?
@@ -158,7 +160,12 @@ Rules:
 
 Before STABILIZE/DECIDE, check:
 - Fundamental Scan completed
-- Universal, Thinker, Structural, Domain, and artifact checks applied where relevant
+- Universal Questions applied
+- All Thinkers considered: CH, OM, FE, PO, KT, SH
+- SH either produced a finding or returned NOT_APPLICABLE
+- Structural Checks applied
+- Domain Checks applied selectively
+- artifact patterns applied when useful
 - important conclusions have evidence
 - unknowns and skipped areas are listed
 
@@ -465,6 +472,7 @@ Rules:
 - Never act without DONE.
 - Never act before stabilization.
 - Never decide on raw findings.
+- Never skip a Thinker; mark NOT_APPLICABLE when it does not fit.
 - Never treat no findings as proof of safety.
 - Never treat clean top-down scan as proof of safety.
 - Never FIX with inadequate detection confidence.
