@@ -426,20 +426,20 @@ Procedure:
 
 Read-only by default.
 
-## 17. CID
+## 17. SIFT Review
 
-CID orchestrates expert reviews.
+SIFT coordinates expert review findings before action.
 
 Phases:
-1. ASSESS: run relevant expert reviews.
-2. CONSOLIDATE: merge duplicates/root causes.
-3. CONFIDENCE: check unknowns and detection confidence.
-4. FIX: only with explicit approval; safe-change rules apply.
+1. SCAN: run relevant expert reviews.
+2. INTEGRATE: merge duplicates/root causes.
+3. FIRM CONFIDENCE: check unknowns and detection confidence.
+4. TREAT: fix only with explicit approval; safe-change rules apply.
 5. VERIFY: run full verification.
 
-CID is read-only unless explicitly told to fix.
+SIFT is read-only unless explicitly told to fix.
 
-## 18. QID Legend
+## 18. Tag Legend
 
 Thinkers:
 - CH: Charlie Munger
