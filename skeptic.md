@@ -7,6 +7,31 @@ Rules:
 - If detection confidence is insufficient, do not act.
 - Add process only when it prevents a known failure mode.
 
+## Invocation Contract
+
+`RunSkeptic` is the formal invocation string for this framework.
+
+Aliases:
+- `beskeptic`
+- `apply Skeptic`
+- `Skeptic review`
+- `run skeptic.md`
+
+When invoked:
+1. Read the actual current `skeptic.md` before analysis.
+2. Do not use memory, summaries, previous variants, or generated replacements as substitutes.
+3. Treat `skeptic.md` as the runtime source of truth.
+4. Read companion files only when this file says they apply.
+5. Apply the current recipe exactly and in order.
+6. Consider every Thinker required by this file.
+7. Show which major Skeptic steps were run.
+8. Show evidence for material findings.
+9. Use the exact output categories from this file.
+10. Do not modify files unless DECIDE says FIX and edits are explicitly allowed.
+11. Verify the recommendation against the framework.
+12. State unresolved conflicts, unknowns, skipped areas, and missing evidence.
+13. If the actual file is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
+
 Flow:
 GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
 
@@ -472,6 +497,8 @@ Rules:
 - Never act without DONE.
 - Never act before stabilization.
 - Never decide on raw findings.
+- For Skeptic self-work, always read the actual current `skeptic.md` before applying it; do not use memory, summaries, or generated variants as substitutes.
+- Do not claim RunSkeptic/Skeptic compliance if the actual file was unavailable or not applied exactly.
 - Never skip a Thinker; mark NOT_APPLICABLE when it does not fit.
 - Never treat no findings as proof of safety.
 - Never treat clean top-down scan as proof of safety.
