@@ -41,10 +41,12 @@ Proceed when:
 - DONE is testable
 - scope is tractable
 - wrong-answer cost is acceptable
+- assumptions about intent and approach are explicit
 
 If not:
 - undefined DONE -> STOP
 - too large but clear -> DECOMPOSE
+- multiple valid interpretations -> enumerate before proceeding
 - unsafe ambiguity -> CONFLICT
 
 ## 0.5. Fundamental Scan
@@ -81,7 +83,7 @@ Apply:
 Output:
 - findings
 - unknowns
-- assumptions
+- assumptions — surfaced and challenged, not passively recorded
 - evidence strength
 - skipped/uncertain areas
 
@@ -119,6 +121,7 @@ Use full name + abbreviation first; then abbreviation.
 - What is missing?
 - Can this be simpler?
 - Is complexity justified?
+- Does this anticipate a need that does not yet exist?
 - Are concerns mixed?
 - Is the boundary clear?
 - What should move in or out?
@@ -280,6 +283,7 @@ Before FIX, state:
 - what is wrong
 - why it is wrong
 - why this fix is correct
+- why this fix is the minimum necessary change
 - what would prove it wrong
 - how to verify and revert
 
@@ -319,6 +323,7 @@ Process:
 4. Revert immediately if verification fails.
 5. Retry only if safer or better informed.
 6. Escalate if safe retry is impossible.
+7. Do not proceed to the next task until verification of the current change passes.
 
 Rules:
 - no partial/unknown state
@@ -327,6 +332,10 @@ Rules:
 - no link removal without replacement or explicit coupling decision
 - no silent failure acceptance
 - no broad refactor when a smaller verified slice reduces risk
+- no speculative code for requirements that do not yet exist
+- no premature abstraction unless a current concrete need demands it
+- match existing style and conventions; do not introduce new patterns during a fix
+- do not modify outside the current task's scope; unrelated improvements are separate tasks
 
 ## 11. Verify
 
@@ -342,6 +351,8 @@ Check:
 - known-bad/edge case when results are suspiciously clean
 
 A test that was never red is weak evidence.
+
+Verification is pass/fail. If fail, return to Act.
 
 ## 12. Learn
 
@@ -515,6 +526,7 @@ Rules:
 - Never treat repeated local fixes as local forever.
 - Every completed task must have an outcome.
 - Every task ends as HANDLED or CONFLICT.
+- Never modify outside the current task's scope.
 
 ## One-Line Summary
 
