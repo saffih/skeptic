@@ -1,0 +1,58 @@
+{
+  "id": "tc06",
+  "name": "Single Redis instance as hidden single point of failure",
+  "artifact_type": "design",
+  "artifact_file": "tc06_hidden_spof.md",
+  "difficulty": "medium",
+  "planted_issues": [
+    {
+      "issue_id": "tc06_i1",
+      "description": "All five microservices depend on a single Redis instance for critical operations (sessions, carts, caching, dedup, metrics). If that instance goes down, all services fail simultaneously. No Redis Sentinel, Cluster, replica, or fallback strategy is mentioned.",
+      "location": "lines 12-20",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["CH", "REL"],
+        "domains": ["REL"],
+        "universal": ["what_breaks_it"],
+        "structural": ["single_point_of_failure"]
+      },
+      "keywords": ["single", "Redis", "SPOF", "single point of failure", "availability", "failover", "replica"]
+    },
+    {
+      "issue_id": "tc06_i2",
+      "description": "'Redis is always available' is stated as fact in the consequences section (line 31) but this assumption is never validated, tested, or backed by an SLA. No chaos testing, no uptime data, no discussion of what happens when this assumption is violated.",
+      "location": "line 31",
+      "expected_classification": "CONFLICT",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["FE", "PO"],
+        "domains": ["REL"],
+        "universal": ["what_breaks_it", "failure_signal"],
+        "structural": ["untested_assumption"]
+      },
+      "keywords": ["assumption", "always available", "SLA", "uptime", "untested", "Redis"]
+    },
+    {
+      "issue_id": "tc06_i3",
+      "description": "No circuit breaker, graceful degradation, or fallback behavior is defined for any service when Redis is unavailable. Services should be able to degrade (e.g., serve stale data, fall back to database reads) rather than failing completely.",
+      "location": "entire document",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["CH", "PO"],
+        "domains": ["REL"],
+        "universal": ["what_breaks_it"],
+        "structural": ["missing_fallback"]
+      },
+      "keywords": ["circuit breaker", "fallback", "degradation", "resilience", "failure mode", "recovery"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc06_c1",
+      "description": "The service discovery mechanism via Consul is well-designed with health checks, automatic deregistration, and traffic rerouting.",
+      "location": "lines 24-27"
+    }
+  ]
+}

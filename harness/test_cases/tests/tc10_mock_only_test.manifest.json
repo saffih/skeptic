@@ -1,0 +1,58 @@
+{
+  "id": "tc10",
+  "name": "Tests that mock the system under test and assert only on mock calls",
+  "artifact_type": "tests",
+  "artifact_file": "tc10_mock_only_test.py",
+  "difficulty": "medium",
+  "planted_issues": [
+    {
+      "issue_id": "tc10_i1",
+      "description": "In setUp, PaymentService itself is mocked (`self.service = MagicMock(spec=PaymentService)`). All tests in TestPaymentProcessing then call methods on the mock, not on a real PaymentService. This means the tests verify that MagicMock works, not that PaymentService works.",
+      "location": "line 21",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["FE", "CFT", "OM"],
+        "domains": ["CFT"],
+        "universal": ["failure_signal"],
+        "structural": ["mock_under_test"]
+      },
+      "keywords": ["MagicMock", "mock", "system under test", "SUT", "testing mock", "useless test"]
+    },
+    {
+      "issue_id": "tc10_i2",
+      "description": "Tests assert only that mock methods were called (assert_called_once, self.service.refund.called) but never check the actual return value or behavior. test_process_payment_returns_success stores the result but never asserts on it. test_refund_updates_status asserts .called but not the return value.",
+      "location": "lines 37, 43",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "CFT"],
+        "domains": ["CFT"],
+        "universal": ["failure_signal"],
+        "structural": ["weak_assertion"]
+      },
+      "keywords": ["assert_called", "called", "no assertion", "return value", "weak", "behavior"]
+    },
+    {
+      "issue_id": "tc10_i3",
+      "description": "test_payments is a class-level mutable list that accumulates data across test runs via setUp. Tests are not isolated — each test appends to the shared list, so the list grows with each test method. If tests depend on list length, they become order-dependent and flaky.",
+      "location": "lines 18, 22-24",
+      "expected_classification": "ACTION",
+      "severity": "medium",
+      "detection_targets": {
+        "thinkers": ["KT", "CFT"],
+        "domains": ["CFT"],
+        "universal": ["what_breaks_it"],
+        "structural": ["shared_test_state"]
+      },
+      "keywords": ["class-level", "mutable", "shared state", "test isolation", "setUp", "list", "order dependent"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc10_c1",
+      "description": "TestConnectionHandling.test_connection_timeout properly instantiates a real PaymentGateway and tests actual timeout behavior with a real exception assertion.",
+      "location": "lines 58-65"
+    }
+  ]
+}

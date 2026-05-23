@@ -1,0 +1,37 @@
+# Service configuration for user-profile-service
+# Last reviewed: 2024-01-15
+# Owner: platform-team@company.com
+
+service:
+  name: user-profile-service
+  version: 3.2.1
+  environment: production
+
+database:
+  host: db-primary.internal
+  port: 5432
+  name: user_profiles
+  pool_size: 20
+  ssl: true
+  connection_timeout: 5000
+
+auth:
+  provider: oauth2
+  legacy_auth_service: auth-v1.internal
+  token_ttl: 3600
+  jwks_url: https://auth.company.com/.well-known/jwks.json
+
+http:
+  timeout: 30
+  max_connections: 100
+  keep_alive: true
+
+features:
+  enable_feature_x: true
+  enable_dark_mode: true
+  enable_audit_logging: true
+
+logging:
+  level: INFO
+  format: json
+  output: stdout

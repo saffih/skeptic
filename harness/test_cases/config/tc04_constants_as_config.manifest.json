@@ -1,0 +1,58 @@
+{
+  "id": "tc04",
+  "name": "Physical constants masquerading as configuration",
+  "artifact_type": "config",
+  "artifact_file": "tc04_constants_as_config.json",
+  "difficulty": "medium",
+  "planted_issues": [
+    {
+      "issue_id": "tc04_i1",
+      "description": "Physical/mathematical constants (pi, gravity, speedOfLight, euler_number, avogadro, boltzmann_constant) are stored as configurable values. These are immutable facts of nature, not deployment-specific settings. Putting them in config suggests they could be changed, which is misleading and error-prone.",
+      "location": "lines 4-6, 15-16, 19",
+      "expected_classification": "ACTION",
+      "severity": "medium",
+      "detection_targets": {
+        "thinkers": ["OM", "KT"],
+        "domains": [],
+        "universal": ["failure_signal"],
+        "structural": ["wrong_abstraction"]
+      },
+      "keywords": ["constant", "config", "immutable", "physics", "hardcode", "pi", "gravity"]
+    },
+    {
+      "issue_id": "tc04_i2",
+      "description": "No schema validation is referenced or enforced for this config file. There is no JSON Schema, no validation on load, and no documentation of which fields are required vs optional, what types or ranges are acceptable.",
+      "location": "entire file",
+      "expected_classification": "ACTION",
+      "severity": "medium",
+      "detection_targets": {
+        "thinkers": ["PO", "DAT"],
+        "domains": ["DAT"],
+        "universal": ["what_breaks_it"],
+        "structural": ["missing_validation"]
+      },
+      "keywords": ["schema", "validation", "type", "required", "optional", "constraint"]
+    },
+    {
+      "issue_id": "tc04_i3",
+      "description": "Naming conventions are inconsistent: camelCase (maxRetryCount, outputDir), snake_case (min_batch_size, log_level), and PascalCase (MaxBatchSize, EnableLogging) are all used. This makes programmatic access error-prone and signals a lack of code review.",
+      "location": "lines 7-11",
+      "expected_classification": "ACTION",
+      "severity": "low",
+      "detection_targets": {
+        "thinkers": ["KT"],
+        "domains": [],
+        "universal": [],
+        "structural": ["naming_inconsistency"]
+      },
+      "keywords": ["naming", "convention", "camelCase", "snake_case", "PascalCase", "inconsistent", "style"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc04_c1",
+      "description": "The version field is appropriate configuration that should be in a config file and follows semantic versioning.",
+      "location": "line 2"
+    }
+  ]
+}
