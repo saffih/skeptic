@@ -1,0 +1,58 @@
+{
+  "id": "tc15",
+  "name": "SQL injection and path traversal in admin search endpoint",
+  "artifact_type": "code",
+  "artifact_file": "tc15_sql_injection.py",
+  "difficulty": "easy",
+  "planted_issues": [
+    {
+      "issue_id": "tc15_i1",
+      "description": "User-supplied query_term from request.args is interpolated directly into an SQL query via f-string (line 36). An attacker can inject arbitrary SQL, exfiltrate data, or drop tables. The sort_field parameter is also unsanitized, enabling ORDER BY injection.",
+      "location": "line 36",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["SEC", "PO"],
+        "domains": ["SEC"],
+        "universal": ["what_breaks_it"],
+        "structural": ["injection"]
+      },
+      "keywords": ["SQL injection", "f-string", "unsanitized", "request.args", "interpolation", "parameterized"]
+    },
+    {
+      "issue_id": "tc15_i2",
+      "description": "The export_path parameter is taken directly from user input and passed to open() without any validation or sandboxing (line 43). An attacker can write to arbitrary filesystem paths (e.g., /etc/crontab, ~/.ssh/authorized_keys), achieving remote code execution.",
+      "location": "lines 42-47",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["SEC"],
+        "domains": ["SEC"],
+        "universal": ["what_breaks_it"],
+        "structural": ["path_traversal"]
+      },
+      "keywords": ["path traversal", "open", "file write", "arbitrary", "user input", "unsanitized"]
+    },
+    {
+      "issue_id": "tc15_i3",
+      "description": "The error handler returns the full Python traceback to the client (line 56). This leaks internal implementation details, file paths, library versions, and potentially database schema information to attackers.",
+      "location": "lines 54-57",
+      "expected_classification": "ACTION",
+      "severity": "medium",
+      "detection_targets": {
+        "thinkers": ["SEC", "FE"],
+        "domains": ["SEC"],
+        "universal": ["what_breaks_it"],
+        "structural": ["information_leak"]
+      },
+      "keywords": ["traceback", "stack trace", "information disclosure", "error", "leak", "format_exc"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc15_c1",
+      "description": "The require_admin decorator correctly validates the admin token via the auth service and returns 401 on failure. The decorator pattern using functools.wraps is properly implemented.",
+      "location": "lines 14-21"
+    }
+  ]
+}

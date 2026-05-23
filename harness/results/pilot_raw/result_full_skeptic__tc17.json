@@ -1,0 +1,166 @@
+{
+  "findings": [
+    {
+      "id": "F1",
+      "description": "Bare `except: pass` in transform_batch silently swallows all exceptions including KeyboardInterrupt, SystemExit, and unexpected runtime errors. Failed records are dropped with no logging, no counter increment, and no signal to the caller.",
+      "location": "lines 74-75",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["PO3", "PO4", "REL1", "UQ4", "CH4", "FE5"],
+      "evidence": "except Exception: pass — no log, no _error_count increment, no re-raise",
+      "confidence": "high"
+    },
+    {
+      "id": "F2",
+      "description": "normalize_currency returns the unconverted record unchanged when no exchange rate is found, after only logging a warning. The amount remains in a non-USD currency but currency field stays as-is, so downstream aggregation silently mixes currencies as if they were USD.",
+      "location": "lines 51-53",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["PO3", "FE1", "UQ4", "DAT7", "SH6"],
+      "evidence": "return record  # returns unconverted record silently — currency and amount are inconsistent with warehouse expectations",
+      "confidence": "high"
+    },
+    {
+      "id": "F3",
+      "description": "_processed_count and _error_count are module-level globals incremented without a lock. Multiple threads call `_processed_count += 1` concurrently, producing a race condition that yields an incorrect (usually under-counted) metric.",
+      "location": "lines 40-41, 64-65, 73",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["DAT2", "REL1", "PO3", "UQ4"],
+      "evidence": "global _processed_count incremented in worker threads via transform_batch without threading.Lock",
+      "confidence": "high"
+    },
+    {
+      "id": "F4",
+      "description": "_error_count is declared and reset but never incremented anywhere in the codebase. The logged summary reports `_processed_count` and `written` but omits error count entirely, so errors are invisible to operators.",
+      "location": "lines 40-41, 100-102, 126",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["OM3", "REL1", "PO4", "FE1"],
+      "evidence": "_error_count = 0 set in run_pipeline but never incremented; logger.info omits it",
+      "confidence": "high"
+    },
+    {
+      "id": "F5",
+      "description": "all_results.extend(transformed) is called from multiple threads without a lock. list.extend is not thread-safe across CPython releases in all cases, and even if GIL protects the list mutation, interleaved results are non-deterministic.",
+      "location": "lines 108, 111-112",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["DAT2", "REL1", "UQ4"],
+      "evidence": "all_results defined in run_pipeline closure, extended from multiple threads concurrently",
+      "confidence": "medium"
+    },
+    {
+      "id": "F6",
+      "description": "validate_transaction is defined but never called in the pipeline (transform_batch, run_pipeline). Invalid records—missing fields, negative amounts—pass through transformation and reach the database write step.",
+      "location": "lines 17-36, 62-77, 98-127",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["OM1", "PO3", "UQ4", "FE5"],
+      "evidence": "validate_transaction defined but no call site in transform_batch or run_pipeline",
+      "confidence": "high"
+    },
+    {
+      "id": "F7",
+      "description": "When num_workers does not evenly divide len(raw_records), batch_size = len(raw_records) // num_workers. If len(raw_records) < num_workers, batch_size is 0 and the last worker gets all records while some workers get empty slices—or a ZeroDivisionError if raw_records is empty.",
+      "location": "lines 105-117",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["UQ5", "PO3", "CH4"],
+      "evidence": "batch_size = len(raw_records) // num_workers with no guard for empty input or batch_size == 0",
+      "confidence": "high"
+    },
+    {
+      "id": "F8",
+      "description": "normalize_currency mutates the input dict in-place (sets original_amount, original_currency, amount, currency keys on record). This means the caller's original record is modified as a side-effect, making retries and debugging harder.",
+      "location": "lines 55-58",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["UQ4", "CPX3", "DAT5"],
+      "evidence": "record[\"original_amount\"] = ...; record[\"amount\"] = ... — modifies the passed-in dict directly",
+      "confidence": "high"
+    },
+    {
+      "id": "F9",
+      "description": "write_results catches all exceptions per record but does not commit or rollback; the docstring defers commit to the caller. run_pipeline never commits or rolls back either, leaving the transaction open on success or partial failure.",
+      "location": "lines 80-95, 125",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["DAT7", "REL1", "PO3", "SH6"],
+      "evidence": "# Don't commit here — let the caller decide; run_pipeline does not call db_connection.commit()",
+      "confidence": "high"
+    },
+    {
+      "id": "F10",
+      "description": "write_results inserts each record individually in a loop with no batching. At scale this is O(n) round-trips, likely to time out or saturate the database under large inputs.",
+      "location": "lines 83-93",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["REL2", "DAT1", "OM4"],
+      "evidence": "for record in results: db_connection.execute(...) — one INSERT per record",
+      "confidence": "high"
+    },
+    {
+      "id": "F11",
+      "description": "The pipeline has no tests (no test file referenced, no assertions, no CFT coverage). The validation function has no test proving it rejects bad records; silent failure paths in transform_batch have no coverage.",
+      "location": "entire file",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["FE5", "FE6", "PO4", "CFT1"],
+      "evidence": "No test file; no assertions in code; critical silent-failure branches unreachable by any visible test",
+      "confidence": "medium"
+    },
+    {
+      "id": "F12",
+      "description": "exchange rates dict is passed in from outside with no validation of staleness, completeness, or source. A stale or empty rates dict silently produces incorrect USD amounts across the entire batch.",
+      "location": "lines 44, 98",
+      "classification": "CONFLICT",
+      "severity": "medium",
+      "triggered_by": ["FE1", "FE4", "REL3", "DAT6"],
+      "evidence": "rates: Dict[str, float] parameter—no timestamp, no version, no completeness check",
+      "confidence": "medium"
+    },
+    {
+      "id": "F13",
+      "description": "data_source.fetch_all() loads the entire dataset into memory at once. For large data lakes this will cause OOM or extreme memory pressure; no streaming or pagination is used.",
+      "location": "line 104",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["REL2", "DAT3", "OM4"],
+      "evidence": "raw_records = data_source.fetch_all() — full dataset loaded before any processing",
+      "confidence": "high"
+    },
+    {
+      "id": "F14",
+      "description": "The SQL INSERT uses %(key)s parameter substitution from a raw user-originated dict without field allowlisting. Extra keys in the record are silently ignored by psycopg2 but the dict keys come from external data, creating a surface for unexpected behavior if the DB driver changes.",
+      "location": "lines 85-89",
+      "classification": "CONFLICT",
+      "severity": "low",
+      "triggered_by": ["SEC2", "ARC4"],
+      "evidence": "VALUES (%(transaction_id)s, ...) passing full record dict—extra attacker-controlled keys present",
+      "confidence": "low"
+    }
+  ],
+  "clean": [
+    {
+      "location": "lines 17-36 (validate_transaction field/amount checks)",
+      "examined_by": ["UQ1", "UQ4", "FE1", "SEC2"]
+    },
+    {
+      "location": "lines 8-14 (imports and logger setup)",
+      "examined_by": ["ARC1", "ARC2", "SEC8"]
+    },
+    {
+      "location": "lines 70 (processed_at UTC timestamp)",
+      "examined_by": ["DAT4", "DAT5", "FE1"]
+    },
+    {
+      "location": "lines 114-120 (thread creation and join loop structure)",
+      "examined_by": ["ST6", "ARC3"]
+    },
+    {
+      "location": "lines 91-92 (write_results error logging per record)",
+      "examined_by": ["REL1", "PO6"]
+    }
+  ]
+}

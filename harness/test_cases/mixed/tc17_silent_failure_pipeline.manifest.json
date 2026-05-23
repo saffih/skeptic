@@ -1,0 +1,72 @@
+{
+  "id": "tc17",
+  "name": "Data pipeline with silent failures, no atomicity, and race conditions",
+  "artifact_type": "code",
+  "artifact_file": "tc17_silent_failure_pipeline.py",
+  "difficulty": "hard",
+  "planted_issues": [
+    {
+      "issue_id": "tc17_i1",
+      "description": "In transform_batch, the except clause catches all exceptions and does `pass` (line 74). Failed transformations are silently dropped — no logging, no error count increment, no dead-letter queue. Records simply vanish from the output without any trace.",
+      "location": "lines 73-74",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "CH"],
+        "domains": ["DAT"],
+        "universal": ["what_breaks_it", "failure_signal"],
+        "structural": ["silent_failure"]
+      },
+      "keywords": ["except", "pass", "silent", "drop", "swallow", "lost records"]
+    },
+    {
+      "issue_id": "tc17_i2",
+      "description": "The pipeline has no monitoring, alerting, or health reporting. There is no mechanism to detect when the pipeline produces fewer records than expected, when error rates spike, or when the pipeline fails entirely. The only output is a log line at the end.",
+      "location": "entire file",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["REL", "CH"],
+        "domains": ["REL"],
+        "universal": ["what_breaks_it"],
+        "structural": ["missing_monitoring"]
+      },
+      "keywords": ["monitoring", "alerting", "observability", "health check", "metrics", "SLA"]
+    },
+    {
+      "issue_id": "tc17_i3",
+      "description": "write_results inserts records one at a time without a transaction. If the process crashes mid-way, partial results are written to the database with no way to identify or roll back the incomplete batch. There is no idempotency key to prevent duplicate writes on retry.",
+      "location": "lines 78-90",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["DAT", "CH"],
+        "domains": ["DAT"],
+        "universal": ["what_breaks_it"],
+        "structural": ["missing_atomicity"]
+      },
+      "keywords": ["transaction", "atomicity", "partial", "commit", "rollback", "idempotency"]
+    },
+    {
+      "issue_id": "tc17_i4",
+      "description": "Multiple threads increment the global _processed_count (line 72) without a lock or atomic operation. This is a race condition — concurrent increments cause lost updates, making the final count unreliable. Similarly, all_results.extend() from multiple threads is not thread-safe.",
+      "location": "lines 39-40, 72, 105",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["DAT", "CPX"],
+        "domains": [],
+        "universal": ["what_breaks_it"],
+        "structural": ["race_condition"]
+      },
+      "keywords": ["race condition", "thread", "lock", "global", "concurrent", "shared state", "atomic"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc17_c1",
+      "description": "The validate_transaction function is well-implemented with proper field checking, type validation via Decimal, and appropriate warning logs for each failure mode.",
+      "location": "lines 17-36"
+    }
+  ]
+}

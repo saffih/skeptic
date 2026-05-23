@@ -1,0 +1,58 @@
+{
+  "id": "tc14",
+  "name": "Runbook with undocumented migration, late sudo requirement, and wrong service name",
+  "artifact_type": "human_docs",
+  "artifact_file": "tc14_hidden_assumptions_doc.md",
+  "difficulty": "medium",
+  "planted_issues": [
+    {
+      "issue_id": "tc14_i1",
+      "description": "Step 2 says 'Run the Migration' but provides no explanation of what the migration does, what data it affects, whether it is reversible, or what happens if it fails. An operator following this runbook blindly runs a script that could drop tables, alter schemas, or migrate data irreversibly.",
+      "location": "lines 17-20",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["FE", "CH"],
+        "domains": ["DAT"],
+        "universal": ["what_breaks_it"],
+        "structural": ["missing_context"]
+      },
+      "keywords": ["migration", "unexplained", "blind", "irreversible", "context", "what does it do"]
+    },
+    {
+      "issue_id": "tc14_i2",
+      "description": "Step 5 requires `sudo` access for the first time in the procedure, but sudo is not listed as a prerequisite. An operator without sudo privileges would successfully complete steps 1-4 (including stopping the service and running the migration) before discovering they cannot deploy the new binary, leaving the system in a partially-deployed state.",
+      "location": "lines 30-32",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "SEC"],
+        "domains": ["SEC"],
+        "universal": ["what_breaks_it"],
+        "structural": ["hidden_prerequisite"]
+      },
+      "keywords": ["sudo", "prerequisite", "permission", "privilege", "late requirement", "root"]
+    },
+    {
+      "issue_id": "tc14_i3",
+      "description": "Step 6 runs `systemctl restart app` but step 4 stops `analytics-service`. The service name mismatch means step 6 may restart a different service (or fail silently if 'app' doesn't exist), while analytics-service remains stopped. There is no verification that the restart succeeded.",
+      "location": "lines 28, 36",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "CH"],
+        "domains": [],
+        "universal": ["what_breaks_it"],
+        "structural": ["name_mismatch"]
+      },
+      "keywords": ["service name", "mismatch", "systemctl", "restart", "wrong name", "analytics-service", "app"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc14_c1",
+      "description": "Step 7 (Verify Deployment) is well-written with a specific health check endpoint, expected response, and log inspection command with appropriate time filter.",
+      "location": "lines 40-49"
+    }
+  ]
+}

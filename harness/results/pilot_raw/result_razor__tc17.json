@@ -1,0 +1,82 @@
+{
+  "findings": [
+    {
+      "id": "F1",
+      "description": "Bare `except: pass` in transform_batch silently discards transformation errors with no logging, no error count increment, and no signal to the caller. Failed records vanish without trace.",
+      "location": "lines 74-75",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["OM1", "CH8"],
+      "evidence": "except Exception:\\n            pass — no logging, no _error_count increment, no re-raise. A bad rate conversion, a key error, or a type error will be swallowed; the pipeline reports success.",
+      "confidence": "high"
+    },
+    {
+      "id": "F2",
+      "description": "normalize_currency returns the unconverted record when a currency rate is missing, allowing non-USD amounts to flow through as if they were USD. The log warning is the only signal; the record is not filtered, flagged, or counted as an error.",
+      "location": "lines 51-53",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["OM1", "PO1", "CH8"],
+      "evidence": "rate = rates.get(currency)\\nif rate is None:\\n    logger.warning(...)\\n    return record  # returns unconverted record silently — comment is the author acknowledging the problem",
+      "confidence": "high"
+    },
+    {
+      "id": "F3",
+      "description": "Race condition: multiple threads call `all_results.extend(transformed)` and `_processed_count += 1` without any lock. list.extend is not thread-safe under all CPython scenarios and _processed_count (read-modify-write) is not atomic.",
+      "location": "lines 64, 73, 111-112",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["KT1", "CH8"],
+      "evidence": "`global _processed_count` incremented with `+= 1` inside threads; `all_results.extend(transformed)` on a shared list inside threads — no threading.Lock anywhere in the file.",
+      "confidence": "high"
+    },
+    {
+      "id": "F4",
+      "description": "_processed_count is a module-level global reset at the start of run_pipeline. If run_pipeline is called concurrently (multiple pipelines), the counters from different runs interfere with each other.",
+      "location": "lines 40-41, 100-102",
+      "classification": "CONFLICT",
+      "severity": "medium",
+      "triggered_by": ["KT1", "PO1"],
+      "evidence": "Module-level `_processed_count = 0` / `_error_count = 0` reset inside `run_pipeline` — not instance state, not protected, reused globally.",
+      "confidence": "medium"
+    },
+    {
+      "id": "F5",
+      "description": "validate_transaction is defined and exported but never called anywhere in the pipeline. Dead validation code means schema violations silently reach the database write stage.",
+      "location": "lines 17-36 (definition); absent from lines 62-77 transform_batch)",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["OM1", "CH8"],
+      "evidence": "validate_transaction exists but transform_batch calls only normalize_currency; no call site in run_pipeline.",
+      "confidence": "high"
+    },
+    {
+      "id": "F6",
+      "description": "When num_workers does not evenly divide len(raw_records), the last batch is handled correctly, but if num_workers > len(raw_records) the computed batch_size is 0 (integer division), causing all workers except the last to receive empty batches and the last worker to receive all records — effectively single-threaded with the overhead of N-1 extra threads.",
+      "location": "lines 105, 114-117",
+      "classification": "CONFLICT",
+      "severity": "low",
+      "triggered_by": ["PO1", "KT1"],
+      "evidence": "batch_size = len(raw_records) // num_workers — integer floor division; if len < num_workers, batch_size = 0.",
+      "confidence": "medium"
+    }
+  ],
+  "clean": [
+    {
+      "location": "lines 17-36 (validate_transaction logic)",
+      "examined_by": ["OM1", "PO1"]
+    },
+    {
+      "location": "lines 80-95 (write_results)",
+      "examined_by": ["OM1", "KT1", "CH8"]
+    },
+    {
+      "location": "lines 44-59 (normalize_currency rate application math)",
+      "examined_by": ["PO1"]
+    },
+    {
+      "location": "lines 122-127 (thread join and final log)",
+      "examined_by": ["CH8", "KT1"]
+    }
+  ]
+}

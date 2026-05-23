@@ -1,0 +1,58 @@
+{
+  "id": "tc08",
+  "name": "Technology mandates disguised as requirements with internal contradictions",
+  "artifact_type": "requirements",
+  "artifact_file": "tc08_solution_without_problem.md",
+  "difficulty": "medium",
+  "planted_issues": [
+    {
+      "issue_id": "tc08_i1",
+      "description": "R-1 mandates 'microservice architecture with at least 6 separate services' and specific technologies (Docker, Kubernetes) without stating the business problem being solved. Requirements should describe what the system must do, not how it must be built. The '6 services' minimum is arbitrary.",
+      "location": "lines 9-10",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["OM", "SH"],
+        "domains": [],
+        "universal": ["failure_signal"],
+        "structural": ["solution_as_requirement"]
+      },
+      "keywords": ["microservice", "solution", "technology", "architecture", "prescriptive", "Docker", "Kubernetes"]
+    },
+    {
+      "issue_id": "tc08_i2",
+      "description": "R-2 states 'We need Apache Kafka' without explaining what business need or technical constraint drives this choice. The requirement specifies the technology (Kafka, 3 brokers, replication factor) without describing the problem (e.g., event throughput needs, ordering guarantees, or decoupling requirements).",
+      "location": "lines 12-13",
+      "expected_classification": "ACTION",
+      "severity": "medium",
+      "detection_targets": {
+        "thinkers": ["OM", "FE"],
+        "domains": [],
+        "universal": ["failure_signal"],
+        "structural": ["solution_as_requirement"]
+      },
+      "keywords": ["Kafka", "technology choice", "solution", "problem statement", "justification"]
+    },
+    {
+      "issue_id": "tc08_i3",
+      "description": "R-3 says 'All application data shall be stored in a single PostgreSQL database' but R-7 says 'Each service must own its data and shall not share database tables.' These two requirements directly contradict each other — a single shared database vs. per-service data ownership.",
+      "location": "lines 15-16, 24-25",
+      "expected_classification": "CONFLICT",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "SH"],
+        "domains": [],
+        "universal": ["what_breaks_it"],
+        "structural": ["contradiction"]
+      },
+      "keywords": ["contradiction", "conflict", "single database", "own data", "inconsistent", "shared"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc08_c1",
+      "description": "R-4 is a well-written requirement that describes user-facing behavior with testable criteria: password reset via email, 24-hour expiry, single-use link.",
+      "location": "lines 17-18"
+    }
+  ]
+}

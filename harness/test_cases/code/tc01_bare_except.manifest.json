@@ -1,0 +1,58 @@
+{
+  "id": "tc01",
+  "name": "Bare except swallows critical exceptions in retry loop",
+  "artifact_type": "code",
+  "artifact_file": "tc01_bare_except.py",
+  "difficulty": "easy",
+  "planted_issues": [
+    {
+      "issue_id": "tc01_i1",
+      "description": "Bare `except: pass` catches all exceptions including SystemExit, KeyboardInterrupt, and MemoryError, silently swallowing them. This makes the retry loop impossible to interrupt and hides critical failures.",
+      "location": "lines 31-32",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "CH", "REL"],
+        "domains": [],
+        "universal": ["what_breaks_it", "failure_signal"],
+        "structural": ["failure_signal"]
+      },
+      "keywords": ["except", "bare", "pass", "silent", "swallow", "SystemExit", "KeyboardInterrupt"]
+    },
+    {
+      "issue_id": "tc01_i2",
+      "description": "Magic number 3 used for retry count with no exponential backoff or jitter. Under load, all clients retry simultaneously, creating a thundering herd effect against the upstream service.",
+      "location": "line 24",
+      "expected_classification": "ACTION",
+      "severity": "medium",
+      "detection_targets": {
+        "thinkers": ["FE", "OM"],
+        "domains": ["REL"],
+        "universal": ["what_breaks_it"],
+        "structural": ["magic_number"]
+      },
+      "keywords": ["magic number", "retry", "backoff", "hardcoded", "thundering herd"]
+    },
+    {
+      "issue_id": "tc01_i3",
+      "description": "fetch_partner_feed returns None on failure instead of raising an exception. The caller process_feed checks truthiness of rows but treats None (failure) and empty list (valid empty feed) identically, losing the distinction between 'no data available' and 'upstream is down'.",
+      "location": "lines 35-36, 43-44",
+      "expected_classification": "ACTION",
+      "severity": "medium",
+      "detection_targets": {
+        "thinkers": ["CH", "PO"],
+        "domains": [],
+        "universal": ["failure_signal"],
+        "structural": ["failure_signal"]
+      },
+      "keywords": ["None", "return", "failure", "silent", "error handling", "sentinel"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc01_c1",
+      "description": "Import block and logging setup are correctly structured with proper format string and appropriate log level.",
+      "location": "lines 1-13"
+    }
+  ]
+}

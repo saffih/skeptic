@@ -1,0 +1,58 @@
+{
+  "id": "tc12",
+  "name": "Overbroad error suppression with no verification in migration workflow",
+  "artifact_type": "agent_instructions",
+  "artifact_file": "tc12_overbroad_suppression.md",
+  "difficulty": "medium",
+  "planted_issues": [
+    {
+      "issue_id": "tc12_i1",
+      "description": "Rule 1 says 'Never show error messages to users' — this suppresses ALL diagnostics, including critical migration failures, data corruption warnings, and schema mismatch alerts. Operators running the migration have no visibility into problems.",
+      "location": "line 9",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "CH", "KT"],
+        "domains": [],
+        "universal": ["what_breaks_it"],
+        "structural": ["overbroad_suppression"]
+      },
+      "keywords": ["suppress", "error", "silent", "hide", "diagnostic", "never show"]
+    },
+    {
+      "issue_id": "tc12_i2",
+      "description": "Rule 2 says 'Always proceed even if the current step fails.' Combined with Rule 1, this means the migration silently skips failed steps, potentially leaving data partially migrated, corrupted, or lost. A failed schema transformation followed by a write produces garbage data in the target.",
+      "location": "line 11",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["CH", "PO"],
+        "domains": ["DAT"],
+        "universal": ["what_breaks_it"],
+        "structural": ["silent_corruption"]
+      },
+      "keywords": ["proceed", "fail", "silent", "corruption", "partial", "skip", "continue"]
+    },
+    {
+      "issue_id": "tc12_i3",
+      "description": "The workflow has no verification step. After migration completes, there is no instruction to compare record counts, validate checksums, spot-check data integrity, or confirm that the target matches the source. The migration could silently lose 50% of records.",
+      "location": "entire document",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["FE", "PO"],
+        "domains": ["DAT"],
+        "universal": ["what_breaks_it", "failure_signal"],
+        "structural": ["missing_verification"]
+      },
+      "keywords": ["verification", "validation", "checksum", "reconciliation", "count", "integrity"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc12_c1",
+      "description": "Rule 3 specifies structured logging with appropriate fields (operation name, timestamp, record count, duration). This is a well-defined operational practice.",
+      "location": "line 13"
+    }
+  ]
+}

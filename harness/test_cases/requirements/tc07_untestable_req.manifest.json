@@ -1,0 +1,58 @@
+{
+  "id": "tc07",
+  "name": "Vague and untestable requirements with no acceptance criteria",
+  "artifact_type": "requirements",
+  "artifact_file": "tc07_untestable_req.md",
+  "difficulty": "easy",
+  "planted_issues": [
+    {
+      "issue_id": "tc07_i1",
+      "description": "FR-2 states 'The system should be fast' and 'Pages must load quickly' without any measurable criteria. No response time targets, percentile thresholds, or load benchmarks are defined. This requirement cannot be tested or verified.",
+      "location": "lines 13-14",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "FE"],
+        "domains": ["CFT"],
+        "universal": ["failure_signal"],
+        "structural": ["vague_requirement"]
+      },
+      "keywords": ["fast", "quickly", "vague", "untestable", "measurable", "criteria", "quantify"]
+    },
+    {
+      "issue_id": "tc07_i2",
+      "description": "FR-3 states 'User experience must be intuitive' and 'Users should find what they need without training.' These are subjective, opinion-based statements that cannot be objectively tested or verified. No usability metrics, task completion rates, or user testing criteria are provided.",
+      "location": "lines 16-17",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "FE"],
+        "domains": ["CFT"],
+        "universal": ["failure_signal"],
+        "structural": ["vague_requirement"]
+      },
+      "keywords": ["intuitive", "clean", "modern", "subjective", "untestable", "usability"]
+    },
+    {
+      "issue_id": "tc07_i3",
+      "description": "No requirement in the document includes acceptance criteria. There are no definitions of done, no test conditions, and no measurable thresholds that would allow QA to determine whether a requirement has been satisfied.",
+      "location": "entire document",
+      "expected_classification": "ACTION",
+      "severity": "high",
+      "detection_targets": {
+        "thinkers": ["PO", "CFT"],
+        "domains": ["CFT"],
+        "universal": ["failure_signal"],
+        "structural": ["missing_acceptance_criteria"]
+      },
+      "keywords": ["acceptance criteria", "definition of done", "testable", "verification", "measurable"]
+    }
+  ],
+  "clean_areas": [
+    {
+      "area_id": "tc07_c1",
+      "description": "FR-1 is well-written: 'The system shall authenticate users via OAuth 2.0 with support for Google and Microsoft identity providers' is specific, testable, and includes concrete details.",
+      "location": "lines 9-10"
+    }
+  ]
+}
