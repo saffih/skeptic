@@ -243,6 +243,26 @@ Check:
 - local/systemic risk
 - reversibility, blast radius, ownership clarity, confidence
 
+### Pattern Classification
+
+Repeated findings are candidate patterns, not proven patterns.
+
+Before grouping them, state:
+- shared rule, root cause, or violated invariant
+- boundary: included, excluded, uncertain
+- lifecycle point
+- why they may not be one pattern
+
+Promote only if the rule and boundary survive challenge.
+
+If promoted:
+- define the common treatment
+- split risk tiers if needed
+- plan action only after DECIDE=FIX
+- list exceptions
+
+Never batch by similar wording, location, file shape, or symptom alone.
+
 Output stabilized issues.
 Raw findings remain PROVISIONAL until stabilized.
 
@@ -513,6 +533,9 @@ Rules:
 - Never rely on hidden state.
 - Never retry unless safer or better informed.
 - Never treat repeated local fixes as local forever.
+- Never promote repeated findings without a shared rule and boundary.
+- Never batch without asking why they are not one pattern.
+- Never use Pattern Classification to act before DECIDE=FIX.
 - Every completed task must have an outcome.
 - Every task ends as HANDLED or CONFLICT.
 
