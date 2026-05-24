@@ -8,7 +8,7 @@ MAIN = subprocess.check_output(["git", "show", "origin/main:skeptic.md"], text=T
 
 class AndreiABVsMain(unittest.TestCase):
     def test_b_has_guardrails_missing_or_weaker_in_a(self):
-        b_only_or_improved = [
+        markers = [
             "intent, assumptions, and chosen approach are explicit enough to test",
             "multiple valid interpretations -> list them; proceed only if one is evidence-backed, low-risk, and testable",
             "assumptions, including intent and approach assumptions; challenge them before DECIDE",
@@ -19,10 +19,10 @@ class AndreiABVsMain(unittest.TestCase):
             "follow existing style and conventions unless that style is the verified problem",
             "no out-of-scope edits; log unrelated improvements separately",
         ]
-        missing = [m for m in b_only_or_improved if m not in TEXT]
+        missing = [m for m in markers if m not in TEXT]
         self.assertEqual(missing, [])
 
-    def test_b_does_not_keep_known_bad_pr_wording(self):
+    def test_bad_pr_wording_removed(self):
         forbidden = [
             "multiple valid interpretations -> enumerate before proceeding",
             "Verification is pass/fail. If fail, return to Act.",
