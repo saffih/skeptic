@@ -312,6 +312,12 @@ Use when:
 
 Do not decompose pure conflict to avoid escalation.
 
+### Promotion Check
+
+Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
+
+If yes, do not promote. Decide FIX, DECOMPOSE, or CONFLICT.
+
 ## 10. Act
 
 Act only after DECIDE says FIX.
@@ -525,6 +531,7 @@ Rules:
 - Never retry unless safer or better informed.
 - Never treat repeated local fixes as local forever.
 - Every completed task must have an outcome.
+- Never mark an artifact ready while ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
 - Every task ends as HANDLED or CONFLICT.
 - Never modify outside the current task's scope; log adjacent issues separately.
 
