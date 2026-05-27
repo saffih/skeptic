@@ -32,6 +32,24 @@ When invoked:
 12. State unresolved conflicts, unknowns, skipped areas, and missing evidence.
 13. If the actual file is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
 
+### RunSkeptic Receipt
+
+Every RunSkeptic report must include a compact receipt:
+
+- Source read: path/ref/SHA or explicit unavailable state
+- Companion files read, if any
+- Permission mode: read-only / patch-local / fix-if-valid
+- DONE statement
+- Major steps run
+- Thinkers considered
+- Evidence used
+- Decision path
+- Verification performed
+- Unresolved conflicts / unknowns
+- Final output category
+
+Do not claim RunSkeptic compliance without this receipt.
+
 Flow:
 GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
 

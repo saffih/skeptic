@@ -56,6 +56,29 @@ class InvocationContractTests(unittest.TestCase):
         self.assertEqual(self.text.count("For Skeptic self-work, always read the actual current `skeptic.md`"), 1)
         self.assertEqual(self.text.count("`RunSkeptic` is the formal invocation string"), 1)
 
+    def test_runskeptic_receipt_exists(self) -> None:
+        for marker in [
+            "### RunSkeptic Receipt",
+            "Every RunSkeptic report must include a compact receipt:",
+            "Source read: path/ref/SHA or explicit unavailable state",
+            "Companion files read, if any",
+            "Permission mode: read-only / patch-local / fix-if-valid",
+            "DONE statement",
+            "Major steps run",
+            "Thinkers considered",
+            "Evidence used",
+            "Decision path",
+            "Verification performed",
+            "Unresolved conflicts / unknowns",
+            "Final output category",
+            "Do not claim RunSkeptic compliance without this receipt.",
+        ]:
+            self.assertIn(marker, self.text)
+
+    def test_runskeptic_receipt_is_not_duplicated(self) -> None:
+        self.assertEqual(self.text.count("### RunSkeptic Receipt"), 1)
+        self.assertEqual(self.text.count("Do not claim RunSkeptic compliance without this receipt."), 1)
+
 
 if __name__ == "__main__":
     unittest.main()
