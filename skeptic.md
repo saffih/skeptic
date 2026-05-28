@@ -18,7 +18,7 @@ Aliases:
 - `run skeptic.md`
 
 When invoked:
-1. Read the actual current `skeptic.md` before analysis.
+1. Read the actual current `skeptic.md`, or an explicitly supplied candidate Skeptic file, before analysis.
 2. Do not use memory, summaries, previous variants, or generated replacements as substitutes.
 3. Treat `skeptic.md` as the runtime source of truth.
 4. Read companion files only when this file says they apply.
@@ -30,12 +30,11 @@ When invoked:
 10. Do not modify files unless DECIDE says FIX and edits are explicitly allowed.
 11. Verify the recommendation against the framework.
 12. State unresolved conflicts, unknowns, skipped areas, and missing evidence.
-13. If the actual file is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
+13. If the source under review is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
 
 ### RunSkeptic Receipt
 
 Every RunSkeptic report must include a compact receipt:
-
 - Source read: path/ref/SHA or explicit unavailable state
 - Companion files read, if any
 - Permission mode: read-only / patch-local / fix-if-valid
@@ -50,8 +49,7 @@ Every RunSkeptic report must include a compact receipt:
 
 Do not claim RunSkeptic compliance without this receipt.
 
-Flow:
-GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
+Flow: GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
 
 ## 0. Gate
 
@@ -89,6 +87,7 @@ Rules:
 ## 1. Map - Detect Only
 
 Record findings before deciding.
+
 Start from Fundamental Scan; expand as needed.
 
 Apply:
@@ -109,8 +108,7 @@ No fixes. No final decisions.
 
 ## 2. Universal Questions
 
-For every meaningful entity:
-file, module, function, config, doc, test, system, process, requirement, decision.
+For every meaningful entity: file, module, function, config, doc, test, system, process, requirement, decision.
 
 - What is this?
 - What is it for?
@@ -123,56 +121,91 @@ file, module, function, config, doc, test, system, process, requirement, decisio
 
 Use full name + abbreviation first; then abbreviation.
 
-### Charlie Munger (CH) - Systems, Dependencies, Failure
-- What depends on this?
-- What does this constrain?
-- What breaks downstream?
-- Is failure bounded?
-- Who bears failure cost?
-- What must/must not stay connected?
-- Is coupling necessary or accidental?
-- What would guarantee failure if unchanged?
+Each thinker is a lens, not a checklist. Inspect through the lens. Report only material findings that affect PASS, ACTION, or CONFLICT.
 
-### Occam's Razor (OM) - Necessity, Simplicity, Boundaries
-- Remove this: what breaks?
-- Is this necessary?
-- What is missing?
-- Can this be simpler?
-- Is complexity justified?
-- Does this solve a current verified need, or speculate about a future one?
-- Are concerns mixed?
-- Is the boundary clear?
-- What should move in or out?
+### Charlie Munger (CH) - Inversion, Incentives, Misjudgment, Safety Margin
 
-### Richard Feynman (FE) - Honesty, Explanation, Reality
-- Is this true now?
-- Can it be explained simply?
-- Does each non-obvious choice explain why?
-- When was it last verified?
-- Do tests prove behavior, not implementation?
-- Was the test ever red?
+Find avoidable stupidity before approving success.
 
-### Karl Popper (PO) - Falsification, Contradiction, Unsafe Change
-- What would prove this wrong?
-- What would make this unsafe?
-- What fails silently?
-- What has no test or monitor?
-- Do rules or assumptions contradict?
-- Can failure be detected before damage spreads?
+Look for:
+- worst material bad outcome and whether evidence, limits, responsibility, or reversal path block it
+- incentives that reward noise, shortcuts, fake certainty, gaming, shallow compliance, or skipped verification
+- second-order damage: downstream harm, hidden cost, brittleness, drift, or confusion
+- misjudgment: confidence without evidence, coherent stories without verification, one-lens thinking, assumptions as facts
+- competence gaps: deciding without enough evidence or domain understanding
+- weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
 
-### Immanuel Kant (KT) - Universalizability
-- Would I want this pattern everywhere, by every contributor?
-- If not, should it be removed, narrowed, replaced, or bounded?
+Report when CH exposes a material failure path, bad incentive, false certainty, competence gap, or missing safety margin.
 
-### Saffi (SH) - Sharp Trade-off Heuristics
-- What are the real forces/sides, and what middle is trying to combine them?
-- Is the middle creating real friction?
-  - If no: SH = NOT_APPLICABLE for this entity.
-  - If yes: continue.
-- Is the middle a real integration, or just a compromise that keeps both costs?
-- Should Side A or Side B dominate as default?
-- What narrow exception protects the other side?
-- If no side should dominate and the middle is not valid, what conflict must be explicit?
+### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
+
+Find unnecessary structure without removing what proves, protects, assigns responsibility for, or makes the required outcome reversible.
+
+Look for:
+- unnecessary assumptions, steps, abstractions, options, or moving parts with no verified current need
+- false simplicity: simplification that proves less, protects less, or breaks the required outcome
+- speculative structure or abstraction before repeated concrete need
+- oversized design: more structure than outcome, evidence, safety, responsibility, or reversibility requires
+- avoidable complexity from misplaced boundaries, mixed concerns, or missing small guards
+
+Report when something can be removed, merged, moved, simplified, or guarded without losing required outcome, evidence, responsibility, reversibility, or safety.
+
+### Richard Feynman (FE) - Reality, Mechanism, Evidence Integrity
+
+Find where explanation outruns reality.
+
+Look for:
+- stale claims: not true now, undated, or not recently verified
+- mechanism gap: says what happens but not clearly how or why it works
+- missing why: a non-obvious choice lacks a clear reason
+- hidden limits: assumptions, failed cases, edge cases, or contradictory evidence are omitted
+- weak evidence: proof does not directly exercise or support the claimed outcome
+- proof gap: confidence, authority, elegance, or coherent story substitutes for observed evidence
+
+Report when a claim, choice, or conclusion cannot be trusted without clearer mechanism, current evidence, disclosed limits, or direct proof.
+
+### Karl Popper (PO) - Falsifiability, Refutation, Contradiction
+
+Find claims that can pass while wrong.
+
+Look for:
+- unfalsifiable claim: no observation, example, check, or condition could show it wrong
+- confirmation-only proof: supporting evidence exists, but no serious disconfirming case was tried
+- contradiction: rules, assumptions, examples, outputs, or acceptance criteria conflict
+- weak refutation path: wrong result is detected too late, only manually, or not at all
+- silent pass: artifact can appear valid while violating the claim
+- overclaim: current checks are treated as proof, not limited corroboration
+
+Report when a claim, rule, decision, or result cannot be refuted, contradicts another requirement, or can pass while wrong.
+
+### Immanuel Kant (KT) - Universalizability, Consistency, Fair Exceptions
+
+Find patterns that should not become general rules.
+
+Look for:
+- harmful universalization: bad if used everywhere or by every similar actor
+- special pleading: one case gets an exception similar cases should not get
+- inconsistent rule: contradicts itself when applied broadly or symmetrically
+- unfair asymmetry: similar actors, cases, users, files, or decisions are treated differently without justification
+- hidden burden: works only by shifting ambiguity, cost, or cleanup to someone else
+
+Report when the pattern should be removed, narrowed, bounded, or made into an explicit rule or exception.
+
+### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
+
+Find invalid middles and unresolved tradeoffs.
+
+Look for:
+- real opposing forces: what each side protects and what each side costs
+- fake middle: compromise keeps both costs without resolving the tension
+- forced balance: the artifact tries to satisfy both sides when one side should dominate
+- missing exception: one side should be default, but the other side needs a narrow protected exception
+- hidden conflict: product, architecture, safety, ownership, or priority decision is required
+
+If no real opposing forces or invalid middle are present, SH = NOT_APPLICABLE.
+
+Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, or requires an explicit tradeoff decision.
+
 
 ## 4. Structural Checks
 
@@ -265,6 +298,7 @@ Check:
 - reversibility, blast radius, ownership clarity, confidence
 
 Output stabilized issues.
+
 Raw findings remain PROVISIONAL until stabilized.
 
 ## 8. Evidence Levels
@@ -289,6 +323,7 @@ Rules:
 Choose one path per stabilized issue.
 
 ### FIX
+
 Use when:
 - root cause, structure, required connections, and source of truth are clear or irrelevant
 - unknowns are resolved or irrelevant
@@ -306,6 +341,7 @@ Before FIX, state:
 - how to verify and revert
 
 ### DECOMPOSE
+
 Use when scope/risk is high but structure is clear enough to split safely.
 
 Split by:
@@ -320,6 +356,7 @@ Split by:
 Each step returns to GATE.
 
 ### CONFLICT
+
 Use when:
 - multiple valid designs exist
 - owner, source of truth, connection, or contract is unclear
@@ -376,7 +413,9 @@ Check:
 
 A test that was never red is weak evidence.
 
-Verification is pass/fail. If fail, preserve evidence, revert unsafe partial state, and retry only with a new observed reason that makes retry safer; otherwise CONFLICT.
+Verification is pass/fail.
+
+If fail, preserve evidence, revert unsafe partial state, and retry only with a new observed reason that makes retry safer; otherwise CONFLICT.
 
 ## 12. Learn
 
@@ -396,9 +435,14 @@ Double-loop:
 
 ## 13. Output
 
+Category layers:
+- Finding/Razor categories: PASS, ACTION, CONFLICT.
+- Final task outcomes: HANDLED, CONFLICT.
+
 Every task ends as HANDLED or CONFLICT.
 
 ### HANDLED
+
 Use for verified fixes, completed decomposed steps, or low-risk logged issues.
 
 Each item includes:
@@ -411,6 +455,7 @@ Each item includes:
 - residual risk, if any
 
 ### CONFLICTS
+
 Use for unresolved tradeoff, unclear owner/SoT/contract, non-reversible change, systemic rule issue, unresolved unknown, or inadequate confidence.
 
 Each item includes:
@@ -425,13 +470,18 @@ Each item includes:
 
 ## 14. Razor - Read-Only Diagnostic
 
-Razor detects, classifies, and recommends. It never changes files.
+Razor is a quick heuristic pass, not a replacement for MAP or the full Thinker lenses.
 
-Tests:
-- OM: remove -> what breaks?
-- KT: universalize -> should this pattern exist everywhere?
-- PO: falsify -> what proves this wrong?
-- CH: invert -> what guarantees failure?
+It detects, classifies, and recommends.
+It never changes files.
+
+Quick lens checks:
+- CH: invert -> what bad outcome, incentive, misjudgment, or weak safety margin appears?
+- OM: simplify -> what unnecessary structure or false simplicity appears?
+- FE: reality -> what claim lacks current evidence, clear mechanism, disclosed limits, or direct proof?
+- PO: refute -> what claim can pass while wrong, contradicts another rule, or lacks a disconfirming check?
+- KT: universalize -> what pattern should not become a general rule?
+- SH: trade off -> what middle hides unresolved friction or requires explicit decision?
 
 Temporal checks:
 - backward: what depends on this?
@@ -443,22 +493,24 @@ Output:
 - ACTION
 - CONFLICT
 
-Severity:
-1. CH: dangerous failure
-2. KT: harmful pattern
-3. PO: unproven or stale
-4. OM: unnecessary
+Severity guide:
+1. CH: dangerous avoidable failure or weak safety margin
+2. PO: claim can pass while wrong or cannot be refuted
+3. FE: reality/evidence integrity gap
+4. KT: harmful general rule or unfair exception
+5. OM: unnecessary structure or false simplicity
+6. SH: unresolved tradeoff or invalid middle
 
 One-line:
-Keep what breaks when removed.
-Universalize what you keep.
-Falsify what you test.
-Invert what you ship.
-Date what you claim.
+Keep what is needed. Remove what is unnecessary.
+Verify what is claimed. Refute what can pass while wrong.
+Invert what can fail. Universalize only safe patterns.
+Make unresolved tradeoffs explicit.
 
 ## 15. Artifact Guide / External Questions
 
 Use after Universal Questions and Structural Checks.
+
 Patterns are detection aids, not exhaustive rules.
 
 External reference:
@@ -501,7 +553,7 @@ SIFT is read-only unless explicitly told to fix.
 
 ## 18. Tag Legend
 
-Thinkers:
+Thinker lens tags:
 - CH: Charlie Munger
 - OM: Occam's Razor
 - FE: Richard Feynman
@@ -509,7 +561,7 @@ Thinkers:
 - KT: Immanuel Kant
 - SH: Saffi; includes Follett-style integration vs compromise check
 
-Domains:
+Domain tags:
 - SEC: Security
 - CPX: Complexity
 - REL: Reliability
@@ -518,22 +570,24 @@ Domains:
 - CFT: Craft / tests
 
 Notation:
-- CH1 = thinker question
-- SEC2 = domain question
-- CH1->SEC2 = thinker surfaced a domain issue
+- CH = finding surfaced through Charlie Munger lens
+- SEC = finding surfaced through Security domain
+- CH->SEC = CH lens surfaced a security-domain issue
+- FE+PO = multiple lenses apply to the same finding
 
 Rules:
-- use only current QIDs
-- QIDs indicate reasoning origin, not severity
-- multiple QIDs can apply to one finding
+- tags indicate reasoning origin, not severity
+- use tags only when they improve traceability
+- multiple tags can apply to one finding
+- do not invent numbered QIDs unless the referenced question bank defines them
 
 ## 19. Invariants
 
 - Never act without DONE.
 - Never act before stabilization.
 - Never decide on raw findings.
-- For Skeptic self-work, always read the actual current `skeptic.md` before applying it; do not use memory, summaries, or generated variants as substitutes.
-- Do not claim RunSkeptic/Skeptic compliance if the actual file was unavailable or not applied exactly.
+- For Skeptic self-work, read the authoritative current `skeptic.md` when reviewing the repo version. When explicitly reviewing a candidate file, read that candidate file and state that it is not yet authoritative. Do not use memory, summaries, or generated variants as substitutes for the source under review.
+- Do not claim RunSkeptic/Skeptic compliance if the source under review was unavailable or not applied exactly.
 - Never skip a Thinker; mark NOT_APPLICABLE when it does not fit.
 - Never treat no findings as proof of safety.
 - Never treat clean top-down scan as proof of safety.
