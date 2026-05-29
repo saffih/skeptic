@@ -20,7 +20,7 @@ Aliases:
 When invoked:
 1. Read the actual current `skeptic.md`, or an explicitly supplied candidate Skeptic file, before analysis.
 2. Do not use memory, summaries, previous variants, or generated replacements as substitutes.
-3. Treat `skeptic.md` as the runtime source of truth.
+3. Treat the source under review as the runtime source of truth.
 4. Read companion files only when this file says they apply.
 5. Apply the current recipe exactly and in order.
 6. Consider every Thinker required by this file.
@@ -121,32 +121,35 @@ For every meaningful entity: file, module, function, config, doc, test, system, 
 
 Use full name + abbreviation first; then abbreviation.
 
-Each thinker is a lens, not a checklist. Inspect through the lens. Report only material findings that affect PASS, ACTION, or CONFLICT.
+Each thinker is a lens, not a checklist. Inspect through the lens. Report only material findings that affect PASS, ACTION, or CONFLICT. Use aspect tags for traceability, for example `CH:IV` or `OM:FS`.
 
 ### Charlie Munger (CH) - Inversion, Incentives, Misjudgment, Safety Margin
 
 Find avoidable stupidity before approving success.
 
 Look for:
-- worst material bad outcome and whether evidence, limits, responsibility, or reversal path block it
-- incentives that reward noise, shortcuts, fake certainty, gaming, shallow compliance, or skipped verification
-- second-order damage: downstream harm, hidden cost, brittleness, drift, or confusion
-- misjudgment: confidence without evidence, coherent stories without verification, one-lens thinking, assumptions as facts
-- competence gaps: deciding without enough evidence or domain understanding
-- weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
+- `CH:IV` inversion: worst material bad outcome and whether evidence, limits, responsibility, or reversal path block it
+- `CH:IN` incentives that reward noise, shortcuts, fake certainty, gaming, shallow compliance, or skipped verification
+- `CH:SO` second-order damage: downstream harm, hidden cost, brittleness, drift, or confusion
+- `CH:MJ` misjudgment: confidence without evidence, coherent stories without verification, one-lens thinking, assumptions as facts
+- `CH:CP` competence gaps: deciding without enough evidence or domain understanding
+- `CH:SM` weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
+- `CH:CR` constraint risk: effort targets a non-bottleneck while the real system constraint, queue, or blocker remains unchanged
+- `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
 
-Report when CH exposes a material failure path, bad incentive, false certainty, competence gap, or missing safety margin.
+Report when CH exposes a material failure path, bad incentive, false certainty, competence gap, missing safety margin, wrong constraint, or unsupported scale-up assumption.
 
 ### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
 
 Find unnecessary structure without removing what proves, protects, assigns responsibility for, or makes the required outcome reversible.
 
 Look for:
-- unnecessary assumptions, steps, abstractions, options, or moving parts with no verified current need
-- false simplicity: simplification that proves less, protects less, or breaks the required outcome
-- speculative structure or abstraction before repeated concrete need
-- oversized design: more structure than outcome, evidence, safety, responsibility, or reversibility requires
-- avoidable complexity from misplaced boundaries, mixed concerns, or missing small guards
+- `OM:UE` unnecessary entities: assumptions, steps, abstractions, options, or moving parts with no verified current need
+- `OM:FS` false simplicity: simplification that proves less, protects less, or breaks the required outcome
+- `OM:SS` speculative structure or abstraction before repeated concrete need
+- `OM:OD` oversized design: more structure than outcome, evidence, safety, responsibility, or reversibility requires
+- `OM:AC` avoidable complexity from misplaced boundaries, mixed concerns, or missing small guards
+- `OM:CF` Chesterton fence: removing or replacing structure before understanding what constraint it protected
 
 Report when something can be removed, merged, moved, simplified, or guarded without losing required outcome, evidence, responsibility, reversibility, or safety.
 
@@ -155,26 +158,27 @@ Report when something can be removed, merged, moved, simplified, or guarded with
 Find where explanation outruns reality.
 
 Look for:
-- stale claims: not true now, undated, or not recently verified
-- mechanism gap: says what happens but not clearly how or why it works
-- missing why: a non-obvious choice lacks a clear reason
-- hidden limits: assumptions, failed cases, edge cases, or contradictory evidence are omitted
-- weak evidence: proof does not directly exercise or support the claimed outcome
-- proof gap: confidence, authority, elegance, or coherent story substitutes for observed evidence
+- `FE:SC` stale claims: not true now, undated, or not recently verified
+- `FE:ME` mechanism gap: says what happens but not clearly how or why it works
+- `FE:WY` missing why: a non-obvious choice lacks a clear reason
+- `FE:HL` hidden limits: assumptions, failed cases, edge cases, or contradictory evidence are omitted
+- `FE:WE` weak evidence: proof does not directly exercise or support the claimed outcome
+- `FE:PG` proof gap: confidence, authority, elegance, or coherent story substitutes for observed evidence
+- `FE:PV` purpose/value gap: the artifact is coherent or well-structured, but the useful outcome, user, owner, or value is unclear
 
-Report when a claim, choice, or conclusion cannot be trusted without clearer mechanism, current evidence, disclosed limits, or direct proof.
+Report when a claim, choice, or conclusion cannot be trusted without clearer mechanism, current evidence, disclosed limits, direct proof, or clear value.
 
 ### Karl Popper (PO) - Falsifiability, Refutation, Contradiction
 
 Find claims that can pass while wrong.
 
 Look for:
-- unfalsifiable claim: no observation, example, check, or condition could show it wrong
-- confirmation-only proof: supporting evidence exists, but no serious disconfirming case was tried
-- contradiction: rules, assumptions, examples, outputs, or acceptance criteria conflict
-- weak refutation path: wrong result is detected too late, only manually, or not at all
-- silent pass: artifact can appear valid while violating the claim
-- overclaim: current checks are treated as proof, not limited corroboration
+- `PO:UF` unfalsifiable claim: no observation, example, check, or condition could show it wrong
+- `PO:CO` confirmation-only proof: supporting evidence exists, but no serious disconfirming case was tried
+- `PO:CN` contradiction: rules, assumptions, examples, outputs, or acceptance criteria conflict
+- `PO:WR` weak refutation path: wrong result is detected too late, only manually, or not at all
+- `PO:SI` silent invalidation: artifact can appear valid while violating the claim
+- `PO:OC` overclaim: current checks are treated as proof, not limited corroboration
 
 Report when a claim, rule, decision, or result cannot be refuted, contradicts another requirement, or can pass while wrong.
 
@@ -183,11 +187,11 @@ Report when a claim, rule, decision, or result cannot be refuted, contradicts an
 Find patterns that should not become general rules.
 
 Look for:
-- harmful universalization: bad if used everywhere or by every similar actor
-- special pleading: one case gets an exception similar cases should not get
-- inconsistent rule: contradicts itself when applied broadly or symmetrically
-- unfair asymmetry: similar actors, cases, users, files, or decisions are treated differently without justification
-- hidden burden: works only by shifting ambiguity, cost, or cleanup to someone else
+- `KT:HU` harmful universalization: bad if used everywhere or by every similar actor
+- `KT:EX` special pleading: one case gets an exception similar cases should not get
+- `KT:IR` inconsistent rule: contradicts itself when applied broadly or symmetrically
+- `KT:UA` unfair asymmetry: similar actors, cases, users, files, or decisions are treated differently without justification
+- `KT:HB` hidden burden: works only by shifting ambiguity, cost, or cleanup to someone else
 
 Report when the pattern should be removed, narrowed, bounded, or made into an explicit rule or exception.
 
@@ -196,15 +200,16 @@ Report when the pattern should be removed, narrowed, bounded, or made into an ex
 Find invalid middles and unresolved tradeoffs.
 
 Look for:
-- real opposing forces: what each side protects and what each side costs
-- fake middle: compromise keeps both costs without resolving the tension
-- forced balance: the artifact tries to satisfy both sides when one side should dominate
-- missing exception: one side should be default, but the other side needs a narrow protected exception
-- hidden conflict: product, architecture, safety, ownership, or priority decision is required
+- `SH:OF` opposing forces: what each side protects and what each side costs
+- `SH:FM` fake middle: compromise keeps both costs without resolving the tension
+- `SH:FB` forced balance: the artifact tries to satisfy both sides when one side should dominate
+- `SH:NE` narrow exception needed: one side should be default, but the other side needs a narrow protected exception
+- `SH:HC` hidden conflict: product, architecture, safety, ownership, or priority decision is required
+- `SH:WL` wrong leverage: the chosen side, middle, or exception does not address the constraint limiting the outcome
 
 If no real opposing forces or invalid middle are present, SH = NOT_APPLICABLE.
 
-Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, or requires an explicit tradeoff decision.
+Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, requires an explicit tradeoff decision, or misses the real leverage point.
 
 
 ## 4. Structural Checks
@@ -553,6 +558,8 @@ SIFT is read-only unless explicitly told to fix.
 
 ## 18. Tag Legend
 
+Tags show reasoning origin, not severity.
+
 Thinker lens tags:
 - CH: Charlie Munger
 - OM: Occam's Razor
@@ -560,6 +567,51 @@ Thinker lens tags:
 - PO: Karl Popper
 - KT: Immanuel Kant
 - SH: Saffi; includes Follett-style integration vs compromise check
+
+Aspect tags:
+- CH:IV inversion / worst material bad outcome
+- CH:IN incentives
+- CH:SO second-order damage
+- CH:MJ misjudgment
+- CH:CP competence gap
+- CH:SM safety margin
+- CH:CR constraint risk
+- CH:SR scale-up risk
+
+- OM:UE unnecessary entity
+- OM:FS false simplicity
+- OM:SS speculative structure
+- OM:OD oversized design
+- OM:AC avoidable complexity
+- OM:CF Chesterton fence / unknown protected constraint
+
+- FE:SC stale claim
+- FE:ME mechanism gap
+- FE:WY missing why
+- FE:HL hidden limits
+- FE:WE weak evidence
+- FE:PG proof gap
+- FE:PV purpose/value gap
+
+- PO:UF unfalsifiable claim
+- PO:CO confirmation-only proof
+- PO:CN contradiction
+- PO:WR weak refutation path
+- PO:SI silent invalidation / silent pass
+- PO:OC overclaim
+
+- KT:HU harmful universalization
+- KT:EX special pleading / unfair exception
+- KT:IR inconsistent rule
+- KT:UA unfair asymmetry
+- KT:HB hidden burden
+
+- SH:OF opposing forces
+- SH:FM fake middle
+- SH:FB forced balance
+- SH:NE narrow exception needed
+- SH:HC hidden conflict
+- SH:WL wrong leverage
 
 Domain tags:
 - SEC: Security
@@ -571,14 +623,16 @@ Domain tags:
 
 Notation:
 - CH = finding surfaced through Charlie Munger lens
+- CH:IV = finding surfaced through CH inversion aspect
 - SEC = finding surfaced through Security domain
-- CH->SEC = CH lens surfaced a security-domain issue
-- FE+PO = multiple lenses apply to the same finding
+- CH:IV->SEC = CH inversion surfaced a security-domain issue
+- FE:WE+PO:SI = multiple aspects apply to the same finding
 
 Rules:
-- tags indicate reasoning origin, not severity
-- use tags only when they improve traceability
+- use the smallest tag set that explains the finding; prefer 1-3 tags
+- use aspect tags when they improve traceability
 - multiple tags can apply to one finding
+- aspect tags do not replace evidence levels, severity, or output categories
 - do not invent numbered QIDs unless the referenced question bank defines them
 
 ## 19. Invariants

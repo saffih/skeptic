@@ -1,12 +1,41 @@
-# CID Domain Questions — Target-Relevant Questions
+# CID Domain Questions
 
-Loaded at APPLY when relevant to the target. Not needed for idle/monitoring cycles.
-Each finding → ACTION, CONFLICT, or EXEMPLAR.
+Target-relevant questions loaded at APPLY when relevant to the target.
 
-Domains: SEC for input/credentials; CPX for code/architecture; REL for broad reviews; DAT for I/O, DB, network; ARC for multi-module; CFT for tests.
-Apply relevant domains first. If relevance is unclear, sample likely domains; expand when findings indicate cross-domain impact or high risk.
+This file is a detection aid, not a second runtime contract.
+The core `skeptic.md` remains authoritative.
 
-Parallelize by domain group: SEC+DAT, CPX+ARC, REL+CFT.
+Use domain questions only when runtime detail is not enough, confidence is weak, findings cross domains, or risk justifies deeper probing.
+
+Each domain probe can surface:
+- PASS: no material issue found with sufficient evidence
+- ACTION: fix, safeguard, test, owner, or follow-up needed
+- CONFLICT: decision needed
+
+Positive patterns may be noted as observations, but they are not final output categories.
+
+Domains:
+- SEC: Security / input / credentials / permissions / exposure
+- CPX: Complexity / coupling / state / mental load
+- REL: Reliability / scale / operations / ownership
+- DAT: Data / I/O / persistence / consistency / timing
+- ARC: Architecture / interfaces / contracts / dependencies
+- CFT: Craft / tests / errors / mocks
+
+Apply likely relevant domains first.
+If relevance is unclear, sample likely domains.
+Expand when evidence, weak confidence, cross-domain findings, or high risk require it.
+
+Do not apply all domains by default.
+
+## Parallelization
+
+For broad scope, parallelize by domain group:
+- SEC+DAT: Security + Data
+- CPX+ARC: Complexity + Architecture
+- REL+CFT: Reliability + Craft
+
+Use parallelization to reduce repeated scanning, not to force every domain onto every artifact.
 
 ---
 
@@ -26,19 +55,19 @@ SEC8. Secrets suppression that can be circumvented?
 ## COMPLEXITY (CPX)
 
 CPX1. Independent concerns tangled in one function?
-CPX2. Code that should be data (lookup table, config, enum)?
+CPX2. Code that should be data, such as lookup table, config, or enum?
 CPX3. State implicit and scattered vs explicit and managed?
-CPX4. Simple (few independent parts), or just familiar?
+CPX4. Simple, with few independent parts, or just familiar?
 CPX5. How many things must you hold in your head to understand this?
 
 ---
 
 ## RELIABILITY (REL)
 
-REL1. No monitoring — how would you know this is silently broken?
+REL1. No monitoring: how would you know this is silently broken?
 REL2. What fails at 10x scale?
 REL3. What external dependency could break this without any code change?
-REL4. Bus factor — who knows this, and what if they leave?
+REL4. Bus factor: who knows this, and what if they leave?
 REL5. Single source of truth for each important datum?
 REL6. Who owns this part or datum, and who is allowed to change it?
 REL7. Is ownership/current responsibility clear enough to operate safely?
@@ -47,10 +76,10 @@ REL7. Is ownership/current responsibility clear enough to operate safely?
 
 ## DATA (DAT)
 
-DAT1. Every external call (subprocess, network, DB) timed out?
+DAT1. Every external call, such as subprocess, network, or DB, timed out?
 DAT2. Race condition? Locks minimal and correct?
 DAT3. What happens when disk is full or filesystem is read-only?
-DAT4. Encoding explicit (UTF-8) or assumed?
+DAT4. Encoding explicit, such as UTF-8, or assumed?
 DAT5. Where is this data authored?
 DAT6. How often is it updated relative to reality?
 DAT7. Who consumes it, and is consistency preserved over time?
@@ -71,60 +100,59 @@ ARC6. Connection missing, accidental, or misplaced?
 ## CRAFT (CFT)
 
 CFT1. Test names describe behavior, not implementation?
-CFT2. Error message tells you HOW to fix it?
+CFT2. Error message tells you how to fix it?
 CFT3. Test mocks so much it only tests the mock?
-
----
-
-## Domain Group Parallelization
-
-For broad scope (>20 files), parallelize by domain group:
-
-- **SEC+DAT**: Security + Data (8 + 4 = 12 questions)
-- **CPX+ARC**: Complexity + Architecture (5 + 3 = 8 questions)
-- **REL+CFT**: Reliability + Craft (5 + 3 = 8 questions)
-
-This reduces total questions per file while ensuring comprehensive coverage.
 
 ---
 
 ## When to Apply
 
-**Apply all domains when**:
-- Scanning code/artifacts
-- Unsure which domain is relevant
-- Missed issues cost more than noise
+Apply domain questions selectively.
 
-**Skip domain questions when**:
-- Idle cycles
-- Monitoring cycles
-- Task-only cycles
-- Non-code artifact review (use Thinkers only)
+Start with likely relevant domains.
+
+Expand only when:
+- evidence crosses domains
+- confidence remains weak
+- risk is high
+- a finding exposes security, data, architecture, reliability, complexity, or craft uncertainty
+
+Do not apply all domains by default.
+Do not treat this file as a second runtime contract.
+The core `skeptic.md` remains authoritative.
+
+Skip domain questions when:
+- idle cycles
+- monitoring cycles
+- task-only cycles
+- non-code artifact review where Thinkers and Structural Checks are sufficient
 
 ---
 
 ## Question Count by Domain
 
-- **SEC**: 8 questions
-- **CPX**: 5 questions
-- **REL**: 7 questions
-- **DAT**: 7 questions
-- **ARC**: 6 questions
-- **CFT**: 3 questions
+- SEC: 8 questions
+- CPX: 5 questions
+- REL: 7 questions
+- DAT: 7 questions
+- ARC: 6 questions
+- CFT: 3 questions
 
-**Total**: target-relevant question set; count varies by selected domains
+Total: target-relevant question set; count varies by selected domains.
 
 ---
 
 ## Finding Classification
 
-Each domain question can result in:
-- **[ACTION]**: Fix needed
-- **[CONFLICT]**: Decision needed (two reasonable approaches)
-- **[EXEMPLAR]**: Pattern worth replicating (OPTIMAL or SATISFICING)
+Domain probes can surface:
+- PASS: no material issue found with sufficient evidence
+- ACTION: fix, safeguard, test, owner, or follow-up needed
+- CONFLICT: decision needed
+
+Positive patterns may be noted as observations, but they are not final output categories.
 
 ---
 
-**Document Owner**: Skeptic Methodology  
-**Review Date**: Quarterly  
-**Status**: ACTIVE
+Document Owner: Skeptic Methodology
+Review Date: Quarterly
+Status: ACTIVE
