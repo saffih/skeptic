@@ -248,6 +248,31 @@ Workers do bounded work.
 
 Workers do not decide final readiness unless explicitly authorized.
 
+### Worker scope limits
+
+Detailed inspection must be delegated to narrowly scoped workers.
+
+Each worker must have:
+- one purpose
+- one bounded input set
+- one output receipt
+- explicit stop conditions
+
+Worker input scope:
+- one file or one narrow file family
+- no more than about 120 lines of raw content unless explicitly justified
+- no broad grep or search unless the worker is specifically a search worker
+- split into more workers if more scope is needed
+
+### Receipt size cap
+
+Default worker receipts must stay under 120 words.
+
+If a longer receipt is needed:
+- worker must state why
+- lead must request an exact excerpt or dispatch a second worker pass
+- worker must not paste full files, logs, or diffs
+
 ## Failure doctrine
 
 A failed run is not trusted until explained.
@@ -291,6 +316,87 @@ If context becomes overloaded:
 3. list blockers
 4. produce a handoff
 5. do not continue by guessing
+
+### Lead context hard limits
+
+The lead agent is orchestration-only.
+
+The lead does not perform broad inspection, implementation, validation, or raw evidence collection when workers or subagents are available.
+
+The lead may:
+- define scope
+- dispatch workers
+- compare compact receipts
+- decide whether evidence is sufficient
+- produce the final prompt, decision, or handoff
+
+The lead must not:
+- inspect full files
+- inspect full diffs
+- inspect full logs
+- consume broad grep output
+- consume large command output
+- perform multi-file evidence synthesis directly
+- implement and review the same broad task in one pass
+
+The lead consumes only compact receipts, exact path/line references, short excerpts, command summaries, hashes, and status summaries.
+
+If the lead needs raw context beyond those inputs, it must stop.
+
+### Worker unavailability rule
+
+If true workers or subagents are required for a broad task but unavailable, the lead must stop instead of doing broad single-agent work.
+
+Do not substitute direct inspection for worker delegation when scope is broad.
+
+### Preventive split rule
+
+Split before overload, not after overload.
+
+Broad work must be separated into slices:
+
+1. discovery / design
+2. implementation
+3. validation / review
+4. merge / release, if relevant
+
+A prompt must not combine discovery, implementation, validation, and merge/release unless the task is trivial and bounded.
+
+Implementation prompts should consume a compact approved design receipt instead of rediscovering the entire problem.
+
+If no compact design receipt exists, run a discovery/design slice first.
+
+### No hidden source of truth
+
+Prior chat is not evidence.
+Memory is not evidence.
+Pasted receipts are not evidence.
+Generated summaries are not evidence.
+Unverified artifacts are not evidence.
+
+Current repo files and verified command output are the source of truth.
+
+### CONTEXT_PROTECTION_FAILURE
+
+Trigger `CONTEXT_PROTECTION_FAILURE` when:
+- the lead needs broad raw context to proceed
+- worker receipts are too large to safely synthesize
+- task scope exceeds the prompt's decomposition
+- true workers or subagents are unavailable for a broad task
+- the lead is being forced to act as implementer and verifier for the same broad task
+- context headroom becomes a controlling risk
+
+Required output when triggered:
+
+```
+CONTEXT_PROTECTION_FAILURE:
+- where overload risk appeared
+- verified evidence so far
+- blockers
+- next smaller slice
+```
+
+Do not continue after `CONTEXT_PROTECTION_FAILURE` without slicing the task.
 
 ## Mutation gate
 
