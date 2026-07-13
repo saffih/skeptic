@@ -1,0 +1,666 @@
+# Skeptic - Detect, Reason, Fix, Verify
+
+AI-executable framework for safe system improvement.
+
+Rules:
+- Correct action over fast action.
+- If detection confidence is insufficient, do not act.
+- Add process only when it prevents a known failure mode.
+
+## Invocation Contract
+
+`RunSkeptic` is the formal invocation string for this framework.
+
+Aliases:
+- `beskeptic`
+- `apply Skeptic`
+- `Skeptic review`
+- `run skeptic.md`
+
+When invoked:
+1. Read the actual current `skeptic.md`, or an explicitly supplied candidate Skeptic file, before analysis.
+2. Do not use memory, summaries, previous variants, or generated replacements as substitutes.
+3. Treat the source under review as the runtime source of truth.
+4. Read companion files only when this file says they apply.
+5. Apply the current recipe exactly and in order.
+6. Consider every Thinker required by this file.
+7. Show which major Skeptic steps were run.
+8. Show evidence for material findings.
+9. Use the exact output categories from this file.
+10. Do not modify files unless DECIDE says FIX and edits are explicitly allowed.
+11. Verify the recommendation against the framework.
+12. State unresolved conflicts, unknowns, skipped areas, and missing evidence.
+13. If the source under review is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
+
+### RunSkeptic Receipt
+
+Every RunSkeptic report must include a compact receipt:
+- Source read: path/ref/SHA or explicit unavailable state
+- Companion files read, if any
+- Permission mode: read-only / patch-local / fix-if-valid
+- DONE statement
+- Major steps run
+- Thinkers considered
+- Evidence used
+- Decision path
+- Verification performed
+- Unresolved conflicts / unknowns
+- Final output category
+
+Do not claim RunSkeptic compliance without this receipt.
+
+Flow: GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
+
+## 0. Gate
+
+Proceed when:
+- DONE is testable
+- scope is tractable
+- wrong-answer cost is acceptable
+- intent, assumptions, and chosen approach are explicit enough to test
+
+If not:
+- undefined DONE -> STOP
+- too large but clear -> DECOMPOSE
+- multiple valid interpretations -> list them; proceed only if one is evidence-backed, low-risk, and testable
+- unresolved or unsafe ambiguity -> CONFLICT
+
+## 0.5. Fundamental Scan
+
+Before broad detection, check what can invalidate later work:
+- system purpose
+- architecture shape
+- boundaries
+- ownership
+- source of truth
+- main flows
+- interfaces / coupling
+- high-risk, recent, or suspected areas
+
+Rules:
+- detect only; do not fix
+- clean scan is not proof of safety
+- structural issues outrank local fixes
+- downstream findings are PROVISIONAL if fundamentals may invalidate them
+- if no structural issue appears, continue to MAP
+
+## 1. Map - Detect Only
+
+Record findings before deciding.
+
+Start from Fundamental Scan; expand as needed.
+
+Apply:
+1. Universal Questions
+2. All Thinkers: CH, OM, FE, PO, KT, SH
+3. Structural Checks
+4. Relevant Domain Checks selectively
+5. Artifact patterns / external question banks when useful
+
+Output:
+- findings
+- unknowns
+- assumptions, including intent and approach assumptions; challenge them before DECIDE
+- evidence strength
+- skipped/uncertain areas
+
+No fixes. No final decisions.
+
+## 2. Universal Questions
+
+For every meaningful entity: file, module, function, config, doc, test, system, process, requirement, decision.
+
+- What is this?
+- What is it for?
+- What depends on it, and what does it depend on?
+- What must always be true?
+- What breaks it?
+- How do we know it works?
+
+## 3. Thinkers
+
+Use full name + abbreviation first; then abbreviation.
+
+Each thinker is a lens, not a checklist. Inspect through the lens. Report only material findings that affect PASS, ACTION, or CONFLICT. Use aspect tags for traceability, for example `CH:IV` or `OM:FS`.
+
+### Charlie Munger (CH) - Inversion, Incentives, Misjudgment, Safety Margin
+
+Find avoidable stupidity before approving success.
+
+Look for:
+- `CH:IV` inversion: worst material bad outcome and whether evidence, limits, responsibility, or reversal path block it
+- `CH:IN` incentives that reward noise, shortcuts, fake certainty, gaming, shallow compliance, or skipped verification
+- `CH:SO` second-order damage: downstream harm, hidden cost, brittleness, drift, or confusion
+- `CH:MJ` misjudgment: confidence without evidence, coherent stories without verification, one-lens thinking, assumptions as facts
+- `CH:CP` competence gaps: deciding without enough evidence or domain understanding
+- `CH:SM` weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
+- `CH:CR` constraint risk: effort targets a non-bottleneck while the real system constraint, queue, or blocker remains unchanged
+- `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
+
+Report when CH exposes a material failure path, bad incentive, false certainty, competence gap, missing safety margin, wrong constraint, or unsupported scale-up assumption.
+
+### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
+
+Find unnecessary structure without removing what proves, protects, assigns responsibility for, or makes the required outcome reversible.
+
+Look for:
+- `OM:UE` unnecessary entities: assumptions, steps, abstractions, options, or moving parts with no verified current need
+- `OM:FS` false simplicity: simplification that proves less, protects less, or breaks the required outcome
+- `OM:SS` speculative structure or abstraction before repeated concrete need
+- `OM:OD` oversized design: more structure than outcome, evidence, safety, responsibility, or reversibility requires
+- `OM:AC` avoidable complexity from misplaced boundaries, mixed concerns, or missing small guards
+- `OM:CF` Chesterton fence: removing or replacing structure before understanding what constraint it protected
+
+Report when something can be removed, merged, moved, simplified, or guarded without losing required outcome, evidence, responsibility, reversibility, or safety.
+
+### Richard Feynman (FE) - Reality, Mechanism, Evidence Integrity
+
+Find where explanation outruns reality.
+
+Look for:
+- `FE:SC` stale claims: not true now, undated, or not recently verified
+- `FE:ME` mechanism gap: says what happens but not clearly how or why it works
+- `FE:WY` missing why: a non-obvious choice lacks a clear reason
+- `FE:HL` hidden limits: assumptions, failed cases, edge cases, or contradictory evidence are omitted
+- `FE:WE` weak evidence: proof does not directly exercise or support the claimed outcome
+- `FE:PG` proof gap: confidence, authority, elegance, or coherent story substitutes for observed evidence
+- `FE:PV` purpose/value gap: the artifact is coherent or well-structured, but the useful outcome, user, owner, or value is unclear
+
+Report when a claim, choice, or conclusion cannot be trusted without clearer mechanism, current evidence, disclosed limits, direct proof, or clear value.
+
+### Karl Popper (PO) - Falsifiability, Refutation, Contradiction
+
+Find claims that can pass while wrong.
+
+Look for:
+- `PO:UF` unfalsifiable claim: no observation, example, check, or condition could show it wrong
+- `PO:CO` confirmation-only proof: supporting evidence exists, but no serious disconfirming case was tried
+- `PO:CN` contradiction: rules, assumptions, examples, outputs, or acceptance criteria conflict
+- `PO:WR` weak refutation path: wrong result is detected too late, only manually, or not at all
+- `PO:SI` silent invalidation: artifact can appear valid while violating the claim
+- `PO:OC` overclaim: current checks are treated as proof, not limited corroboration
+
+Report when a claim, rule, decision, or result cannot be refuted, contradicts another requirement, or can pass while wrong.
+
+### Immanuel Kant (KT) - Universalizability, Consistency, Fair Exceptions
+
+Find patterns that should not become general rules.
+
+Look for:
+- `KT:HU` harmful universalization: bad if used everywhere or by every similar actor
+- `KT:EX` special pleading: one case gets an exception similar cases should not get
+- `KT:IR` inconsistent rule: contradicts itself when applied broadly or symmetrically
+- `KT:UA` unfair asymmetry: similar actors, cases, users, files, or decisions are treated differently without justification
+- `KT:HB` hidden burden: works only by shifting ambiguity, cost, or cleanup to someone else
+
+Report when the pattern should be removed, narrowed, bounded, or made into an explicit rule or exception.
+
+### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
+
+Find invalid middles and unresolved tradeoffs.
+
+Look for:
+- `SH:OF` opposing forces: what each side protects and what each side costs
+- `SH:FM` fake middle: compromise keeps both costs without resolving the tension
+- `SH:FB` forced balance: the artifact tries to satisfy both sides when one side should dominate
+- `SH:NE` narrow exception needed: one side should be default, but the other side needs a narrow protected exception
+- `SH:HC` hidden conflict: product, architecture, safety, ownership, or priority decision is required
+- `SH:WL` wrong leverage: the chosen side, middle, or exception does not address the constraint limiting the outcome
+
+If no real opposing forces or invalid middle are present, SH = NOT_APPLICABLE.
+
+Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, requires an explicit tradeoff decision, or misses the real leverage point.
+
+
+## 4. Structural Checks
+
+Check meaningful entities for:
+- role and ownership
+- boundaries and concern split
+- interfaces, required links, forbidden links, implicit links, contracts
+- necessary vs accidental coupling
+- source of truth and competing copies
+- data/control flow, update timing, consumers
+- reversibility, retry safety, and failure signal
+
+## 5. Domain Checks
+
+Apply selectively:
+- SEC: security, inputs, auth, secrets, permissions, exposure
+- CPX: complexity, coupling, state, mental load
+- REL: reliability, monitoring, scale, ownership, operations
+- DAT: data, I/O, persistence, consistency, timing
+- ARC: architecture, interfaces, contracts, dependencies
+- CFT: tests, errors, mocks, craft
+
+Rules:
+- do not apply all domains blindly
+- sample likely domains when unsure
+- expand when findings cross domains or risk is high
+- controlled redundancy is allowed for high risk
+- use `skeptic-questions.md` for expanded SEC/CPX/REL/DAT/ARC/CFT questions when runtime detail is not enough
+
+## 6. Detection Confidence
+
+Before STABILIZE/DECIDE, check:
+- Fundamental Scan completed
+- Universal Questions applied
+- All Thinkers considered: CH, OM, FE, PO, KT, SH
+- SH either produced a finding or returned NOT_APPLICABLE
+- Structural Checks applied
+- Domain Checks applied selectively
+- artifact patterns applied when useful
+- important conclusions have evidence
+- unknowns and skipped areas are listed
+
+Track unknowns:
+- owner, source of truth, contract, dependency
+- behavior, risk boundary, revert path, test path
+- acceptance criteria
+
+Blind spots:
+- unresolved ownership / SoT / contract / interface
+- implicit or required connection unclear
+- unverified behavior or weak tests
+- missing failure signal
+- suspiciously clean result
+- local area skipped because top-down scan looked clean
+- downstream work depends on unresolved fundamentals
+
+If confidence is weak:
+- expand MAP only where evidence requires it
+- sample adjacent domains
+- run CH/PO adversarial pass if clean result is suspicious
+- resolve, decompose, or escalate high-risk UNKNOWNs
+- CONFLICT if confidence cannot reasonably improve
+
+Do not loop indefinitely.
+
+## 7. Stabilize
+
+Do not decide on raw findings.
+
+Merge findings sharing:
+- data, boundary, responsibility, interface
+- source of truth, failure mode, root cause
+
+Classify root cause:
+- local bug
+- missing test
+- missing contract
+- unclear ownership
+- source-of-truth issue
+- accidental coupling
+- stale assumption
+- systemic rule issue
+- detection confidence issue
+
+Check:
+- overlapping, conflicting, or redundant fixes
+- one finding explaining another
+- unknowns blocking action
+- local/systemic risk
+- reversibility, blast radius, ownership clarity, confidence
+
+Output stabilized issues.
+
+Raw findings remain PROVISIONAL until stabilized.
+
+## 8. Evidence Levels
+
+Before DECIDE, classify every finding.
+
+- OBSERVED: directly seen in code, tests, config, docs, or runtime behavior.
+- REPRODUCED: confirmed with failing test, probe, command, or execution.
+- HISTORICAL: confirmed by issue, changelog, CVE, advisory, maintainer note, or release note.
+- INFERRED RISK: plausible from structure, boundary, exposure, missing tests, or weak evidence, but not reproduced.
+
+Rules:
+- Do not report INFERRED RISK as confirmed bug.
+- Security/parser/sanitizer INFERRED RISK becomes PROVISIONAL ACTION or CONFLICT.
+- FIX requires OBSERVED evidence and a verification path.
+- Confirmed vulnerability/history claim requires REPRODUCED or HISTORICAL evidence.
+- HANDLED must include evidence level.
+- CONFLICTS must include missing evidence.
+
+## 9. Decide
+
+Choose one path per stabilized issue.
+
+### FIX
+
+Use when:
+- root cause, structure, required connections, and source of truth are clear or irrelevant
+- unknowns are resolved or irrelevant
+- change is reversible, testable, retryable
+- risk is low/medium
+- confidence and verification path are adequate
+- fix justification is complete
+
+Before FIX, state:
+- what is wrong
+- why it is wrong
+- why this fix is correct
+- why this is the smallest change that solves the verified issue without broadening scope
+- what would prove it wrong
+- how to verify and revert
+
+### DECOMPOSE
+
+Use when scope/risk is high but structure is clear enough to split safely.
+
+Split by:
+- responsibility
+- interface
+- source of truth
+- data flow
+- testable slice
+- reversible step
+- unknown to resolve
+
+Each step returns to GATE.
+
+### CONFLICT
+
+Use when:
+- multiple valid designs exist
+- owner, source of truth, connection, or contract is unclear
+- product/architecture intent is required
+- change cannot be made reversible
+- decomposition does not remove ambiguity
+- confidence remains inadequate
+
+Do not decompose pure conflict to avoid escalation.
+
+### Promotion Check
+
+Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
+
+If yes, do not promote. Decide FIX, DECOMPOSE, or CONFLICT.
+
+## 10. Act
+
+Act only after DECIDE says FIX.
+
+Process:
+1. Preserve previous state.
+2. Apply the smallest reversible change.
+3. Verify immediately.
+4. Revert immediately if verification fails.
+5. Retry only if safer or better informed.
+6. Escalate if safe retry is impossible.
+7. Do not proceed to another task until the current change is verified or safely reverted.
+
+Rules:
+- no partial/unknown state
+- no hidden-state reliance
+- no implementation on unresolved conflict in the same area
+- no link removal without replacement or explicit coupling decision
+- no silent failure acceptance
+- no broad refactor when a smaller verified slice reduces risk
+- no speculative code for unverified future requirements
+- no premature abstraction unless a current concrete need requires it
+- follow existing style and conventions unless that style is the verified problem
+- no out-of-scope edits; log unrelated improvements separately
+
+## 11. Verify
+
+Use evidence, not confidence.
+
+Check:
+- red -> green for bug fixes when possible
+- 3-5 manual spot checks
+- end-to-end trace from entry to output
+- constraints: correctness, safety, performance, cost, context, maintainability
+- pre-mortem: 3 concrete failure modes addressed before action
+- regression: previously working behavior still works
+- known-bad/edge case when results are suspiciously clean
+
+A test that was never red is weak evidence.
+
+Verification is pass/fail.
+
+If fail, preserve evidence, revert unsafe partial state, and retry only with a new observed reason that makes retry safer; otherwise CONFLICT.
+
+## 12. Learn
+
+Trigger DOUBLE-LOOP when:
+- same fix category appears 3+ times
+- same conflict appears 2+ times
+- following a rule worsens outcomes
+- expectation feels arbitrary
+- local fixes repeatedly reveal same structure problem
+- repeated misses show detection coverage failure
+
+Single-loop:
+- implementation wrong -> fix and re-verify
+
+Double-loop:
+- rule, expectation, design, or detection method may be wrong -> CONFLICT unless obvious, reversible, and low risk
+
+## 13. Output
+
+Category layers:
+- Finding/Razor categories: PASS, ACTION, CONFLICT.
+- Final task outcomes: HANDLED, CONFLICT.
+
+Every task ends as HANDLED or CONFLICT.
+
+### HANDLED
+
+Use for verified fixes, completed decomposed steps, or low-risk logged issues.
+
+Each item includes:
+- issue
+- root cause
+- action
+- verification
+- detection confidence
+- evidence level
+- residual risk, if any
+
+### CONFLICTS
+
+Use for unresolved tradeoff, unclear owner/SoT/contract, non-reversible change, systemic rule issue, unresolved unknown, or inadequate confidence.
+
+Each item includes:
+- issue
+- thesis
+- antithesis
+- tradeoffs
+- blocking unknowns
+- missing evidence
+- safe recommendation, if any
+- decision needed
+
+## 14. Razor - Read-Only Diagnostic
+
+Razor is a quick heuristic pass, not a replacement for MAP or the full Thinker lenses.
+
+It detects, classifies, and recommends.
+It never changes files.
+
+Quick lens checks:
+- CH: invert -> what bad outcome, incentive, misjudgment, or weak safety margin appears?
+- OM: simplify -> what unnecessary structure or false simplicity appears?
+- FE: reality -> what claim lacks current evidence, clear mechanism, disclosed limits, or direct proof?
+- PO: refute -> what claim can pass while wrong, contradicts another rule, or lacks a disconfirming check?
+- KT: universalize -> what pattern should not become a general rule?
+- SH: trade off -> what middle hides unresolved friction or requires explicit decision?
+
+Temporal checks:
+- backward: what depends on this?
+- forward: what does this constrain?
+- staleness: when was it last verified?
+
+Output:
+- PASS
+- ACTION
+- CONFLICT
+
+Severity guide:
+1. CH: dangerous avoidable failure or weak safety margin
+2. PO: claim can pass while wrong or cannot be refuted
+3. FE: reality/evidence integrity gap
+4. KT: harmful general rule or unfair exception
+5. OM: unnecessary structure or false simplicity
+6. SH: unresolved tradeoff or invalid middle
+
+One-line:
+Keep what is needed. Remove what is unnecessary.
+Verify what is claimed. Refute what can pass while wrong.
+Invert what can fail. Universalize only safe patterns.
+Make unresolved tradeoffs explicit.
+
+## 15. Artifact Guide / External Questions
+
+Use after Universal Questions and Structural Checks.
+
+Patterns are detection aids, not exhaustive rules.
+
+External reference:
+- `skeptic-questions.md` contains expanded domain questions.
+- Runtime core is authoritative.
+- External questions expand detection only; no mandatory process.
+
+- Code: dead code, weak abstractions, bare except, magic values, string-built SQL/commands, no coverage, no timeout/retry/cleanup, silent wrong-input success.
+- Tests: behavior vs implementation, shared state, order/OS dependence, test never red, critical regression gap.
+- Config: dead fields, constants disguised as config, inconsistent names/types/units, stale paths/services, bad defaults, missing validation.
+- Agent instructions: no why, over-broad rule, contradiction, stale tool/model behavior, suppresses errors, skips verification, causes inaction.
+- Human docs: repeats code/help, missing prerequisites, untested steps, hidden assumptions, silent command failure.
+- Design decisions: over-generalization, lock-in, hidden assumptions, unvalidated design, implicit dependency, no observability, single point of failure.
+- Requirements: no user need, untestable, not revalidated, solution without problem, no acceptance criteria.
+
+## 16. Expert Review
+
+One reviewer, one domain, one report.
+
+Procedure:
+1. Scope domain and files.
+2. Apply Razor, structural checks, relevant domains, and Confidence Gate.
+3. Report ACTIONS and CONFLICTS.
+4. Do not modify files unless explicitly asked to fix.
+
+Read-only by default.
+
+## 17. SIFT Review
+
+SIFT coordinates expert review findings before action.
+
+Phases:
+1. SCAN: run relevant expert reviews.
+2. INTEGRATE: merge duplicates/root causes.
+3. FIRM CONFIDENCE: check unknowns and detection confidence.
+4. TREAT: fix only with explicit approval; safe-change rules apply.
+5. VERIFY: run full verification.
+
+SIFT is read-only unless explicitly told to fix.
+
+## 18. Tag Legend
+
+Tags show reasoning origin, not severity.
+
+Thinker lens tags:
+- CH: Charlie Munger
+- OM: Occam's Razor
+- FE: Richard Feynman
+- PO: Karl Popper
+- KT: Immanuel Kant
+- SH: Saffi; includes Follett-style integration vs compromise check
+
+Aspect tags:
+- CH:IV inversion / worst material bad outcome
+- CH:IN incentives
+- CH:SO second-order damage
+- CH:MJ misjudgment
+- CH:CP competence gap
+- CH:SM safety margin
+- CH:CR constraint risk
+- CH:SR scale-up risk
+
+- OM:UE unnecessary entity
+- OM:FS false simplicity
+- OM:SS speculative structure
+- OM:OD oversized design
+- OM:AC avoidable complexity
+- OM:CF Chesterton fence / unknown protected constraint
+
+- FE:SC stale claim
+- FE:ME mechanism gap
+- FE:WY missing why
+- FE:HL hidden limits
+- FE:WE weak evidence
+- FE:PG proof gap
+- FE:PV purpose/value gap
+
+- PO:UF unfalsifiable claim
+- PO:CO confirmation-only proof
+- PO:CN contradiction
+- PO:WR weak refutation path
+- PO:SI silent invalidation / silent pass
+- PO:OC overclaim
+
+- KT:HU harmful universalization
+- KT:EX special pleading / unfair exception
+- KT:IR inconsistent rule
+- KT:UA unfair asymmetry
+- KT:HB hidden burden
+
+- SH:OF opposing forces
+- SH:FM fake middle
+- SH:FB forced balance
+- SH:NE narrow exception needed
+- SH:HC hidden conflict
+- SH:WL wrong leverage
+
+Domain tags:
+- SEC: Security
+- CPX: Complexity
+- REL: Reliability
+- DAT: Data / I/O
+- ARC: Architecture / interfaces
+- CFT: Craft / tests
+
+Notation:
+- CH = finding surfaced through Charlie Munger lens
+- CH:IV = finding surfaced through CH inversion aspect
+- SEC = finding surfaced through Security domain
+- CH:IV->SEC = CH inversion surfaced a security-domain issue
+- FE:WE+PO:SI = multiple aspects apply to the same finding
+
+Rules:
+- use the smallest tag set that explains the finding; prefer 1-3 tags
+- use aspect tags when they improve traceability
+- multiple tags can apply to one finding
+- aspect tags do not replace evidence levels, severity, or output categories
+- do not invent numbered QIDs unless the referenced question bank defines them
+
+## 19. Invariants
+
+- Never act without DONE.
+- Never act before stabilization.
+- Never decide on raw findings.
+- For Skeptic self-work, read the authoritative current `skeptic.md` when reviewing the repo version. When explicitly reviewing a candidate file, read that candidate file and state that it is not yet authoritative. Do not use memory, summaries, or generated variants as substitutes for the source under review.
+- Do not claim RunSkeptic/Skeptic compliance if the source under review was unavailable or not applied exactly.
+- Never skip a Thinker; mark NOT_APPLICABLE when it does not fit.
+- Never treat no findings as proof of safety.
+- Never treat clean top-down scan as proof of safety.
+- Never FIX with inadequate detection confidence.
+- Never report inferred risk as confirmed bug.
+- Never ignore unresolved UNKNOWNs.
+- Never remove without knowing what breaks.
+- Never break a link without replacement or explicit coupling decision.
+- Never execute unresolved conflict in the same area.
+- Never accept silent failure.
+- Never leave partial state.
+- Never rely on hidden state.
+- Never retry unless safer or better informed.
+- Never treat repeated local fixes as local forever.
+- Every completed task must have an outcome.
+- Never mark an artifact ready while ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
+- Every task ends as HANDLED or CONFLICT.
+- Never modify outside the current task's scope; log adjacent issues separately.
+
+## One-Line Summary
+
+Gate -> Fundamental Scan -> Map -> Confidence -> Stabilize -> Evidence -> Decide -> Act Safely -> Verify -> Learn

@@ -1,0 +1,12 @@
+diff --git a/A/skeptic.md b/B/skeptic.md
+index 1985bd3..4b6dc37 100644
+--- a/A/skeptic.md
++++ b/B/skeptic.md
+@@ -167,0 +168,4 @@ Look for:
++- `FE:TB` trust-boundary transition: lower-authority content is
++  interpreted or promoted as instruction, evidence, code, query,
++  path, configuration, policy, tool action, memory, or trusted
++  state beyond its permitted role
+@@ -594,0 +599,2 @@ Aspect tags:
++- FE:TB trust-boundary transition / lower-authority content gaining
++  unintended control or authority
