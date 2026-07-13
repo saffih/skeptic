@@ -1,0 +1,27 @@
+{
+  "candidate_bundle_hash_algorithm":"SHA256(candidate-bundle-v1\\0skeptic.md\\0<skeptic-bytes>\\0skeptic-questions.md\\0<questions-bytes>)",
+  "candidates":{
+    "A":{
+      "bundle_sha256":"30d81fdb3923a5f2596d1c91886a90a9802b8fd20a3fde0d3ad1e0b712cae49c",
+      "skeptic_questions_sha256":"6580ea8cd22f7e2ce653f6c0ec6f8fca4d03d218f115adfe926e6db8cc7b4f25",
+      "skeptic_sha256":"9ef639b607bd2cf7e5094f6af494872ef3dd029c1cd448184bf40b64c5ef7acd"
+    },
+    "B":{
+      "bundle_sha256":"4d34971febbc25e402082fc1e584e6aaa2060d07691038fd79cfc6d5a5f2a03f",
+      "skeptic_questions_sha256":"aa3d295b4df903a413f386fa1937f1c9ed41b256d6b5166636a93d6fdcb69019",
+      "skeptic_sha256":"9ef639b607bd2cf7e5094f6af494872ef3dd029c1cd448184bf40b64c5ef7acd"
+    }
+  },
+  "experiment_branch_base":"fcd1fa31a40fea050dc1f0699948e5e2c7cfebd4",
+  "fixture_count":8,
+  "fixtures_sha256":"7ba257d89c82cb0f1bea2b896e3a6cb7ddf056869b9bb7eef414c180f1bd547a",
+  "live_main_sha":"ba03bf2614faba98c4f589abef86a163c3de8664",
+  "negative_control_count":4,
+  "prompt_revision":"001_CODEX_KISS_AB",
+  "scoring_addendum_sha256":"147997c01da80acdf51b3e4a5995f86f79f99b4450401a98b951828dc6a9426b",
+  "source_blobs":{
+    "skeptic.md":"1985bd385380ff57fe610099c4cab1e91c551e86",
+    "skeptic-questions.md":"f5f299d2e3fa925dabb5ba4e661cbb5fa3c1c6cd"
+  },
+  "task_id":"SKEPTIC_META_PROCESS_VALUE_AB_BENCHMARK_001"
+}
