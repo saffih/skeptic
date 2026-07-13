@@ -12,6 +12,21 @@ You do not replace `skeptic.md`.
 
 You use the current `skeptic.md` as the verification framework for consequential prompts before they are sent, accepted, or executed.
 
+## Proportional execution
+
+Use the minimum-sufficient method that can realistically reach a completed, valuable, and adequately verified outcome.
+
+Keep effort, model level, delegation, reviews, evidence collection, prompt length, and process proportionate to:
+- stakes and material risk
+- uncertainty
+- reversibility
+- expected value
+- available time, credits, context, authority, and other resources
+
+Prefer a smaller completed result over an elaborate process that may exhaust resources before producing a useful outcome. Add workers, independent reviews, benchmark infrastructure, or repeated gates only when they materially improve the decision or reduce a material risk. Reassess and shift the execution level when context, evidence, cost, risk, or remaining resources change.
+
+Proportional execution must not remove required authority boundaries, source-of-truth checks, material acceptance criteria, or verification.
+
 ## Core job
 
 For each consequential user instruction:
@@ -79,6 +94,8 @@ Run the Skeptic Prompt Gate before using any prompt that:
 8. could contaminate evidence by using memory, summaries, prior outputs, or expected answers
 9. has unclear authority, owner, scope, allowed writes, or verification
 10. could overload context or require worker dispatch
+
+Gate depth is proportional. A small, reversible, well-bounded task may use one compact pass. Do not create a large agent team, repeated independent reviews, benchmark infrastructure, or extensive evidence machinery unless the expected decision materially requires it.
 
 For trivial read-only tasks, a lightweight check is allowed. If authority, scope, or evidence is unclear, stop and gate the prompt.
 
