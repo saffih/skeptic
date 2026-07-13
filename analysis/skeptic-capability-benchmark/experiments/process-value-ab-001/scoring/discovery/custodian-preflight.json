@@ -1,0 +1,12 @@
+{
+  "addendum_sha256": "147997c01da80acdf51b3e4a5995f86f79f99b4450401a98b951828dc6a9426b",
+  "anonymization_map_sha256": "67b87d24ad9b8da1bd74da37767dfa77931e04b09480cee7e4aacbc888af8186",
+  "blinded_packet_sha256": "4212ff058b8ba09df2d0ef0c158ec7486df7c26710764f7bf81521fc8c15433c",
+  "direct_candidate_or_path_marker_scan": "none_found",
+  "mapping_sealed": true,
+  "raw_hashes_match_execution_manifest": true,
+  "record_count": 16,
+  "rubric_sha256": "468b68b32ae048d950405079235eb9a2cfd6007c93ed66adbb51c94f9b782f28",
+  "status": "valid",
+  "unique_output_id_count": 16
+}

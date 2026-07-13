@@ -1,0 +1,23 @@
+TASK_ID: SKEPTIC_META_PROCESS_VALUE_AB_BENCHMARK_001
+CHECKER: tools/check_experiment.py results
+RUN_1: PASS: frozen inputs, 16 runs, blinded scoring, adjudication, arithmetic, gate, and path boundary
+RUN_2: PASS: frozen inputs, 16 runs, blinded scoring, adjudication, arithmetic, gate, and path boundary
+OUTPUTS_IDENTICAL: yes
+OUTPUT_SHA256: b467b5301d4600f7c0e19b84f44ef48cedfa16f11d55faa3c5d15f440b2bc4c2
+STATE_DIGEST_UNCHANGED: yes
+FROZEN_ARTIFACTS_UNCHANGED: 7/7
+RUNNER_CONTEXTS: 16 unique
+RUNNER_RETRIES: 0
+JUDGE_CONTEXTS: 2 unique
+JUDGE_RETRIES: 1 pre-context technical failure, 0 accepted-context replacements
+JUDGE_AGREEMENTS: 14/16
+ADJUDICATIONS: 2
+A_SCORE: 14/16
+B_SCORE: 15/16
+DISCOVERY_GATE: NO_ADDITIONAL_VALUE
+VISIBLE_REGRESSION: not-run
+BLINDING_RECEIPT_RECORDS: 16/16
+NEGATIVE_TEST: one-byte blinded-packet mutation rejected with blinding receipt packet hash mismatch
+PATH_BOUNDARY: PASS
+PRIVATE_EVIDENCE_ACCESSED: no
+STAGE6E_CHANGED: no

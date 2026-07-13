@@ -32,4 +32,10 @@ The 36-fixture visible regression phase runs only if Candidate B passes the froz
 
 ## Result
 
-Pending frozen execution and blinded scoring.
+- Discovery execution: complete, 16 fresh runner contexts, zero runner retries.
+- Candidate A: `14 / 16` (`7 / 8` positive, `7 / 8` negative control).
+- Candidate B: `15 / 16` (`7 / 8` positive, `8 / 8` negative control).
+- Discovery gate: `NO_ADDITIONAL_VALUE`.
+- Visible regression: not run because B improved zero positive fixtures and had no positive-total gain.
+
+The observed one-point difference is confined to negative control `PV07`. It does not demonstrate that the optional question improves the target `PROC` cases. No source patch, promotion, private-evidence access, Stage 6E execution, PR, or merge is authorized.
