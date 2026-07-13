@@ -135,9 +135,10 @@ Look for:
 - `CH:CP` competence gaps: deciding without enough evidence or domain understanding
 - `CH:SM` weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
 - `CH:CR` constraint risk: effort targets a non-bottleneck while the real system constraint, queue, or blocker remains unchanged
+- `CH:EV` effort-value alignment: effort, cost, rigor, process, or resource use is disproportionate to expected value, material risk reduction, decision importance, available resources, or the probability of reaching a completed useful outcome
 - `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
 
-Report when CH exposes a material failure path, bad incentive, false certainty, competence gap, missing safety margin, wrong constraint, or unsupported scale-up assumption.
+Report when CH exposes a material failure path, bad incentive, false certainty, competence gap, missing safety margin, wrong constraint, disproportionate effort or resource waste, low-probability completion, or unsupported scale-up assumption.
 
 ### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
 
@@ -481,7 +482,7 @@ It detects, classifies, and recommends.
 It never changes files.
 
 Quick lens checks:
-- CH: invert -> what bad outcome, incentive, misjudgment, or weak safety margin appears?
+- CH: invert -> what bad outcome, incentive, misjudgment, weak safety margin, or effort-value mismatch appears?
 - OM: simplify -> what unnecessary structure or false simplicity appears?
 - FE: reality -> what claim lacks current evidence, clear mechanism, disclosed limits, or direct proof?
 - PO: refute -> what claim can pass while wrong, contradicts another rule, or lacks a disconfirming check?
@@ -576,6 +577,7 @@ Aspect tags:
 - CH:CP competence gap
 - CH:SM safety margin
 - CH:CR constraint risk
+- CH:EV effort-value alignment / disproportionate effort, resource waste, or low-probability completion
 - CH:SR scale-up risk
 
 - OM:UE unnecessary entity
