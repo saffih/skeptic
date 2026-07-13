@@ -166,8 +166,13 @@ Look for:
 - `FE:WE` weak evidence: proof does not directly exercise or support the claimed outcome
 - `FE:PG` proof gap: confidence, authority, elegance, or coherent story substitutes for observed evidence
 - `FE:PV` purpose/value gap: the artifact is coherent or well-structured, but the useful outcome, user, owner, or value is unclear
+- `FE:TB` trust-boundary transition: untrusted, lower-authority, or unverified content, output, or state is accepted -- or is structurally permitted to flow -- into a higher-trust or control-bearing role without an explicit validation or authorization step proportionate to the consequence
 
-Report when a claim, choice, or conclusion cannot be trusted without clearer mechanism, current evidence, disclosed limits, direct proof, or clear value.
+Higher-trust or control-bearing roles include: instruction, permission, verified evidence, source of truth, executable input, policy, configuration, safety or control signal.
+
+For every `FE:TB` finding, identify the lower-trust source, the promoted role, the boundary crossed, and the missing validation or authorization.
+
+Report when a claim, choice, conclusion, or trust transition cannot be trusted without clearer mechanism, current evidence, disclosed limits, direct proof, clear value, or a validated and authorized transition into a higher-trust or control-bearing role.
 
 ### Karl Popper (PO) - Falsifiability, Refutation, Contradiction
 
@@ -484,7 +489,7 @@ It never changes files.
 Quick lens checks:
 - CH: invert -> what bad outcome, incentive, misjudgment, weak safety margin, or effort-value mismatch appears?
 - OM: simplify -> what unnecessary structure or false simplicity appears?
-- FE: reality -> what claim lacks current evidence, clear mechanism, disclosed limits, or direct proof?
+- FE: reality -> what claim lacks current evidence, clear mechanism, disclosed limits, direct proof, or a validated transition into a higher-trust or control-bearing role?
 - PO: refute -> what claim can pass while wrong, contradicts another rule, or lacks a disconfirming check?
 - KT: universalize -> what pattern should not become a general rule?
 - SH: trade off -> what middle hides unresolved friction or requires explicit decision?
@@ -594,6 +599,7 @@ Aspect tags:
 - FE:WE weak evidence
 - FE:PG proof gap
 - FE:PV purpose/value gap
+- FE:TB trust-boundary transition / unvalidated promotion into a higher-trust or control-bearing role
 
 - PO:UF unfalsifiable claim
 - PO:CO confirmation-only proof
