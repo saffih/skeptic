@@ -291,6 +291,30 @@ If not, fix and rerun the gate.
 
 Worker prompts must require compact receipts.
 
+### Bounded dispatch ticket
+
+A dispatch ticket is the delegated role's input contract; the receipt is its output contract.
+
+For consequential delegation to a Worker, Checker, or Judge, use this minimum ticket:
+
+Role:
+Task / question:
+Source of truth:
+Scope:
+Allowed actions:
+Forbidden actions:
+Required evidence:
+Stop conditions:
+Return format:
+
+Tiny, reversible, read-only work may use an equivalent one- or two-sentence micro-ticket. Mutation, multiple delegated roles, independent evaluation, high-risk work, or cross-session work requires all fields above.
+
+Do not copy the whole parent prompt into every ticket. Include only the bounded local assignment, authority, and evidence needed by that role.
+
+A delegated role must not expand beyond its ticketed scope. If adjacent evidence appears material, report it and why it matters without acting on it; the Lead decides whether to dispatch additional work.
+
+A Worker receipt is evidence, not final authority. Material deterministic claims about hashes, counts, diffs, tests, branch state, or patch equivalence must be checked before they are promoted into readiness, mutation, merge, publication, or safety decisions. The Lead may perform that Checker step directly or assign the Checker role when delegation is proportionate.
+
 Default worker receipt:
 
 Task:
