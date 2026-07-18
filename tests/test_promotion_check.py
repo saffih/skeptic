@@ -10,7 +10,7 @@ class PromotionCheckTests(unittest.TestCase):
 
     def test_promotion_check_blocks_unresolved_blockers(self):
         self.assertIn(
-            "Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.",
+            "Before marking anything ready, approved, or safe to proceed, check whether any ACTION, DECOMPOSE, CONFLICT, review-required status, or blocking unknown remains unresolved.",
             TEXT,
         )
         self.assertIn(
@@ -20,7 +20,7 @@ class PromotionCheckTests(unittest.TestCase):
 
     def test_promotion_invariant_exists(self):
         self.assertIn(
-            "Never mark an artifact ready while ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.",
+            "Never mark an artifact ready while ACTION, DECOMPOSE, CONFLICT, review-required status, or blocking unknown remains unresolved.",
             TEXT,
         )
 
@@ -37,7 +37,7 @@ class PromotionCheckTests(unittest.TestCase):
     def test_core_contract_preserved(self):
         for marker in [
             "`RunSkeptic` is the formal invocation string",
-            "Treat `skeptic.md` as the runtime source of truth.",
+            "Treat the source under review as the runtime source of truth.",
             "Apply the current recipe exactly and in order.",
             "Every task ends as HANDLED or CONFLICT.",
         ]:

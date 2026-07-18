@@ -44,6 +44,7 @@ Examples:
 
 - Invocation Contract changes must test exact invocation markers and compliance failure cases.
 - Gate changes must test clear DONE, unclear DONE, oversized work, and unsafe ambiguity.
+- Prompt Review Level changes must test both bounded Agent Prompts and complete Task Prompts, including cases where every child prompt is valid but the aggregate workflow cannot reach DONE.
 - Fundamental Scan changes must test ownership, source of truth, interface, consumer, and failure-signal gaps.
 - Map changes must test detect-only behavior and assumption/evidence separation.
 - Thinker changes must test all required Thinkers and NOT_APPLICABLE behavior.
@@ -88,6 +89,38 @@ Every behavior-changing Skeptic proposal must be tested against these cases:
 10. Repeated local fixes
     Expected: trigger LEARN / DOUBLE-LOOP review.
 
+11. Complete feasible Task Prompt
+    Expected: PASS only when exact DONE, verified start, authority, dependency graph, routing, completion reserve, durable evidence, bounded retries, verification, integration when required, and closure are all present.
+
+12. Locally valid child prompts with no end-to-end integration owner
+    Expected: task-level ACTION; child-level success must not produce task-level PASS.
+
+13. Task Prompt with vague or intermediate DONE
+    Expected: STOP or ACTION; a branch, commit, pull request, local merge, or push attempt must not satisfy requested verified remote completion.
+
+14. Task Prompt with no protected completion reserve
+    Expected: ACTION when exploration, workers, or repeated gates can consume the capacity required for synthesis, verification, integration, and closure.
+
+15. Task Prompt whose decision-critical evidence exists only in transient context
+    Expected: ACTION until a durable evidence destination and checkpoint acceptance are defined.
+
+16. Task Prompt that blind-reruns the same failure class
+    Expected: ACTION or DECOMPOSE; require a retry bound and redesign trigger.
+
+17. Task Prompt with unresolved model or effort routing
+    Expected: ACTION when routing can be repaired; CONFLICT when material required capability cannot be selected or authorized.
+
+18. Clear task too large for available resources
+    Expected: DECOMPOSE into independently completable Task Prompts or reduce to an owner-authorized terminal slice.
+
+19. Merge-to-main task that stops at branch, commit, or pull request
+    Expected: task-level ACTION; require integration, publication, fresh remote observation, and Task Closure Receipt evidence.
+
+20. Task Prompt whose protocol cost approaches the result's value
+    Expected: reduce ceremony, shrink the slice, or stop; do not add agents or stronger models to compensate.
+
+`tests/test_task_prompt_scenarios.py` is the executable reference decision table for these Task Prompt gate outcomes. It verifies the explicit PASS/ACTION/DECOMPOSE/CONFLICT routing for the listed conditions. It does not replace semantic RunSkeptic review or prove that arbitrary prose is feasible.
+
 ## 4. Reject Conditions
 
 Reject a proposed Skeptic change if any of these occur:
@@ -103,6 +136,10 @@ Reject a proposed Skeptic change if any of these occur:
 - verification becomes weaker without explicit justification
 - companion files override `skeptic.md` runtime authority
 - the proposal uses memory or summaries instead of the actual current `skeptic.md`
+- a Task Prompt receives PASS only because its child Agent Prompts pass locally
+- context is described as protected without an allocation, measurable substitute, or stop threshold
+- retries or fix-until-PASS loops can consume the completion reserve without a declared bound
+- an intermediate repository or publication state is accepted as terminal DONE
 
 ## 5. Evidence Rule
 
@@ -136,6 +173,7 @@ A Skeptic change report must end using the current framework output categories.
 For the current framework:
 - full Skeptic ends as HANDLED or CONFLICT
 - Razor ends as PASS, ACTION, or CONFLICT
+- Task Prompt review may use DECOMPOSE as a DECIDE path; it does not create a new final task outcome
 
 ## 9. Test Before Merge Rule
 
@@ -146,4 +184,3 @@ Before merging a Skeptic change:
 3. Show git status.
 4. Show diff.
 5. Report unresolved conflicts and missing evidence.
-

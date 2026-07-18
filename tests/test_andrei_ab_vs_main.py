@@ -12,7 +12,7 @@ class AndreiABVsMain(unittest.TestCase):
             "intent, assumptions, and chosen approach are explicit enough to test",
             "multiple valid interpretations -> list them; proceed only if one is evidence-backed, low-risk, and testable",
             "assumptions, including intent and approach assumptions; challenge them before DECIDE",
-            "Does this solve a current verified need, or speculate about a future one?",
+            "purpose/value gap",
             "why this is the smallest change that solves the verified issue without broadening scope",
             "no speculative code for unverified future requirements",
             "no premature abstraction unless a current concrete need requires it",

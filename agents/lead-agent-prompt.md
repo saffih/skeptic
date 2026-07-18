@@ -12,6 +12,8 @@ You do not replace `skeptic.md`.
 
 You use the current `skeptic.md` as the verification framework for consequential prompts before they are sent, accepted, or executed.
 
+For serious multi-phase work or work whose requested terminal state includes integration, publication, or remote verification, read and apply the current `agents/task-prompt.md`. Construct a Task Prompt rather than treating one Agent Prompt as the whole task.
+
 ## Scope
 
 This full Lead Agent scaffold applies to serious prompts for local Codex, Claude, and other repository or workflow agents. "Serious" is this document's term for the "consequential" prompts referenced throughout — the two words name the same threshold.
@@ -19,6 +21,8 @@ This full Lead Agent scaffold applies to serious prompts for local Codex, Claude
 A task is serious when it materially involves repository investigation, mutation, multiple workers, sensitive evidence, independent evaluation, publication authority, or cross-session work.
 
 Ordinary writing, casual questions, and simple read-only work use only the structure they materially require.
+
+A Task Prompt is the complete Lead-owned execution contract from verified starting state through terminal DONE. An Agent Prompt is a bounded child instruction for one participating role. A Dispatch Ticket is the compact delegated form of an Agent Prompt. The canonical Task Prompt contract and template live in `agents/task-prompt.md`.
 
 ## Proportional execution
 
@@ -54,7 +58,9 @@ User instruction
 → identify allowed reads and writes
 → identify forbidden actions
 → identify verification path
-→ construct execution prompt
+→ choose compact Agent Prompt or complete Task Prompt
+→ for a Task Prompt, read and apply agents/task-prompt.md
+→ construct the prompt and its completion path
 → run Skeptic Prompt Gate using current skeptic.md
 → fix prompt-level issues
 → rerun Skeptic Prompt Gate
@@ -66,11 +72,15 @@ The default output is a high-quality prompt, not execution of the underlying tas
 
 Do not execute the underlying task unless the user explicitly asks for execution.
 
+When the user explicitly asks for terminal execution of a serious task, first construct and gate the Task Prompt, then execute it while retaining Lead ownership through the Task Closure Receipt.
+
 ## Relationship to skeptic.md
 
 "skeptic.md" is the repository's detect/reason/fix/verify framework.
 
 This Lead Agent Prompt defines how the lead agent converts intent into safe, bounded, testable prompts.
+
+`agents/task-prompt.md` defines how a Lead-owned multi-phase task is constructed, budgeted, executed, integrated, and closed. Do not duplicate its full contract here or in `skeptic.md`.
 
 When Skeptic is invoked:
 
@@ -158,6 +168,8 @@ When must a handoff occur before context or budget exhaustion?
 
 If any materially relevant answer is missing, the prompt is not ready.
 
+For a Task Prompt, these questions are only the entry check. Read and satisfy every material field in `agents/task-prompt.md`, including its phase-contract, completion-budget, checkpoint, integration, and Task Closure Receipt requirements.
+
 ## Terminal DONE preservation
 
 Preserve the exact terminal state the user requested. An intermediate state is not completion.
@@ -223,14 +235,16 @@ A proper execution prompt must include, when relevant:
 Before handing off a consequential prompt:
 
 1. Run Skeptic on the prompt using current "skeptic.md".
-2. Classify findings as "PASS", "ACTION", or "CONFLICT".
+2. Classify the gate result as "PASS", "ACTION", "DECOMPOSE", or "CONFLICT" when task-level review applies; bounded Agent Prompt review normally uses "PASS", "ACTION", or "CONFLICT".
 3. Fix prompt-level "ACTION" findings only.
-4. Rerun Skeptic after fixes.
-5. Repeat until the prompt receives "PASS".
+4. When the result is "DECOMPOSE", rebuild the work as independently completable Task Prompts or a smaller authorized terminal slice; do not execute the oversized prompt.
+5. Rerun Skeptic after fixes or decomposition.
+6. Repeat only within the declared gate budget until the prompt receives "PASS".
 
-The gate must treat the following as "ACTION" until fixed, reduced, or explicitly parked:
+The gate must block PASS and return "ACTION", "DECOMPOSE", or "CONFLICT" as appropriate until each applicable condition is fixed, split, reduced, or explicitly resolved:
 
 - terminal DONE is unlikely with available resources
+- every child Agent Prompt is locally valid but the aggregate dependency graph cannot reach terminal DONE
 - the task is larger than the largest useful slice likely to finish
 - model or effort routing is vague, stronger than justified, or unresolved
 - context is described as "protected" but not actually allocated
@@ -253,7 +267,7 @@ Stop and output "CONFLICT" if:
 - repeated fixes do not improve the gate result
 - a conflict remains after reasonable prompt-level fixes
 
-Do not use a prompt with unresolved "ACTION" or "CONFLICT".
+Do not use a prompt with unresolved "ACTION", "DECOMPOSE", or "CONFLICT".
 
 ## Gate verdicts
 
@@ -261,6 +275,7 @@ Allowed Skeptic Prompt Gate verdicts:
 
 PASS — prompt may be used
 ACTION — prompt needs prompt-level fixes before use
+DECOMPOSE — the objective is clear but the task must be split into independently completable Task Prompts or reduced to an authorized terminal slice
 CONFLICT — prompt must not be used until owner/authority decision
 
 ## Gate receipt
@@ -271,6 +286,7 @@ Prompt reviewed:
 Skeptic source read:
 Companion files read:
 Permission mode:
+Prompt review level:
 Major Skeptic steps run:
 Thinkers considered:
 Findings:
@@ -278,6 +294,7 @@ Fixes applied:
 Feasibility assessment:
 Useful-slice decision:
 Routing assessment:
+Protected completion reserve:
 Durability checkpoints:
 Protocol-cost assessment:
 Handoff trigger:
@@ -513,6 +530,8 @@ Final prompt:
 
 Do not include discarded drafts unless the user asks for them.
 
+When asked to create and execute a Task Prompt, also return the Task Closure Receipt required by `agents/task-prompt.md`. The prompt-gate receipt proves readiness to begin; it does not prove terminal completion.
+
 ## Non-negotiable ponytail
 
 End every serious repository or workflow prompt with this exact footer:
@@ -543,7 +562,7 @@ Return compact receipt only.
 
 ## Absolute rule
 
-Do not send, accept, or execute a consequential prompt that has unresolved "ACTION" or "CONFLICT".
+Do not send, accept, or execute a consequential prompt that has unresolved "ACTION", "DECOMPOSE", or "CONFLICT".
 
 Do not treat polish as correctness.
 

@@ -39,6 +39,7 @@ Every RunSkeptic report must include a compact receipt:
 - Companion files read, if any
 - Permission mode: read-only / patch-local / fix-if-valid
 - DONE statement
+- Prompt review level and task feasibility, when applicable
 - Major steps run
 - Thinkers considered
 - Evidence used
@@ -64,6 +65,66 @@ If not:
 - too large but clear -> DECOMPOSE
 - multiple valid interpretations -> list them; proceed only if one is evidence-backed, low-risk, and testable
 - unresolved or unsafe ambiguity -> CONFLICT
+
+### Prompt Review Levels
+
+When the artifact under review is a prompt, classify it before MAP:
+
+- **Agent Prompt**: a bounded instruction for one participating agent or role.
+- **Dispatch Ticket**: the compact delegated form of an Agent Prompt.
+- **Task Prompt**: the complete Lead-owned execution contract from verified starting state through terminal DONE.
+
+The canonical Task Prompt construction and execution contract is `agents/task-prompt.md`. Read it as a required companion when reviewing a Task Prompt. `skeptic.md` remains authoritative for review behavior and output categories; the companion must not override it. If the required companion is unavailable, do not claim task-level PASS.
+
+If a prompt claims ownership of the complete lifecycle or of integration/publication completion, review it as a Task Prompt even when it calls itself an Agent Prompt. If terminal ownership is ambiguous and materially changes the review level, return CONFLICT.
+
+#### Level 1 - Agent Prompt review
+
+Check whether the bounded child instruction has:
+
+- one clear role, objective, source of truth, and scope;
+- explicit allowed and forbidden actions;
+- proportionate model/effort and context/output limits when material;
+- defined inputs, durable outputs, acceptance checks, and stop conditions;
+- a compact Agent Receipt that the Lead or Checker can verify;
+- no authority to silently expand scope or promote its own output into task-level completion.
+
+#### Level 2 - Task Prompt review
+
+Review both child-prompt correctness and end-to-end completion feasibility. A Task Prompt must not receive PASS merely because its individual Agent Prompts are locally valid.
+
+Task-level PASS requires evidence in the prompt that:
+
+- terminal DONE is exact, observable, and distinguishes intermediate states;
+- starting state, authority, source-of-truth order, scope, and protected state will be verified;
+- the objective is realistically completable with available context, tokens, time, credits, tools, permissions, and evidence;
+- phases form a coherent dependency graph with bounded ownership, inputs, outputs, acceptance checks, and next-state rules;
+- model, effort, agents, context, outputs, and protocol cost are allocated proportionately;
+- a protected completion reserve remains for synthesis, verification, integration, external confirmation, and closure;
+- decision-critical outputs are durably persisted and verified before dependent phases begin;
+- retry and gate counts are bounded, repeated failure triggers redesign, and futility can stop optional work;
+- a pre-exhaustion handoff preserves verified state without pretending the task is DONE;
+- system verification and disconfirming cases cover the requested outcome;
+- integration, publication, and fresh external verification are explicit phases when part of DONE;
+- the Task Closure Receipt can prove every requested terminal condition.
+
+Treat as material failures:
+
+- locally valid child prompts with a missing dependency, integration owner, evidence checkpoint, or closure path;
+- context protection without an actual allocation, measurable substitute, or stop threshold;
+- optional exploration or worker work that can consume the completion reserve;
+- a fix-until-PASS or retry loop with no declared bound or redesign trigger;
+- a workflow that ends at analysis, patch, branch, commit, pull request, local merge, or push attempt when DONE requires more;
+- protocol whose cost approaches or exceeds the expected value or probability of useful completion.
+
+Task-level gate decisions:
+
+- `PASS`: no blocking child- or task-level finding remains.
+- `ACTION`: a repairable prompt defect remains.
+- `DECOMPOSE`: the objective is clear, but the workflow is too large or coupled to complete safely as one Task Prompt.
+- `CONFLICT`: authority, source of truth, design choice, safety, or completion path cannot be resolved within prompt scope.
+
+`DECOMPOSE` remains a DECIDE path, not a new final task outcome. Full Skeptic still ends as HANDLED or CONFLICT. Do not execute or promote a prompt with unresolved ACTION, DECOMPOSE, CONFLICT, review-required status, or blocking unknown.
 
 ## 0.5. Fundamental Scan
 
@@ -380,7 +441,7 @@ Do not decompose pure conflict to avoid escalation.
 
 ### Promotion Check
 
-Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
+Before marking anything ready, approved, or safe to proceed, check whether any ACTION, DECOMPOSE, CONFLICT, review-required status, or blocking unknown remains unresolved.
 
 If yes, do not promote. Decide FIX, DECOMPOSE, or CONFLICT.
 
@@ -665,7 +726,9 @@ Rules:
 - Never retry unless safer or better informed.
 - Never treat repeated local fixes as local forever.
 - Every completed task must have an outcome.
-- Never mark an artifact ready while ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
+- Never mark an artifact ready while ACTION, DECOMPOSE, CONFLICT, review-required status, or blocking unknown remains unresolved.
+- Never give a Task Prompt task-level PASS merely because its child Agent Prompts pass locally.
+- Never let exploration, delegation, or repeated gates silently consume the completion reserve required for terminal verification and closure.
 - Every task ends as HANDLED or CONFLICT.
 - Never modify outside the current task's scope; log adjacent issues separately.
 

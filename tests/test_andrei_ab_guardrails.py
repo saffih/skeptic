@@ -8,7 +8,7 @@ class AndreiABGuardrails(unittest.TestCase):
     def test_contract_preserved(self):
         for marker in [
             "`RunSkeptic` is the formal invocation string",
-            "Treat `skeptic.md` as the runtime source of truth.",
+            "Treat the source under review as the runtime source of truth.",
             "Apply the current recipe exactly and in order.",
             "Every task ends as HANDLED or CONFLICT.",
         ]:
@@ -28,7 +28,7 @@ class AndreiABGuardrails(unittest.TestCase):
 
     def test_speculation_scope_and_style_guardrails(self):
         for marker in [
-            "Does this solve a current verified need, or speculate about a future one?",
+            "purpose/value gap",
             "why this is the smallest change that solves the verified issue without broadening scope",
             "no speculative code for unverified future requirements",
             "no premature abstraction unless a current concrete need requires it",
@@ -40,8 +40,9 @@ class AndreiABGuardrails(unittest.TestCase):
 
     def test_failed_verification_no_blind_loop(self):
         self.assertIn("Do not proceed to another task until the current change is verified or safely reverted.", TEXT)
+        self.assertIn("Verification is pass/fail.", TEXT)
         self.assertIn(
-            "Verification is pass/fail. If fail, preserve evidence, revert unsafe partial state, and retry only with a new observed reason that makes retry safer; otherwise CONFLICT.",
+            "If fail, preserve evidence, revert unsafe partial state, and retry only with a new observed reason that makes retry safer; otherwise CONFLICT.",
             TEXT,
         )
         self.assertNotIn("Verification is pass/fail. If fail, return to Act.", TEXT)
