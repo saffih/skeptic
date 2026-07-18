@@ -116,6 +116,27 @@ time. Compact by contract (each receipt <= 1,500 words).
 - Final output category: PASS (pre-review gate; not terminal
   promotion).
 
+## Receipt 2a — Materially revised rerun (allowed repair pass)
+
+- Trigger: independent reviewer dispatch 1 returned ACTION — manifest
+  row for `correction-repository-record.md` claimed
+  SELF_REFERENCE_NOT_APPLICABLE while the file was absent at packet
+  commit e9731d1 (a "status asserted but not evidenced" cell; PO:SI).
+- Source read: `skeptic.md` at 29788a48 (SHA-256 7c052b21…), same
+  session, re-consulted for the repair-scope decision.
+- Repair applied (smallest change): manifest generator now labels
+  absent files NOT_PRESENT / PENDING; SELF_REFERENCE_NOT_APPLICABLE is
+  used for the manifest's own row always, and for the repository
+  record's row only once that file exists. Manifest regenerated
+  deterministically. No substantive file changed.
+- Disconfirming re-check: regenerated manifest re-verified — zero
+  unauthorized non-equivalent rows; nine-file blob equality unchanged;
+  dogfood prefix hash unchanged; allowlist diff unchanged except
+  authorized receipt/manifest/progress updates.
+- Budget: this consumes the one allowed materially revised pre-review
+  rerun. Verdict on the repaired packet: PASS (ready for the second and
+  final reviewer dispatch).
+
 ## Receipt 3 — Terminal-promotion RunSkeptic
 
 (Appended at the terminal checkpoint; absent means terminal promotion

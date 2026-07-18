@@ -22,14 +22,23 @@ Completed phases:
 - P0 preflight: contracts read+hashed; Level 2 Task Prompt gate PASS on
   the materially revised owner-issued prompt (receipt in
   `correction-runskeptic-receipt.md`); state verification complete.
-- P1 (this checkpoint): branch created; nine immutable files hashed
-  before mutation; substantive artifacts written (closure-correction,
+- P1: branch created; nine immutable files hashed before mutation;
+  substantive artifacts written (closure-correction,
   next-action-spec-v2, Dogfood Entry 002); reviewer ticket and
-  pre-review RunSkeptic receipt written; manifest generated.
+  pre-review RunSkeptic receipt written; manifest generated. Commit 1
+  e9731d1c934d75bb04b0cef75044b783917906c9 pushed and freshly verified
+  (main and historical branch unchanged).
+- P2: reviewer dispatch 1 returned ACTION (one manifest-labeling
+  finding; checks 1–9 PASS on recomputed evidence). Verbatim receipt
+  persisted in `correction-review-receipt.md`.
+- P3 (this checkpoint): material correction applied (manifest
+  pending-row convention fixed); pre-review RunSkeptic repair rerun
+  PASS (Receipt 2a); reviewer-repair budget path active (max 4
+  commits/pushes).
 
 Unresolved gaps:
-- Independent review not yet dispatched (requires this packet pushed and
-  freshly verified first).
+- Reviewer dispatch 2 (second and final) pending against this
+  checkpoint once pushed and freshly verified; PASS required.
 - Terminal RunSkeptic, repository record, and final verification pending.
 
 Blocking conflicts:
