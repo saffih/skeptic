@@ -264,7 +264,7 @@ Report when the pattern should be removed, narrowed, bounded, or made into an ex
 
 ### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
 
-Find invalid middles and unresolved tradeoffs.
+Find invalid middles, unresolved tradeoffs, and provably dominated options without erasing protected differences.
 
 Look for:
 - `SH:OF` opposing forces: what each side protects and what each side costs
@@ -273,10 +273,33 @@ Look for:
 - `SH:NE` narrow exception needed: one side should be default, but the other side needs a narrow protected exception
 - `SH:HC` hidden conflict: product, architecture, safety, ownership, or priority decision is required
 - `SH:WL` wrong leverage: the chosen side, middle, or exception does not address the constraint limiting the outcome
+- `SH:PF` Pareto frontier / proven dominance: remove an option only when another is safely no worse on every protected dimension and strictly better on at least one
 
-If no real opposing forces or invalid middle are present, SH = NOT_APPLICABLE.
+#### SH:PF decision rule
 
-Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, requires an explicit tradeoff decision, or misses the real leverage point.
+Use SH:PF only for an explicit comparison with at least two live options. Existing authority, source-of-truth, ownership, and hard safety blockers run first. The lens routing results below do not replace Skeptic's final output categories.
+
+- `NOT_APPLICABLE`: no live multi-option comparison exists; add no frontier process.
+- `DEFER_EXISTING`: an earlier Skeptic check already decides or blocks the case; do not duplicate or override it.
+- `DOMINANCE_UNPROVEN`: the comparison or any elimination guard is unresolved; preserve the option and route the gap through existing evidence, trade-off, exception, or CONFLICT handling.
+- `PRESERVE_FRONTIER`: the comparison is valid but no option is proven dominated; keep every non-dominated option.
+- `ELIMINATE_DOMINATED`: one option is proven dominated; remove it from the live set.
+
+To prove that A dominates B:
+
+1. Compare disaggregated, decision-relevant dimensions with the same direction, scope, time horizon, evidence standard, and tractability assumptions. Include hard constraints and protected minority or subgroup outcomes.
+2. Use current evidence and represent material uncertainty as credible intervals. For a claimed outcome that depends on causation, correlation alone cannot prove superiority.
+3. A is safely no worse on a dimension only when A's lower credible bound is at least B's upper credible bound. A is strictly better only when its lower credible bound is greater than B's upper credible bound.
+4. Require A to be safely no worse on every protected dimension and strictly better on at least one. Weighted totals, averages, or grouped outcomes cannot substitute for this all-dimensions check.
+5. Before elimination, verify that B has no missing minority or subgroup benefit, long-tail value, uncertainty-sensitive upside, reversibility or information value, strategic option value, narrow exception, or legitimate stakeholder weighting.
+
+If any basis or guard is missing, dominance is unproven. If neither option is strictly better, both remain on the frontier; OM may separately test whether equal options are unnecessary duplicates.
+
+Report the dominating option, dominated option, compared dimensions, evidence and uncertainty basis, and preservation guards checked whenever SH:PF returns `ELIMINATE_DOMINATED`.
+
+If no real opposing forces, invalid middle, or live option comparison are present, SH = NOT_APPLICABLE.
+
+Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, requires an explicit tradeoff decision, misses the real leverage point, or retains a proven dominated option.
 
 
 ## 4. Structural Checks
@@ -681,6 +704,7 @@ Aspect tags:
 - SH:NE narrow exception needed
 - SH:HC hidden conflict
 - SH:WL wrong leverage
+- SH:PF Pareto frontier / proven dominance
 
 Domain tags:
 - SEC: Security

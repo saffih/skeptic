@@ -48,6 +48,7 @@ Examples:
 - Fundamental Scan changes must test ownership, source of truth, interface, consumer, and failure-signal gaps.
 - Map changes must test detect-only behavior and assumption/evidence separation.
 - Thinker changes must test all required Thinkers and NOT_APPLICABLE behavior.
+- Pareto frontier / dominance changes must test true dominance, frontier preservation, fail-closed evidence guards, and silence when existing Skeptic or an ordinary task is already sufficient.
 - Evidence changes must test OBSERVED, REPRODUCED, HISTORICAL, and INFERRED RISK handling.
 - Decide changes must test FIX, DECOMPOSE, and CONFLICT.
 - Act changes must test that action occurs only after DECIDE says FIX.
@@ -121,6 +122,19 @@ Every behavior-changing Skeptic proposal must be tested against these cases:
 
 `tests/test_task_prompt_scenarios.py` is the executable reference decision table for these Task Prompt gate outcomes. It verifies the explicit PASS/ACTION/DECOMPOSE/CONFLICT routing for the listed conditions. It does not replace semantic RunSkeptic review or prove that arbitrary prose is feasible.
 
+### SH:PF executable coverage
+
+`tests/test_pareto_frontier.py` binds the SH:PF runtime rule to a deterministic 16-case decision table. It covers true-dominance changes, existing-sufficient and ordinary silent controls, and false-dominance traps involving stale or uncertain evidence, causation versus correlation, weights, grouping, aggregation, tractability, minority harm, long-tail preservation, consequence horizons, equality, reversibility, and strategic option value.
+
+SH:PF promotion requires:
+
+- 16/16 frozen scenario decisions pass
+- 2/2 proven dominated options are eliminated
+- existing-sufficient and ordinary controls remain silent or defer exactly as specified
+- 0 false eliminations across minority, long-tail, uncertainty, and option value preservation cases
+- the frozen promotion contract remains unchanged after candidate output
+- the full regression suite and semantic RunSkeptic review pass
+
 ## 4. Reject Conditions
 
 Reject a proposed Skeptic change if any of these occur:
@@ -140,6 +154,7 @@ Reject a proposed Skeptic change if any of these occur:
 - context is described as protected without an allocation, measurable substitute, or stop threshold
 - retries or fix-until-PASS loops can consume the completion reserve without a declared bound
 - an intermediate repository or publication state is accepted as terminal DONE
+- SH:PF eliminates an option using a weighted total, average, grouping, stale or correlational claim, unresolved uncertainty, or a comparison that omits protected value
 
 ## 5. Evidence Rule
 
