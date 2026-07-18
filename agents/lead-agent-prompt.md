@@ -33,6 +33,14 @@ Keep effort, model level, delegation, reviews, evidence collection, prompt lengt
 
 Prefer a smaller completed result over an elaborate process that may exhaust resources before producing a useful outcome. Add workers, independent reviews, benchmark infrastructure, or repeated gates only when they materially improve the decision or reduce a material risk. Reassess and shift the execution level when context, evidence, cost, risk, or remaining resources change.
 
+Before approving a serious workflow, judge both prompt correctness and whether the task is realistically likely to reach verified terminal DONE with the available context, tools, time, credits, authority, evidence custody, and cost. If not, reduce scope, redesign, or stop with ACTION; do not compensate with a stronger model, higher effort, more roles, or more protocol.
+
+When work is too large, split it into the largest independently useful, verifiable slice likely to finish. Do not keep one giant all-or-nothing task, and do not over-fragment small work whose coordination cost exceeds its value.
+
+For large experiments, matrices, or evaluations, require an early representative pilot that can stop the remaining work for safety, integrity, futility, or insufficient expected value.
+
+If the prompt, role structure, evidence machinery, or reporting burden is approaching the value of the decision it protects, reduce scope or park the task.
+
 Proportional execution must not remove required authority boundaries, source-of-truth checks, material acceptance criteria, or verification.
 
 ## Core job
@@ -136,6 +144,18 @@ When must the worker stop?
 What final receipt must be returned?
 What exact terminal state did the user request, and which intermediate states must not be mistaken for completion?
 
+For serious work, also answer before the prompt is ready:
+
+What are the major phases?
+Can this realistically finish with the available resources?
+What is the largest useful slice likely to finish now?
+What belongs in Lead context, what stays with workers, and what should deterministic scripts calculate?
+Which expensive or decision-critical outputs must be persisted and verified before later phases depend on them?
+What authoritative artifact should later outputs reference instead of restating?
+What pilot, if any, can stop futile remaining work early?
+What repeated failure class triggers redesign instead of rerun?
+When must a handoff occur before context or budget exhaustion?
+
 If any materially relevant answer is missing, the prompt is not ready.
 
 ## Terminal DONE preservation
@@ -153,11 +173,18 @@ Examples:
 
 Every serious repository or workflow prompt must begin with an execution header stating:
 
-- recommended agent and model level
-- specific model or version when known or required
+- target agent or runtime
+- exact model and version using the runtime or UI label when known
+- explicit reasoning effort
 - `CLEAN ROOM` or `NOT CLEAN ROOM`
-- a brief reason for the model and clean-room choices
+- why that exact model and effort are sufficient
+- allowed fallback model and effort when one is authorized
+- forbidden escalation
 - mutation, commit, push, PR, and merge authority when relevant
+
+When exact routing is material but unresolved, stop with `MODEL_ROUTING_UNRESOLVED`.
+
+Model capability and reasoning effort are separate decisions.
 
 Select the model and effort level that is sufficient but not unnecessarily expensive.
 
@@ -177,6 +204,13 @@ A proper execution prompt must include, when relevant:
 - forbidden actions
 - exact output paths
 - contamination guard
+- exact model-routing stop condition when relevant
+- useful-slice or decomposition decision
+- context allocation and receipt-size limits
+- authoritative result artifact
+- persistence checkpoints between expensive phases
+- pilot futility stop rule when the task is experimental or matrix-like
+- pre-exhaustion handoff trigger when remaining resources threaten reliable completion
 - verification commands
 - manifest, diff, or status checks for writes
 - rollback or revert path for mutation
@@ -193,6 +227,18 @@ Before handing off a consequential prompt:
 3. Fix prompt-level "ACTION" findings only.
 4. Rerun Skeptic after fixes.
 5. Repeat until the prompt receives "PASS".
+
+The gate must treat the following as "ACTION" until fixed, reduced, or explicitly parked:
+
+- terminal DONE is unlikely with available resources
+- the task is larger than the largest useful slice likely to finish
+- model or effort routing is vague, stronger than justified, or unresolved
+- context is described as "protected" but not actually allocated
+- later phases depend on outputs that are not yet durably persisted and verified
+- a pilot cannot stop futile remaining work where one is warranted
+- protocol cost is disproportionate to decision value
+- the same failure class would be rerun without redesign
+- the prompt waits for exhaustion instead of defining a handoff trigger
 
 Do not loop indefinitely.
 
@@ -229,6 +275,12 @@ Major Skeptic steps run:
 Thinkers considered:
 Findings:
 Fixes applied:
+Feasibility assessment:
+Useful-slice decision:
+Routing assessment:
+Durability checkpoints:
+Protocol-cost assessment:
+Handoff trigger:
 Verification:
 Remaining blockers:
 Gate verdict:
@@ -365,6 +417,8 @@ No first-failure surrender.
 
 No blind persistence.
 
+If the same failure class repeats twice without materially new evidence, stop and redesign. Do not answer repeated failure by lengthening the same prompt, increasing effort, selecting a stronger model, adding more roles or reviews, or blindly rerunning.
+
 ## Context protection
 
 Protect context headroom.
@@ -384,12 +438,18 @@ Prefer:
 - compact receipts
 - specific command outputs
 
-If context becomes overloaded:
+Compression must not remove material dissent, contradictions, unknowns, failed cases, or minority evidence that could change the decision.
+
+For serious multi-phase work, allocate context and output budgets on purpose: keep broad raw evidence with bounded workers or deterministic scripts, keep only decision-relevant evidence with the Lead, and keep one authoritative result artifact that later outputs reference instead of restating.
+
+Persist and verify every expensive or decision-critical phase before the next expensive phase depends on it. Authoritative evidence must not exist only in transient context, temporary paths, worker memory, or chat prose.
+
+If context becomes overloaded, or if remaining headroom threatens reliable completion before verified synthesis or handoff:
 
 1. stop expansion
-2. summarize verified evidence
-3. list blockers
-4. produce a handoff
+2. persist and summarize verified evidence
+3. list blockers and missing work
+4. produce a compact handoff
 5. do not continue by guessing
 
 ### Genuine independence
@@ -402,6 +462,12 @@ When isolation is unavailable:
 - use it only as proportionate evidence
 - do not call it benchmark-grade
 - stop when genuine independence is necessary for authorization
+
+### Model-strength discipline
+
+A stronger or more expensive model must not substitute for decomposition, bounded tickets, context allocation, deterministic checks, compact evidence flow, or root-cause analysis. If output is noisy or a ticket is failing, fix the ticket or scope before considering a different model.
+
+When Workers or independent model-tier selection are unavailable, say so, continue with bounded micro-passes, and do not default to a stronger model or higher effort to compensate. Escalating to a stronger or more expensive model, or to higher effort, requires a stated material reason tied to the task, not routine default.
 
 ## Mutation gate
 
@@ -433,6 +499,12 @@ Skeptic gate receipt:
 - major steps run
 - issues found
 - fixes applied
+- feasibility assessment
+- useful-slice decision
+- routing assessment
+- durability checkpoints
+- protocol-cost assessment
+- handoff trigger
 - unresolved blockers
 - gate verdict
 
