@@ -139,5 +139,58 @@ time. Compact by contract (each receipt <= 1,500 words).
 
 ## Receipt 3 — Terminal-promotion RunSkeptic
 
-(Appended at the terminal checkpoint; absent means terminal promotion
-has not occurred.)
+- Source read: `skeptic.md` at 29788a48 (SHA-256 7c052b21…), re-read
+  this session; companions `agents/task-prompt.md`,
+  `agents/lead-agent-prompt.md`.
+- Source under review: the complete intended final tree — frozen
+  substantive files (unchanged since reviewer PASS, blob-verified),
+  both verbatim reviewer receipts, `correction-repository-record.md`,
+  progress ledger, and the deterministically regenerated manifest.
+  This receipt's own append and the subsequent manifest regeneration
+  are self-referential bookkeeping excused by the contract's
+  self-reference rule; both are deterministic and inspectable in the
+  terminal commit diff.
+- Permission mode: patch-local (metadata/receipt class only;
+  substantive files frozen).
+- DONE statement: terminal promotion of the correction branch package;
+  final publication verification is performed after the terminal
+  commit and reported with observed values in the terminal in-session
+  response, per the record's stated convention.
+- Major steps run: GATE, Fundamental Scan, MAP, Confidence, Stabilize,
+  Evidence, Decide, Verify.
+- Thinkers: CH:IV — residual worst case is a final push failing or
+  drifting refs; bounded by the explicit refspec, fresh post-push
+  fetch/ls-remote comparison, and stop-on-mismatch. CH:MJ — no
+  condition is promoted on confidence: each maps to a recomputed
+  observation. OM — no artifact beyond the authorized eight + one
+  append; NOT_APPLICABLE otherwise. FE:TB — the package promotes
+  nothing into authority: Case 2R stays unauthorized, doctrine
+  unchanged, `main` untouched; the one authority statement (branch
+  retention) cites the owner prompt, not inference. FE:SC — every hash
+  recomputed this session. PO:CO/PO:SI — disconfirmation performed by
+  two independent reviewers who recomputed load-bearing values and by
+  the regenerated (never hand-edited) manifest; the dispatch-1 ACTION
+  proves the disconfirming path actually fires. KT:IR — the package
+  holds itself to the standard it applies to Slice 3B: no DONE claim
+  before external verification; the record explicitly defers final
+  verification to the terminal response instead of self-certifying.
+  SH — NOT_APPLICABLE (no unresolved live trade-off; the reviewer-
+  recommendation conflict on the record's manifest row is resolved by
+  the owner contract's explicit self-reference rule, a source-of-truth
+  application, not a compromise).
+- Evidence levels: OBSERVED/REPRODUCED for all mechanical conditions
+  (hashes, blobs, trees, tests, refs); the historical statuses carry
+  the evidence levels stated in `closure-correction.md`.
+- Decision path: Promotion Check — no unresolved ACTION, DECOMPOSE,
+  CONFLICT, review requirement, or blocking unknown remains (dispatch
+  1 ACTION repaired and re-reviewed; dispatch 2 PASS; gate budget
+  respected). DECIDE: FIX path complete; promote.
+- Verification performed: nine-file blob equality at the final tree;
+  allowlist diff vs 29788a48; dogfood prefix hash; 85/85 tests;
+  `git diff --check` clean; manifest regeneration with zero
+  unauthorized non-equivalent rows.
+- Unresolved conflicts / unknowns: U1–U3 and the four-way NOT RESOLVED
+  attribution stand by design; Case 2R execution unauthorized.
+- Final output category: HANDLED (for the Slice 3C correction task,
+  contingent only on the terminal response's post-fetch verification,
+  which cannot precede itself).

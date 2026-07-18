@@ -43,10 +43,17 @@ Completed phases:
   in `correction-review-receipt.md` (this checkpoint). Substantive
   files frozen as of that PASS.
 
+- P5 (terminal checkpoint): dispatch-2 receipt checkpoint
+  5c42a7fdaa7c3b066667c774714f9c81a4f29ea9 pushed and freshly
+  verified; `correction-repository-record.md` written; terminal
+  RunSkeptic Receipt 3 appended (promotion approved); manifest
+  finally regenerated; tests re-run. This is the last authorized
+  commit/push (4 of 4, reviewer-repair path).
+
 Unresolved gaps:
-- Terminal RunSkeptic (Receipt 3), repository record, final manifest
-  regeneration, and final external verification pending (last
-  authorized commit/push).
+- Final post-fetch verification of the terminal commit is reported in
+  the terminal in-session response (it necessarily postdates this
+  file's content).
 
 Blocking conflicts:
 None.
