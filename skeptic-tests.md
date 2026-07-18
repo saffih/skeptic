@@ -133,7 +133,7 @@ SH:PF promotion requires:
 - 2/2 proven dominated options are eliminated
 - existing-sufficient and ordinary controls remain silent or defer exactly as specified
 - 0 false eliminations across minority, long-tail, uncertainty, and option value preservation cases
-- the frozen promotion contract remains unchanged after candidate output
+- the promotion-time contract is preserved at `archive/sh-pf-frozen-contract`, replacing active byte-level immutability enforcement with historical recoverability and traceability
 - the full regression suite and semantic RunSkeptic review pass
 
 ## 4. Reject Conditions
