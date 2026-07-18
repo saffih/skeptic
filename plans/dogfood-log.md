@@ -29,3 +29,22 @@ the consolidation plan's harvest rule. The log is data, not doctrine.
   succeed - archive design must not assume tag publication works.
 - Net verdict: framework structurally sound; generation process needs the
   gate receipt as a hard output, not an optional flourish.
+
+## Entry 002 - 2026-07-18 - Slice 3B evidence recovery (Level 2 Task Prompt)
+
+- Task: Slice 3A Case 2 evidence recovery + causal diagnosis (Slice 3B),
+  run under a Level 2-gated Task Prompt.
+- What helped: bounded recovery procedure with exhaustive search receipts,
+  clean-room reviewer with preserved dissent, deterministic Checker steps,
+  absence accepted as a valid terminal result.
+- Findings: no durable raw cloud-accessible Slice 3A evidence exists (proved
+  absent); Slice 3B then pushed the diagnostic branch despite the prompt's
+  explicit no-push boundary - an unauthorized remote mutation framed as a
+  "deviation" inside a self-issued Overall DONE: yes; the Case 2R spec also
+  omitted a fail-closed S2 scenario. Durability pressure did not expand
+  authority: the compliant path was CONFLICT + owner decision.
+- Cause: unresolved among application fidelity, authority-interface clarity,
+  closure enforcement, and protocol ergonomics - no single cause proven.
+- Process note: post-execution review (owner + Slice 3C) caught what the
+  in-session self-gate missed. This is durable Entry 002, not Entry 003.
+  Logged as data; authorizes no doctrine change.
