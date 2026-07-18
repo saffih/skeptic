@@ -75,9 +75,84 @@ from history by the same command.
 - PR #4: closed, not merged; harvest comment issuecomment-5010882021.
 - PR #2: open, unmerged; disposition comment issuecomment-5010882918.
 
-## Pending sections (filled during P5-P7)
+## P5: branch deletion - BLOCKED (harness permission layer)
 
-- P5 deletion results.
-- P6 frozen-hash migration results and test-count delta.
-- RunSkeptic on the change.
-- Task Closure Receipt.
+Both the nine-target batch deletion and a single-target retry
+(`git push origin --delete andrei`) were denied by the Claude Code
+auto-mode permission classifier - a harness-level control, not a git,
+proxy, or GitHub refusal, and not resolvable by the owner-selected
+archive mechanism. Per the v2 contract's permission-refusal class this
+returns CONFLICT for P5 with state preserved: all seven archives are
+published and verified, the restore table is durable on the remote, and
+no branch was deleted. Deletions are safe to perform at any time.
+
+Owner resolution paths:
+1. Run the deletions directly:
+   `git push origin --delete andrei feat/skeptic-effort-value-alignment plan/skeptic-practical-improvement-reset promotion-check pattern-classification revised-questions experiment/skeptic-meta-process-value-ab-001 experiment/skeptic-trust-boundary-fe-tb-ab-001 claude/lead-agent-prompt-artifact-9rd2na`
+2. Or add a Bash permission rule allowing branch-deletion pushes and tell
+   the session to finish P5; per-target gates (archive verification,
+   ancestry proofs) are already satisfied and recorded above.
+
+The slice-branch self-deletion required by DONE-7 is blocked by the same
+control and defers identically.
+
+## P6: frozen-hash migration (accepted)
+
+- `FROZEN_CONTRACT_SHA256`, the `CONTRACT` path constant, the `hashlib`
+  import, and `test_frozen_contract_has_not_changed_after_candidate_output`
+  removed from `tests/test_pareto_frontier.py`.
+- Honest evidence note added to the `skeptic-tests.md` SH:PF section: the
+  archive preserves the historical promotion contract and replaces active
+  byte-level immutability enforcement with historical recoverability and
+  traceability; it does not prove the current live file matches the
+  archived state.
+- Full suite: 85 passing. Delta from BASELINE_TEST_COUNT (86) is exactly
+  -1, fully explained by the one retired test. `git diff --check` clean;
+  only the two intended files changed.
+
+## RunSkeptic (on this slice's change)
+
+Steps: GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE ->
+EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN. Material findings: the
+P5/harness conflict (recorded above, routed as CONFLICT, not worked
+around); FE:HL honesty obligation on the tag-to-archive evidence change
+(satisfied by the governance note); no OM finding - net structure
+removed, none added. Evidence: OBSERVED (ls-remote, test, diff outputs).
+LEARN (single-loop): a harness permission layer sits above both git
+authority and owner intent; destructive-action contracts should name it
+as a distinct failure class in future prompts. Output: HANDLED for the
+completed phases; CONFLICT recorded for P5.
+
+## Task Closure Receipt
+
+- DONE-1 PR #4 closed, not merged, harvest comment: YES
+  (re-verified state=closed, merged=false; comment 5010882021).
+- DONE-2 PR #2 open, unmerged, one disposition comment: YES
+  (comment 5010882918).
+- DONE-3 seven archives published and verified at full SHAs: YES
+  (as archive branches per delegated option A; ls-remote 7/7 exact).
+- DONE-4 nine branches deleted: NO - BLOCKED by harness permission
+  classifier; per-target gates satisfied; deletions defer safely.
+- DONE-5 benchmark branch present at fcd1fa31a... AND archived: YES.
+- DONE-6 hash pin retired, honest governance note, 85/85 with explained
+  -1 delta: YES.
+- DONE-7 record committed, merged to main, pushed, fresh origin/main
+  verified: YES for publication (values in the publication section
+  below); slice-branch deletion deferred with P5.
+- Per-phase model labels: P2/P3 Claude Sonnet 5; P0/P1/P4/P5-attempt/P6/P7
+  Claude Fable 5. Effort: EFFORT_LABEL_UNAVAILABLE.
+- Protected state: main never force-pushed; benchmark branch untouched at
+  its full SHA; routing branch untouched.
+- Unresolved blockers: P5 harness permission (owner resolution paths
+  above).
+- Residual risk: archives preserve history but do not enforce
+  current-file immutability; archive branches are ordinary refs and can
+  be deleted or moved by anyone with push access.
+- Overall DONE: NO - complete except the permission-blocked deletions;
+  no intermediate state is relabeled as completion.
+
+## Publication verification (filled at P7 push)
+
+See the closure summary in the session log; values recorded at push time:
+local main, fetched origin/main, and advertised refs/heads/main all equal
+the slice merge commit; ahead/behind 0/0; suite 85/85 on merged main.

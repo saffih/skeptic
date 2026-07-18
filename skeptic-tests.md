@@ -136,6 +136,15 @@ SH:PF promotion requires:
 - the frozen promotion contract remains unchanged after candidate output
 - the full regression suite and semantic RunSkeptic review pass
 
+The promotion-time frozen contract state of
+`plans/skeptic-next-capability-sh-pf.md` is preserved at the published
+archive ref `archive/sh-pf-frozen-contract`
+(`52cd8226c276186530a32a52b36d5a3943434faa`). This archive preserves the
+historical promotion contract and replaces active byte-level immutability
+enforcement (the retired hash-pin test) with historical recoverability and
+traceability; it does not prove that the current live file still matches
+the archived state, and the live plans file may now be annotated.
+
 ## 4. Reject Conditions
 
 Reject a proposed Skeptic change if any of these occur:

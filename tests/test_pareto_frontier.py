@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import unittest
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -9,10 +8,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SKEPTIC = ROOT / "skeptic.md"
 GOVERNANCE = ROOT / "skeptic-tests.md"
-CONTRACT = ROOT / "plans" / "skeptic-next-capability-sh-pf.md"
-FROZEN_CONTRACT_SHA256 = (
-    "fa4808ee4feab12ab4a7837c686936f9025a146492d4e90dd89427cc252c82ab"
-)
 
 NOT_APPLICABLE = "NOT_APPLICABLE"
 DEFER_EXISTING = "DEFER_EXISTING"
@@ -217,10 +212,6 @@ class ParetoFrontierContractTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.skeptic = SKEPTIC.read_text(encoding="utf-8")
         cls.governance = GOVERNANCE.read_text(encoding="utf-8")
-
-    def test_frozen_contract_has_not_changed_after_candidate_output(self) -> None:
-        digest = hashlib.sha256(CONTRACT.read_bytes()).hexdigest()
-        self.assertEqual(digest, FROZEN_CONTRACT_SHA256)
 
     def test_runtime_contains_complete_pareto_decision_contract(self) -> None:
         sh_start = self.skeptic.index("### Saffi (SH)")
