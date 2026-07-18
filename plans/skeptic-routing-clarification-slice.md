@@ -8,7 +8,11 @@ hash-pinned by any test (per the consolidation plan's tag-not-hash rule).
 
 - **Execution header**: single Lead agent in one remote session; no worker
   delegation (bounded single-file prose plus deterministic tests - delegation
-  cost would exceed value). NOT CLEAN ROOM, same-context, labeled as such.
+  cost would exceed value; one Lead without workers was proportionate because
+  no phase produced broad raw evidence needing isolation). Model/runtime
+  label actually used: Claude Fable 5. Reasoning-effort label:
+  EFFORT_LABEL_UNAVAILABLE (the runtime exposes no effort setting; not
+  guessed). NOT CLEAN ROOM, same-context, labeled as such. No fallback used.
   No model escalation; forbidden to compensate for defects with more roles.
   Mutation authority: `skeptic.md` (SH section), `skeptic-tests.md`
   (coverage list), `tests/` (one new file), `plans/` (slice record and two
@@ -107,6 +111,10 @@ mandatory-universal-sequence phrasing; governance binding asserted.
   specification and its decision table; they do not prove that an agent
   reading the prose routes correctly at runtime. Behavioral evidence is
   Track 3 (dogfood) work.
+- Process gap found post-publication: this original run recorded steps only
+  through VERIFY and did not run LEARN. The gap is repaired in the
+  post-publication receipt correction below; LEARN is not retroactively
+  claimed for the original run.
 - Output category: HANDLED.
 
 ## Task Closure Receipt
@@ -117,10 +125,115 @@ mandatory-universal-sequence phrasing; governance binding asserted.
 - Required verification passed: yes (red-before-green recorded; 9/9
   focused; 86/86 full regression).
 - RunSkeptic HANDLED: yes (receipt above).
-- Integration/publication: filled at merge - commit merged to `main`,
-  pushed, fresh `origin/main` fetched and compared.
+- Integration/publication: yes - implementation commit
+  `ac221cb570019ca25fddffa80c71a81b94154f05` fast-forward merged from the
+  working branch into local `main`, pushed non-force to `origin/main`,
+  fresh fetch performed; local `main` and fetched `origin/main` both
+  observed at `ac221cb570019ca25fddffa80c71a81b94154f05`; ancestry of the
+  implementation commit in fresh `origin/main` verified with
+  `git merge-base --is-ancestor`; full suite rerun green on merged `main`
+  (86/86).
 - Protected state preserved: yes (no files outside declared scope changed;
   `git status` clean of unexpected mutation).
 - Unresolved blockers: none.
 - Residual risk: runtime-behavior gap named above; routing prose could
   still be misread by an agent - detectable only via dogfood log entries.
+
+## Post-publication receipt correction (2026-07-18)
+
+This section is a docs-only correction to this receipt, performed after
+Slice 1 publication was accepted at
+`ac221cb570019ca25fddffa80c71a81b94154f05`. It changes no runtime rule, no
+test, and no history. Three gaps in the receipt as first persisted are
+repaired: (1) the execution header did not record the exact model and
+effort routing actually used; (2) the recorded RunSkeptic flow stopped at
+VERIFY and omitted LEARN; (3) the publication entry was a forward
+reference ("filled at merge") that was never back-filled with observed
+values.
+
+### Exact execution routing (as actually used)
+
+- Model/runtime label: Claude Fable 5.
+- Reasoning-effort label: EFFORT_LABEL_UNAVAILABLE - the runtime exposes
+  no effort setting; the value is recorded as unavailable, not guessed.
+- Clean-room status: NOT CLEAN ROOM (same-context throughout).
+- Fallback used: none. Escalation: none.
+- One Lead without workers was proportionate: every phase was a bounded
+  single-file prose edit or a deterministic test run; no phase produced
+  broad raw evidence whose isolation or summarization would have protected
+  Lead context.
+
+### RunSkeptic rerun (complete flow, post-publication)
+
+Rerun against the actual current `skeptic.md` (at `ac221cb`), covering the
+already-published Slice 1 implementation plus this receipt correction.
+Steps run: GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE ->
+EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN. LEARN did not run in the
+original pass and is not retroactively claimed for it.
+
+- GATE: DONE testable (corrected receipt in verified remote main); scope
+  one file; wrong-answer cost low.
+- FUNDAMENTAL SCAN / MAP: no structural finding against the published
+  implementation; the correction itself is documentation. MAP findings on
+  the receipt: FE:SC/FE:HL (missing routing record), PO:SI (flow recorded
+  as complete while LEARN was absent), FE:WE (publication claim persisted
+  without observed values). All repaired by this section.
+- CONFIDENCE / STABILIZE: findings share one root cause - closure fields
+  written as forward references instead of observed values at closure time.
+- EVIDENCE: OBSERVED (git and test outputs quoted below).
+- DECIDE/ACT: FIX (docs-only edit of this file); smallest change; revert
+  path is git revert of the correction commit.
+- VERIFY: `git diff --check` clean; only this file changed; full suite
+  green before commit; remote state re-verified after push.
+- LEARN conclusion (single-loop): the implementation was correct; the
+  defect was process - a Task Closure Receipt must be completed with
+  concrete observed values at closure time, never left as a forward
+  reference. First occurrence of this failure class. If a
+  placeholder-closure recurs, treat it as DOUBLE-LOOP and amend
+  `agents/task-prompt.md` section 14 to forbid forward references in
+  closure receipts explicitly.
+- Output category: HANDLED (this correction); the published Slice 1
+  implementation remains HANDLED.
+
+### Concrete Task Closure evidence (observed values)
+
+- Slice 1 implementation commit:
+  `ac221cb570019ca25fddffa80c71a81b94154f05`
+- Starting baseline: `52cd8226c276186530a32a52b36d5a3943434faa`
+- Plan commit: `17a9616b16987189e4a9e64c52aeda5db0b7c7a8`
+- Focused validation: 9/9. Full regression: 86/86.
+- `skeptic.md` net delta: +16 lines.
+- Publication verification (re-derived fresh at correction preflight,
+  2026-07-18): local `main` = `ac221cb570019ca25fddffa80c71a81b94154f05`;
+  fetched `origin/main` = same; `FETCH_HEAD` (after `git fetch origin
+  main`) = same; advertised `refs/heads/main` via `ls-remote` = same;
+  ahead/behind `main...origin/main` = 0/0.
+- Changed-file blob comparison, local worktree vs `origin/main`:
+  `skeptic.md` `f651a833...` MATCH; `skeptic-tests.md` `2a7a5094...`
+  MATCH; `tests/test_constraint_leverage_dominance_routing.py`
+  `36225f32...` MATCH; `plans/skeptic-consolidation-and-dogfood-plan.md`
+  `ed13ff13...` MATCH. The fifth changed file is this receipt itself, the
+  object under correction; its remote blob is verified after the
+  correction push.
+- Publication routing note: the correction commit was made directly on
+  local `main` (at `ac221cb`) rather than fast-forwarded from the working
+  branch, because the working branch carries the not-yet-authorized
+  Slice 2 prompt commit (`e0a3653`), which must not enter `main` with
+  this correction. Non-force push; no history rewrite; `ac221cb` is not
+  amended.
+
+### Evidence taxonomy
+
+- Specification-regression evidence: marker, compactness, and
+  decision-table tests freeze the routing contract's prose and oracle.
+- Red-before-green evidence: REPRODUCED - 4 binding tests failed before
+  the prose existed, then passed (recorded above).
+- Repository/publication evidence: OBSERVED - the SHA, ahead/behind, and
+  blob values quoted in this section.
+- Behavioral evidence: NOT YET OBTAINED - no evidence yet that an
+  arbitrary agent reading the prose routes correctly in natural work;
+  this remains Track 3 (dogfood) work, per the preserved limitation
+  statement above.
+
+Slice 2 status at this correction: NOT AUTHORIZED; paused pending owner
+go-ahead.
