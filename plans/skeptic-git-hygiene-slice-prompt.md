@@ -1,282 +1,293 @@
-# Slice 2 Task Prompt: Git Hygiene (gated PASS, awaiting execution)
+# Slice 2 Task Prompt v2: Git Hygiene (revised after Level 2 review; ACTION findings fixed)
 
-Constructed per `agents/lead-agent-prompt.md` and `agents/task-prompt.md`;
-gated with RunSkeptic against current `skeptic.md` (two passes; pass 1
-findings and fixes recorded below). Execution authority: consolidation plan
-Track 2, merged to `main` at `ac221cb`.
+v1 of this prompt (git history at `e0a3653`) received an independent Level 2
+review with verdict ACTION, not PASS. This v2 applies all ten findings.
+Partial execution already occurred under explicit in-session owner
+authorization before the review arrived; the mutation ledger below records
+it. No branch was deleted and no tag reached the remote.
 
-## Why this slice is next (reasoning)
+## Review findings applied in v2
 
-- The consolidation plan sequences hygiene immediately after the routing
-  slice, and the owner's second opinion confirmed: "After it reaches
-  verified remote main, execute Git hygiene as a separate reversible Task
-  Prompt."
-- Stale state is an active hazard, not just clutter: open PR #4 proposes
-  rules partially superseded by current `main`; the frozen-SHA pin blocks
-  any annotation of a plans file; nine stale branches invite future agents
-  to resume outdated work (the backlog explicitly warns about PR #4).
-- It is the safest available slice: deterministic operations, zero
-  `skeptic.md` changes, every step reversible via tags or PR reopen.
-- Doctrine dedup (Slice 3) touches all three runtime files; doing hygiene
-  first means dedup starts from a clean field.
+1. Authority recorded explicitly; external side effects gated on
+   `AUTHORITY_PENDING` until the owner authorizes this v2.
+2. Exact model labels recorded, including actual labels for already-executed
+   phases; effort recorded as `EFFORT_LABEL_UNAVAILABLE`, not invented.
+3. P0 pre-execution Task-level Skeptic gate added with persisted receipt.
+4. Fresh slice branch replaces reuse of the routing branch.
+5. Full 40-character SHAs are the authoritative deletion/tagging contract.
+6. Content drift on any target returns `STATE_DRIFT_REQUIRES_OWNER_DECISION`;
+   no self-approved retargeting.
+7. Per-target absence/presence verification replaces exact global branch
+   counts; the slice branch is deleted after verified merge.
+8. `BASELINE_TEST_COUNT` recorded at P1; all-pass plus explained delta
+   replaces a hardcoded total.
+9. The tag-vs-hash evidence difference is stated honestly; tag-object and
+   peeled SHAs are both recorded.
+10. Clean-room classification made consistent.
 
-## Skeptic Prompt Gate receipt
+## Mutation ledger (executed before this revision, under in-session owner go-ahead)
 
-- Prompt reviewed: this Task Prompt. Level: Task Prompt (Level 2).
-- Skeptic source read: current `skeptic.md` (at `ac221cb`); companions
-  `agents/task-prompt.md`, `agents/lead-agent-prompt.md`, `skeptic-tests.md`.
-- Permission mode: fix-if-valid with explicit publication authority.
-- Pass 1 findings (all ACTION, all fixed in the prompt below):
-  1. `KT:IR` - consolidation-plan principle 6 ("archive-tag before any
-     branch deletion") conflicts with its own disposition table (merged
-     branches: "delete; nothing lost"). Resolved: the principle protects
-     reversibility, not tags per se; merged tips stay reachable from `main`
-     forever. The prompt requires a `merge-base --is-ancestor` proof before
-     any untagged deletion.
-  2. `PO:SI` - silent-loss path: a branch could be deleted after a tag was
-     created locally but before it landed on the remote. Fixed: per-branch
-     acceptance gate - `ls-remote` must show the tag at the recorded SHA
-     before that branch's deletion is authorized.
-  3. `CH:SO` - deleting PR #4's head branch would auto-close the PR as a
-     side effect, losing the explicit disposition comment. Fixed: hard
-     ordering - close PR #4 with its comment before its branch is deleted.
-  4. `FE:TB`/authority - closing PR #2 acts on an external contributor's
-     work without an owner decision. Reduced to comment-only; closing PR #2
-     is explicitly out of scope.
-  5. `FE:SC` - the preflight branch table is a dated observation that may
-     drift before execution. Fixed: P1 re-audit with exact-match
-     invalidation; one re-audit allowed, second drift is CONFLICT.
-  6. `OM:UE` - replacing the frozen-hash test with a runtime git lookup
-     inside unittest adds fragility (fails in shallow clones). Resolved:
-     retire the test, preserve the frozen state at an annotated tag, and
-     record the pointer in governance.
-- Pass 2: PASS. Feasibility: high - ~20 deterministic operations, bounded
-  edits, full rollback paths. Protocol cost proportionate. Thinkers
-  considered: CH, OM, FE, PO, KT, SH (SH: no live trade-off requiring
-  decision; routing lenses NOT_APPLICABLE - no constraint doubt, no option
-  comparison beyond already-decided dispositions).
-- Gate verdict: PASS. Use decision: execute on owner go-ahead.
+- P1 re-audit: `origin/main` drift `ac221cb` -> `c6df30f` (known cause: the
+  Slice 1 receipt-correction commit); all nine deletion-target tips matched
+  the authorized snapshot exactly; ancestry proofs passed for the four
+  merged branches.
+- P2 executed: PR #4 harvest comment posted (issuecomment-5010882021) and
+  PR #4 closed, not merged (read-back: state=closed, merged=false).
+  Reversible: PR can be reopened.
+- P3 executed: PR #2 disposition comment posted (issuecomment-5010882918);
+  PR #2 remains open and unmerged.
+- P4 partial: seven annotated tags created locally; push to origin failed
+  twice with HTTP 403 (branch pushes succeed in this environment; the
+  failure is tag-ref-specific and suggests proxy policy). No tag is on the
+  remote. Root cause not yet confirmed; no blind retry performed.
+- Not executed: any branch deletion, any test edit, any commit for this
+  slice.
+- Model labels actually used for the executed phases: Claude Sonnet 5
+  (session had been switched by the owner); the session was later returned
+  to Claude Fable 5.
+
+## Owner decision required at authorization (tag publication)
+
+If the environment blocks `refs/tags/*` pushes, DONE-3 cannot be met as
+written. Options:
+
+- A (recommended): publish `archive/*` branches instead of tags
+  (`refs/heads/archive/<name>`). Equally durable and restorable; branch
+  pushes are proven to work here. Trade-off honestly noted: a branch
+  signals "history" less strongly than a tag - but an unprotected tag is
+  also force-movable, so the durability difference is small.
+- B: keep tags local, record them in the slice record, defer publication
+  to an environment that permits tag pushes; branch deletion then also
+  defers (deletion must never precede published archives).
+- C: stop with CONFLICT.
+
+P4 first probes one tag push after root-causing the 403; if policy-blocked,
+apply the owner-selected option.
 
 ---
 
-# Task Prompt: Git hygiene - PR dispositions, archive tags, stale-branch removal, frozen-hash migration
+# Task Prompt: Git hygiene v2
 
 ## Execution header
 
 Target runtime/agent: Claude Code remote session with git push authority
-and GitHub MCP tools (PR read/comment/close). Single Lead agent; Checker
-duties performed by the Lead via deterministic git commands; no workers
-(bounded deterministic operations - delegation cost exceeds value).
-Model/runtime label and effort: session default model, standard effort.
-Sufficient because the work is deterministic git/PR operations plus short
-prose comments. Forbidden escalation: no stronger model, no added roles or
-reviews to compensate for a failing step.
-Clean-room status: NOT CLEAN ROOM (same-context; acceptable - no
-independent evaluation in scope).
-Mutation/integration/publication authority: push `archive/*` tags; delete
-the nine listed remote branches; close PR #4; one comment each on PR #2
-and PR #4; edit `tests/test_pareto_frontier.py` and `skeptic-tests.md`;
-add the slice record under `plans/`; commit on
-`claude/skeptic-routing-clarification-1efkvx`; fast-forward merge to
-`main` and push. NO force push anywhere. NO tag deletion.
+and GitHub MCP tools. Single Lead agent; Checker duties via deterministic
+git commands; no workers (mechanical operations; delegation adds
+coordination cost without independence value). No independent Judge.
+Exact model/runtime label: record the actual visible session label at
+execution time (expected: Claude Fable 5; actual label must be recorded in
+the slice record, per phase if it changes).
+Reasoning effort: EFFORT_LABEL_UNAVAILABLE (runtime exposes no effort
+setting; reviewer-recommended intent is medium - the risks here are
+authority and remote-mutation correctness, which a stronger model does not
+reduce). Fallback: none. Forbidden escalation: no second model, no added
+agents or reviewers, no higher effort to compensate for a failing step.
+Clean-room status: NOT CLEAN ROOM. Independent review: NOT REQUIRED.
+Reason: no comparative judgment requiring protected isolation.
+
+External-side-effect authority: AUTHORITY_PENDING.
+The remaining phases (P4 completion, P5, P6, P7) perform archive
+publication, branch deletion, and a push to main. Do not execute them
+until the owner explicitly authorizes this v2 in the current session,
+including the tag-vs-archive-branch decision above. The authorization
+wording must be quoted verbatim in the slice record. P2 and P3 are already
+complete under prior explicit in-session authorization (ledger above).
+
+## P0 - Task Prompt Skeptic gate (pre-execution)
+
+Read the current `skeptic.md` and `agents/task-prompt.md`. Run Level 2
+Task Prompt review on this v2. Fix ACTION findings and rerun; maximum
+three passes. Persist the gate receipt in the slice record. No external
+mutation unless the final verdict is PASS. DECOMPOSE or CONFLICT stops
+execution.
 
 ## Objective
 
 Remove stale git state that can mislead future agents, preserving every
-unmerged commit via verified archive tags, and free
+unmerged commit via verified published archives, and free
 `plans/skeptic-next-capability-sh-pf.md` from its byte-level hash pin.
+
+## Working branch
+
+Create `claude/skeptic-git-hygiene-1efkvx` fresh from current
+`origin/main`. Do not reuse the routing slice branch (one slice = one
+branch, per the consolidation plan). After verified merge to `main`,
+delete this slice branch. The prior routing branch
+(`claude/skeptic-routing-clarification-1efkvx`) is the session-designated
+branch; its deletion is deferred to the owner or session end - recorded as
+a deferred item, not silently kept.
 
 ## Exact terminal DONE
 
-1. PR #4 is closed (not merged) with a comment stating: superseded by
-   current `main`; harvest result (which of its rules already landed;
-   which remain candidates - expected: the explicit
-   `CONTEXT_PROTECTION_FAILURE` stop token and numeric receipt caps -
-   recorded for a possible future slice, not implemented now); branch
-   preserved at its archive tag.
-2. PR #2 remains open and unmerged, with one comment: not mergeable as-is
-   (stale base, two unrelated concerns); the detection harness is
-   recognized as a candidate behavioral instrument to be harvested after
-   the dogfood gate (plan Track 3); the pilot result is read as a
-   limited-pilot association, not proof. No close.
-3. Annotated tags exist on the remote, each verified by `ls-remote` to
-   point at its recorded SHA:
-   - `archive/experiment-skeptic-meta-process-value-ab-001` -> `9c24f6f3a`
-   - `archive/experiment-skeptic-trust-boundary-fe-tb-ab-001` -> `fce98e350`
-   - `archive/claude-lead-agent-prompt-artifact-9rd2na` -> `ff08a8470`
-   - `archive/pattern-classification` -> `d5f2bdc54`
-   - `archive/revised-questions` -> `f76ba4d68`
-   - `archive/benchmark-skeptic-capability-stage2-2026-07-04` -> `fcd1fa31a`
-   - `archive/sh-pf-frozen-contract` -> `52cd8226`
-   (Annotated tags point at tag objects; verify the dereferenced `^{}`
-   entry matches the SHA.)
-4. These remote branches no longer exist: `andrei`,
-   `feat/skeptic-effort-value-alignment`,
-   `plan/skeptic-practical-improvement-reset`, `promotion-check` (merged -
-   ancestry proof required before deletion), `pattern-classification`,
-   `revised-questions`, `experiment/skeptic-meta-process-value-ab-001`,
-   `experiment/skeptic-trust-boundary-fe-tb-ab-001`,
-   `claude/lead-agent-prompt-artifact-9rd2na` (tag-verified first; PR #4
-   closed first).
-5. `benchmark/skeptic-capability-stage2-2026-07-04` still exists at
-   `fcd1fa31a` AND carries its archive tag (parked Stage 6E evidence;
-   protected state).
+1. PR #4 closed, not merged, with the harvest comment. STATUS: already
+   complete (verified read-back; comment 5010882021). Re-verify state at
+   closure; do not repeat the comment.
+2. PR #2 open and unmerged with one disposition comment. STATUS: already
+   complete (comment 5010882918). Re-verify open state at closure; no
+   further comments.
+3. Seven archives published and verified on the remote, each against its
+   full authoritative SHA below - as annotated tags (recording both
+   tag-object SHA and peeled commit SHA), or as `archive/*` branches if
+   the owner selected option A. Authoritative targets:
+   - experiment/skeptic-meta-process-value-ab-001 ->
+     `9c24f6f3a8a8c9f75d060ccef07f49e736866689`
+   - experiment/skeptic-trust-boundary-fe-tb-ab-001 ->
+     `fce98e3505eda14b2588869eeef44528f81c7a2e`
+   - claude/lead-agent-prompt-artifact-9rd2na ->
+     `ff08a84707441b7d19971ef663a04a5dc280e6c3`
+   - pattern-classification ->
+     `d5f2bdc54b6cf076b5d7ab836ab0b49e40960045`
+   - revised-questions ->
+     `f76ba4d68ed090b768778ed415f0004f4bf6fecb`
+   - benchmark/skeptic-capability-stage2-2026-07-04 ->
+     `fcd1fa31a40fea050dc1f0699948e5e2c7cfebd4` (branch also retained)
+   - sh-pf-frozen-contract ->
+     `52cd8226c276186530a32a52b36d5a3943434faa`
+   If any name resolves differently from these full SHAs at execution:
+   STATE_DRIFT_REQUIRES_OWNER_DECISION.
+4. Deleted remote branches, each only after its published archive is
+   verified (or, for the merged four, after a fresh
+   `merge-base --is-ancestor <full-SHA> origin/main` proof): `andrei`
+   (`33bcb0e34294da2a39465bfbdb80f2ea54c7f701`),
+   `feat/skeptic-effort-value-alignment`
+   (`b3d6d9ea63bfa6e60c968bcd90c58311eb447fbc`),
+   `plan/skeptic-practical-improvement-reset`
+   (`eb06396624ed237ad0df0e43ce1afaa51b26e01e`), `promotion-check`
+   (`6b69e35335d66a6d42e78929e769981711d1756e`), plus the five archived
+   unmerged branches listed in DONE-3 (excluding benchmark).
+5. `benchmark/skeptic-capability-stage2-2026-07-04` still present at its
+   full SHA AND archived (protected state; disconfirming check required).
 6. `tests/test_pareto_frontier.py` no longer contains
-   `FROZEN_CONTRACT_SHA256` or
-   `test_frozen_contract_has_not_changed_after_candidate_output`;
-   `skeptic-tests.md` SH:PF section notes the promotion-time contract is
-   preserved at `archive/sh-pf-frozen-contract`; full suite green (85
-   tests expected).
-7. Slice record `plans/skeptic-git-hygiene-slice-record.md` (dispositions,
-   tag-to-SHA table with branch-name mapping for restore, PR links,
-   receipts, RunSkeptic result) committed, merged to `main`, pushed, and
-   fresh `origin/main` fetched and verified to contain the commit.
+   `FROZEN_CONTRACT_SHA256` or the frozen-contract test; the
+   `skeptic-tests.md` SH:PF section states honestly: the archive preserves
+   the historical promotion contract and replaces active byte-level
+   immutability enforcement with historical recoverability and
+   traceability. All tests pass; the count delta from
+   `BASELINE_TEST_COUNT` is exactly -1 and is explained in the record.
+7. Slice record `plans/skeptic-git-hygiene-slice-record.md` (verbatim
+   authorization quote, P0 gate receipt, dispositions, archive restore
+   table with full SHAs, per-phase model labels, receipts, RunSkeptic
+   result) committed on the slice branch, merged to `main`, pushed, fresh
+   `origin/main` verified; slice branch then deleted.
 
-Intermediate states that are not DONE: tags created locally but not
-pushed or not verified; any deletion before its per-branch acceptance;
-comments drafted but not posted; branch-only commit; push without fresh
-remote verification.
+Not DONE: local-only archives; any deletion before its per-target
+verification; branch-only commit; push without fresh remote verification.
 
-## Verified starting state (P1 must re-verify; observed 2026-07-18)
+Final-state verification is per-target: every targeted deletion absent;
+every protected ref present at its full SHA; no unlisted ref mutated. No
+exact global branch count is asserted.
 
-`origin/main` = `ac221cb57`; 86/86 tests green. Remote tips:
-`andrei 33bcb0e34` (merged), `benchmark/... fcd1fa31a` (keep),
-`claude/lead-agent-prompt-artifact-9rd2na ff08a8470` (PR #4 head),
-`experiment/skeptic-meta-process-value-ab-001 9c24f6f3a`,
-`experiment/skeptic-trust-boundary-fe-tb-ab-001 fce98e350`,
-`feat/skeptic-effort-value-alignment b3d6d9ea6` (merged),
-`pattern-classification d5f2bdc54`,
-`plan/skeptic-practical-improvement-reset eb0639662` (merged),
-`promotion-check 6b69e3533` (merged), `revised-questions f76ba4d68`.
-PR #4 open (head `ff08a84`, base `b071899`); PR #2 open from fork
-`EHS-il/skeptic:integrate-karpathy-coding-discipline`.
+## Verified starting state (P1 must re-verify)
 
-Invalidation: any tip differs, a "merged" branch gains commits, PR states
-changed, or a new open PR references a listed branch -> STOP, re-audit
-once, update this table; a second drift -> CONFLICT.
+`origin/main` = `c6df30f6ec9e2d6bb309b817178fbcb45ca0b1aa`; record
+`BASELINE_TEST_COUNT` from a fresh full-suite run (last observed: 86, all
+passing). Target tips: the full SHAs in DONE-3/DONE-4. PR #4 closed with
+1 comment; PR #2 open with the disposition comment.
+Drift rules: `origin/main` advancing by new verified work -> re-audit and
+record, then continue if no deletion target is affected. Any change to a
+deletion-target tip, PR head, or ancestry ->
+STATE_DRIFT_REQUIRES_OWNER_DECISION; do not retarget an archive or delete
+the changed branch without renewed owner authorization. Network or
+metadata-only drift may be retried within limits.
 
 ## Authority and source-of-truth order
 
-1. Owner instruction: consolidation plan Track 2 (merged in `main`).
+1. Explicit owner authorization of this v2 in the current session
+   (verbatim quote required in the slice record).
 2. Live remote/GitHub state observed at execution.
-3. This Task Prompt.
-PR #2 belongs to an external contributor: comment authority only. Closing
-or merging PR #2 requires an explicit owner decision - out of scope.
+3. Consolidation plan Track 2 (merged in `main`) as the source of intended
+   work - not, by itself, execution authority.
+4. This Task Prompt.
+PR #2 belongs to an external contributor: comment authority only (already
+used); closing or merging it requires a separate explicit owner decision.
 
 ## Scope and mutation boundary
 
-Allowed: `git fetch --prune`; ancestry checks; create and push the seven
-`archive/*` tags; delete exactly the nine listed remote branches; close
-PR #4; one comment per PR (#2, #4); edit the two listed files; add the
-slice record; commit/push working branch; ff-merge and push `main`.
-Forbidden: force push; deleting `main`, the working branch, or
-`benchmark/...`; deleting any unlisted branch; deleting tags; merging any
-PR; editing `skeptic.md` or `agents/*`; any write to the fork.
-Rollback: restore any branch with `git push origin <tag>^{}:refs/heads/<branch>`
-(mapping table in the slice record); reopen PR #4; revert the test edit
-via git.
-Expected final state: clean tree; `main` == `origin/main` containing the
-slice commit; remote has 3 branches (`main`, working branch, benchmark)
-plus 7 archive tags.
+Allowed: fetch --prune; ancestry checks; one root-cause probe of the
+tag-push 403; publish the seven archives per the owner-selected mechanism;
+delete exactly the nine listed branches; edit the two listed files; add
+the slice record; commit/push the fresh slice branch; ff-merge and push
+`main`; delete the slice branch after verified merge.
+Forbidden: force push; deleting `main`, the benchmark branch, or the
+session-designated routing branch; deleting any unlisted ref; deleting
+archives; merging any PR; further PR comments or closures; editing
+`skeptic.md` or `agents/*`; any write to the fork.
+Rollback: restore any branch via
+`git push origin <archive-ref>^{}:refs/heads/<original-branch-name>`
+(restore table with full SHAs persisted before deletions); reopen PR #4;
+revert file edits via git.
 
 ## Completion-feasibility and budget
 
-Largest useful slice: all of Track 2 - small and deterministic.
-Envelope: single session, ~20 git/MCP operations, one bounded test edit.
-Protected completion reserve: merge-to-main and fresh remote verification
-run before any optional wording polish or extra tidying.
-Limits: max 2 retries per failure class, then redesign; network retries
-up to 4 with backoff. Futility stop: permission or branch-protection
-refusal -> CONFLICT with state preserved (tags already pushed are the
-safe partial state; deletions simply defer).
+Envelope: single session, ~20 deterministic operations, one bounded test
+edit. Protected completion reserve: merge-to-main and fresh remote
+verification before any optional polish. Limits: max 2 retries per failure
+class then redesign; network retries x4 backoff. Futility: policy or
+permission refusal that the owner-selected option cannot resolve ->
+CONFLICT with state preserved (published archives are the safe partial
+state; deletions defer).
 
 ## Execution graph
 
-P1 Preflight re-audit. Deps: none. `git fetch --prune`; recompute tips,
-ancestry (merged set), PR states via MCP; compare to table above.
-Accept: exact match (or one documented re-audit). Next: P2, P3, P4.
+P0 Skeptic gate (above). -> P1.
+P1 Preflight re-audit: fetch --prune; resolve every target name to its
+   full SHA and compare; PR states; BASELINE_TEST_COUNT; drift rules
+   applied. -> P4 (P2, P3 already complete - verify only).
+P4 Archive publication: root-cause the 403 (proxy status probe); apply
+   owner-selected mechanism; publish seven archives; verify each on the
+   remote against its full SHA (tags: dereferenced ^{} value; record tag
+   object + peeled SHAs). Persist the restore table in the slice record
+   draft before any deletion. Accept: 7/7 verified.
+P5 Branch deletion: per-target - archive verified (or fresh ancestry
+   proof for the merged four), then delete; verify absence; benchmark
+   never touched. Accept: nine absent, protected refs present.
+P6 Frozen-hash migration: remove the constant and its test; add the
+   honest governance note; full suite; explain the -1 delta. Accept: all
+   pass; only the two intended files changed.
+P7 Record and publish: finalize slice record; commit on the slice branch;
+   push; ff-merge to `main`; push; fetch; verify fresh `origin/main`;
+   rerun suite; delete the slice branch; verify deletion.
 
-P2 PR #4 disposition. Deps: P1. Diff the branch's rules against current
-`agents/lead-agent-prompt.md`; write the harvest note; post close-comment;
-close PR #4. Ordering rule: close BEFORE its branch deletion so closure is
-an explicit decision, not a side effect. Accept: PR #4 state=closed,
-comment visible via MCP read-back.
+## Context, evidence, independence, failure handling
 
-P3 PR #2 disposition. Deps: P1. Post the comment defined in DONE-2.
-Accept: comment visible; PR still open.
-
-P4 Archive tags. Deps: P1. Create the seven annotated tags at the recorded
-SHAs; push; verify each via `ls-remote --tags` dereferenced SHA. Accept:
-7/7 verified. Record the tag-to-SHA-to-branch table in the slice record
-draft now (durable before deletions).
-
-P5 Branch deletion. Deps: P4 (per-branch tag verified) and P2 (for the
-PR #4 head branch). For the four merged branches first prove
-`git merge-base --is-ancestor <tip> origin/main`; then delete. Delete the
-five tagged branches. Never touch `benchmark/...`. Accept: `ls-remote`
-shows the nine branches gone, benchmark present, tags present.
-
-P6 Frozen-hash migration. Deps: P4 (sh-pf tag verified). Remove the hash
-constant and its test; add the governance pointer line; run the full
-suite. Accept: suite green (85 expected); `git status` shows only the two
-intended files changed.
-
-P7 Record and publish. Deps: P2-P6. Finalize the slice record with
-receipts and RunSkeptic result; commit on the working branch; push;
-ff-merge to `main`; push; `git fetch`; verify `origin/main` contains the
-commit and equals local `main`; rerun the suite on `main`.
-
-## Context and evidence custody
-
-Lead context: this prompt, the re-audited table, per-phase acceptance
-results. Deterministic outputs (ls-remote listings, ancestry checks, test
-results) are evidence; the tag table is persisted in the slice record at
-P4, before any deletion depends on it. Gap ledger inside the slice record
-if any phase blocks.
-
-## Clean-room / independence
-
-NOT_APPLICABLE - no evaluation, comparison, or scoring in scope.
-
-## Failure, retry, redesign, and handoff
-
-Failure classes: permission/protection refusal -> CONFLICT, preserve
-state; network -> retry x4 backoff; state drift -> one re-audit then
-CONFLICT; suite failure after P6 -> revert the edit, re-diagnose, max 2
-attempts then CONFLICT. Pre-exhaustion handoff: commit and push the slice
-record with a completed-phase table; deferred deletions are safe because
-their tags are already pushed and verified.
+Lead context holds this prompt, the re-audited full-SHA table, and
+per-phase acceptance results. Deterministic outputs (ls-remote listings,
+ancestry checks, test results) are the evidence; the restore table is
+persisted before deletions depend on it; gap ledger in the slice record
+if a phase blocks. Failure classes: policy/permission refusal ->
+owner-selected option, else CONFLICT with state preserved; network ->
+retry x4 backoff; target drift -> STATE_DRIFT_REQUIRES_OWNER_DECISION;
+suite failure after P6 -> revert, re-diagnose, max 2 attempts then
+CONFLICT. Pre-exhaustion handoff: commit and push the slice record with a
+completed-phase table; deferred deletions are safe once archives are
+published and verified.
 
 ## System verification
 
-- Full `ls-remote` (heads and tags) compared against the expected final
-  set from DONE-3/4/5.
-- Disconfirming check on protected state: `benchmark/...` must still
-  resolve, at `fcd1fa31a`.
-- Full unittest suite after P6 and again on merged `main`.
-- RunSkeptic on the change; maximum 3 passes; end HANDLED or CONFLICT.
-
-## Integration / publication / remote verification
-
-As P7: non-force push, fresh fetch, SHA equality, ancestor check.
-Blockers (credentials, protection, drift) -> preserve verified work,
-return CONFLICT; never relabel a partial state as DONE.
+Per-target ls-remote checks (absence and presence at full SHA);
+disconfirming protected-state checks (benchmark, main, routing branch);
+full suite after P6 and on merged `main`; RunSkeptic on the change, max 3
+passes, ending HANDLED or CONFLICT.
 
 ## Task Closure Receipt
 
-Enumerate DONE-1 through DONE-7 each yes/no with evidence (PR states and
-comment URLs, ls-remote excerpts, ancestry proofs, suite counts, fresh
-`origin/main` SHA); protected-state result for `benchmark/...` and
-`main`; unresolved blockers; residual risk. `Overall DONE: yes` only when
-all seven verify.
+Enumerate DONE-1..7 yes/no with evidence (verbatim authorization quote,
+P0 receipt, comment IDs and PR read-back states, per-target ls-remote
+values with full SHAs, tag-object and peeled SHAs where applicable,
+ancestry proofs, BASELINE_TEST_COUNT and explained delta, fresh
+origin/main SHA, slice-branch deletion proof); per-phase model labels;
+protected-state results; unresolved blockers; residual risk (including:
+archives preserve history but do not enforce current-file immutability).
+Overall DONE: yes only when all seven verify.
 
 # PONYTAIL / KISS - NON-NEGOTIABLE EXECUTION CHECKSUM
 
-Never delete an unmerged branch before its remote archive tag is verified.
-Never touch benchmark/skeptic-capability-stage2-2026-07-04 or main history.
-Close PR #4 with its comment before deleting its head branch.
-PR #2: one comment only - no close, no merge.
-No force push. No tag deletion. Drift or unexpected mutation = stop.
+No external mutation while AUTHORITY_PENDING; quote the authorization verbatim.
+Never delete a branch before its published archive (or fresh ancestry proof) is verified.
+Full 40-char SHAs are the only deletion contract; any target drift = owner decision.
+Never touch benchmark/skeptic-capability-stage2-2026-07-04, main history, or the routing branch.
+PR #2 and PR #4: no further actions beyond re-verification.
+No force push. No archive deletion. Fresh slice branch only; delete it after verified merge.
 Merged-to-remote-main with fresh verification is the only DONE.
 
 # END OF PROMPT
