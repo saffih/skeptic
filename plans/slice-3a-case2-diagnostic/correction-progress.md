@@ -36,10 +36,17 @@ Completed phases:
   PASS (Receipt 2a); reviewer-repair budget path active (max 4
   commits/pushes).
 
+- P4: repair checkpoint 0b0001e3d71c8db361bb1d3aa255ebb2473ef3b3
+  pushed and freshly verified; reviewer dispatch 2 (second and final)
+  ran fresh against it and returned PASS with independent
+  recomputation of all load-bearing hashes. Verbatim receipt persisted
+  in `correction-review-receipt.md` (this checkpoint). Substantive
+  files frozen as of that PASS.
+
 Unresolved gaps:
-- Reviewer dispatch 2 (second and final) pending against this
-  checkpoint once pushed and freshly verified; PASS required.
-- Terminal RunSkeptic, repository record, and final verification pending.
+- Terminal RunSkeptic (Receipt 3), repository record, final manifest
+  regeneration, and final external verification pending (last
+  authorized commit/push).
 
 Blocking conflicts:
 None.
