@@ -49,6 +49,7 @@ Examples:
 - Map changes must test detect-only behavior and assumption/evidence separation.
 - Thinker changes must test all required Thinkers and NOT_APPLICABLE behavior.
 - Pareto frontier / dominance changes must test true dominance, frontier preservation, fail-closed evidence guards, and silence when existing Skeptic or an ordinary task is already sufficient.
+- Constraint/leverage/dominance routing changes must test single-lens cases, silent ordinary tasks, materially distinct co-reports without duplication, wrong-constraint deferral of dominance elimination, and fail-closed unproven dominance; `tests/test_constraint_leverage_dominance_routing.py` is the executable reference.
 - Evidence changes must test OBSERVED, REPRODUCED, HISTORICAL, and INFERRED RISK handling.
 - Decide changes must test FIX, DECOMPOSE, and CONFLICT.
 - Act changes must test that action occurs only after DECIDE says FIX.

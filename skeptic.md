@@ -297,6 +297,22 @@ If any basis or guard is missing, dominance is unproven. If neither option is st
 
 Report the dominating option, dominated option, compared dimensions, evidence and uncertainty basis, and preservation guards checked whenever SH:PF returns `ELIMINATE_DOMINATED`.
 
+#### Constraint, leverage, and dominance routing
+
+`CH:CR`, `SH:WL`, and `SH:PF` answer different questions about different entities:
+
+- `CH:CR`: is effort aimed at the real system constraint? Entity: the system, queue, or limiting factor.
+- `SH:WL`: inside a real trade-off, does the chosen default, middle, or exception act on the lever that changes the limiting outcome? Entity: one trade-off decision.
+- `SH:PF`: is one of several live comparable options proven dominated? Entity: the live option set.
+
+Routing rules:
+
+- Apply only the lenses whose entity is present; an ordinary task with no constraint doubt, no real trade-off, and no live option comparison triggers none of them.
+- The practical default order is constraint, then leverage, then dominance, but skip absent stages: a clear option comparison does not require inventing a bottleneck, and a plain bottleneck error does not require trade-off or frontier analysis.
+- A live `CH:CR` finding that effort targets the wrong constraint makes dominance elimination premature; route `SH:PF` to `DEFER_EXISTING` until the constraint question is resolved.
+- Report `CH:CR` and `SH:WL` together only when they expose materially different defects: the wrong bottleneck and the wrong lever inside the trade-off. When one finding explains the other, merge them in STABILIZE.
+- Incomplete dominance evidence stays `DOMINANCE_UNPROVEN`; it neither substitutes for constraint or leverage analysis nor creates a `CH:CR` or `SH:WL` finding by itself.
+
 If no real opposing forces, invalid middle, or live option comparison are present, SH = NOT_APPLICABLE.
 
 Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, requires an explicit tradeoff decision, misses the real leverage point, or retains a proven dominated option.

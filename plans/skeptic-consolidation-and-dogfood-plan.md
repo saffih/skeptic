@@ -95,9 +95,12 @@ PR dispositions:
   as-is - stale base, two unrelated concerns in one PR. But its
   detection-effectiveness harness (18 planted-issue cases, TP/FP/FN scoring,
   question-set variants) is exactly the behavioral instrument this repo
-  lacks, and its pilot result - razor's 4 questions at F1 0.78 vs the full
-  86-question set at F1 0.72 - is direct evidence for the line-budget
-  principle. Harvest the harness design as candidate tooling in a fresh
+  lacks. Its pilot result - razor's 4 questions at F1 0.78 vs the full
+  86-question set at F1 0.72 - is a limited-pilot association consistent
+  with the line-budget principle (13 runs, incomplete matrix, older
+  baseline, question count varied together with content and structure); it
+  does not prove that file growth caused the lower score. Harvest the
+  harness design as candidate tooling in a fresh
   slice once Track 3 justifies it; reply on the PR with that disposition.
 - **Frozen-hash fix**: tag the SH:PF contract state
   (`archive/sh-pf-frozen-contract` at the commit whose hash the test pins),
@@ -116,10 +119,11 @@ framework on external design and code tasks.
   Task Prompt), gate verdicts, what materially helped, what was ceremony,
   any failure or near-harm the framework missed, net verdict. The log is
   data, not doctrine; bureaucracy in the log is itself a finding.
-- **Harvest rule**: failure cases from the log are the only admissible
-  justification for new lenses, including non-maleficence and
-  persons-as-ends. Three or more entries are required before the next
-  capability decision after routing.
+- **Harvest rule**: new capability requires a concrete demonstrated failure
+  from dogfooding, planted-issue testing, credible external evidence, or a
+  proven structural gap - not speculation alone. This applies to
+  non-maleficence and persons-as-ends. Three or more log entries are
+  required before the next capability decision after routing.
 - **Behavioral measurement**: if the log shows detection or routing
   problems, build a planted-issue harness (PR #2 model) as tooling under
   `tests/` or a new `harness/` directory - deterministic scoring, frozen
