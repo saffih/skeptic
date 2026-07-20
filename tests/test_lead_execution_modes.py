@@ -28,6 +28,7 @@ class LeadExecutionModeContractTests(unittest.TestCase):
         cls.lead = LEAD_PROMPT.read_text(encoding="utf-8")
         cls.governance = GOVERNANCE.read_text(encoding="utf-8")
         cls.execution = section(cls.lead, "## Execution mode and package ownership")
+        cls.resume = section(cls.lead, "## Checkpoint-first resume and closure fast path")
         cls.core = section(cls.lead, "## Core job")
         cls.scenarios = section(
             cls.governance,
@@ -113,6 +114,106 @@ class LeadExecutionModeContractTests(unittest.TestCase):
             self.assertIn(f"`{field}`", self.core)
         self.assertIn("operational stop reason", self.core)
         self.assertIn("not a new Skeptic", self.core)
+
+    def test_checkpoint_state_precedes_resume_or_artifact_review(self) -> None:
+        for behavior in [
+            "read and verify the authoritative state or checkpoint before broad artifact review",
+            "the highest completed phase",
+            "the first incomplete phase",
+            "A lifecycle written from phase zero does not authorize replay.",
+        ]:
+            self.assertIn(behavior, self.resume)
+        for mode in ["EXECUTE_PACKAGE", "REPAIR_PACKAGE"]:
+            self.assertRegex(
+                self.core,
+                rf"`{mode}`: read authoritative state first;[\s\S]*?resume at the first incomplete phase",
+            )
+
+    def test_closure_only_fills_missing_fields_without_replay(self) -> None:
+        for behavior in [
+            "When substantive work is complete, enter `CLOSURE_ONLY`",
+            "Read only the authoritative checkpoint, final result, gap or missing-field ledger, and draft or final closure receipt.",
+            "Fill missing receipt fields deterministically.",
+            "Issue the Task Closure Receipt and stop.",
+        ]:
+            self.assertIn(behavior, self.resume)
+        self.assertRegex(
+            self.scenarios,
+            r"Closure-only missing receipt fields[\s\S]*?enter `CLOSURE_ONLY`[\s\S]*?do not replay, recompute, call an advisor, or broadly read raw outputs",
+        )
+
+    def test_accepted_controller_result_is_verified_not_recomputed(self) -> None:
+        for behavior in [
+            "verify its identity, inputs, hash, acceptance, and required counts",
+            "Do not recreate inventories, score tables, regression ledgers, or conclusions",
+            "Open raw evidence only for a named unresolved dispute.",
+        ]:
+            self.assertIn(behavior, self.resume)
+        self.assertRegex(
+            self.scenarios,
+            r"Accepted controller result needs no independent confirmation[\s\S]*?verify identity, inputs, hash, acceptance, and required counts[\s\S]*?without recomputation",
+        )
+
+    def test_checkpoint_invalidation_reopens_only_smallest_phase(self) -> None:
+        for invalidation in [
+            "a hash mismatch",
+            "a corrupt or missing accepted artifact",
+            "failed acceptance",
+            "a changed immutable input",
+            "contradictory authoritative state",
+        ]:
+            self.assertIn(invalidation, self.resume)
+        for record in [
+            "invalid checkpoint",
+            "deterministic evidence",
+            "smallest phase reopened",
+            "preserved unaffected evidence",
+            "renewed feasibility",
+        ]:
+            self.assertIn(record, self.resume)
+        self.assertIn("Otherwise stop with `CHECKPOINT_CONFLICT`.", self.resume)
+
+    def test_closure_ready_state_forbids_optional_advisor(self) -> None:
+        self.assertIn(
+            'do not initiate an advisor, Judge, extra review, new inventory, independent analysis, or "one more check"',
+            self.resume,
+        )
+        self.assertRegex(
+            self.scenarios,
+            r"Optional advisor after closure-ready[\s\S]*?do not call the advisor; close",
+        )
+
+    def test_lifecycle_resumes_at_first_incomplete_phase(self) -> None:
+        self.assertRegex(
+            self.scenarios,
+            r"Resume at the first incomplete phase[\s\S]*?P0-P5 complete[\s\S]*?start at P6 without replaying earlier phases",
+        )
+
+    def test_context_exhaustion_after_completion_is_failure(self) -> None:
+        for failure in [
+            "`prompt too long`",
+            "session exhaustion",
+            "forced compression",
+            "unplanned handoff",
+        ]:
+            self.assertIn(failure, self.resume)
+        self.assertRegex(
+            self.scenarios,
+            r"Context exhaustion after completion[\s\S]*?context protection as failed[\s\S]*?surviving artifacts do not make that Lead execution successful",
+        )
+
+    def test_resume_receipt_records_checkpoint_and_transition_state(self) -> None:
+        for field in [
+            "Authoritative checkpoint",
+            "Highest completed phase",
+            "First incomplete phase",
+            "Closure-ready status",
+            "Lead-context files opened and reason",
+            "Remaining work",
+            "Backward-transition authorization and evidence",
+        ]:
+            self.assertIn(f"`{field}`", self.resume)
+            self.assertIn(f"`{field}`", self.core)
 
 
 if __name__ == "__main__":

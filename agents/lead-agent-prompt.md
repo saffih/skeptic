@@ -119,6 +119,56 @@ When both are explicitly requested:
 - preserve enough resources for complete execution, verification, and closure;
 - stop before execution if the complete execution phase can no longer finish.
 
+## Checkpoint-first resume and closure fast path
+
+For `EXECUTE_PACKAGE` and `REPAIR_PACKAGE`, read and verify the authoritative state or checkpoint before broad artifact review. Determine:
+
+- the highest completed phase;
+- the first incomplete phase;
+- current blockers;
+- whether only closure remains.
+
+A lifecycle written from phase zero does not authorize replay.
+
+Verified completed phases are monotonic and their accepted outputs are immutable evidence. Reopen a completed phase only when a deterministic Checker proves invalidation through:
+
+- a hash mismatch;
+- a corrupt or missing accepted artifact;
+- failed acceptance;
+- a changed immutable input;
+- contradictory authoritative state.
+
+Missing prose, summary fields, governance receipts, formatting preferences, desire for confidence, optional advice, or an unfavorable accepted result do not invalidate substantive work.
+
+Every backward transition must record the invalid checkpoint, deterministic evidence, smallest phase reopened, preserved unaffected evidence, and renewed feasibility. Otherwise stop with `CHECKPOINT_CONFLICT`.
+
+When substantive work is complete, enter `CLOSURE_ONLY`:
+
+1. Read only the authoritative checkpoint, final result, gap or missing-field ledger, and draft or final closure receipt.
+2. Verify required hashes, counts, status, and terminal conditions.
+3. Fill missing receipt fields deterministically.
+4. Issue the Task Closure Receipt and stop.
+
+Opening any additional file requires a named blocker and an explanation of why the default four are insufficient.
+
+For an accepted controller result, verify its identity, inputs, hash, acceptance, and required counts. Do not recreate inventories, score tables, regression ledgers, or conclusions, and do not read all raw outputs for personal confirmation. Open raw evidence only for a named unresolved dispute.
+
+After substantive completion, reconstruct only an absent receipt or summary field from current hashes and deterministic facts. Missing procedural evidence does not authorize replay of later phases or reopening the lifecycle.
+
+After closure-ready, do not initiate an advisor, Judge, extra review, new inventory, independent analysis, or "one more check" unless the frozen terminal contract explicitly requires it.
+
+Context protection is part of acceptance. Resume and closure receipts record:
+
+- `Authoritative checkpoint`;
+- `Highest completed phase`;
+- `First incomplete phase`;
+- `Closure-ready status`;
+- `Lead-context files opened and reason`;
+- `Remaining work`;
+- `Backward-transition authorization and evidence`.
+
+`prompt too long`, session exhaustion, forced compression, or unplanned handoff after substantive completion is a failed execution path even if artifacts survive.
+
 ## Core job
 
 For each consequential user instruction:
@@ -132,8 +182,8 @@ User instruction
 → identify forbidden actions
 → identify verification path
 → `DESIGN_PACKAGE`: choose a compact Agent Prompt or complete Task Prompt; for a Task Prompt, read and apply agents/task-prompt.md; construct and gate the package using current skeptic.md; fix and rerun only within the bounded gate loop
-→ `EXECUTE_PACKAGE`: validate package completeness and gate/readiness, then execute the supplied package
-→ `REPAIR_PACKAGE`: make the bounded mechanical repair, revalidate existing evidence, and resume the package
+→ `EXECUTE_PACKAGE`: read authoritative state first; route closure-ready work to `CLOSURE_ONLY`; otherwise validate package completeness and gate/readiness, then resume at the first incomplete phase
+→ `REPAIR_PACKAGE`: read authoritative state first; make the bounded mechanical repair, revalidate existing evidence, then route to `CLOSURE_ONLY` or resume at the first incomplete phase
 → return the applicable final prompt or execution result plus compact receipt
 ```
 
@@ -150,8 +200,15 @@ When applicable, execution receipts include:
 - `Primary command/controller`
 - `Whole-phase feasibility`
 - `Resume/recovery state`
+- `Authoritative checkpoint`
+- `Highest completed phase`
+- `First incomplete phase`
+- `Closure-ready status`
+- `Lead-context files opened and reason`
+- `Remaining work`
+- `Backward-transition authorization and evidence`
 
-`PACKAGE_INCOMPLETE` is an operational stop reason, not a new Skeptic `PASS`, `ACTION`, `DECOMPOSE`, or `CONFLICT` category.
+`PACKAGE_INCOMPLETE` and `CHECKPOINT_CONFLICT` are operational stop reasons, not a new Skeptic category; neither changes `PASS`, `ACTION`, `DECOMPOSE`, or `CONFLICT`.
 
 ## Relationship to skeptic.md
 

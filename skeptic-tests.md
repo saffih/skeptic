@@ -140,6 +140,24 @@ Every behavior-changing Skeptic proposal must be tested against these cases:
 5. Complete batch cannot fit
    When the first calls fit but the complete batch plus judging, verification, persistence, and closure does not fit the remaining session or call budget, do not launch the batch; pilot, reduce, hand off, or stop. Generic context protection is not sufficient feasibility evidence.
 
+6. Closure-only missing receipt fields
+   Given P1-P6 complete while the P0 receipt and four deterministic counts are missing, enter `CLOSURE_ONLY`, fill only the missing fields, issue the closure receipt, and do not replay, recompute, call an advisor, or broadly read raw outputs.
+
+7. Accepted controller result needs no independent confirmation
+   Given an accepted controller result and a Lead desire for confirmation, verify identity, inputs, hash, acceptance, and required counts, then close without recomputation.
+
+8. Proven checkpoint invalidation
+   Given a deterministic checkpoint hash mismatch, reopen only the smallest evidenced phase, preserve unaffected evidence, and record renewed feasibility.
+
+9. Optional advisor after closure-ready
+   Given closure-ready state and an advisor not required by the frozen terminal contract, do not call the advisor; close.
+
+10. Resume at the first incomplete phase
+    Given a lifecycle listing P0-P6 while authoritative state proves P0-P5 complete, start at P6 without replaying earlier phases.
+
+11. Context exhaustion after completion
+    Given broad rereading after substantive completion reaches `prompt too long`, treat context protection as failed; surviving artifacts do not make that Lead execution successful.
+
 ### SH:PF executable coverage
 
 `tests/test_pareto_frontier.py` binds the SH:PF runtime rule to a deterministic 16-case decision table. It covers true-dominance changes, existing-sufficient and ordinary silent controls, and false-dominance traps involving stale or uncertain evidence, causation versus correlation, weights, grouping, aggregation, tractability, minority harm, long-tail preservation, consequence horizons, equality, reversibility, and strategic option value.
