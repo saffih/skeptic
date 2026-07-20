@@ -123,6 +123,26 @@ Every behavior-changing Skeptic proposal must be tested against these cases:
 
 `tests/test_task_prompt_scenarios.py` is the executable reference decision table for these Task Prompt gate outcomes. It verifies the explicit PASS/ACTION/DECOMPOSE/CONFLICT routing for the listed conditions. It does not replace semantic RunSkeptic review or prove that arbitrary prose is feasible.
 
+### Task Prompt checkpoint/resume regression scenarios
+
+1. Closure-only missing procedural fields
+   Given P1-P6 complete while the P0 receipt and deterministic counts are missing, enter `CLOSURE_ONLY`, fill only the missing fields, issue the Task Closure Receipt, and do not replay completed phases.
+
+2. Accepted result and extra confidence
+   Given an accepted controller result and a Lead request for extra confidence, verify identity, input and result hashes, acceptance, and required counts, then close without recomputation.
+
+3. Deterministic checkpoint invalidation
+   Given a checkpoint hash mismatch, reopen only the smallest evidenced phase, preserve unaffected evidence, and record renewed feasibility.
+
+4. Optional review after closure-ready
+   Given closure-ready state and an optional review not frozen into the terminal contract, do not call it; close.
+
+5. Resume at P6
+   Given a lifecycle listing P0-P6 while the authoritative checkpoint proves P0-P5 complete, start at P6 without replaying earlier phases.
+
+6. Context exhaustion after substantive completion
+   Given broad rereading after completion reaches `prompt too long`, mark the Task Prompt execution path failed; surviving artifacts do not convert that execution into success.
+
 ### Lead execution-mode regression scenarios
 
 1. Predesigned benchmark package

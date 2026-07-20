@@ -181,6 +181,109 @@ class TaskPromptContractTests(unittest.TestCase):
         ]:
             self.assertIn(marker, self.task)
 
+    def test_resumed_state_machine_routes_from_authoritative_checkpoint(self) -> None:
+        for marker in [
+            "New execution:",
+            "Resumed execution:",
+            "RESUME ENTRY",
+            "VERIFY AUTHORITATIVE CHECKPOINT",
+            "first incomplete dependency-ready phase",
+            "CLOSURE_ONLY when substantive work is complete",
+            "smallest evidenced backward transition after deterministic invalidation",
+            "CHECKPOINT_CONFLICT when state cannot be reconciled",
+            "A lifecycle written from phase zero does not authorize replay",
+        ]:
+            self.assertIn(marker, self.task)
+
+    def test_closure_only_missing_fields_do_not_reopen_execution(self) -> None:
+        for marker in [
+            "When substantive work is complete, enter `CLOSURE_ONLY`.",
+            "fill only missing receipt fields",
+            "Missing procedural evidence does not reopen completed phases.",
+        ]:
+            self.assertIn(marker, self.task)
+        for marker in [
+            "Closure-only missing procedural fields",
+            "do not replay completed phases",
+        ]:
+            self.assertIn(marker, self.governance)
+
+    def test_accepted_result_is_verified_without_independent_recomputation(self) -> None:
+        for marker in [
+            "verify identity, input and result hashes, acceptance, and required counts",
+            "Do not recreate inventories, scores, ledgers, or conclusions",
+            "Raw evidence may be opened only for one named unresolved dispute.",
+        ]:
+            self.assertIn(marker, self.task)
+        self.assertIn("Accepted result and extra confidence", self.governance)
+        self.assertIn("then close without recomputation", self.governance)
+
+    def test_checkpoint_invalidation_reopens_smallest_evidenced_phase(self) -> None:
+        for marker in [
+            "hash mismatch",
+            "corrupt or missing accepted artifact",
+            "failed acceptance",
+            "changed immutable input",
+            "contradictory authoritative state",
+            "smallest phase reopened",
+            "preserved unaffected evidence",
+            "renewed feasibility",
+            "Otherwise return `CHECKPOINT_CONFLICT`.",
+        ]:
+            self.assertIn(marker, self.task)
+        self.assertIn("Deterministic checkpoint invalidation", self.governance)
+
+    def test_closure_ready_state_forbids_optional_review_expansion(self) -> None:
+        self.assertIn(
+            'do not add an advisor, Judge, optional review, new inventory, broad analysis, or "one more check"',
+            self.task,
+        )
+        self.assertIn("Optional review after closure-ready", self.governance)
+        self.assertIn("do not call it; close", self.governance)
+
+    def test_checkpoint_proven_p0_to_p5_resumes_at_p6(self) -> None:
+        self.assertIn("Resume at the first incomplete dependency-ready phase.", self.task)
+        self.assertIn("Resume at P6", self.governance)
+        self.assertIn("start at P6 without replaying earlier phases", self.governance)
+
+    def test_context_exhaustion_after_completion_fails_task_execution(self) -> None:
+        for marker in [
+            "`prompt too long`",
+            "session exhaustion",
+            "forced compression",
+            "unplanned handoff",
+            "failed Task Prompt execution path",
+        ]:
+            self.assertIn(marker, self.task)
+        self.assertIn("Context exhaustion after substantive completion", self.governance)
+        self.assertIn(
+            "surviving artifacts do not convert that execution into success",
+            self.governance,
+        )
+
+    def test_resume_record_is_bound_to_contract_and_copyable_template(self) -> None:
+        for marker in [
+            "authoritative checkpoint path or ref and hash",
+            "highest completed phase",
+            "first incomplete phase",
+            "closure-ready status",
+            "Lead-context files opened and reason",
+            "backward-transition authorization and evidence",
+            "## Resume / checkpoint state",
+            "Checkpoint / resume state:",
+            "Checkpoint conflict / backward-transition rule:",
+            "Execution mode / `CLOSURE_ONLY` status:",
+        ]:
+            self.assertIn(marker, self.task)
+
+    def test_operational_resume_stops_preserve_skeptic_verdicts(self) -> None:
+        self.assertIn(
+            "`PACKAGE_INCOMPLETE` and `CHECKPOINT_CONFLICT` are operational stop reasons, not Skeptic verdicts.",
+            self.task,
+        )
+        for verdict in ["`PASS`", "`ACTION`", "`DECOMPOSE`", "`CONFLICT`"]:
+            self.assertIn(verdict, self.task)
+
 
 if __name__ == "__main__":
     unittest.main()

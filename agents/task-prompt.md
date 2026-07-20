@@ -61,10 +61,21 @@ Delegation transfers bounded work, not terminal ownership. A worker may report s
 ## Task Prompt state machine
 
 ```text
+New execution:
 INTAKE
 -> PREFLIGHT
 -> DESIGN
 -> TASK-LEVEL SKEPTIC GATE
+
+Resumed execution:
+RESUME ENTRY
+-> VERIFY AUTHORITATIVE CHECKPOINT
+-> first incomplete dependency-ready phase
+   or CLOSURE_ONLY when substantive work is complete
+   or smallest evidenced backward transition after deterministic invalidation
+   or CHECKPOINT_CONFLICT when state cannot be reconciled
+
+Execution loop (entered from the new-execution gate or a verified resume route):
 -> EXECUTE READY PHASE
 -> VERIFY AND PERSIST CHECKPOINT
 -> REASSESS FEASIBILITY AND BUDGET
@@ -76,6 +87,48 @@ INTAKE
 ```
 
 No phase may consume an unmet dependency. No dependent phase may use an output that has not passed its acceptance check and been durably persisted. No intermediate state may be promoted to DONE.
+
+A lifecycle written from phase zero does not authorize replay of verified work.
+
+## Checkpoint-first resume and closure-only execution
+
+Before broad artifact review, resumed execution must verify the authoritative checkpoint and record:
+
+- authoritative checkpoint path or ref and hash;
+- highest completed phase;
+- first incomplete phase;
+- blockers;
+- closure-ready status;
+- remaining work;
+- Lead-context files opened and reason;
+- backward-transition authorization and evidence.
+
+Resume at the first incomplete dependency-ready phase. Completed phases and their accepted outputs are immutable evidence.
+
+Reopen a completed phase only when a deterministic Checker proves invalidation through a hash mismatch, corrupt or missing accepted artifact, failed acceptance, changed immutable input, or contradictory authoritative state.
+
+A backward transition must name the invalid checkpoint, deterministic evidence, smallest phase reopened, preserved unaffected evidence, and renewed feasibility. Otherwise return `CHECKPOINT_CONFLICT`.
+
+Missing prose, summaries, governance receipts, formatting preferences, extra-confidence requests, optional advice, or unfavorable accepted results do not invalidate substantive work.
+
+When substantive work is complete, enter `CLOSURE_ONLY`. By default, read only:
+
+1. the authoritative checkpoint;
+2. the authoritative final result;
+3. the gap or missing-field ledger;
+4. the draft or final Task Closure Receipt.
+
+Then verify required hashes, counts, state, external status, and terminal conditions; fill only missing receipt fields; preserve accepted results; issue the Task Closure Receipt; and stop. Any additional artifact requires a named blocker and an explanation of why the default four are insufficient.
+
+For an accepted deterministic result, verify identity, input and result hashes, acceptance, and required counts. Do not recreate inventories, scores, ledgers, or conclusions, and do not read all raw outputs. Raw evidence may be opened only for one named unresolved dispute.
+
+After closure-ready, do not add an advisor, Judge, optional review, new inventory, broad analysis, or "one more check" unless it was explicitly frozen into the terminal contract before execution.
+
+Missing procedural evidence does not reopen completed phases. Reconstruct only the absent receipt or summary field from current hashes and deterministic facts.
+
+`prompt too long`, session exhaustion, forced compression, or unplanned handoff after substantive completion is a failed Task Prompt execution path even when artifacts survive.
+
+`PACKAGE_INCOMPLETE` and `CHECKPOINT_CONFLICT` are operational stop reasons, not Skeptic verdicts. They do not change `PASS`, `ACTION`, `DECOMPOSE`, or `CONFLICT` meanings.
 
 ## Required Task Prompt contract
 
@@ -113,6 +166,8 @@ Before mutation, verify and record the relevant current state, such as:
 - reproduced baseline checks and known pre-existing failures.
 
 Define which changes invalidate the preflight and force recheck or CONFLICT. Never hide a red baseline or attribute it to the new work without evidence.
+
+For resumed execution, verify the checkpoint-first resume record before broad artifact review. The written lifecycle order is not evidence that the current phase is zero.
 
 ### 4. Authority and source-of-truth order
 
@@ -174,6 +229,8 @@ Allowed actions and mutation boundary:
 Budget / context / output limit:
 Required output and durable evidence location:
 Acceptance and disconfirming checks:
+Checkpoint / resume state:
+Backward-transition authorization and evidence:
 Failure, retry, and rollback path:
 Next-state rule:
 ```
@@ -209,6 +266,8 @@ Return paths, hashes, short excerpts, concise findings, and compact receipts. Do
 
 Every expensive or decision-critical phase must persist an authoritative artifact before dependent work begins. Temporary chat, worker memory, transient context, and unverified summaries are not durable evidence. Compression must preserve dissent, contradictions, failed cases, unknowns, and minority evidence that could change a decision.
 
+On resume, Lead context begins with the authoritative checkpoint record. In `CLOSURE_ONLY`, use the default four artifacts defined above and record every Lead-context file opened and its reason; broader reading requires a named blocker.
+
 Maintain a compact gap ledger for long or delegated tasks:
 
 ```text
@@ -234,6 +293,8 @@ At each checkpoint:
 3. update the gap ledger;
 4. re-estimate remaining work against the protected completion reserve;
 5. authorize only dependency-ready next phases.
+
+Completed accepted checkpoints are monotonic. Reopen only the smallest phase supported by deterministic invalidation under the checkpoint-first resume contract, preserve unaffected evidence, and reassess feasibility. Missing procedural fields are not a failure class and do not authorize replay.
 
 On failure, preserve evidence, identify the exact point and failure class, find the smallest verified cause, and retry only when the next attempt is materially safer or better informed.
 
@@ -263,6 +324,8 @@ If authority, credentials, network, CI, review, mergeability, or remote state bl
 ### 14. Task Closure Receipt
 
 The Task Closure Receipt is the only terminal proof for the whole Task Prompt. It must enumerate each DONE condition, its yes/no result, evidence, delivered refs or artifact identifiers, tests and reviews, protected-state result, unresolved blockers, and residual risk.
+
+For resumed or `CLOSURE_ONLY` execution, it must also include the checkpoint-first resume record, the Lead-context file ledger, and any backward-transition authorization. Fill absent procedural fields from deterministic current facts without reopening completed phases.
 
 `Overall DONE: yes` is allowed only when every required terminal condition is verified. Agent Receipts, confidence, and a successful push command are inputs to closure, not substitutes for it.
 
@@ -346,6 +409,16 @@ Protected or out-of-scope state:
 Baseline checks and pre-existing failures:
 Invalidation/recheck conditions:
 
+## Resume / checkpoint state
+Authoritative checkpoint path/ref and hash:
+Highest completed phase:
+First incomplete phase:
+Blockers:
+Closure-ready status:
+Remaining work:
+Lead-context files opened and reason:
+Backward-transition authorization and evidence:
+
 ## Authority and source-of-truth order
 1. <highest applicable authority>
 Decision owners:
@@ -374,6 +447,8 @@ Allowed actions:
 Budget / context / output limit:
 Output and durable evidence location:
 Acceptance and disconfirming checks:
+Checkpoint / resume state:
+Backward-transition authorization and evidence:
 Failure / retry / rollback:
 Next-state rule:
 
@@ -387,6 +462,7 @@ Lead context:
 Worker/tool context:
 Authoritative artifacts:
 Gap ledger location:
+Lead-context files opened and reason:
 Compression/handoff rule:
 
 ## Clean-room / independence
@@ -398,6 +474,7 @@ Isolation proof or same-context limitation:
 Failure classes:
 Maximum retries/gate passes:
 Redesign trigger:
+Checkpoint conflict / backward-transition rule:
 Pre-exhaustion handoff contents/location:
 
 ## System verification
@@ -412,6 +489,13 @@ Fresh external verification:
 Failure stop:
 
 ## Task Closure Receipt
+Execution mode / `CLOSURE_ONLY` status:
+Authoritative checkpoint path/ref and hash:
+Highest completed phase:
+First incomplete phase:
+Remaining work:
+Lead-context files opened and reason:
+Backward-transition authorization and evidence:
 Task Prompt created and gated: yes/no + evidence
 Implementation complete: yes/no + evidence
 Required verification passed: yes/no + evidence
