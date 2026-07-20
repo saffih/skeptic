@@ -47,6 +47,78 @@ If the prompt, role structure, evidence machinery, or reporting burden is approa
 
 Proportional execution must not remove required authority boundaries, source-of-truth checks, material acceptance criteria, or verification.
 
+## Execution mode and package ownership
+
+Before designing or executing serious work, classify the Lead's mode:
+
+- `DESIGN_PACKAGE`: the user asks the Lead to design the workflow, Task Prompt, controller, fixtures, schemas, or execution package. DONE is the completed and gated package unless execution is also explicitly requested and realistically feasible.
+- `EXECUTE_PACKAGE`: the user supplies or identifies an already designed prompt, plan, controller, or execution package and asks for execution. The Lead validates and operates that package; it does not rebuild the workflow inside the execution session.
+- `REPAIR_PACKAGE`: an existing execution package has a bounded mechanical defect. The Lead repairs the execution machinery without changing the objective, evidence rules, protected comparison basis, scoring rules, or terminal DONE.
+
+A supplied Task Prompt or execution package is evidence that planning has already occurred. Do not interpret an execution request as permission to recreate a larger plan.
+
+In `EXECUTE_PACKAGE` mode:
+
+1. Locate the package's primary execution command or controller.
+2. Verify the required:
+   - immutable inputs;
+   - output schemas;
+   - validator;
+   - durable state or resume mechanism;
+   - scoring or aggregation logic when applicable;
+   - report or closure generator;
+   - exact terminal DONE.
+3. Execute through the supplied controller or primary command.
+4. Keep repeated calls, retries, mappings, hashing, validation, scoring, and resumability in deterministic machinery rather than Lead context.
+5. Give the Lead compact phase receipts and named disputes, not complete repeated raw outputs.
+6. Permit bounded mechanical repairs only.
+7. Treat a semantic change to the objective, candidate, oracle, scoring basis, protected comparison, or terminal DONE as a new design task.
+
+For a serious repeated, matrix, benchmark, or cross-session workflow, return `PACKAGE_INCOMPLETE` before expensive execution when any necessary component is missing, including:
+
+- controller or primary command;
+- immutable inputs;
+- schemas;
+- validator;
+- durable state;
+- scoring or aggregation;
+- recovery or resume command.
+
+List the exact missing artifacts.
+
+Do not improvise a substantial replacement runtime inside the same Lead execution session.
+
+A small bounded task may execute directly when creating a controller or package would cost more than the work. Package completeness is proportional, not ceremonial.
+
+Before launching an expensive phase, prove that the entire phase plus verification, persistence, and closure can fit the remaining:
+
+- calls;
+- session capacity;
+- time;
+- credits;
+- context;
+- authority.
+
+Do not start a batch merely because its first calls fit.
+
+Pilot, reduce, hand off, or stop before the phase when complete execution is not realistic.
+
+Successful outputs are immutable evidence.
+
+When a validator, parser, or checker is repaired:
+
+- repair the checker;
+- revalidate existing outputs;
+- do not regenerate valid expensive work unless the output itself is corrupt or experiment inputs changed.
+
+Package design and package execution must not silently consume the same execution budget.
+
+When both are explicitly requested:
+
+- budget them as separate phases;
+- preserve enough resources for complete execution, verification, and closure;
+- stop before execution if the complete execution phase can no longer finish.
+
 ## Core job
 
 For each consequential user instruction:
@@ -54,25 +126,32 @@ For each consequential user instruction:
 ```text
 User instruction
 → identify real objective
+→ classify `DESIGN_PACKAGE`, `EXECUTE_PACKAGE`, or `REPAIR_PACKAGE`
 → identify authority and source of truth
 → identify allowed reads and writes
 → identify forbidden actions
 → identify verification path
-→ choose compact Agent Prompt or complete Task Prompt
-→ for a Task Prompt, read and apply agents/task-prompt.md
-→ construct the prompt and its completion path
-→ run Skeptic Prompt Gate using current skeptic.md
-→ fix prompt-level issues
-→ rerun Skeptic Prompt Gate
-→ repeat until PASS or stop condition
-→ return final usable prompt plus compact receipt
+→ `DESIGN_PACKAGE`: choose a compact Agent Prompt or complete Task Prompt; for a Task Prompt, read and apply agents/task-prompt.md; construct and gate the package using current skeptic.md; fix and rerun only within the bounded gate loop
+→ `EXECUTE_PACKAGE`: validate package completeness and gate/readiness, then execute the supplied package
+→ `REPAIR_PACKAGE`: make the bounded mechanical repair, revalidate existing evidence, and resume the package
+→ return the applicable final prompt or execution result plus compact receipt
 ```
 
 The default output is a high-quality prompt, not execution of the underlying task.
 
 Do not execute the underlying task unless the user explicitly asks for execution.
 
-When the user explicitly asks for terminal execution of a serious task, first construct and gate the Task Prompt, then execute it while retaining Lead ownership through the Task Closure Receipt.
+When the user explicitly asks for terminal execution of serious work that is not already planned or packaged, first construct and gate the Task Prompt, then execute it while retaining Lead ownership through the Task Closure Receipt. When a supplied package already governs the work, validate its completeness and operate it without rebuilding it.
+
+When applicable, execution receipts include:
+
+- `Execution mode`
+- `Package completeness`
+- `Primary command/controller`
+- `Whole-phase feasibility`
+- `Resume/recovery state`
+
+`PACKAGE_INCOMPLETE` is an operational stop reason, not a new Skeptic `PASS`, `ACTION`, `DECOMPOSE`, or `CONFLICT` category.
 
 ## Relationship to skeptic.md
 

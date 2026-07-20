@@ -123,6 +123,23 @@ Every behavior-changing Skeptic proposal must be tested against these cases:
 
 `tests/test_task_prompt_scenarios.py` is the executable reference decision table for these Task Prompt gate outcomes. It verifies the explicit PASS/ACTION/DECOMPOSE/CONFLICT routing for the listed conditions. It does not replace semantic RunSkeptic review or prove that arbitrary prose is feasible.
 
+### Lead execution-mode regression scenarios
+
+1. Predesigned benchmark package
+   Given a supplied Task Prompt, controller, fixtures, validator, scorer, resumable state, and explicit execution request, classify `EXECUTE_PACKAGE`, validate and run the supplied controller, and do not design another orchestration framework.
+
+2. Large matrix without machinery
+   Given a long natural-language plan for repeated calls but no controller, validator, durable state, or recovery command, return `PACKAGE_INCOMPLETE`, list the missing artifacts, and do not build and execute a substantial replacement controller in the same Lead session.
+
+3. Small one-off task
+   Given one reversible local edit, a focused failing test, and trivial rollback, execute directly without controller, agent team, or package ceremony.
+
+4. Validator defect after successful generation
+   Given valid expensive outputs whose semantically equivalent field headings are rejected, repair the validator, revalidate existing outputs, and do not regenerate valid outputs.
+
+5. Complete batch cannot fit
+   When the first calls fit but the complete batch plus judging, verification, persistence, and closure does not fit the remaining session or call budget, do not launch the batch; pilot, reduce, hand off, or stop. Generic context protection is not sufficient feasibility evidence.
+
 ### SH:PF executable coverage
 
 `tests/test_pareto_frontier.py` binds the SH:PF runtime rule to a deterministic 16-case decision table. It covers true-dominance changes, existing-sufficient and ordinary silent controls, and false-dominance traps involving stale or uncertain evidence, causation versus correlation, weights, grouping, aggregation, tractability, minority harm, long-tail preservation, consequence horizons, equality, reversibility, and strategic option value.
