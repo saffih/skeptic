@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SKEPTIC = ROOT / "skeptic.md"
+AGENTS = ROOT / "AGENTS.md"
 
 
 class InvocationContractTests(unittest.TestCase):
@@ -82,6 +83,55 @@ class InvocationContractTests(unittest.TestCase):
     def test_runskeptic_receipt_is_not_duplicated(self) -> None:
         self.assertEqual(self.text.count("### RunSkeptic Receipt"), 1)
         self.assertEqual(self.text.count("Do not claim RunSkeptic compliance without this receipt."), 1)
+
+
+class EntryMapTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.text = AGENTS.read_text(encoding="utf-8")
+
+    def test_entry_map_routes_to_all_three_owned_files(self) -> None:
+        route_lines = [
+            line.strip() for line in self.text.splitlines() if line.strip().startswith("-> `")
+        ]
+        self.assertEqual(len(route_lines), 3)
+        destinations = {line[len("-> `"):-1] for line in route_lines}
+        self.assertEqual(
+            destinations,
+            {"skeptic.md", "agents/lead-agent-prompt.md", "agents/task-prompt.md"},
+        )
+
+    def test_review_route_does_not_overlap_gating_route(self) -> None:
+        review_trigger_line = next(
+            line for line in self.text.splitlines() if "Review an artifact" in line
+        )
+        gating_trigger_line = next(
+            line for line in self.text.splitlines() if "Construct or gate an agent prompt" in line
+        )
+        self.assertNotIn("gating", review_trigger_line.lower())
+        self.assertNotIn("construct", review_trigger_line.lower())
+        self.assertNotIn("review", gating_trigger_line.lower())
+        self.assertNotIn("runskeptic", gating_trigger_line.lower())
+        self.assertNotIn("skeptic", gating_trigger_line.lower())
+
+    def test_entry_map_states_ownership_rules(self) -> None:
+        self.assertIn("load only", self.text.lower())
+        self.assertIn(
+            "`skeptic.md` is authoritative for RunSkeptic behavior and output categories.",
+            self.text,
+        )
+        self.assertIn(
+            "`agents/lead-agent-prompt.md` is authoritative for the Lead role, prompt architecture, and prompt gating.",
+            self.text,
+        )
+        self.assertIn(
+            "`agents/task-prompt.md` is authoritative for Task Prompt construction, execution control, and closure.",
+            self.text,
+        )
+        self.assertIn(
+            'Do not edit "skeptic.md" unless explicitly authorized.',
+            self.text,
+        )
 
 
 if __name__ == "__main__":
