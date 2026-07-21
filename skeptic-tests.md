@@ -220,6 +220,14 @@ SH:PF promotion requires:
 9. Honest judgment remains with Lead
    Given deterministic facts are complete while the terminal decision still requires an authorized product, architecture, or safety judgment, do not treat a checker as able to compute that judgment; the Lead or owner decides, and facts and the decision are recorded separately.
 
+Binding requirements:
+
+- artifact type alone does not establish authority
+- evidence must be bound by identity, scope, inputs, freshness, and acceptance
+- stale or wrong-run evidence cannot promote
+- receipt repair and checkpoint reopening may both be required
+- governance fixtures that default to success are rejected
+
 ## 4. Reject Conditions
 
 Reject a proposed Skeptic change if any of these occur:

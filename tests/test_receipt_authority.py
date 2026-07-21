@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import unittest
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
@@ -13,40 +13,84 @@ LEAD_PROMPT = ROOT / "agents" / "lead-agent-prompt.md"
 GOVERNANCE = ROOT / "skeptic-tests.md"
 
 
-class Decision(str, Enum):
-    VERIFY_NARROWLY = "VERIFY_NARROWLY"
-    REPAIR_RECEIPT = "REPAIR_RECEIPT"
-    REOPEN_SMALLEST_PHASE = "REOPEN_SMALLEST_PHASE"
-    CLOSE = "CLOSE"
-    REJECT_PROMOTION = "REJECT_PROMOTION"
+class EvidenceState(str, Enum):
+    VERIFIED_MATCH = "VERIFIED_MATCH"
+    VERIFIED_MISMATCH = "VERIFIED_MISMATCH"
+    UNVERIFIED = "UNVERIFIED"
+
+
+class CheckpointState(str, Enum):
+    VALID = "VALID"
+    INVALIDATED = "INVALIDATED"
+    UNKNOWN = "UNKNOWN"
+
+
+class Promotion(str, Enum):
+    ALLOW = "ALLOW"
+    BLOCK = "BLOCK"
+    VERIFY = "VERIFY"
+
+
+class ReceiptAction(str, Enum):
+    NONE = "NONE"
+    REPAIR = "REPAIR"
+    RECONSTRUCT = "RECONSTRUCT"
+
+
+@dataclass(frozen=True)
+class Result:
+    promotion: Promotion
+    reopen_smallest_phase: bool
+    receipt_action: ReceiptAction
+    preserve_accepted_outputs: bool
 
 
 @dataclass(frozen=True)
 class ReceiptCase:
-    """Facts a Lead/Checker can observe about one receipt claim."""
+    """No field has a default: an incomplete case must fail to construct,
+    not silently resolve toward success."""
 
-    primary_evidence_matches_claim: bool = True
-    claim_is_promotion_critical: bool = False
-    checkpoint_deterministically_invalidated: bool = False
-    receipt_claim_verified: bool = True
-    checkpoint_or_facts_complete: bool = True
-    closure_fields_reconstructable: bool = True
+    evidence_state: EvidenceState
+    checkpoint_state: CheckpointState
+    promotion_critical: bool
+    material_evidence_present: bool
+    receipt_verified: bool
+    terminal_facts_complete: bool
+    closure_field_missing: bool
+    closure_field_reconstructable: bool
+    accepted_outputs_valid: bool
 
 
-def authority_decision(case: ReceiptCase) -> Decision:
-    """Reference for Section 3: primary evidence > deterministic checkpoint
-    > verified receipt > unverified claim."""
-    if not case.primary_evidence_matches_claim:
-        if case.claim_is_promotion_critical:
-            return Decision.REJECT_PROMOTION
-        return Decision.REPAIR_RECEIPT
-    if case.checkpoint_deterministically_invalidated:
-        return Decision.REOPEN_SMALLEST_PHASE
-    if not case.receipt_claim_verified:
-        return Decision.VERIFY_NARROWLY
-    if case.checkpoint_or_facts_complete and case.closure_fields_reconstructable:
-        return Decision.CLOSE
-    return Decision.VERIFY_NARROWLY
+def evaluate(case: ReceiptCase) -> Result:
+    """Executable reference for the binding-aware authority rule in
+    agents/task-prompt.md. Fails closed: unverified or unbound evidence
+    never promotes or closes."""
+    preserve = case.accepted_outputs_valid
+
+    if case.evidence_state is EvidenceState.UNVERIFIED or case.checkpoint_state is CheckpointState.UNKNOWN:
+        return Result(Promotion.VERIFY, False, ReceiptAction.NONE, preserve)
+
+    reopen = case.checkpoint_state is CheckpointState.INVALIDATED
+
+    if not case.material_evidence_present:
+        return Result(Promotion.BLOCK, reopen, ReceiptAction.NONE, preserve)
+
+    if case.evidence_state is EvidenceState.VERIFIED_MISMATCH:
+        promotion = Promotion.BLOCK if (case.promotion_critical or reopen) else Promotion.ALLOW
+        return Result(promotion, reopen, ReceiptAction.REPAIR, preserve)
+
+    if reopen:
+        return Result(Promotion.BLOCK, True, ReceiptAction.NONE, preserve)
+
+    if not case.terminal_facts_complete:
+        return Result(Promotion.VERIFY, False, ReceiptAction.NONE, preserve)
+
+    if case.closure_field_missing:
+        if case.closure_field_reconstructable:
+            return Result(Promotion.ALLOW, False, ReceiptAction.RECONSTRUCT, preserve)
+        return Result(Promotion.VERIFY, False, ReceiptAction.NONE, preserve)
+
+    return Result(Promotion.ALLOW, False, ReceiptAction.NONE, preserve)
 
 
 def requires_formal_receipt(
@@ -65,6 +109,19 @@ def decision_owner(
     return "DETERMINISTIC" if deterministic_facts_complete else "UNRESOLVED"
 
 
+MATCH_VALID_COMPLETE = dict(
+    evidence_state=EvidenceState.VERIFIED_MATCH,
+    checkpoint_state=CheckpointState.VALID,
+    promotion_critical=False,
+    material_evidence_present=True,
+    receipt_verified=True,
+    terminal_facts_complete=True,
+    closure_field_missing=False,
+    closure_field_reconstructable=False,
+    accepted_outputs_valid=True,
+)
+
+
 class CrossFileAuthorityMarkerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -76,13 +133,15 @@ class CrossFileAuthorityMarkerTests(unittest.TestCase):
     def test_skeptic_receipt_is_not_authoritative(self) -> None:
         self.assertIn("not proof and not an authorization artifact", self.skeptic)
 
-    def test_task_prompt_defines_authority_precedence(self) -> None:
+    def test_task_prompt_defines_binding_aware_authority(self) -> None:
         self.assertIn("compact claim-and-evidence index", self.task_prompt)
-        self.assertIn(
-            "reports whether the whole Task Prompt reached verified terminal conditions",
-            self.task_prompt,
-        )
+        self.assertIn("A receipt never outranks the evidence it summarizes", self.task_prompt)
+        self.assertIn("identity, scope, inputs, freshness, and acceptance state", self.task_prompt)
         self.assertIn("not an independent promotion input", self.task_prompt)
+
+    def test_closure_receipt_is_not_overclaimed_as_proof(self) -> None:
+        self.assertIn("required terminal summary for the whole Task Prompt", self.task_prompt)
+        self.assertNotIn("only terminal proof", self.task_prompt)
 
     def test_lead_prompt_treats_receipts_as_claims(self) -> None:
         self.assertIn(
@@ -90,7 +149,7 @@ class CrossFileAuthorityMarkerTests(unittest.TestCase):
             self.lead_prompt,
         )
 
-    def test_governance_has_receipt_authority_scenarios_and_reject_conditions(self) -> None:
+    def test_governance_has_receipt_authority_scenarios_and_binding_rules(self) -> None:
         self.assertIn("Receipt authority regression scenarios", self.governance)
         for marker in [
             "an unverified receipt authorizes a consequential transition",
@@ -99,44 +158,63 @@ class CrossFileAuthorityMarkerTests(unittest.TestCase):
             "receipt ceremony becomes mandatory for trivial non-delegated work",
             "a checklist-only RunSkeptic receipt is accepted without evidence",
             "a closure receipt independently invents DONE",
+            "artifact type alone does not establish authority",
+            "stale or wrong-run evidence cannot promote",
+            "governance fixtures that default to success are rejected",
         ]:
             self.assertIn(marker, self.governance)
 
 
 class ReceiptAuthorityScenarioTests(unittest.TestCase):
-    """Exercises the nine scenarios from the Receipt Authority Consolidation Plan."""
+    """Exercises the fourteen fail-closed cases from the Minimal Repair Plan."""
 
-    def setUp(self) -> None:
-        self.verified = ReceiptCase()
+    def test_case_1_false_test_claim_blocks_and_repairs(self) -> None:
+        case = ReceiptCase(**{**MATCH_VALID_COMPLETE, "evidence_state": EvidenceState.VERIFIED_MISMATCH, "promotion_critical": True})
+        result = evaluate(case)
+        self.assertEqual(result.promotion, Promotion.BLOCK)
+        self.assertEqual(result.receipt_action, ReceiptAction.REPAIR)
+        self.assertFalse(result.reopen_smallest_phase)
 
-    def test_scenarios_1_7_8_promotion_critical_claims_are_rejected(self) -> None:
-        # False test claim / checklist theatre / controller-vs-prose: all
-        # contradict a promotion-critical claim with primary evidence.
-        case = replace(
-            self.verified,
-            primary_evidence_matches_claim=False,
-            claim_is_promotion_critical=True,
+    def test_case_2_claimed_mutation_without_mutation_repairs_no_reopen(self) -> None:
+        case = ReceiptCase(**{**MATCH_VALID_COMPLETE, "evidence_state": EvidenceState.VERIFIED_MISMATCH})
+        result = evaluate(case)
+        self.assertEqual(result.receipt_action, ReceiptAction.REPAIR)
+        self.assertFalse(result.reopen_smallest_phase)
+        self.assertEqual(result.promotion, Promotion.ALLOW)
+
+    def test_case_3_missing_reconstructable_closure_field_closes_without_replay(self) -> None:
+        case = ReceiptCase(**{**MATCH_VALID_COMPLETE, "closure_field_missing": True, "closure_field_reconstructable": True})
+        result = evaluate(case)
+        self.assertEqual(result.promotion, Promotion.ALLOW)
+        self.assertEqual(result.receipt_action, ReceiptAction.RECONSTRUCT)
+        self.assertFalse(result.reopen_smallest_phase)
+
+    def test_case_4_receipt_conflicts_with_valid_checkpoint_repairs_checkpoint_stays_valid(self) -> None:
+        case = ReceiptCase(**{**MATCH_VALID_COMPLETE, "evidence_state": EvidenceState.VERIFIED_MISMATCH})
+        result = evaluate(case)
+        self.assertEqual(result.receipt_action, ReceiptAction.REPAIR)
+        self.assertFalse(result.reopen_smallest_phase)
+
+    def test_case_5_deterministic_invalidation_blocks_and_reopens(self) -> None:
+        case = ReceiptCase(**{**MATCH_VALID_COMPLETE, "checkpoint_state": CheckpointState.INVALIDATED})
+        result = evaluate(case)
+        self.assertEqual(result.promotion, Promotion.BLOCK)
+        self.assertTrue(result.reopen_smallest_phase)
+
+    def test_case_6_mismatch_and_invalidation_together_repairs_and_reopens(self) -> None:
+        case = ReceiptCase(
+            **{
+                **MATCH_VALID_COMPLETE,
+                "evidence_state": EvidenceState.VERIFIED_MISMATCH,
+                "checkpoint_state": CheckpointState.INVALIDATED,
+            }
         )
-        self.assertEqual(authority_decision(case), Decision.REJECT_PROMOTION)
+        result = evaluate(case)
+        self.assertEqual(result.promotion, Promotion.BLOCK)
+        self.assertEqual(result.receipt_action, ReceiptAction.REPAIR)
+        self.assertTrue(result.reopen_smallest_phase)
 
-    def test_scenario_2_claimed_mutation_without_mutation_repairs_receipt(self) -> None:
-        case = replace(self.verified, primary_evidence_matches_claim=False)
-        decision = authority_decision(case)
-        self.assertEqual(decision, Decision.REPAIR_RECEIPT)
-        self.assertNotEqual(decision, Decision.REOPEN_SMALLEST_PHASE)
-
-    def test_scenario_3_missing_closure_field_closes_without_replay(self) -> None:
-        self.assertEqual(authority_decision(self.verified), Decision.CLOSE)
-
-    def test_scenario_4_receipt_conflicts_with_checkpoint_repairs_not_reopens(self) -> None:
-        case = replace(self.verified, primary_evidence_matches_claim=False)
-        self.assertEqual(authority_decision(case), Decision.REPAIR_RECEIPT)
-
-    def test_scenario_5_deterministic_invalidation_reopens_smallest_phase(self) -> None:
-        case = replace(self.verified, checkpoint_deterministically_invalidated=True)
-        self.assertEqual(authority_decision(case), Decision.REOPEN_SMALLEST_PHASE)
-
-    def test_scenario_6_and_proportionality_trivial_task_needs_no_ceremony(self) -> None:
+    def test_case_7_trivial_non_delegated_task_needs_no_formal_receipt(self) -> None:
         self.assertFalse(
             requires_formal_receipt(
                 delegated=False, serious_task_prompt=False, run_skeptic_invoked=False
@@ -147,18 +225,43 @@ class ReceiptAuthorityScenarioTests(unittest.TestCase):
                 delegated=True, serious_task_prompt=False, run_skeptic_invoked=False
             )
         )
-        self.assertEqual(authority_decision(self.verified), Decision.CLOSE)
 
-    def test_scenario_9_human_owned_judgment_is_not_computed_by_a_checker(self) -> None:
-        owner = decision_owner(
-            deterministic_facts_complete=True, requires_authorized_judgment=True
+    def test_case_8_checklist_theatre_blocks_on_missing_material_evidence(self) -> None:
+        case = ReceiptCase(**{**MATCH_VALID_COMPLETE, "material_evidence_present": False})
+        result = evaluate(case)
+        self.assertEqual(result.promotion, Promotion.BLOCK)
+
+    def test_case_9_controller_incomplete_beats_closure_prose_preserves_outputs(self) -> None:
+        case = ReceiptCase(
+            **{**MATCH_VALID_COMPLETE, "evidence_state": EvidenceState.VERIFIED_MISMATCH, "promotion_critical": True, "accepted_outputs_valid": True}
         )
+        result = evaluate(case)
+        self.assertEqual(result.promotion, Promotion.BLOCK)
+        self.assertEqual(result.receipt_action, ReceiptAction.REPAIR)
+        self.assertTrue(result.preserve_accepted_outputs)
+
+    def test_case_10_human_owned_judgment_is_not_computed_by_a_checker(self) -> None:
+        owner = decision_owner(deterministic_facts_complete=True, requires_authorized_judgment=True)
         self.assertEqual(owner, "LEAD_OR_OWNER")
         self.assertNotEqual(owner, "DETERMINISTIC")
 
-    def test_unverified_conflicting_claim_requires_narrow_verification_first(self) -> None:
-        case = replace(self.verified, receipt_claim_verified=False)
-        self.assertEqual(authority_decision(case), Decision.VERIFY_NARROWLY)
+    def test_case_11_raw_log_from_another_run_is_unverified(self) -> None:
+        case = ReceiptCase(**{**MATCH_VALID_COMPLETE, "evidence_state": EvidenceState.UNVERIFIED})
+        result = evaluate(case)
+        self.assertEqual(result.promotion, Promotion.VERIFY)
+
+    def test_case_12_stale_commit_evidence_is_unverified(self) -> None:
+        case = ReceiptCase(**{**MATCH_VALID_COMPLETE, "checkpoint_state": CheckpointState.UNKNOWN})
+        result = evaluate(case)
+        self.assertEqual(result.promotion, Promotion.VERIFY)
+
+    def test_case_13_omitted_fields_raise_type_error(self) -> None:
+        with self.assertRaises(TypeError):
+            ReceiptCase(evidence_state=EvidenceState.VERIFIED_MATCH)  # type: ignore[call-arg]
+
+    def test_case_14_old_terminal_proof_phrase_is_absent(self) -> None:
+        task_prompt = TASK_PROMPT.read_text(encoding="utf-8")
+        self.assertNotIn("only terminal proof", task_prompt)
 
 
 if __name__ == "__main__":

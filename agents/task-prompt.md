@@ -323,7 +323,7 @@ If authority, credentials, network, CI, review, mergeability, or remote state bl
 
 ### 14. Task Closure Receipt
 
-The Task Closure Receipt is the only terminal proof for the whole Task Prompt. It must enumerate each DONE condition, its yes/no result, evidence, delivered refs or artifact identifiers, tests and reviews, protected-state result, unresolved blockers, and residual risk.
+The Task Closure Receipt is the required terminal summary for the whole Task Prompt. It must enumerate each DONE condition, its yes/no result, evidence, delivered refs or artifact identifiers, tests and reviews, protected-state result, unresolved blockers, and residual risk.
 
 For resumed or `CLOSURE_ONLY` execution, it must also include the checkpoint-first resume record, the Lead-context file ledger, and any backward-transition authorization. Fill absent procedural fields from deterministic current facts without reopening completed phases.
 
@@ -331,7 +331,7 @@ For resumed or `CLOSURE_ONLY` execution, it must also include the checkpoint-fir
 
 ### 15. Receipt, evidence, checkpoint, and closure authority
 
-Use this precedence when evidence conflicts: primary observed artifacts and external state (files, command results, test exit codes, Git/remote state, generated outputs) outrank deterministic Checker/controller results (reproducible counts, hashes, validation, scoring); these outrank an accepted authoritative checkpoint, which governs resume and phase status until deterministically invalidated; this outranks a verified Agent Receipt or Task Closure Receipt whose material claims have been checked against the above; an unverified receipt or model summary is a claim only and cannot authorize a consequential next state on its own.
+Resolve a material conflict claim-by-claim. Before relying on an artifact, Checker/controller result, or checkpoint, verify that it is bound to the relevant claim through identity, scope, inputs, freshness, and acceptance state. A receipt never outranks the evidence it summarizes. An accepted checkpoint governs resume until verified contradictory evidence deterministically invalidates it. When source binding or authority remains unresolved, verify narrowly and block consequential promotion.
 
 A Task Closure Receipt is derived from verified terminal conditions; it is not independent evidence that those conditions are true. On a mismatch between a receipt and higher-authority evidence, verify the specific conflicting claim, repair or reject the receipt, and reopen only the smallest phase that deterministic invalidation actually supports. Missing or inaccurate receipt prose alone does not replay completed work.
 
