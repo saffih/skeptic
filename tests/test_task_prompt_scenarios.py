@@ -73,7 +73,8 @@ class TaskPromptScenario:
     dependency_graph_complete: bool = True
     feasible_as_one_task: bool = True
     protected_completion_reserve: bool = True
-    durable_evidence_checkpoints: bool = True
+    persistence_required: bool = False
+    persistence_plan_adequate: bool = True
     retries_and_gates_bounded: bool = True
     routing: RoutingState = RoutingState.RESOLVED
     integration_required: bool = True
@@ -83,7 +84,13 @@ class TaskPromptScenario:
 
 
 def task_level_gate(scenario: TaskPromptScenario) -> GateDecision:
-    """Executable reference for the documented Task Prompt decision table."""
+    """Executable reference for the documented Task Prompt decision table.
+
+    Persistence is conditional: a bounded session-only task with no handoff,
+    resume, delegation, independent review, or cross-session consumer does not
+    require a durable store. Only a task with a material survival requirement
+    (persistence_required) needs an adequate authorized persistence plan.
+    """
     if not scenario.authority_clear:
         return GateDecision.CONFLICT
     if scenario.routing is RoutingState.REQUIRED_UNAVAILABLE:
@@ -91,13 +98,17 @@ def task_level_gate(scenario: TaskPromptScenario) -> GateDecision:
     if not scenario.feasible_as_one_task:
         return GateDecision.DECOMPOSE
 
+    persistence_satisfied = (
+        not scenario.persistence_required or scenario.persistence_plan_adequate
+    )
+
     repairable_requirements = [
         scenario.child_prompts_valid,
         scenario.exact_done,
         scenario.verified_start,
         scenario.dependency_graph_complete,
         scenario.protected_completion_reserve,
-        scenario.durable_evidence_checkpoints,
+        persistence_satisfied,
         scenario.retries_and_gates_bounded,
         scenario.routing is RoutingState.RESOLVED,
         not scenario.integration_required or scenario.integration_and_fresh_verification,
@@ -133,11 +144,23 @@ class TaskPromptScenarioTests(unittest.TestCase):
             GateDecision.ACTION,
         )
 
-    def test_transient_decision_evidence_is_action(self) -> None:
-        self.assertEqual(
-            task_level_gate(replace(self.complete, durable_evidence_checkpoints=False)),
-            GateDecision.ACTION,
+    def test_persistence_required_and_plan_inadequate_is_action(self) -> None:
+        scenario = replace(
+            self.complete, persistence_required=True, persistence_plan_adequate=False
         )
+        self.assertEqual(task_level_gate(scenario), GateDecision.ACTION)
+
+    def test_persistence_not_required_and_no_store_passes(self) -> None:
+        scenario = replace(
+            self.complete, persistence_required=False, persistence_plan_adequate=False
+        )
+        self.assertEqual(task_level_gate(scenario), GateDecision.PASS)
+
+    def test_persistence_required_and_plan_adequate_passes(self) -> None:
+        scenario = replace(
+            self.complete, persistence_required=True, persistence_plan_adequate=True
+        )
+        self.assertEqual(task_level_gate(scenario), GateDecision.PASS)
 
     def test_unbounded_retry_loop_is_action(self) -> None:
         self.assertEqual(

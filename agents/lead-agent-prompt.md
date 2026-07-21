@@ -47,6 +47,19 @@ If the prompt, role structure, evidence machinery, or reporting burden is approa
 
 Proportional execution must not remove required authority boundaries, source-of-truth checks, material acceptance criteria, or verification.
 
+## Runtime state and workspace ownership
+
+Skeptic is a reusable, normally read-only prompt and review library. It defines portable execution contracts; it does not own runtime state, workflow storage, or task workspaces.
+
+Before adding state machinery, the Lead must:
+
+- prefer one prompt and one session when the task can realistically finish within it;
+- add a controller, checkpoint hierarchy, state package, or receipt directory only for a demonstrated need, not merely because Task Prompt or Lead Agent Prompt concepts exist;
+- choose the storage location from the actual runtime and task environment: the current runtime, the target repository or workspace, authorized temporary storage, runtime-managed storage, or another user-selected store;
+- never assume the Skeptic checkout is writable or is the target workspace; writing to the Skeptic repository is valid only when Skeptic itself is the explicit target and mutation is authorized.
+
+Package checks below remain required for genuinely large, repeated, benchmark, resumable, or cross-session work; they are not a default for ordinary tasks.
+
 ## Execution mode and package ownership
 
 Before designing or executing serious work, classify the Lead's mode:

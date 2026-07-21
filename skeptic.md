@@ -113,12 +113,14 @@ Task-level PASS requires evidence in the prompt that:
 - phases form a coherent dependency graph with bounded ownership, inputs, outputs, acceptance checks, and next-state rules;
 - model, effort, agents, context, outputs, and protocol cost are allocated proportionately;
 - a protected completion reserve remains for synthesis, verification, integration, external confirmation, and closure;
-- decision-critical outputs are durably persisted and verified before dependent phases begin;
+- when survival beyond the current session is materially required -- handoff, interruption, context clearing, independent review, delegation, repeated execution, or cross-session continuation -- decision-critical outputs are durably persisted, in an authorized location chosen by the invoking runtime or task environment, and verified before dependent phases begin;
 - retry and gate counts are bounded, repeated failure triggers redesign, and futility can stop optional work;
 - a pre-exhaustion handoff preserves verified state without pretending the task is DONE;
 - system verification and disconfirming cases cover the requested outcome;
 - integration, publication, and fresh external verification are explicit phases when part of DONE;
 - the Task Closure Receipt can prove every requested terminal condition.
+
+Persistence is conditional, not automatic. Skeptic does not prescribe a canonical state directory, receipt directory, controller, filesystem layout, database, or storage mechanism, and the Skeptic checkout is not the default writable workspace; the invoking runtime or task environment selects the authorized location when persistence is materially required. When no material survival requirement exists -- no handoff, resume, delegation, independent review, repeated execution, or cross-session consumer -- a bounded task that can reliably finish in one session may receive task-level PASS without a controller, checkpoint file, state directory, or durable artifact store. When such survival is materially required, missing or inadequate authorized persistence is ACTION. This does not weaken evidence integrity: transient context never counts as having survived a context boundary it did not survive.
 
 Treat as material failures:
 

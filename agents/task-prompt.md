@@ -29,6 +29,20 @@ The Lead owns the Task Prompt and the terminal outcome. An Agent Prompt is a bou
 
 Do not copy this entire file into `agents/lead-agent-prompt.md`, `skeptic.md`, or every Dispatch Ticket. Reference it and include only the local contract needed by the current role.
 
+## Stateless library and runtime-owned state
+
+This repository is a reusable, normally read-only prompt and review library. It defines portable execution contracts; it does not own runtime state, workflow storage, or task workspaces. State handling belongs to the invoking runtime and the actual task environment, not to this checkout.
+
+Persistence is conditional, not automatic:
+
+- A task that can reliably finish in one session, with no handoff, interruption, independent review, delegation, repeated execution, or cross-session consumer, may remain entirely session-only. It does not require a controller, checkpoint file, gap-ledger file, state directory, or durable artifact store.
+- Persistence is required when evidence or state must survive handoff, interruption, context clearing, independent review, delegation, repeated execution, or cross-session continuation.
+- This Task Prompt defines the required state and evidence properties for the survival need that actually exists -- identity, scope, freshness, and acceptance -- not a particular mechanism or path.
+- When persistence is materially required, the environment selects an authorized location: the current runtime, the target repository or workspace, authorized temporary storage, runtime-managed storage, or another user-selected store.
+- The Skeptic checkout is not the default task workspace. Writing to it is valid only when Skeptic itself is the explicit target and mutation is authorized.
+
+Any field in this contract or its copyable template that names a durable location, checkpoint, or state destination may be marked `NOT_APPLICABLE` with a stated reason when the task is valid session-only work.
+
 ## When a Task Prompt is required
 
 Use a Task Prompt when the user asks for terminal execution of serious work, especially when the task materially involves one or more of:
@@ -395,6 +409,8 @@ A Task Prompt must not receive PASS merely because every Agent Prompt passes loc
 
 ```text
 # Task Prompt: <outcome>
+
+Note: fields below that name a durable location, checkpoint, or state destination may read `NOT_APPLICABLE` with a stated reason for valid session-only work. See "Stateless library and runtime-owned state" above.
 
 ## Execution header
 Target runtime/agent:

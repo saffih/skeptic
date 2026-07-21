@@ -121,7 +121,13 @@ Every behavior-changing Skeptic proposal must be tested against these cases:
 20. Task Prompt whose protocol cost approaches the result's value
     Expected: reduce ceremony, shrink the slice, or stop; do not add agents or stronger models to compensate.
 
-`tests/test_task_prompt_scenarios.py` is the executable reference decision table for these Task Prompt gate outcomes. It verifies the explicit PASS/ACTION/DECOMPOSE/CONFLICT routing for the listed conditions. It does not replace semantic RunSkeptic review or prove that arbitrary prose is feasible.
+21. Bounded one-session task with no handoff, resume, delegation, or cross-context consumer
+    Expected: task-level PASS without a controller, checkpoint file, state directory, or durable artifact store; no material survival requirement exists.
+
+22. Delegated, resumable, cross-session, or independently reviewed task whose required evidence exists only in transient context
+    Expected: task-level ACTION until an adequate authorized persistence mechanism exists.
+
+`tests/test_task_prompt_scenarios.py` is the executable reference decision table for these Task Prompt gate outcomes. It verifies the explicit PASS/ACTION/DECOMPOSE/CONFLICT routing for the listed conditions, including conditional persistence. It does not replace semantic RunSkeptic review or prove that arbitrary prose is feasible.
 
 ### Smallest credible alternative executable coverage
 
@@ -276,6 +282,8 @@ Reject a proposed Skeptic change if any of these occur:
 - receipt ceremony becomes mandatory for trivial non-delegated work
 - a checklist-only RunSkeptic receipt is accepted without evidence
 - a closure receipt independently invents DONE
+- persistent state or storage is treated as universally mandatory when no material survival requirement exists
+- Skeptic prescribes a canonical state directory, receipt directory, controller, filesystem layout, database, or storage mechanism, or treats its own checkout as the default writable workspace
 
 ## 5. Evidence Rule
 

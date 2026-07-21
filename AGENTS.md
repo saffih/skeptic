@@ -15,3 +15,7 @@ Ownership:
 - `agents/lead-agent-prompt.md` is authoritative for the Lead role, prompt architecture, and prompt gating.
 - `agents/task-prompt.md` is authoritative for Task Prompt construction, execution control, and closure.
 - Editing `skeptic.md` requires explicit authority. Do not edit "skeptic.md" unless explicitly authorized.
+
+Architectural boundary:
+
+This repository is a reusable, normally read-only prompt and review library. It defines portable execution contracts; it does not own runtime state, workflow storage, or task workspaces. Task-specific state is selected and owned by the invoking runtime or actual task environment, not by this checkout.

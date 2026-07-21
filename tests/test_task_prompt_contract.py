@@ -276,6 +276,76 @@ class TaskPromptContractTests(unittest.TestCase):
         ]:
             self.assertIn(marker, self.task)
 
+    def test_stateless_library_boundary_is_stated(self) -> None:
+        for marker in [
+            "## Stateless library and runtime-owned state",
+            "does not own runtime state, workflow storage, or task workspaces",
+            "State handling belongs to the invoking runtime and the actual task environment",
+        ]:
+            self.assertIn(marker, self.task)
+        self.assertIn(
+            "does not own runtime state, workflow storage, or task workspaces",
+            self.lead,
+        )
+
+    def test_persistence_is_conditional_not_automatic(self) -> None:
+        for marker in [
+            "Persistence is conditional, not automatic:",
+            "may remain entirely session-only",
+            "Persistence is required when evidence or state must survive handoff, interruption, context clearing, independent review, delegation, repeated execution, or cross-session continuation.",
+        ]:
+            self.assertIn(marker, self.task)
+
+    def test_environment_selects_authorized_persistence_location(self) -> None:
+        self.assertIn(
+            "the environment selects an authorized location: the current runtime, the target repository or workspace, authorized temporary storage, runtime-managed storage, or another user-selected store.",
+            self.task,
+        )
+        self.assertIn(
+            "choose the storage location from the actual runtime and task environment",
+            self.lead,
+        )
+
+    def test_skeptic_checkout_is_not_default_workspace(self) -> None:
+        self.assertIn("The Skeptic checkout is not the default task workspace.", self.task)
+        self.assertIn(
+            "never assume the Skeptic checkout is writable or is the target workspace",
+            self.lead,
+        )
+        self.assertIn(
+            "writing to the Skeptic repository is valid only when Skeptic itself is the explicit target and mutation is authorized.",
+            self.lead,
+        )
+
+    def test_location_fields_may_be_not_applicable_for_session_only_work(self) -> None:
+        self.assertIn(
+            'may be marked `NOT_APPLICABLE` with a stated reason when the task is valid session-only work.',
+            self.task,
+        )
+        self.assertIn(
+            'may read `NOT_APPLICABLE` with a stated reason for valid session-only work',
+            self.task,
+        )
+
+    def test_skeptic_distinguishes_session_only_from_material_survival(self) -> None:
+        for marker in [
+            "Persistence is conditional, not automatic.",
+            "Skeptic does not prescribe a canonical state directory, receipt directory, controller, filesystem layout, database, or storage mechanism",
+            "the Skeptic checkout is not the default writable workspace",
+            "may receive task-level PASS without a controller, checkpoint file, state directory, or durable artifact store",
+            "missing or inadequate authorized persistence is ACTION",
+        ]:
+            self.assertIn(marker, self.skeptic)
+
+    def test_governance_has_conditional_persistence_scenarios(self) -> None:
+        for marker in [
+            "Bounded one-session task with no handoff, resume, delegation, or cross-context consumer",
+            "task-level PASS without a controller, checkpoint file, state directory, or durable artifact store",
+            "Delegated, resumable, cross-session, or independently reviewed task whose required evidence exists only in transient context",
+            "task-level ACTION until an adequate authorized persistence mechanism exists",
+        ]:
+            self.assertIn(marker, self.governance)
+
     def test_operational_resume_stops_preserve_skeptic_verdicts(self) -> None:
         self.assertIn(
             "`PACKAGE_INCOMPLETE` and `CHECKPOINT_CONFLICT` are operational stop reasons, not Skeptic verdicts.",
