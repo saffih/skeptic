@@ -191,6 +191,35 @@ SH:PF promotion requires:
 - the promotion-time contract is preserved at `archive/sh-pf-frozen-contract`, replacing active byte-level immutability enforcement with historical recoverability and traceability
 - the full regression suite and semantic RunSkeptic review pass
 
+### Receipt authority regression scenarios
+
+1. False test claim
+   Given an Agent Receipt claims tests passed while the primary command record shows a non-zero exit code, reject promotion, let primary evidence win, record the mismatch, and do not claim DONE.
+
+2. Claimed mutation without mutation
+   Given an Agent Receipt claims a file changed while the Git diff and file hash show no change, reject the mutation claim, repair the receipt, and do not reopen unrelated phases.
+
+3. Missing closure field after completed work
+   Given an accepted checkpoint proves substantive phases complete while one closure receipt field is absent, enter or remain in `CLOSURE_ONLY`, reconstruct the field from deterministic facts, and close without replaying execution.
+
+4. Receipt conflicts with checkpoint
+   Given an unverified worker receipt says a phase is incomplete while the accepted checkpoint and artifacts prove it complete and no deterministic invalidation exists, let the checkpoint win, repair or reject the receipt, and continue from the first genuinely incomplete phase.
+
+5. Deterministic checkpoint invalidation
+   Given the receipt and checkpoint both say complete while the accepted artifact hash no longer matches, reopen only the smallest affected phase, preserve unaffected evidence, and record backward-transition evidence.
+
+6. Trivial non-delegated task
+   Given one reversible local edit with immediate deterministic verification and no delegation, handoff, publication, or serious Task Prompt requirement, accept compact inline evidence without separate formal Agent Receipt machinery.
+
+7. Checklist theatre
+   Given a RunSkeptic receipt lists all major steps and Thinkers with no material evidence or actual application shown, do not claim RunSkeptic compliance; require evidence for material findings and skipped/unknown areas.
+
+8. Controller result versus receipt prose
+   Given a deterministic controller reports failure or incomplete while the closure receipt says `Overall DONE: yes`, reject terminal promotion, let the controller/primary evidence win, repair the closure receipt, and do not regenerate accepted expensive work unless its outputs are invalid.
+
+9. Honest judgment remains with Lead
+   Given deterministic facts are complete while the terminal decision still requires an authorized product, architecture, or safety judgment, do not treat a checker as able to compute that judgment; the Lead or owner decides, and facts and the decision are recorded separately.
+
 ## 4. Reject Conditions
 
 Reject a proposed Skeptic change if any of these occur:
@@ -211,6 +240,12 @@ Reject a proposed Skeptic change if any of these occur:
 - retries or fix-until-PASS loops can consume the completion reserve without a declared bound
 - an intermediate repository or publication state is accepted as terminal DONE
 - SH:PF eliminates an option using a weighted total, average, grouping, stale or correlational claim, unresolved uncertainty, or a comparison that omits protected value
+- an unverified receipt authorizes a consequential transition
+- receipt prose overrides primary evidence or deterministic state
+- missing receipt prose causes completed phases to replay
+- receipt ceremony becomes mandatory for trivial non-delegated work
+- a checklist-only RunSkeptic receipt is accepted without evidence
+- a closure receipt independently invents DONE
 
 ## 5. Evidence Rule
 

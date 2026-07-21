@@ -169,6 +169,10 @@ Context protection is part of acceptance. Resume and closure receipts record:
 
 `prompt too long`, session exhaustion, forced compression, or unplanned handoff after substantive completion is a failed execution path even if artifacts survive.
 
+### Receipts as claims until verified
+
+Treat an Agent Receipt or Task Closure Receipt as a claim, not authority, until its material fields are checked against primary evidence, deterministic Checker output, or the accepted checkpoint. Verify only the decision-critical claims; do not repeat a worker's entire investigation merely to raise confidence. Accepted checkpoints and primary evidence outrank receipt prose: on a mismatch, perform narrow verification, repair or reject the receipt, and reopen only the smallest phase that deterministic invalidation actually supports. Do not impose formal receipt ceremony on ordinary small, non-delegated work.
+
 ## Core job
 
 For each consequential user instruction:

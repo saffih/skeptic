@@ -18,7 +18,7 @@ User objective
 -> Task Closure Receipt
 ```
 
-The Lead owns the Task Prompt and the terminal outcome. An Agent Prompt is a bounded child instruction. A Dispatch Ticket is the compact delegated form of an Agent Prompt. An Agent Receipt is evidence returned by one role. A Task Closure Receipt proves whether the whole Task Prompt reached the requested terminal state.
+The Lead owns the Task Prompt and the terminal outcome. An Agent Prompt is a bounded child instruction. A Dispatch Ticket is the compact delegated form of an Agent Prompt. An Agent Receipt is a compact claim-and-evidence index returned by one role. A Task Closure Receipt reports whether the whole Task Prompt reached verified terminal conditions.
 
 ## Relationship to other repository contracts
 
@@ -327,7 +327,15 @@ The Task Closure Receipt is the only terminal proof for the whole Task Prompt. I
 
 For resumed or `CLOSURE_ONLY` execution, it must also include the checkpoint-first resume record, the Lead-context file ledger, and any backward-transition authorization. Fill absent procedural fields from deterministic current facts without reopening completed phases.
 
-`Overall DONE: yes` is allowed only when every required terminal condition is verified. Agent Receipts, confidence, and a successful push command are inputs to closure, not substitutes for it.
+`Overall DONE: yes` is allowed only when every required terminal condition is verified. Agent Receipts, confidence, and a successful push command are inputs to closure, not substitutes for it, and `Overall DONE: yes` must not contradict deterministic facts or accepted checkpoint state.
+
+### 15. Receipt, evidence, checkpoint, and closure authority
+
+Use this precedence when evidence conflicts: primary observed artifacts and external state (files, command results, test exit codes, Git/remote state, generated outputs) outrank deterministic Checker/controller results (reproducible counts, hashes, validation, scoring); these outrank an accepted authoritative checkpoint, which governs resume and phase status until deterministically invalidated; this outranks a verified Agent Receipt or Task Closure Receipt whose material claims have been checked against the above; an unverified receipt or model summary is a claim only and cannot authorize a consequential next state on its own.
+
+A Task Closure Receipt is derived from verified terminal conditions; it is not independent evidence that those conditions are true. On a mismatch between a receipt and higher-authority evidence, verify the specific conflicting claim, repair or reject the receipt, and reopen only the smallest phase that deterministic invalidation actually supports. Missing or inaccurate receipt prose alone does not replay completed work.
+
+A small, non-delegated, reversible task may use a compact inline evidence summary in place of formal Agent Receipt ceremony. This does not waive the Task Closure Receipt for a serious Task Prompt or the RunSkeptic Receipt when RunSkeptic is invoked.
 
 ## Agent Prompt and Dispatch Ticket
 
@@ -362,10 +370,10 @@ Verification and disconfirming checks:
 Failures, unknowns, and blockers:
 Budget / context result:
 Recommended next action:
-Confidence and evidence level:
+Confidence and evidence level (optional; not an independent promotion input):
 ```
 
-The Lead or a Checker must verify material receipt claims before promoting them into readiness, mutation, integration, publication, or safety decisions.
+The Lead or a Checker must verify material receipt claims before promoting them into readiness, mutation, integration, publication, or safety decisions. See [Receipt, evidence, checkpoint, and closure authority](#15-receipt-evidence-checkpoint-and-closure-authority) for the full precedence order.
 
 ## Task-level Skeptic readiness gate
 
