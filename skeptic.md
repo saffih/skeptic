@@ -66,6 +66,16 @@ If not:
 - multiple valid interpretations -> list them; proceed only if one is evidence-backed, low-risk, and testable
 - unresolved or unsafe ambiguity -> CONFLICT
 
+### Smallest credible alternative guard
+
+Before PASS on a plan, prompt, design, or process-heavy artifact, compare it with the smallest credible alternative that could achieve the same required outcome while preserving necessary evidence, safety, responsibility, and reversibility.
+
+Apply `CH:EV` and `OM:OD`: identify removable structure and justify the remaining material structure. If a materially smaller alternative is equally sufficient, return ACTION. Listing the Thinkers or repeating unchanged reviews does not establish simplicity.
+
+The PASS rationale must state the smallest credible alternative considered, what it removes, whether it preserves the required outcome, evidence, safety, responsibility, and reversibility, and why the retained structure is necessary.
+
+Preserve `OM:FS`: reject simplification that removes required proof, safety, ownership, reversibility, or outcomes.
+
 ### Prompt Review Levels
 
 When the artifact under review is a prompt, classify it before MAP:

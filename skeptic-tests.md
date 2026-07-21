@@ -123,6 +123,19 @@ Every behavior-changing Skeptic proposal must be tested against these cases:
 
 `tests/test_task_prompt_scenarios.py` is the executable reference decision table for these Task Prompt gate outcomes. It verifies the explicit PASS/ACTION/DECOMPOSE/CONFLICT routing for the listed conditions. It does not replace semantic RunSkeptic review or prove that arbitrary prose is feasible.
 
+### Smallest credible alternative executable coverage
+
+1. Oversized but individually defensible plan
+   Given a materially smaller alternative that preserves the required outcome, evidence, safety, responsibility, and reversibility, return ACTION.
+
+2. False simplification
+   Given a smaller alternative that removes required safety, evidence, ownership, or reversibility, reject that simplification under `OM:FS`; necessary retained structure may pass when justified.
+
+3. Repeated reviews without comparison
+   Given three same-context reviews that list `CH` and `OM` but never compare a credible smaller alternative, return ACTION; repetition does not establish simplicity.
+
+`tests/test_task_prompt_scenarios.py` exercises these outcomes without treating line count or marker presence as proof.
+
 ### Task Prompt checkpoint/resume regression scenarios
 
 1. Closure-only missing procedural fields
