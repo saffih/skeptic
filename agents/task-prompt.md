@@ -125,6 +125,8 @@ A backward transition must name the invalid checkpoint, deterministic evidence, 
 
 Missing prose, summaries, governance receipts, formatting preferences, extra-confidence requests, optional advice, or unfavorable accepted results do not invalidate substantive work.
 
+Before each phase and immediately after each acceptance, the Task Prompt requires the Lead to record capacity as `SUFFICIENT` (next phase plus verification and closure can still finish), `CONSTRAINED` (optional work is forbidden; continue only with required work), or `UNSAFE` (checkpoint and hand off before further substantive work). Every unplanned action must be classified as `acceptance-required`, `blocker-required`, or `optional`; optional work is forbidden immediately after any acceptance and whenever capacity is `CONSTRAINED` or `UNSAFE`. A valid acceptance requires persistence and immediate advancement, not another semantic review, spot-check, or rereading of the accepted candidate for reassurance.
+
 When substantive work is complete, enter `CLOSURE_ONLY`. By default, read only:
 
 1. the authoritative checkpoint;
@@ -243,7 +245,12 @@ Allowed actions and mutation boundary:
 Budget / context / output limit:
 Required output and durable evidence location:
 Acceptance and disconfirming checks:
+Deterministic promotion checks:
+Accepting owner:
+What acceptance authorizes:
+What acceptance forbids:
 Checkpoint / resume state:
+Deterministic invalidation conditions:
 Backward-transition authorization and evidence:
 Failure, retry, and rollback path:
 Next-state rule:
@@ -471,7 +478,12 @@ Allowed actions:
 Budget / context / output limit:
 Output and durable evidence location:
 Acceptance and disconfirming checks:
+Deterministic promotion checks:
+Accepting owner:
+What acceptance authorizes:
+What acceptance forbids:
 Checkpoint / resume state:
+Deterministic invalidation conditions:
 Backward-transition authorization and evidence:
 Failure / retry / rollback:
 Next-state rule:

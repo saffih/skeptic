@@ -155,6 +155,18 @@ Missing prose, summary fields, governance receipts, formatting preferences, desi
 
 Every backward transition must record the invalid checkpoint, deterministic evidence, smallest phase reopened, preserved unaffected evidence, and renewed feasibility. Otherwise stop with `CHECKPOINT_CONFLICT`.
 
+### Capacity and unplanned-action classification
+
+Before each phase and immediately after each acceptance, classify Lead capacity:
+
+- `SUFFICIENT`: the next phase plus verification and closure can still finish.
+- `CONSTRAINED`: optional work is forbidden; continue only with required work.
+- `UNSAFE`: checkpoint and hand off before further substantive work.
+
+Classify every unplanned action as `acceptance-required` (promoting a valid accepted result and advancing), `blocker-required` (resolving a named blocker), or `optional` (anything else, including an extra review, spot-check, or reassurance pass). Optional work is forbidden immediately after any acceptance and whenever capacity is `CONSTRAINED` or `UNSAFE`.
+
+A valid acceptance — identity, reviewer eligibility, required receipt fields, and evidence references all resolve, with no unresolved blocker — requires persistence and immediate advancement. Do not redo an accepted semantic review, add a spot-check, or reread the accepted candidate for reassurance: only the deterministic invalidation conditions above authorize reopening it.
+
 When substantive work is complete, enter `CLOSURE_ONLY`:
 
 1. Read only the authoritative checkpoint, final result, gap or missing-field ledger, and draft or final closure receipt.
