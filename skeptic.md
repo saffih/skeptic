@@ -50,6 +50,8 @@ Every RunSkeptic report must include a compact receipt:
 
 Do not claim RunSkeptic compliance without this receipt.
 
+This receipt is a compact index of claims and evidence, not proof and not an authorization artifact. Material findings must point to the evidence that supports them; listing steps or Thinkers considered without their material application and evidence does not establish RunSkeptic compliance. If a receipt claim conflicts with the evidence it cites, do not claim RunSkeptic compliance until the mismatch is corrected or the conflict is explicitly resolved.
+
 Flow: GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
 
 ## 0. Gate

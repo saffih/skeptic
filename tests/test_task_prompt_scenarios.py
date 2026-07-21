@@ -21,16 +21,14 @@ class RoutingState(str, Enum):
 
 @dataclass(frozen=True)
 class SimplicityGateScenario:
-    credible_alternative_compared: bool = True
-    materially_smaller_alternative: bool = False
-    preserves_required_outcome: bool = True
-    preserves_evidence: bool = True
-    preserves_safety: bool = True
-    preserves_responsibility: bool = True
-    preserves_reversibility: bool = True
-    retained_structure_justified: bool = True
-    same_context_reviews: int = 1
-    lists_ch_and_om: bool = True
+    credible_alternative_compared: bool
+    materially_smaller_alternative: bool
+    preserves_required_outcome: bool
+    preserves_evidence: bool
+    preserves_safety: bool
+    preserves_responsibility: bool
+    preserves_reversibility: bool
+    retained_structure_justified: bool
 
 
 def simplicity_gate(scenario: SimplicityGateScenario) -> GateDecision:
@@ -52,6 +50,18 @@ def simplicity_gate(scenario: SimplicityGateScenario) -> GateDecision:
     if not scenario.retained_structure_justified:
         return GateDecision.ACTION
     return GateDecision.PASS
+
+
+COMPLETE_SIMPLICITY_CASE = dict(
+    credible_alternative_compared=True,
+    materially_smaller_alternative=False,
+    preserves_required_outcome=True,
+    preserves_evidence=True,
+    preserves_safety=True,
+    preserves_responsibility=True,
+    preserves_reversibility=True,
+    retained_structure_justified=True,
+)
 
 
 @dataclass(frozen=True)
@@ -186,26 +196,41 @@ class TaskPromptScenarioTests(unittest.TestCase):
 
 class SimplicityGateScenarioTests(unittest.TestCase):
     def test_equally_sufficient_smaller_plan_is_action(self) -> None:
-        scenario = SimplicityGateScenario(materially_smaller_alternative=True)
+        scenario = SimplicityGateScenario(
+            **{**COMPLETE_SIMPLICITY_CASE, "materially_smaller_alternative": True}
+        )
         self.assertEqual(simplicity_gate(scenario), GateDecision.ACTION)
 
     def test_false_simplification_is_rejected_under_om_fs(self) -> None:
         scenario = SimplicityGateScenario(
-            materially_smaller_alternative=True,
-            preserves_safety=False,
-            preserves_evidence=False,
-            preserves_responsibility=False,
-            preserves_reversibility=False,
+            **{
+                **COMPLETE_SIMPLICITY_CASE,
+                "materially_smaller_alternative": True,
+                "preserves_safety": False,
+                "preserves_evidence": False,
+                "preserves_responsibility": False,
+                "preserves_reversibility": False,
+            }
         )
         self.assertEqual(simplicity_gate(scenario), GateDecision.PASS)
 
     def test_repeated_thinker_lists_without_comparison_are_action(self) -> None:
         scenario = SimplicityGateScenario(
-            credible_alternative_compared=False,
-            same_context_reviews=3,
-            lists_ch_and_om=True,
+            **{**COMPLETE_SIMPLICITY_CASE, "credible_alternative_compared": False}
         )
         self.assertEqual(simplicity_gate(scenario), GateDecision.ACTION)
+
+    def test_unjustified_retained_structure_is_action(self) -> None:
+        scenario = SimplicityGateScenario(
+            **{**COMPLETE_SIMPLICITY_CASE, "retained_structure_justified": False}
+        )
+        self.assertEqual(simplicity_gate(scenario), GateDecision.ACTION)
+
+    def test_omitted_decision_fact_raises_type_error(self) -> None:
+        with self.assertRaises(TypeError):
+            SimplicityGateScenario(  # type: ignore[call-arg]
+                credible_alternative_compared=True
+            )
 
 
 if __name__ == "__main__":
