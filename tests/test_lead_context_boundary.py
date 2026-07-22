@@ -77,9 +77,10 @@ class ContextBoundaryContractTests(unittest.TestCase):
             "`blocker_condition`",
         ]:
             self.assertIn(field, self.orch)
-        # The specialized ticket must subordinate to the existing one, not fork it.
-        self.assertIn('the "Bounded dispatch ticket" expressed with the fields', self.orch)
-        self.assertIn("not a second format", self.orch)
+        # The boundary ticket is a distinct, stricter schema, not a subset of the general ticket.
+        self.assertIn(
+            'not identical to, nor a subset of, the general "Bounded dispatch ticket"', self.orch
+        )
 
     def test_open_ended_ticket_is_invalid(self) -> None:
         self.assertIn("A ticket is invalid if it requests a general summary", self.orch)
