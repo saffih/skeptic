@@ -61,19 +61,14 @@ A Plan Author receives the objective, the current required contracts, and only n
 
 The plan proportionately defines: objective and observable terminal DONE; starting-state verification; authority and source-of-truth order; scope, exclusions, and protected state; task/risk classification and the smallest credible alternative; roles, ownership, and model/effort routing; Lead and worker context protection; dependency-ready phases; evidence and cross-context persistence; deterministic and behavioral verification; repair, retry, futility, integration, and closure; assumptions and residual risk.
 
-**Plan Skeptic verification** means:
+**Plan Skeptic verification** is this Builder's specialization of the canonical **Fix Skeptic verification** defined in `AGENTS.md` ("Verification vocabulary"): the artifact identity is fixed to the exact plan bytes and their SHA-256, so a plan-byte change is the fix event that resets the consecutive-PASS count to zero. Do not restate the canonical fix procedure here; apply it as written in `AGENTS.md`, run on the exact plan bytes via the actual current RunSkeptic procedure (`skeptic.md`).
 
-1. Run the actual current RunSkeptic procedure (`skeptic.md`) on the exact plan bytes.
-2. Apply only fixes authorized by Skeptic's `DECIDE` stage.
-3. Repeat until the exact unchanged plan bytes receive three consecutive `PASS` verdicts.
-4. Any plan-byte change resets the consecutive-pass count to zero.
-5. Preserve every required RunSkeptic receipt and the plan SHA-256 at each attempt.
-
-Bounds:
+Builder-specific bounds and receipts:
 
 - at most two plan-changing repair cycles;
 - at most seven RunSkeptic reviews total;
-- stop early when the remaining review allowance cannot still produce three consecutive passes.
+- stop early when the remaining review allowance cannot still produce three consecutive passes;
+- preserve every required RunSkeptic receipt and the plan SHA-256 at each attempt.
 
 Failure returns `PLAN_VERIFICATION_BLOCKED` with the latest plan bytes, hash, receipts, findings, and blocker.
 

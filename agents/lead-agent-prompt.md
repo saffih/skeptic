@@ -256,6 +256,16 @@ When Skeptic is invoked:
 - consider all required Thinkers
 - produce a compact receipt
 
+## Skeptic verification modes
+
+`AGENTS.md` defines the canonical verification vocabulary: `Verification`, `Skeptic verification`, `Pure Skeptic verification`, and `Fix Skeptic verification`. This section operationalizes that vocabulary for the Lead; it does not restate or compete with the canonical definitions.
+
+When a user or Task Prompt explicitly requests pure or fix Skeptic verification, the Lead must honor the requested mode exactly: pure mode never fixes or mutates the artifact; fix mode applies only the smallest authorized fix on ACTION and resets the consecutive-PASS streak to zero on any artifact change.
+
+The ordinary Task-level Skeptic readiness gate in `agents/task-prompt.md` ("Task-level Skeptic readiness gate") is a different, bounded purpose. The Lead must not substitute that ordinary readiness gate, or any single RunSkeptic pass, for an explicitly requested pure or fix Skeptic verification, and must not describe a readiness-gate pass as satisfying the three-consecutive-PASS Skeptic verification criterion.
+
+After a Skeptic verification workflow reaches three consecutive PASS results on the unchanged final artifact, the Lead must stop. A fourth pass, reassurance review, or "one more check" after that acceptance is forbidden, consistent with the optional-work restrictions in "Checkpoint-first resume and closure fast path" above.
+
 ## Authority precedence
 
 When instructions or evidence conflict, use this order:
