@@ -89,12 +89,19 @@ class PlanSkepticVerificationTests(unittest.TestCase):
         cls.builder = BUILDER.read_text(encoding="utf-8")
 
     def test_definition_same_hash_reset_and_receipts(self) -> None:
+        # Updated for VERIFICATION_WORKFLOW_CONTRACT_V1: Plan Skeptic
+        # verification is now a concise specialization reference to the
+        # canonical Fix Skeptic verification defined in AGENTS.md, rather
+        # than an independent full restatement of the fix mechanic. These
+        # markers check the reference plus the still-preserved plan-specific
+        # artifact identity, reset behavior, and receipt requirement.
         for marker in [
-            "Run the actual current RunSkeptic procedure",
-            "Apply only fixes authorized by Skeptic's `DECIDE` stage.",
+            "**Plan Skeptic verification** is this Builder's specialization of the canonical **Fix Skeptic verification** defined in `AGENTS.md`",
+            "Do not restate the canonical fix procedure here",
+            "the artifact identity is fixed to the exact plan bytes and their SHA-256",
+            "resets the consecutive-PASS count to zero",
             "three consecutive `PASS` verdicts",
-            "Any plan-byte change resets the consecutive-pass count to zero.",
-            "Preserve every required RunSkeptic receipt and the plan SHA-256",
+            "preserve every required RunSkeptic receipt and the plan SHA-256",
         ]:
             self.assertIn(marker, self.builder)
 

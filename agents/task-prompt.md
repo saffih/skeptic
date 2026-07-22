@@ -412,6 +412,12 @@ Task-level verdicts:
 
 A Task Prompt must not receive PASS merely because every Agent Prompt passes locally. Do not execute a Task Prompt with unresolved ACTION, DECOMPOSE, CONFLICT, review-required status, or blocking unknown.
 
+### Relationship to canonical Skeptic verification
+
+This readiness gate is an ordinary, bounded gate: one initial pass plus at most two materially revised reruns (see "Checkpoints, failure, retry, and redesign"). It is not `Skeptic verification` as defined in `AGENTS.md`, and passing it must not be reported as satisfying the three-consecutive-PASS Skeptic verification criterion.
+
+When a Task Prompt's terminal DONE explicitly requires pure or fix Skeptic verification, use the canonical definitions and bounds in `AGENTS.md` ("Verification vocabulary") rather than this readiness gate. State the RunSkeptic mode (pure or fix), the artifact identity/hash under review, the required consecutive-PASS count, the maximum fix cycles, the maximum total passes, and the remaining-budget early-stop rule in the Task Prompt's "System verification" section and copyable template.
+
 ## Copyable Task Prompt template
 
 ```text
@@ -516,7 +522,12 @@ Pre-exhaustion handoff contents/location:
 ## System verification
 Targeted checks:
 Regression and disconfirming checks:
-RunSkeptic loop and maximum passes:
+RunSkeptic mode (ordinary readiness gate / pure Skeptic verification / fix Skeptic verification):
+Artifact identity/hash under review:
+Required consecutive PASS count:
+Maximum fix cycles:
+Maximum total RunSkeptic passes:
+Remaining-budget early-stop rule:
 
 ## Integration / publication / remote verification
 Preconditions:
