@@ -719,7 +719,7 @@ Tiny, reversible, read-only work may use an equivalent one- or two-sentence micr
 
 Do not copy the whole parent prompt into every ticket. Include only the bounded local assignment, authority, and evidence needed by that role.
 
-A delegated role must not expand beyond its ticketed scope. If adjacent evidence appears material, report it and why it matters without acting on it; the Lead decides whether to dispatch additional work.
+A delegated role must not expand beyond its ticketed scope. If adjacent evidence appears material, it routes through the out-of-ticket classification (see "Context boundary contract"): the agent returns only the classification needed to route it, not the substantive content, and does not act on it; the Lead decides whether to dispatch additional work.
 
 A Worker receipt is evidence, not final authority. Material deterministic claims about hashes, counts, diffs, tests, branch state, or patch equivalence must be checked before they are promoted into readiness, mutation, merge, publication, or safety decisions. The Lead may perform that Checker step directly or assign the Checker role when delegation is proportionate.
 
