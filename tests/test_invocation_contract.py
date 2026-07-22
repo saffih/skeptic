@@ -107,22 +107,15 @@ class EntryMapTests(unittest.TestCase):
         )
 
     def test_review_route_does_not_overlap_orchestrate_route(self) -> None:
-        # The old entry map had a separate "Construct or gate an agent
-        # prompt" route; the current orchestration-only Lead folded prompt
-        # gating into agents/task-prompt-builder.md's Prompt-Build
-        # Verification, so that route no longer exists. Check instead that
-        # the two routes that remain closest in subject matter -- review and
-        # orchestrate -- still don't overlap.
         review_trigger_line = next(
             line for line in self.text.splitlines() if "Review an artifact" in line
         )
-        orchestrate_trigger_line = next(
-            line for line in self.text.splitlines() if "Orchestrate work as the Lead" in line
+        lead_trigger_line = next(
+            line for line in self.text.splitlines() if "Lead task execution" in line
         )
-        self.assertNotIn("orchestrate", review_trigger_line.lower())
-        self.assertNotIn("boundary agent", review_trigger_line.lower())
-        self.assertNotIn("runskeptic", orchestrate_trigger_line.lower())
-        self.assertNotIn("skeptic", orchestrate_trigger_line.lower())
+        self.assertNotIn("task execution", review_trigger_line.lower())
+        self.assertNotIn("runskeptic", lead_trigger_line.lower())
+        self.assertNotIn("skeptic", lead_trigger_line.lower())
 
     def test_entry_map_states_ownership_rules(self) -> None:
         self.assertIn("load only", self.text.lower())
@@ -131,17 +124,16 @@ class EntryMapTests(unittest.TestCase):
             self.text,
         )
         self.assertIn(
-            "`agents/lead-agent-prompt.md` is authoritative for the Lead role: an "
-            "orchestration-only contract of compact state, one Boundary Agent "
-            "dispatch per transition, and structural receipt validation.",
+            "`agents/lead-agent-prompt.md` is authoritative for the lightweight Lead role, "
+            "including direct execution, optional delegation, and deterministic validation.",
             self.text,
         )
         self.assertIn(
-            "`agents/task-prompt.md` is authoritative for Task Prompt construction, execution control, and closure.",
+            "`agents/task-prompt.md` is authoritative for proportional Task Prompt content and workflow guidance.",
             self.text,
         )
         self.assertIn(
-            "`agents/task-prompt-builder.md` is authoritative for the objective/verified-plan-to-Task-Prompt build operation",
+            "`agents/task-prompt-builder.md` is authoritative for the objective-or-plan-to-Task-Prompt build operation",
             self.text,
         )
         self.assertIn(
