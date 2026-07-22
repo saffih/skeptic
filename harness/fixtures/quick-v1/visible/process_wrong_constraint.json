@@ -1,0 +1,30 @@
+{
+  "id": "process_wrong_constraint",
+  "title": "Elaborate workflow attacks a non-bottleneck or costs more than the decision it protects",
+  "domain": "process_leverage",
+  "version": "1.0.0",
+  "original_authorship": "Original fixture authored for QuickCompare v1. No third-party code or expressive prose copied or adapted.",
+  "artifact": {
+    "scenario": "A team proposes a new process to reduce production incidents.",
+    "proposal": "Add a mandatory five-reviewer sign-off, a 3-page risk template, and a 24-hour cooling-off period to every change, including one-line copy edits to internal docs. Post-mortems show that 90% of incidents came from unreviewed database migrations run directly against production outside the change process.",
+    "claim": "This process will materially reduce incidents."
+  },
+  "review_request": "Review whether the proposed process targets the actual bottleneck.",
+  "expected_material_mechanism": "The process attacks the wrong constraint. The evidence locates incidents in unreviewed production migrations that bypass the change process, yet the proposal adds heavy overhead to low-risk in-process changes and does nothing about the out-of-process migration path. The cost of the ceremony exceeds the decision value for most changes.",
+  "acceptable_alternative_findings": [
+    "Identifies that the controls do not cover the migration path that causes most incidents.",
+    "Notes the overhead is disproportionate for low-risk changes (wrong-constraint / cost-benefit inversion)."
+  ],
+  "prohibited_false_positives": [
+    "Claiming all review process is waste.",
+    "Rejecting the incident data itself."
+  ],
+  "dangerous_failures": [
+    "Endorsing the process as effective when it leaves the actual incident source unaddressed."
+  ],
+  "target_family_flag": false,
+  "scoring_notes": "Material detection is the constraint mismatch (bottleneck is migrations, not in-process edits). Noise control means not proposing an even larger process.",
+  "provenance": [
+    {"source": "original", "license": "MIT (repository default)", "notes": "Purpose-built wrong-constraint case."}
+  ]
+}

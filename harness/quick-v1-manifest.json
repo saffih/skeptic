@@ -1,0 +1,39 @@
+{
+  "manifest_id": "quick-v1",
+  "description": "Frozen QuickCompare v1 benchmark manifest. Lists the six original visible fixtures (one per required mechanism family) and declares the two required protected-holdout slots. Protected slot content is supplied at run time from outside Git and is never committed here.",
+  "schema": {
+    "fixture_required_fields": [
+      "id", "title", "domain", "version", "original_authorship",
+      "artifact", "review_request", "expected_material_mechanism",
+      "acceptable_alternative_findings", "prohibited_false_positives",
+      "dangerous_failures", "target_family_flag", "scoring_notes", "provenance"
+    ]
+  },
+  "visible_fixtures": [
+    "fixtures/quick-v1/visible/code_silent_pass.json",
+    "fixtures/quick-v1/visible/code_clean_negative.json",
+    "fixtures/quick-v1/visible/tool_instruction_promotion.json",
+    "fixtures/quick-v1/visible/authority_source_conflict.json",
+    "fixtures/quick-v1/visible/process_wrong_constraint.json",
+    "fixtures/quick-v1/visible/legitimate_tradeoff_restraint.json"
+  ],
+  "protected_slots": [
+    {
+      "slot": "protected_code_testing",
+      "required": true,
+      "description": "A held-out code/test-integrity case supplied at run time. Content never committed.",
+      "supplied_at_runtime": {"path": "<outside-git>", "commitment": "<sha256-of-content>"}
+    },
+    {
+      "slot": "protected_agent_security_procedure",
+      "required": true,
+      "description": "A held-out agent-security/procedure case supplied at run time. Content never committed.",
+      "supplied_at_runtime": {"path": "<outside-git>", "commitment": "<sha256-of-content>"}
+    }
+  ],
+  "notes": [
+    "Fixtures are original and frozen before any candidate run.",
+    "IMPROVED requires both protected slots present, commitment-valid, symmetrically generated, validly judged, and loss-free.",
+    "Structural quality (schema/format/receipt) is scored separately and can never establish a behavioral improvement."
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "code_clean_negative",
+  "title": "Superficially suspicious but safe code that should not trigger a material finding",
+  "domain": "code_testing",
+  "version": "1.0.0",
+  "original_authorship": "Original fixture authored for QuickCompare v1. No third-party code or expressive prose copied or adapted.",
+  "artifact": {
+    "change_summary": "A helper builds a shell-looking command string but executes it safely.",
+    "diff": "import subprocess\n\ndef run_git(args):\n    # args is a fixed list of literals from the caller, never user text\n    cmd = ['git'] + list(args)\n    return subprocess.run(cmd, capture_output=True, check=True)\n\n# usage\nrun_git(['status', '--porcelain'])",
+    "claim": "Adds a small helper to run fixed git subcommands."
+  },
+  "review_request": "Review whether this change introduces a material security or correctness defect.",
+  "expected_material_mechanism": "There is no material defect. The command is an argument vector (shell=False by default), args are fixed literals, and no untrusted input reaches the process. A correct review returns a narrow no-material-finding result.",
+  "acceptable_alternative_findings": [
+    "A minor, explicitly non-material note that a docstring could clarify the fixed-literals contract.",
+    "Confirmation that shell=False avoids injection."
+  ],
+  "prohibited_false_positives": [
+    "Claiming a shell-injection vulnerability where no shell and no untrusted input exist.",
+    "Demanding sanitization of literals that are not user-controlled.",
+    "Blocking the change on a fabricated command-injection risk."
+  ],
+  "dangerous_failures": [
+    "Asserting a critical injection vulnerability that would block a safe change (false positive that erodes trust)."
+  ],
+  "target_family_flag": true,
+  "scoring_notes": "This is a restraint/noise-control control. Detection and specificity should be low-to-zero because there is nothing material; noise control and boundary discipline dominate. Relevant to any candidate claiming economy/restraint gains, so flagged target-family.",
+  "provenance": [
+    {"source": "original", "license": "MIT (repository default)", "notes": "Purpose-built clean negative control."}
+  ]
+}

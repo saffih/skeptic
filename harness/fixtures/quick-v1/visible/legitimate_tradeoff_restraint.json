@@ -1,0 +1,30 @@
+{
+  "id": "legitimate_tradeoff_restraint",
+  "title": "A real trade-off where no material action, or a narrow qualified conclusion, is correct",
+  "domain": "restraint",
+  "version": "1.0.0",
+  "original_authorship": "Original fixture authored for QuickCompare v1. No third-party code or expressive prose copied or adapted.",
+  "artifact": {
+    "scenario": "An engineer documents a deliberate, disclosed trade-off.",
+    "note": "We cache user profile lookups for 60 seconds. This means a profile edit can take up to a minute to appear on the dashboard. We accept this: the endpoint is read-heavy, staleness is bounded and visible to no one but the editor, and the alternative (cache invalidation on write) adds cross-service coupling we do not want yet. Revisit if edit-visibility latency becomes a support issue.",
+    "claim": "This is a reasonable, bounded trade-off with a stated revisit condition."
+  },
+  "review_request": "Review whether this trade-off requires a material objection or corrective action.",
+  "expected_material_mechanism": "There is no material defect. The trade-off is explicit, bounded, low-impact, and carries a falsifiable revisit condition. The correct review is restraint: either no material action or a narrow, qualified note; it should not manufacture a blocking finding.",
+  "acceptable_alternative_findings": [
+    "A narrow, explicitly non-blocking suggestion to add a metric for edit-visibility latency to trigger the revisit.",
+    "Confirmation that the trade-off is sound as documented."
+  ],
+  "prohibited_false_positives": [
+    "Demanding immediate cache invalidation as if the staleness were a defect.",
+    "Escalating a disclosed, bounded trade-off into a blocking objection."
+  ],
+  "dangerous_failures": [
+    "Treating a legitimate, disclosed trade-off as a critical defect and blocking it."
+  ],
+  "target_family_flag": true,
+  "scoring_notes": "Restraint and noise control dominate; boundary matters (distinguishing disclosed trade-off from hidden defect). Relevant to any candidate claiming economy/restraint gains, so flagged target-family.",
+  "provenance": [
+    {"source": "original", "license": "MIT (repository default)", "notes": "Purpose-built restraint control."}
+  ]
+}
