@@ -380,6 +380,255 @@ class LeadPromptReferencesCanonicalHierarchyTests(unittest.TestCase):
         self.assertEqual(self.lead.count(sentence), 0)
 
 
+class LogicalVersusPhysicalLaunchTests(unittest.TestCase):
+    """Scenario 4 / DONE 5: flat physical spawning preserves logical B ownership."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.task = TASK_PROMPT.read_text(encoding="utf-8")
+
+    def test_section_and_flat_spawn_do_not_assume_nested_spawn(self) -> None:
+        self.assertIn(
+            "### Logical hierarchy versus physical launch", self.task
+        )
+        self.assertIn(
+            "It must not assume that a B Supervisor can technically spawn its "
+            "own C agents.",
+            self.task,
+        )
+
+    def test_flat_spawn_routes_result_to_b_not_a(self) -> None:
+        for marker in [
+            "A or the runtime physically launches C from B's frozen Dispatch "
+            "Ticket",
+            "C's result is routed to B's evidence boundary, not to A",
+            "B remains the accepting and summarizing owner for the phase",
+            "A receives only B's one bounded upward receipt unless a named "
+            "dispute authorizes narrow evidence access",
+        ]:
+            self.assertIn(marker, self.task)
+
+    def test_physical_topology_never_overrides_logical_ownership(self) -> None:
+        self.assertIn(
+            "Flat physical spawning therefore does not collapse the logical "
+            "layer",
+            self.task,
+        )
+        self.assertIn(
+            "Physical launch topology never overrides logical ownership and "
+            "routing.",
+            self.task,
+        )
+
+
+class DispatchFitGateTests(unittest.TestCase):
+    """Scenario 5 / DONE 8: an oversized dispatch stops before launch."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.task = TASK_PROMPT.read_text(encoding="utf-8")
+
+    def test_gate_runs_before_every_child_launch(self) -> None:
+        self.assertIn(
+            "### Dispatch-fit gate and measurable context guards", self.task
+        )
+        self.assertIn(
+            "Before every child launch, run a dispatch-fit gate.", self.task
+        )
+
+    def test_oversized_dispatch_stops_before_launch(self) -> None:
+        self.assertIn(
+            "If the ticket plus required inherited context does not fit, do not "
+            "launch.",
+            self.task,
+        )
+        self.assertIn(
+            "Oversized dispatch stops before launch, not after a failed launch.",
+            self.task,
+        )
+
+    def test_reduction_ladder_ends_in_context_handoff_required(self) -> None:
+        for marker in [
+            "reduce embedded material",
+            "replace embedded material with references and hashes",
+            "split the phase into smaller bounded tickets",
+            "otherwise stop with `CONTEXT_HANDOFF_REQUIRED`",
+        ]:
+            self.assertIn(marker, self.task)
+
+    def test_context_handoff_required_is_not_a_verdict_or_done(self) -> None:
+        self.assertIn(
+            "`CONTEXT_HANDOFF_REQUIRED` is an operational stop or transition "
+            "reason, not a Skeptic verdict and not DONE",
+            self.task,
+        )
+
+    def test_no_universal_threshold_bounds_are_declared_per_task(self) -> None:
+        # DONE 8: measurable substitutes, not one invented universal threshold.
+        self.assertIn(
+            "this contract does not fix one universal byte or token threshold",
+            self.task,
+        )
+
+
+class FailedLaunchIsNotAResultTests(unittest.TestCase):
+    """Scenario 6 / DONE 8: a failed child launch is not a completed review."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.task = TASK_PROMPT.read_text(encoding="utf-8")
+
+    def test_failed_launch_does_not_count_as_review_or_pass(self) -> None:
+        self.assertIn("### A failed launch is not a result", self.task)
+        self.assertIn(
+            "does not count as a completed check, a completed review, or a "
+            "RunSkeptic PASS",
+            self.task,
+        )
+
+    def test_failed_launch_does_not_advance_a_counter(self) -> None:
+        self.assertIn(
+            "does not advance any phase or verification counter", self.task
+        )
+
+
+class TerminalStateLockTests(unittest.TestCase):
+    """Scenario 9 / DONE 9: accepted and terminal states forbid extra work."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.task = TASK_PROMPT.read_text(encoding="utf-8")
+
+    def test_terminal_state_lock_after_third_pass_or_closure(self) -> None:
+        self.assertIn("### Terminal-state lock", self.task)
+        self.assertIn(
+            "After the third consecutive RunSkeptic PASS, integration "
+            "readiness, or closure readiness, the terminal state is locked",
+            self.task,
+        )
+
+    def test_terminal_lock_forbids_optional_work_and_fourth_pass(self) -> None:
+        self.assertIn(
+            "no optional advisor, no reassurance review, no broad reread, no "
+            "regenerated inventory or evidence chain, and no fourth RunSkeptic "
+            "pass",
+            self.task,
+        )
+
+    def test_only_deterministic_evidence_reopens_smallest_phase(self) -> None:
+        self.assertIn(
+            "Only deterministic completion, a named blocker, or proven "
+            "invalidation may reopen work, and only the smallest affected phase",
+            self.task,
+        )
+
+
+class CompactExecutionStateTests(unittest.TestCase):
+    """DONE 6/7 and Scenarios 7/8: a portable minimum execution-state record."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.task = TASK_PROMPT.read_text(encoding="utf-8")
+
+    def test_section_defines_portable_minimum_record(self) -> None:
+        self.assertIn("## Compact execution state", self.task)
+        self.assertIn(
+            "define a portable minimum execution-state record sufficient to "
+            "replace or resume the Lead without replaying history",
+            self.task,
+        )
+
+    def test_record_is_properties_not_a_mechanism(self) -> None:
+        # DONE 6: no prescribed directory, controller, database, or path.
+        self.assertIn(
+            "This is a set of required properties, not a mandatory file format, "
+            "path, storage mechanism, controller, or database.",
+            self.task,
+        )
+        self.assertIn(
+            "never becomes a workflow controller or a repository-owned state "
+            "store",
+            self.task,
+        )
+
+    def test_record_consolidates_rather_than_duplicates(self) -> None:
+        # P3: guard against a disguised controller / duplicated state block.
+        self.assertIn(
+            "consolidates, rather than duplicates, the resume-checkpoint record",
+            self.task,
+        )
+
+    def test_record_preserves_all_required_fields(self) -> None:
+        # DONE 7: identities, phase/acceptance, dissent/blockers, counters, next.
+        for marker in [
+            "task or objective identity",
+            "authoritative base identity and current candidate identity",
+            "current phase and highest accepted phase",
+            "accepted artifact and receipt identities, locations, hashes, "
+            "freshness, and acceptance owner",
+            "unresolved dissent, contradiction, unknown, blocker, or "
+            "deterministic invalidation",
+            "fix-cycle, PASS-streak, retry, and gate counters when the workflow "
+            "uses them",
+            "capacity state",
+            "first incomplete dependency-ready phase",
+            "next authorized state",
+            "closure-ready status",
+        ]:
+            self.assertIn(marker, self.task)
+
+    def test_replacement_lead_resumes_without_full_history(self) -> None:
+        # Scenario 7: replacement Lead finds the first incomplete phase.
+        self.assertIn(
+            "A replacement Lead reads this record and resumes at the first "
+            "incomplete dependency-ready phase without reconstructing full "
+            "history.",
+            self.task,
+        )
+
+    def test_candidate_change_resets_streak(self) -> None:
+        # Scenario 8: a candidate change resets the verification streak.
+        self.assertIn(
+            "A candidate change updates the candidate identity and resets any "
+            "PASS-streak counter it records.",
+            self.task,
+        )
+
+    def test_session_only_may_mark_not_applicable(self) -> None:
+        # DONE: session-only tasks may mark persistence fields NOT_APPLICABLE.
+        self.assertIn(
+            "may mark the record `NOT_APPLICABLE` with a reason", self.task
+        )
+
+
+class H2CrossReferenceTests(unittest.TestCase):
+    """Lead prompt and Builder reference the H2 contract by canonical home."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.lead = LEAD_PROMPT.read_text(encoding="utf-8")
+        cls.builder = (ROOT / "agents" / "task-prompt-builder.md").read_text(
+            encoding="utf-8"
+        )
+        cls.task = TASK_PROMPT.read_text(encoding="utf-8")
+
+    def test_lead_references_h2_pieces_by_pointer(self) -> None:
+        for marker in [
+            "portable compact execution-state record",
+            "dispatch-fit gate",
+            "terminal-state lock",
+        ]:
+            self.assertIn(marker, self.lead)
+
+    def test_builder_validates_compact_state_and_dispatch_fit(self) -> None:
+        self.assertIn("Compact execution state", self.builder)
+        self.assertIn("dispatch-fit gate", self.builder)
+
+    def test_compact_state_section_defined_once_in_task_prompt(self) -> None:
+        # No-duplicate discipline: the canonical home is task-prompt.md.
+        self.assertEqual(self.task.count("## Compact execution state"), 1)
+
+
 class ProtectedFilesUnchangedTests(unittest.TestCase):
     """Scenario 14 / DONE 11: protected files remain byte-identical."""
 

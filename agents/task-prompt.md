@@ -503,6 +503,57 @@ Require A -> B -> C when the work materially includes:
 
 Collapsed execution does not waive receipt verification, authority boundaries, or exact DONE. A missing layer must not be invented: do not describe a single-context task as if a separate B or C reviewed it, and do not claim independence a collapsed structure did not have. The closure-ready restriction in "Checkpoint-first resume and closure-only execution" still binds a collapsed A: no optional advisor or extra review after any phase is accepted.
 
+### Logical hierarchy versus physical launch
+
+The hierarchy is logical -- it governs ownership, information flow, and promotion, not which runtime process spawns which. It must not assume that a B Supervisor can technically spawn its own C agents. When the runtime supports only flat spawning -- A or the runtime can launch a C agent, but B cannot nest a child -- the logical hierarchy is preserved by routing, not by nesting:
+
+- A or the runtime physically launches C from B's frozen Dispatch Ticket;
+- C's result is routed to B's evidence boundary, not to A;
+- B remains the accepting and summarizing owner for the phase;
+- A receives only B's one bounded upward receipt unless a named dispute authorizes narrow evidence access.
+
+Flat physical spawning therefore does not collapse the logical layer: B still owns acceptance and compression for its phase even when B did not issue the launch call. Physical launch topology never overrides logical ownership and routing.
+
+### Dispatch-fit gate and measurable context guards
+
+Before every child launch, run a dispatch-fit gate. It measures whether the bounded Dispatch Ticket plus the context the child must inherit fits within the child's declared budget. When exact token counters are unavailable, use the measurable substitutes already required by the completion-feasibility preflight -- maximum child count per phase, maximum embedded excerpts or lines, maximum receipt fields, references and hashes instead of embedded logs or diffs, and maximum retry and review counts.
+
+If the ticket plus required inherited context does not fit, do not launch. In order:
+
+1. reduce embedded material;
+2. replace embedded material with references and hashes;
+3. split the phase into smaller bounded tickets;
+4. otherwise stop with `CONTEXT_HANDOFF_REQUIRED`.
+
+Oversized dispatch stops before launch, not after a failed launch. `CONTEXT_HANDOFF_REQUIRED` is an operational stop or transition reason, not a Skeptic verdict and not DONE: it means the current context cannot safely carry the next launch and must hand off compact authoritative state first. Each serious Task Prompt declares its own runtime-appropriate measurable bound or substitute during the completion-feasibility preflight; this contract does not fix one universal byte or token threshold.
+
+### A failed launch is not a result
+
+A child launch that fails, times out, is rejected, or returns incomplete output is an operational failure, not evidence. It does not count as a completed check, a completed review, or a RunSkeptic PASS, and it does not advance any phase or verification counter. Re-launch only within the declared retry bound; the same launch failure twice without materially new information triggers redesign or a truthful blocked result, not a counted pass.
+
+### Terminal-state lock
+
+After a phase is accepted, only that phase's declared next authorized state is available. After the third consecutive RunSkeptic PASS, integration readiness, or closure readiness, the terminal state is locked: no optional advisor, no reassurance review, no broad reread, no regenerated inventory or evidence chain, and no fourth RunSkeptic pass. This restates at the hierarchy level the closure-ready restriction in "Checkpoint-first resume and closure-only execution" and the three-PASS stop in `AGENTS.md` ("Skeptic verification"); it adds no new rule. Only deterministic completion, a named blocker, or proven invalidation may reopen work, and only the smallest affected phase, under the backward-transition rule.
+
+## Compact execution state
+
+Some tasks materially require handoff, interruption recovery, delegation, repeated verification, or cross-session continuation. For those, define a portable minimum execution-state record sufficient to replace or resume the Lead without replaying history. This is a set of required properties, not a mandatory file format, path, storage mechanism, controller, or database. Per "Stateless library and runtime-owned state", the invoking runtime or task environment selects an authorized location; a task that can reliably finish in one session with no such need may mark the record `NOT_APPLICABLE` with a reason.
+
+The record consolidates, rather than duplicates, the resume-checkpoint record in "Checkpoint-first resume and closure-only execution" and the gap ledger in "Context allocation and evidence custody". Reusing those fields, it must identify, where applicable:
+
+- task or objective identity;
+- authoritative base identity and current candidate identity (for example the base ref and the candidate commit and tree);
+- current phase and highest accepted phase;
+- accepted artifact and receipt identities, locations, hashes, freshness, and acceptance owner;
+- unresolved dissent, contradiction, unknown, blocker, or deterministic invalidation;
+- fix-cycle, PASS-streak, retry, and gate counters when the workflow uses them;
+- capacity state (`SUFFICIENT`, `CONSTRAINED`, or `UNSAFE`);
+- first incomplete dependency-ready phase;
+- next authorized state;
+- closure-ready status.
+
+A replacement Lead reads this record and resumes at the first incomplete dependency-ready phase without reconstructing full history. The record carries identities, hashes, and material conclusions -- not embedded logs, diffs, or full evidence -- so it stays compact and never becomes a workflow controller or a repository-owned state store. A candidate change updates the candidate identity and resets any PASS-streak counter it records.
+
 ## Task-level Skeptic readiness gate
 
 Before execution and before terminal promotion, apply the current `skeptic.md` at both applicable levels:
@@ -563,6 +614,15 @@ Remaining work:
 Lead-context files opened and reason:
 Backward-transition authorization and evidence:
 
+## Compact execution-state record (when handoff/resume/delegation/repeated-verification/cross-session is material; else NOT_APPLICABLE)
+Consolidates the resume/checkpoint block above and the gap ledger; adds only:
+Task/objective identity:
+Authoritative base and current candidate identity (ref / commit / tree):
+Accepted artifact+receipt identities, hashes, freshness, acceptance owner:
+Fix-cycle / PASS-streak / retry / gate counters (if used):
+Capacity state:
+Next authorized state:
+
 ## Authority and source-of-truth order
 1. <highest applicable authority>
 Decision owners:
@@ -603,6 +663,7 @@ Next-state rule:
 
 ## Agent Prompts / Dispatch Tickets
 <for each delegated phase, include or reference the bounded ticket>
+Dispatch-fit gate (ticket + inherited context fits; else CONTEXT_HANDOFF_REQUIRED):
 Level 1 Skeptic gate result:
 Receipt destination and verifying owner:
 
