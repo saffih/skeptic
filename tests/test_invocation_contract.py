@@ -106,18 +106,23 @@ class EntryMapTests(unittest.TestCase):
             },
         )
 
-    def test_review_route_does_not_overlap_gating_route(self) -> None:
+    def test_review_route_does_not_overlap_orchestrate_route(self) -> None:
+        # The old entry map had a separate "Construct or gate an agent
+        # prompt" route; the current orchestration-only Lead folded prompt
+        # gating into agents/task-prompt-builder.md's Prompt-Build
+        # Verification, so that route no longer exists. Check instead that
+        # the two routes that remain closest in subject matter -- review and
+        # orchestrate -- still don't overlap.
         review_trigger_line = next(
             line for line in self.text.splitlines() if "Review an artifact" in line
         )
-        gating_trigger_line = next(
-            line for line in self.text.splitlines() if "Construct or gate an agent prompt" in line
+        orchestrate_trigger_line = next(
+            line for line in self.text.splitlines() if "Orchestrate work as the Lead" in line
         )
-        self.assertNotIn("gating", review_trigger_line.lower())
-        self.assertNotIn("construct", review_trigger_line.lower())
-        self.assertNotIn("review", gating_trigger_line.lower())
-        self.assertNotIn("runskeptic", gating_trigger_line.lower())
-        self.assertNotIn("skeptic", gating_trigger_line.lower())
+        self.assertNotIn("orchestrate", review_trigger_line.lower())
+        self.assertNotIn("boundary agent", review_trigger_line.lower())
+        self.assertNotIn("runskeptic", orchestrate_trigger_line.lower())
+        self.assertNotIn("skeptic", orchestrate_trigger_line.lower())
 
     def test_entry_map_states_ownership_rules(self) -> None:
         self.assertIn("load only", self.text.lower())
@@ -126,7 +131,9 @@ class EntryMapTests(unittest.TestCase):
             self.text,
         )
         self.assertIn(
-            "`agents/lead-agent-prompt.md` is authoritative for the Lead role, prompt architecture, and prompt gating.",
+            "`agents/lead-agent-prompt.md` is authoritative for the Lead role: an "
+            "orchestration-only contract of compact state, one Boundary Agent "
+            "dispatch per transition, and structural receipt validation.",
             self.text,
         )
         self.assertIn(

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-A Task Prompt is the complete Lead-owned execution contract for accomplishing a defined outcome from verified starting state through terminal DONE.
+A Task Prompt is the complete execution contract for accomplishing a defined outcome from verified starting state through terminal DONE.
 
 It is a control plane for the task. It may coordinate phases, agents, tools, decisions, retries, evidence checkpoints, tests, reviews, commits, merges, pushes, and remote verification. It must not become a transcript, evidence dump, or copy of every child prompt.
 
@@ -11,19 +11,19 @@ Canonical hierarchy:
 ```text
 User objective
 -> Task Prompt
-   -> Lead Agent Prompt
-      -> Agent Prompts / Dispatch Tickets
-         -> Agent Receipts and evidence
+   -> orchestration-only Lead
+      -> Boundary Agent Dispatch Tickets
+         -> compact receipts and external evidence
    -> verification and integration
 -> Task Closure Receipt
 ```
 
-The Lead owns the Task Prompt and the terminal outcome. An Agent Prompt is a bounded child instruction. A Dispatch Ticket is the compact delegated form of an Agent Prompt. An Agent Receipt is a compact claim-and-evidence index returned by one role. A Task Closure Receipt reports whether the whole Task Prompt reached verified terminal conditions.
+The Task Prompt binds the user objective, authority, workflow, and terminal outcome. The Lead only advances its orchestration state. Every substantive phase is performed by a fresh Boundary Agent under a bounded Dispatch Ticket. An Agent Receipt is a compact claim-and-evidence index returned by one Boundary Agent. A Task Closure Receipt reports whether the whole Task Prompt reached verified terminal conditions.
 
 ## Relationship to other repository contracts
 
 - `agents/task-prompt.md` is authoritative for Task Prompt construction, execution control, and closure.
-- `agents/lead-agent-prompt.md` is authoritative for the Lead role, prompt architecture, and prompt gating.
+- `agents/lead-agent-prompt.md` is authoritative for the orchestration-only Lead role and Boundary Agent routing.
 - `skeptic.md` is authoritative for RunSkeptic review behavior and output categories.
 - Repository and runtime governance remain authoritative within their scopes.
 
@@ -57,20 +57,11 @@ Use a Task Prompt when the user asks for terminal execution of serious work, esp
 
 A small, reversible task may use a compact Task Prompt containing only the fields that materially apply. Proportionality may reduce ceremony; it must not remove exact DONE, authority, material scope limits, verification, or stop conditions.
 
-## Lead ownership
+## Orchestration ownership
 
-The Lead retains ownership of:
+The Task Prompt retains the user objective, exact terminal DONE, authority, source-of-truth order, phase graph, evidence rules, and acceptance conditions. The Lead retains only compact orchestration state and selects the next authorized Boundary Agent task.
 
-- the user objective and exact terminal DONE;
-- authority and source-of-truth resolution;
-- feasibility, useful-slice, and protocol-cost decisions;
-- phase architecture and dependency order;
-- model, effort, agent, context, and completion-budget routing;
-- evidence custody and promotion decisions;
-- failure classification, retry, redesign, and escalation;
-- verification, integration, publication, remote confirmation, and closure.
-
-Delegation transfers bounded work, not terminal ownership. A worker may report success within its ticket while the Task Prompt remains incomplete.
+Every inspection, plan, implementation, test, review, judgment, repair, verification, integration, publication, remote check, and closure operation belongs to a fresh Boundary Agent. A Boundary Agent may report success within its ticket while the Task Prompt remains incomplete; its receipt cannot promote itself to terminal DONE.
 
 ## Task Prompt state machine
 
@@ -114,18 +105,16 @@ Before broad artifact review, resumed execution must verify the authoritative ch
 - blockers;
 - closure-ready status;
 - remaining work;
-- Lead-context files opened and reason;
+- Boundary-Agent artifact references opened and reason;
 - backward-transition authorization and evidence.
 
 Resume at the first incomplete dependency-ready phase. Completed phases and their accepted outputs are immutable evidence.
 
-Reopen a completed phase only when a deterministic Checker proves invalidation through a hash mismatch, corrupt or missing accepted artifact, failed acceptance, changed immutable input, or contradictory authoritative state.
+Reopen a completed phase only when a fresh verification Boundary Agent reports deterministic invalidation through a hash mismatch, corrupt or missing accepted artifact, failed acceptance, changed immutable input, or contradictory authoritative state.
 
 A backward transition must name the invalid checkpoint, deterministic evidence, smallest phase reopened, preserved unaffected evidence, and renewed feasibility. Otherwise return `CHECKPOINT_CONFLICT`.
 
 Missing prose, summaries, governance receipts, formatting preferences, extra-confidence requests, optional advice, or unfavorable accepted results do not invalidate substantive work.
-
-Before each phase and immediately after each acceptance, the Task Prompt requires the Lead to record capacity as `SUFFICIENT` (next phase plus verification and closure can still finish), `CONSTRAINED` (optional work is forbidden; continue only with required work), or `UNSAFE` (checkpoint and hand off before further substantive work). Every unplanned action must be classified as `acceptance-required`, `blocker-required`, or `optional`; optional work is forbidden immediately after any acceptance and whenever capacity is `CONSTRAINED` or `UNSAFE`. A valid acceptance requires persistence and immediate advancement, not another semantic review, spot-check, or rereading of the accepted candidate for reassurance.
 
 When substantive work is complete, enter `CLOSURE_ONLY`. By default, read only:
 
@@ -138,13 +127,13 @@ Then verify required hashes, counts, state, external status, and terminal condit
 
 For an accepted deterministic result, verify identity, input and result hashes, acceptance, and required counts. Do not recreate inventories, scores, ledgers, or conclusions, and do not read all raw outputs. Raw evidence may be opened only for one named unresolved dispute.
 
-After closure-ready, do not add an advisor, Judge, optional review, new inventory, broad analysis, or "one more check" unless it was explicitly frozen into the terminal contract before execution.
+After closure-ready, do not dispatch an optional review, new inventory, broad analysis, or "one more check" unless it was explicitly frozen into the terminal contract before execution.
 
 Missing procedural evidence does not reopen completed phases. Reconstruct only the absent receipt or summary field from current hashes and deterministic facts.
 
 `prompt too long`, session exhaustion, forced compression, or unplanned handoff after substantive completion is a failed Task Prompt execution path even when artifacts survive.
 
-`PACKAGE_INCOMPLETE` and `CHECKPOINT_CONFLICT` are operational stop reasons, not Skeptic verdicts. They do not change `PASS`, `ACTION`, `DECOMPOSE`, or `CONFLICT` meanings.
+`CHECKPOINT_CONFLICT` is an operational stop reason, not a Skeptic verdict. It does not change `PASS`, `ACTION`, `DECOMPOSE`, or `CONFLICT` meanings.
 
 ## Required Task Prompt contract
 
@@ -263,31 +252,24 @@ Prefer the fewest phases that keep ownership, evidence, and recovery clear. Do n
 Route by the actual work:
 
 - deterministic commands or scripts for hashes, counts, status, diffs, builds, and repeatable checks;
-- bounded workers for broad searches, inventories, or isolated implementation;
-- Checkers for deterministic promotion evidence;
-- independent Judges only when independence materially affects the decision;
-- the Lead for ambiguity, architecture, authority, tradeoffs, readiness, integration, and closure.
+- a fresh Boundary Agent for every substantive search, inventory, implementation, check, judgment, review, repair, integration, or closure operation;
+- deterministic tools only inside the assigned Boundary Agent task;
+- genuinely independent Boundary Agents only when independence materially affects the decision;
+- the Lead only for selecting the next authorized task from compact receipt fields.
 
 For every material route, state the role, required capability, selected runtime/model and effort, reason, fallback, and stop condition. Runtime availability must be verified when selection matters. A stronger model must not substitute for a repaired ticket, smaller scope, better evidence flow, or correct decomposition.
 
 ### 9. Context allocation and evidence custody
 
-The Task Prompt must say what remains in Lead context, what stays with workers or deterministic tools, and what is durably persisted.
+The Task Prompt must say what compact orchestration facts may enter Lead context, what stays with Boundary Agents, and what is durably persisted.
 
-Keep with the Lead:
+Keep with the Lead only current stage, candidate identity, receipt identities, PASS/fix/retry counters, blocker, next action, and closure-ready status. Keep all substantive findings, dissent, raw searches, inventories, logs, diffs, test output, reasoning, judgments, and evidence bodies outside Lead context.
 
-- objective, authority, dependencies, material findings and dissent;
-- phase/checkpoint status, gap ledger, decisions, and terminal verification.
+Return only the exact compact receipt fields declared in the ticket. Persist detailed output externally when required and return its identity; do not paste the parent Task Prompt or evidence body into the receipt.
 
-Keep outside Lead context when proportionate:
+Every expensive or decision-critical phase must persist an authoritative artifact before dependent work begins. Temporary chat, Boundary Agent memory, transient context, and unverified summaries are not durable evidence. External artifacts must preserve dissent, contradictions, failed cases, unknowns, and minority evidence that could change a decision.
 
-- broad raw searches, repetitive inventories, large logs, and full worker reasoning.
-
-Return paths, hashes, short excerpts, concise findings, and compact receipts. Do not paste the parent Task Prompt into each ticket.
-
-Every expensive or decision-critical phase must persist an authoritative artifact before dependent work begins. Temporary chat, worker memory, transient context, and unverified summaries are not durable evidence. Compression must preserve dissent, contradictions, failed cases, unknowns, and minority evidence that could change a decision.
-
-On resume, Lead context begins with the authoritative checkpoint record. In `CLOSURE_ONLY`, use the default four artifacts defined above and record every Lead-context file opened and its reason; broader reading requires a named blocker.
+On resume, a fresh Boundary Agent verifies the authoritative checkpoint and returns only the permitted orchestration facts. In `CLOSURE_ONLY`, the closure Boundary Agent uses the default four artifacts defined above and identifies any additional artifact opened and its named blocker.
 
 Maintain a compact gap ledger for long or delegated tasks:
 
@@ -346,21 +328,23 @@ If authority, credentials, network, CI, review, mergeability, or remote state bl
 
 The Task Closure Receipt is the required terminal summary for the whole Task Prompt. It must enumerate each DONE condition, its yes/no result, evidence, delivered refs or artifact identifiers, tests and reviews, protected-state result, unresolved blockers, and residual risk.
 
-For resumed or `CLOSURE_ONLY` execution, it must also include the checkpoint-first resume record, the Lead-context file ledger, and any backward-transition authorization. Fill absent procedural fields from deterministic current facts without reopening completed phases.
+A fresh closure Boundary Agent persists this detailed receipt outside Lead context. The Lead receives only its artifact identity, compact outcome, blocker when present, next state, and receipt identity.
+
+For resumed or `CLOSURE_ONLY` execution, it must also include the checkpoint-first resume record, the Boundary-Agent artifact ledger, and any backward-transition authorization. Fill absent procedural fields from deterministic current facts without reopening completed phases.
 
 `Overall DONE: yes` is allowed only when every required terminal condition is verified. Agent Receipts, confidence, and a successful push command are inputs to closure, not substitutes for it, and `Overall DONE: yes` must not contradict deterministic facts or accepted checkpoint state.
 
 ### 15. Receipt, evidence, checkpoint, and closure authority
 
-Resolve a material conflict claim-by-claim. Before relying on an artifact, Checker/controller result, or checkpoint, verify that it is bound to the relevant claim through identity, scope, inputs, freshness, and acceptance state. A receipt never outranks the evidence it summarizes. An accepted checkpoint governs resume until verified contradictory evidence deterministically invalidates it. When source binding or authority remains unresolved, verify narrowly and block consequential promotion.
+Resolve a material conflict claim-by-claim. Before relying on an artifact, Boundary-Agent/controller result, or checkpoint, have a fresh verification Boundary Agent verify that it is bound to the relevant claim through identity, scope, inputs, freshness, and acceptance state. A receipt never outranks the evidence it summarizes. An accepted checkpoint governs resume until verified contradictory evidence deterministically invalidates it. When source binding or authority remains unresolved, verify narrowly and block consequential promotion.
 
 A Task Closure Receipt is derived from verified terminal conditions; it is not independent evidence that those conditions are true. On a mismatch between a receipt and higher-authority evidence, verify the specific conflicting claim, repair or reject the receipt, and reopen only the smallest phase that deterministic invalidation actually supports. Missing or inaccurate receipt prose alone does not replay completed work.
 
-A small, non-delegated, reversible task may use a compact inline evidence summary in place of formal Agent Receipt ceremony. This does not waive the Task Closure Receipt for a serious Task Prompt or the RunSkeptic Receipt when RunSkeptic is invoked.
+A small Boundary Agent task still returns its declared compact receipt, but it need not create a separate detailed report when no detailed output is required. This does not waive the Task Closure Receipt for a serious Task Prompt or the RunSkeptic report when RunSkeptic is invoked; those detailed artifacts remain outside Lead context and are referenced by identity.
 
 ## Agent Prompt and Dispatch Ticket
 
-An Agent Prompt is a bounded instruction for one participating role. It does not own overall completion unless the Task Prompt explicitly appoints that agent as Lead.
+An Agent Prompt or Dispatch Ticket is a bounded instruction for one fresh Boundary Agent. It never owns overall completion or becomes a sub-Lead.
 
 Use this compact Dispatch Ticket for delegated work:
 
@@ -378,27 +362,24 @@ Stop conditions:
 Return receipt:
 ```
 
-## Agent Receipt
+## Compact Boundary Agent receipt
 
 ```text
-Role and task:
-Scope completed:
-Files or objects read:
-Commands or tools used:
-Evidence and durable locations:
-Changes made:
-Verification and disconfirming checks:
-Failures, unknowns, and blockers:
-Budget / context result:
-Recommended next action:
-Confidence and evidence level (optional; not an independent promotion input):
+task_id:
+outcome:
+candidate_identity: <when relevant>
+artifact_identity: <when relevant>
+finding_ids: <when relevant>
+blocker: <when relevant>
+next_state:
+receipt_identity:
 ```
 
-The Lead or a Checker must verify material receipt claims before promoting them into readiness, mutation, integration, publication, or safety decisions. See [Receipt, evidence, checkpoint, and closure authority](#15-receipt-evidence-checkpoint-and-closure-authority) for the full precedence order.
+Detailed findings, commands, logs, diffs, test output, evidence bodies, and reasoning are persisted outside Lead context when required. A fresh verification Boundary Agent verifies material evidence and returns only the compact fields declared in its ticket. The Lead validates that structural receipt and advances or stops; it never reads or interprets the detailed artifact. See [Receipt, evidence, checkpoint, and closure authority](#15-receipt-evidence-checkpoint-and-closure-authority) for the full precedence order.
 
 ## Task-level Skeptic readiness gate
 
-Before execution and before terminal promotion, apply the current `skeptic.md` at both applicable levels:
+Before execution and before terminal promotion, dispatch a fresh Skeptic Boundary Agent to apply the current `skeptic.md` at both applicable levels:
 
 1. Agent Prompt level: each child instruction is bounded, authorized, testable, and able to return useful evidence.
 2. Task Prompt level: the aggregate system can realistically traverse its dependency graph and reach exact terminal DONE within the available resources and authority.
@@ -453,7 +434,7 @@ First incomplete phase:
 Blockers:
 Closure-ready status:
 Remaining work:
-Lead-context files opened and reason:
+Boundary-Agent artifact references opened and reason:
 Backward-transition authorization and evidence:
 
 ## Authority and source-of-truth order
@@ -500,11 +481,11 @@ Level 1 Skeptic gate result:
 Receipt destination and verifying owner:
 
 ## Context and evidence custody
-Lead context:
-Worker/tool context:
+Lead compact orchestration state:
+Boundary-Agent/tool context:
 Authoritative artifacts:
 Gap ledger location:
-Lead-context files opened and reason:
+Boundary-Agent artifact references opened and reason:
 Compression/handoff rule:
 
 ## Clean-room / independence
@@ -541,7 +522,7 @@ Authoritative checkpoint path/ref and hash:
 Highest completed phase:
 First incomplete phase:
 Remaining work:
-Lead-context files opened and reason:
+Boundary-Agent artifact references opened and reason:
 Backward-transition authorization and evidence:
 Task Prompt created and gated: yes/no + evidence
 Implementation complete: yes/no + evidence

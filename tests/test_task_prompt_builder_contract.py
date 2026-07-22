@@ -52,7 +52,15 @@ class BuilderExistenceAndAliasTests(unittest.TestCase):
             self.agents,
         )
         self.assertIn("`agents/task-prompt-builder.md`", self.agents)
-        self.assertIn("take precedence over the generic prompt-construction route", self.agents)
+        # The old "take precedence over the generic prompt-construction
+        # route" phrase was removed along with the longer Lead prompt; the
+        # current entry map instead states the aliases route to the Builder
+        # first, ahead of any other handling.
+        self.assertIn(
+            "These four aliases route here first; Task Prompt construction is "
+            "`agents/task-prompt-builder.md`'s job",
+            self.agents,
+        )
         self.assertIn(
             "`agents/task-prompt-builder.md` is authoritative for the objective/verified-plan-to-Task-Prompt build operation",
             self.agents,
@@ -141,10 +149,18 @@ class ContractApplicationTests(unittest.TestCase):
             self.builder,
         )
 
-    def test_prompt_lead_design_package_mode(self) -> None:
+    def test_task_prompt_construction_by_boundary_agent(self) -> None:
         for marker in [
-            "Use a Prompt Lead in `DESIGN_PACKAGE` mode",
+            "Use a fresh Prompt Builder Boundary Agent",
             "agents/task-prompt.md` contract and template",
+        ]:
+            self.assertIn(marker, self.builder)
+
+    def test_plan_and_review_work_use_fresh_boundary_agents(self) -> None:
+        for marker in [
+            "A fresh Plan Author Boundary Agent receives the objective",
+            "Each RunSkeptic pass is performed by a fresh Skeptic Reviewer Boundary Agent",
+            "fresh plan-repair Boundary Agent",
         ]:
             self.assertIn(marker, self.builder)
 
@@ -166,11 +182,11 @@ class UnifiedPromptBuildVerificationTests(unittest.TestCase):
             "**A. Plan fidelity and provenance**",
             "**B. Task-Prompt completeness**",
             "**C. Dependency integrity**",
-            "**D. Lead-Agent application**",
+            "**D. Orchestration-only Lead application**",
             "**E. Lead-context protection**",
             "**F. Execution feasibility**",
             "**G. Internal consistency and authority**",
-            "**H. End-to-end Lead dry run**",
+            "**H. End-to-end orchestration dry run**",
             "**I. Proportionality**",
         ]:
             self.assertIn(marker, self.builder)
@@ -178,11 +194,18 @@ class UnifiedPromptBuildVerificationTests(unittest.TestCase):
     def test_verdicts_and_repair_routing(self) -> None:
         for marker in [
             "`READY` — freeze the exact final Task-Prompt SHA-256",
-            "`REPAIR_REQUIRED` — the Prompt Lead repairs the Task Prompt",
+            "`REPAIR_REQUIRED` — a fresh repair Boundary Agent repairs the Task Prompt",
             "`PLAN_DEFECT` — return to plan production",
             "`BLOCKED` — preserve the exact candidate identity",
         ]:
             self.assertIn(marker, self.builder)
+
+    def test_detailed_verification_report_stays_outside_lead_context(self) -> None:
+        self.assertIn("persists a detailed report", self.builder)
+        self.assertIn(
+            "returns to the Lead only the declared compact receipt fields and the report identity",
+            self.builder,
+        )
 
     def test_plan_defect_returns_to_plan_verification(self) -> None:
         self.assertIn("repeat full Plan Skeptic verification", self.builder)
@@ -246,11 +269,18 @@ class ContextProtectionTests(unittest.TestCase):
 
     def test_lead_context_protection_markers_present(self) -> None:
         for marker in [
-            "Lead receives compact authoritative inputs, not full histories",
-            "raw logs/discussions/large outputs stay outside Lead context absent a named dispute",
-            "closure capacity protected by a measurable reserve or substitute",
+            "Lead receives only declared compact orchestration fields and receipt identities",
+            "detailed results remain external",
+            "closure capacity is protected",
         ]:
             self.assertIn(marker, self.builder)
+
+    def test_builder_output_is_externalized(self) -> None:
+        self.assertIn("Persist one external builder artifact containing:", self.builder)
+        self.assertIn(
+            "Return to the Lead only: `task_id`, `outcome`, the final Task-Prompt `candidate_identity`",
+            self.builder,
+        )
 
 
 if __name__ == "__main__":

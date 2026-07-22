@@ -1,14 +1,37 @@
 # made by AI
+"""Substantive-action delegation and RunSkeptic verification handling.
+
+Covers the current `agents/lead-agent-prompt.md` "## Core rule" and
+"## Verification" sections. The orchestration-only contract has no named
+execution-mode packages; the equivalent concept is that every category of
+substantive work named in the Core rule -- including testing, review,
+RunSkeptic, repair, verification, integration, pushing changes, and
+remote-state checks -- is always performed by a fresh Boundary Agent, never
+executed inline by the Lead, and role names never create an alternative
+execution path. Verification is a specific instance of that rule: RunSkeptic
+runs inside a Boundary Agent, its receipt is limited to a stricter allowlist,
+the PASS streak resets on an ACTION verdict or any candidate change, and an
+ACTION verdict routes only `finding_ids` (via `report_identity`, never the
+full report) to a fresh repair Boundary Agent.
+
+Two kinds of coverage, matching repository convention:
+
+- A self-contained frozen decision table encodes the delegation and
+  PASS-streak rules so the contract cannot silently regress toward the Lead
+  performing a substantive action itself or treating a narrated/reused
+  candidate as a genuine consecutive PASS.
+- Marker tests freeze the governing prose in `agents/lead-agent-prompt.md`.
+"""
 from __future__ import annotations
 
 import re
 import unittest
+from dataclasses import dataclass
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
 LEAD_PROMPT = ROOT / "agents" / "lead-agent-prompt.md"
-GOVERNANCE = ROOT / "skeptic-tests.md"
 
 
 def section(document: str, heading: str) -> str:
@@ -22,198 +45,308 @@ def section(document: str, heading: str) -> str:
     return match.group("body")
 
 
-class LeadExecutionModeContractTests(unittest.TestCase):
+# --------------------------------------------------------------------------
+# Executable reference decision table
+# --------------------------------------------------------------------------
+
+# The concrete, named substantive actions enumerated in "## Core rule".
+# ("any future task that requires domain reasoning or produces detailed
+# output" is a forward-looking catch-all, tested separately as prose.)
+SUBSTANTIVE_ACTIONS = frozenset(
+    {
+        "repository_inspection",
+        "planning",
+        "implementation",
+        "testing",
+        "review",
+        "run_skeptic",
+        "interpretation_of_findings",
+        "repair",
+        "verification",
+        "integration",
+        "pushing_changes",
+        "remote_state_checks",
+        "tool_use",
+        "external_system_interaction",
+    }
+)
+
+ROLE_NAMES = frozenset(
+    {"implementer", "reviewer", "checker", "advisor", "verifier", "integrator"}
+)
+
+
+def requires_fresh_boundary_agent(action: str) -> bool:
+    """Every substantive action must be performed by a fresh Boundary
+    Agent, without exception."""
+    if action not in SUBSTANTIVE_ACTIONS:
+        raise ValueError(f"unknown action: {action}")
+    return True
+
+
+def is_alternative_execution_path(role_name: str) -> bool:
+    """Role names are optional descriptions of a Boundary Agent's
+    objective. None of them is an alternative execution path that would let
+    the Lead perform the work itself under that label."""
+    if role_name not in ROLE_NAMES:
+        raise ValueError(f"unknown role name: {role_name}")
+    return False
+
+
+@dataclass(frozen=True)
+class VerificationState:
+    """Consecutive-PASS tracking for one candidate under review. No field
+    has a default: an incomplete case must fail to construct."""
+
+    consecutive_passes: int
+    candidate_identity: str
+
+
+def apply_verdict(
+    state: VerificationState, verdict: str, new_candidate_identity: str
+) -> VerificationState:
+    """Any candidate change resets the PASS count to zero. Otherwise, PASS
+    increments the streak and ACTION resets it to zero."""
+    if verdict not in ("PASS", "ACTION"):
+        raise ValueError(f"unknown verdict: {verdict}")
+    candidate_changed = new_candidate_identity != state.candidate_identity
+    if candidate_changed or verdict == "ACTION":
+        return VerificationState(
+            consecutive_passes=0, candidate_identity=new_candidate_identity
+        )
+    return VerificationState(
+        consecutive_passes=state.consecutive_passes + 1,
+        candidate_identity=new_candidate_identity,
+    )
+
+
+def should_stop_verification(state: VerificationState) -> bool:
+    """Stop verification after three consecutive PASS results on the same
+    unchanged candidate."""
+    return state.consecutive_passes >= 3
+
+
+RUNSKEPTIC_RECEIPT_ALLOWLIST = frozenset(
+    {"candidate_identity", "verdict", "finding_ids", "report_identity", "receipt_identity"}
+)
+
+
+def runskeptic_receipt_is_valid(returned_fields: frozenset) -> bool:
+    """A RunSkeptic Boundary Agent receipt may contain only this stricter
+    allowlist; the full report must never enter the Lead context."""
+    return returned_fields.issubset(RUNSKEPTIC_RECEIPT_ALLOWLIST)
+
+
+def repair_dispatch_fields(verdict: str) -> frozenset:
+    """On ACTION, repair is dispatched to a fresh Boundary Agent using only
+    the identified finding_ids (reachable via report_identity) -- never the
+    full report body."""
+    if verdict != "ACTION":
+        raise ValueError("repair is dispatched only on an ACTION verdict")
+    return frozenset({"report_identity", "finding_ids"})
+
+
+class SubstantiveActionDelegationTests(unittest.TestCase):
+    def test_every_named_substantive_action_requires_a_boundary_agent(self) -> None:
+        for action in SUBSTANTIVE_ACTIONS:
+            with self.subTest(action=action):
+                self.assertTrue(requires_fresh_boundary_agent(action))
+
+    def test_unknown_action_is_rejected_rather_than_silently_permitted(self) -> None:
+        with self.assertRaises(ValueError):
+            requires_fresh_boundary_agent("undocumented_future_action")
+
+    def test_no_role_name_is_an_alternative_execution_path(self) -> None:
+        for role in ROLE_NAMES:
+            with self.subTest(role=role):
+                self.assertFalse(is_alternative_execution_path(role))
+
+
+class VerificationStreakTests(unittest.TestCase):
+    def test_pass_increments_streak_on_unchanged_candidate(self) -> None:
+        state = VerificationState(consecutive_passes=1, candidate_identity="c1")
+        state = apply_verdict(state, "PASS", "c1")
+        self.assertEqual(state.consecutive_passes, 2)
+
+    def test_action_resets_streak_to_zero(self) -> None:
+        state = VerificationState(consecutive_passes=2, candidate_identity="c1")
+        state = apply_verdict(state, "ACTION", "c1")
+        self.assertEqual(state.consecutive_passes, 0)
+
+    def test_any_candidate_change_resets_streak_even_on_pass(self) -> None:
+        state = VerificationState(consecutive_passes=2, candidate_identity="c1")
+        state = apply_verdict(state, "PASS", "c2")
+        self.assertEqual(state.consecutive_passes, 0)
+        self.assertEqual(state.candidate_identity, "c2")
+
+    def test_three_consecutive_passes_on_unchanged_candidate_stops_verification(
+        self,
+    ) -> None:
+        state = VerificationState(consecutive_passes=0, candidate_identity="c1")
+        for _ in range(3):
+            state = apply_verdict(state, "PASS", "c1")
+        self.assertTrue(should_stop_verification(state))
+
+    def test_two_consecutive_passes_does_not_stop_verification(self) -> None:
+        state = VerificationState(consecutive_passes=0, candidate_identity="c1")
+        for _ in range(2):
+            state = apply_verdict(state, "PASS", "c1")
+        self.assertFalse(should_stop_verification(state))
+
+    def test_pass_streak_across_a_candidate_change_never_reaches_three(self) -> None:
+        state = VerificationState(consecutive_passes=2, candidate_identity="c1")
+        # A repaired/edited candidate is a new identity even after two prior
+        # passes; the streak must not carry over.
+        state = apply_verdict(state, "PASS", "c2")
+        self.assertFalse(should_stop_verification(state))
+
+    def test_unknown_verdict_is_rejected(self) -> None:
+        state = VerificationState(consecutive_passes=0, candidate_identity="c1")
+        with self.assertRaises(ValueError):
+            apply_verdict(state, "MAYBE", "c1")
+
+
+class RunSkepticReceiptTests(unittest.TestCase):
+    def test_allowlisted_fields_are_valid(self) -> None:
+        self.assertTrue(
+            runskeptic_receipt_is_valid(
+                frozenset({"candidate_identity", "verdict", "receipt_identity"})
+            )
+        )
+
+    def test_full_report_field_is_not_in_the_allowlist(self) -> None:
+        self.assertFalse(runskeptic_receipt_is_valid(frozenset({"report"})))
+        self.assertNotIn("report", RUNSKEPTIC_RECEIPT_ALLOWLIST)
+
+    def test_repair_dispatch_uses_only_report_identity_and_finding_ids(self) -> None:
+        fields = repair_dispatch_fields("ACTION")
+        self.assertEqual(fields, frozenset({"report_identity", "finding_ids"}))
+        self.assertNotIn("report", fields)
+
+    def test_repair_dispatch_is_only_valid_on_action_verdict(self) -> None:
+        with self.assertRaises(ValueError):
+            repair_dispatch_fields("PASS")
+
+
+# --------------------------------------------------------------------------
+# Marker tests: the governing prose must be present in lead-agent-prompt.md
+# --------------------------------------------------------------------------
+
+
+class CoreRuleMarkerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         cls.lead = LEAD_PROMPT.read_text(encoding="utf-8")
-        cls.governance = GOVERNANCE.read_text(encoding="utf-8")
-        cls.execution = section(cls.lead, "## Execution mode and package ownership")
-        cls.resume = section(cls.lead, "## Checkpoint-first resume and closure fast path")
-        cls.core = section(cls.lead, "## Core job")
-        cls.scenarios = section(
-            cls.governance,
-            "### Lead execution-mode regression scenarios",
-        )
+        cls.core = section(cls.lead, "## Core rule")
 
-    def test_execution_modes_are_distinct_and_routed_in_core_flow(self) -> None:
-        for mode in ["DESIGN_PACKAGE", "EXECUTE_PACKAGE", "REPAIR_PACKAGE"]:
-            self.assertIn(f"`{mode}`", self.execution)
-            self.assertIn(f"`{mode}`", self.core)
-        self.assertLess(
-            self.lead.index("## Execution mode and package ownership"),
-            self.lead.index("## Core job"),
-        )
-
-    def test_predesigned_package_is_operated_not_rebuilt(self) -> None:
-        for behavior in [
-            "validates and operates that package",
-            "Execute through the supplied controller or primary command.",
-            "does not rebuild the workflow inside the execution session",
-        ]:
-            self.assertIn(behavior, self.execution)
-        self.assertRegex(
-            self.scenarios,
-            r"Predesigned benchmark package[\s\S]*?classify `EXECUTE_PACKAGE`[\s\S]*?run the supplied controller",
-        )
-
-    def test_incomplete_large_package_stops_before_replacement_runtime(self) -> None:
-        required_artifacts = [
-            "controller or primary command",
-            "immutable inputs",
-            "schemas",
-            "validator",
-            "durable state",
-            "scoring or aggregation",
-            "recovery or resume command",
-        ]
-        for artifact in required_artifacts:
-            self.assertIn(artifact, self.execution)
-        self.assertIn("return `PACKAGE_INCOMPLETE` before expensive execution", self.execution)
-        self.assertIn("List the exact missing artifacts.", self.execution)
-        self.assertIn("Do not improvise a substantial replacement runtime", self.execution)
-
-    def test_small_reversible_task_avoids_package_ceremony(self) -> None:
-        self.assertIn("A small bounded task may execute directly", self.execution)
-        self.assertRegex(
-            self.scenarios,
-            r"Small one-off task[\s\S]*?execute directly without controller, agent team, or package ceremony",
-        )
-
-    def test_validator_repair_reuses_valid_expensive_outputs(self) -> None:
-        for behavior in [
-            "repair the checker",
-            "revalidate existing outputs",
-            "do not regenerate valid expensive work",
-        ]:
-            self.assertIn(behavior, self.execution)
-        self.assertRegex(
-            self.scenarios,
-            r"Validator defect after successful generation[\s\S]*?repair the validator[\s\S]*?do not regenerate valid outputs",
-        )
-
-    def test_whole_batch_feasibility_precedes_launch(self) -> None:
-        for behavior in [
-            "entire phase plus verification, persistence, and closure",
-            "Do not start a batch merely because its first calls fit.",
-            "Pilot, reduce, hand off, or stop before the phase",
-        ]:
-            self.assertIn(behavior, self.execution)
-        self.assertRegex(
-            self.scenarios,
-            r"Complete batch cannot fit[\s\S]*?do not launch the batch[\s\S]*?Generic context protection is not sufficient",
-        )
-
-    def test_receipts_and_operational_stop_preserve_skeptic_categories(self) -> None:
-        for field in [
-            "Execution mode",
-            "Package completeness",
-            "Primary command/controller",
-            "Whole-phase feasibility",
-            "Resume/recovery state",
-        ]:
-            self.assertIn(f"`{field}`", self.core)
-        self.assertIn("operational stop reason", self.core)
-        self.assertIn("not a new Skeptic", self.core)
-
-    def test_checkpoint_state_precedes_resume_or_artifact_review(self) -> None:
-        for behavior in [
-            "read and verify the authoritative state or checkpoint before broad artifact review",
-            "the highest completed phase",
-            "the first incomplete phase",
-            "A lifecycle written from phase zero does not authorize replay.",
-        ]:
-            self.assertIn(behavior, self.resume)
-        for mode in ["EXECUTE_PACKAGE", "REPAIR_PACKAGE"]:
-            self.assertRegex(
-                self.core,
-                rf"`{mode}`: read authoritative state first;[\s\S]*?resume at the first incomplete phase",
-            )
-
-    def test_closure_only_fills_missing_fields_without_replay(self) -> None:
-        for behavior in [
-            "When substantive work is complete, enter `CLOSURE_ONLY`",
-            "Read only the authoritative checkpoint, final result, gap or missing-field ledger, and draft or final closure receipt.",
-            "Fill missing receipt fields deterministically.",
-            "Issue the Task Closure Receipt and stop.",
-        ]:
-            self.assertIn(behavior, self.resume)
-        self.assertRegex(
-            self.scenarios,
-            r"Closure-only missing receipt fields[\s\S]*?enter `CLOSURE_ONLY`[\s\S]*?do not replay, recompute, call an advisor, or broadly read raw outputs",
-        )
-
-    def test_accepted_controller_result_is_verified_not_recomputed(self) -> None:
-        for behavior in [
-            "verify its identity, inputs, hash, acceptance, and required counts",
-            "Do not recreate inventories, score tables, regression ledgers, or conclusions",
-            "Open raw evidence only for a named unresolved dispute.",
-        ]:
-            self.assertIn(behavior, self.resume)
-        self.assertRegex(
-            self.scenarios,
-            r"Accepted controller result needs no independent confirmation[\s\S]*?verify identity, inputs, hash, acceptance, and required counts[\s\S]*?without recomputation",
-        )
-
-    def test_checkpoint_invalidation_reopens_only_smallest_phase(self) -> None:
-        for invalidation in [
-            "a hash mismatch",
-            "a corrupt or missing accepted artifact",
-            "failed acceptance",
-            "a changed immutable input",
-            "contradictory authoritative state",
-        ]:
-            self.assertIn(invalidation, self.resume)
-        for record in [
-            "invalid checkpoint",
-            "deterministic evidence",
-            "smallest phase reopened",
-            "preserved unaffected evidence",
-            "renewed feasibility",
-        ]:
-            self.assertIn(record, self.resume)
-        self.assertIn("Otherwise stop with `CHECKPOINT_CONFLICT`.", self.resume)
-
-    def test_closure_ready_state_forbids_optional_advisor(self) -> None:
+    def test_every_substantive_action_must_be_delegated(self) -> None:
         self.assertIn(
-            'do not initiate an advisor, Judge, extra review, new inventory, independent analysis, or "one more check"',
-            self.resume,
+            "Every substantive action must be performed by a fresh Boundary "
+            "Agent.",
+            self.core,
         )
-        self.assertRegex(
-            self.scenarios,
-            r"Optional advisor after closure-ready[\s\S]*?do not call the advisor; close",
-        )
+        self.assertIn("This includes, without exception:", self.core)
 
-    def test_lifecycle_resumes_at_first_incomplete_phase(self) -> None:
-        self.assertRegex(
-            self.scenarios,
-            r"Resume at the first incomplete phase[\s\S]*?P0-P5 complete[\s\S]*?start at P6 without replaying earlier phases",
-        )
-
-    def test_context_exhaustion_after_completion_is_failure(self) -> None:
-        for failure in [
-            "`prompt too long`",
-            "session exhaustion",
-            "forced compression",
-            "unplanned handoff",
+    def test_named_substantive_actions_are_enumerated(self) -> None:
+        for item in [
+            "repository inspection",
+            "planning",
+            "implementation",
+            "testing",
+            "review",
+            "RunSkeptic",
+            "interpretation of findings",
+            "repair",
+            "verification",
+            "integration",
+            "pushing changes",
+            "remote-state checks",
+            "tool use",
+            "external-system interaction",
         ]:
-            self.assertIn(failure, self.resume)
-        self.assertRegex(
-            self.scenarios,
-            r"Context exhaustion after completion[\s\S]*?context protection as failed[\s\S]*?surviving artifacts do not make that Lead execution successful",
+            self.assertIn(item, self.core)
+
+    def test_forward_looking_catch_all_is_present(self) -> None:
+        self.assertIn(
+            "any future task that requires domain reasoning or produces "
+            "detailed output",
+            self.core,
         )
 
-    def test_resume_receipt_records_checkpoint_and_transition_state(self) -> None:
-        for field in [
-            "Authoritative checkpoint",
-            "Highest completed phase",
-            "First incomplete phase",
-            "Closure-ready status",
-            "Lead-context files opened and reason",
-            "Remaining work",
-            "Backward-transition authorization and evidence",
+    def test_role_names_are_not_alternative_execution_paths(self) -> None:
+        for role in [
+            "implementer",
+            "reviewer",
+            "checker",
+            "advisor",
+            "verifier",
+            "integrator",
         ]:
-            self.assertIn(f"`{field}`", self.resume)
-            self.assertIn(f"`{field}`", self.core)
+            self.assertIn(role, self.core)
+        self.assertIn(
+            "Role names such as implementer, reviewer, checker, advisor, "
+            "verifier, or integrator are optional descriptions of a "
+            "Boundary Agent's objective.",
+            self.core,
+        )
+        self.assertIn("They are not alternative execution paths.", self.core)
+
+
+class VerificationMarkerTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.lead = LEAD_PROMPT.read_text(encoding="utf-8")
+        cls.verification = section(cls.lead, "## Verification")
+
+    def test_verification_is_always_performed_by_boundary_agents(self) -> None:
+        self.assertIn(
+            "Verification is always performed by Boundary Agents.",
+            self.verification,
+        )
+
+    def test_lead_must_never_list_is_enumerated(self) -> None:
+        for must_not in [
+            "run RunSkeptic",
+            "read a RunSkeptic report",
+            "interpret findings",
+            "choose a repair strategy",
+            "run tests",
+            "analyze test output",
+        ]:
+            self.assertIn(must_not, self.verification)
+
+    def test_runskeptic_receipt_allowlist_is_named(self) -> None:
+        for field in RUNSKEPTIC_RECEIPT_ALLOWLIST:
+            self.assertIn(field, self.verification)
+        self.assertIn(
+            "The full report must remain outside the Lead context.",
+            self.verification,
+        )
+
+    def test_pass_increments_and_action_resets_streak(self) -> None:
+        self.assertIn(
+            "If the verdict is PASS, increment the consecutive PASS count.",
+            self.verification,
+        )
+        self.assertIn(
+            "If the verdict is ACTION, reset the PASS count to zero and "
+            "dispatch a fresh Boundary Agent to repair only the identified "
+            "findings.",
+            self.verification,
+        )
+
+    def test_candidate_change_resets_streak(self) -> None:
+        self.assertIn(
+            "Any candidate change resets the PASS count to zero.",
+            self.verification,
+        )
+
+    def test_stop_after_three_consecutive_passes(self) -> None:
+        self.assertIn(
+            "Stop verification after three consecutive PASS results on the "
+            "same unchanged candidate.",
+            self.verification,
+        )
 
 
 if __name__ == "__main__":
