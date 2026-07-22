@@ -90,15 +90,20 @@ class EntryMapTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.text = AGENTS.read_text(encoding="utf-8")
 
-    def test_entry_map_routes_to_all_three_owned_files(self) -> None:
+    def test_entry_map_routes_to_all_owned_files(self) -> None:
         route_lines = [
             line.strip() for line in self.text.splitlines() if line.strip().startswith("-> `")
         ]
-        self.assertEqual(len(route_lines), 3)
+        self.assertEqual(len(route_lines), 4)
         destinations = {line[len("-> `"):-1] for line in route_lines}
         self.assertEqual(
             destinations,
-            {"skeptic.md", "agents/lead-agent-prompt.md", "agents/task-prompt.md"},
+            {
+                "skeptic.md",
+                "agents/lead-agent-prompt.md",
+                "agents/task-prompt.md",
+                "agents/task-prompt-builder.md",
+            },
         )
 
     def test_review_route_does_not_overlap_gating_route(self) -> None:
@@ -126,6 +131,10 @@ class EntryMapTests(unittest.TestCase):
         )
         self.assertIn(
             "`agents/task-prompt.md` is authoritative for Task Prompt construction, execution control, and closure.",
+            self.text,
+        )
+        self.assertIn(
+            "`agents/task-prompt-builder.md` is authoritative for the objective/verified-plan-to-Task-Prompt build operation",
             self.text,
         )
         self.assertIn(
