@@ -29,3 +29,22 @@ the consolidation plan's harvest rule. The log is data, not doctrine.
   succeed - archive design must not assume tag publication works.
 - Net verdict: framework structurally sound; generation process needs the
   gate receipt as a hard output, not an optional flourish.
+
+## Entry 002 - 2026-07-22 - Dispatch-first entry protocol (Slice A.1)
+
+- Task: exercise the new "Dispatch-first execution entry" contract on a small
+  representative multi-stage repo task (verify -> review -> integrate the
+  Slice A.1 candidate). Not Slice B, whose failed context was not reused.
+- First Lead invocation behavior: did no substantive repo work itself;
+  dispatched exactly one fresh CHECKER stage agent with a bounded ticket;
+  validated its one compact receipt; updated compact state; stopped without a
+  second transition or context growth. Only the first (Check) transition of the
+  lifecycle was exercised, as the protocol requires.
+- Checker receipt (validated against own runs): focused file 35 passed; full
+  suite 310 passed; subsection present exactly once; protected files
+  (skeptic.md, skeptic-questions.md, harness/) byte-identical to origin/main.
+- Receipt limitation noted: the Checker's `git diff --name-only origin/main`
+  omitted the still-untracked new test file; accounted for at commit via
+  `git status`. Not a candidate defect.
+- Net verdict: entry protocol behaves as specified - one dispatch, one receipt,
+  one state update, immediate stop. No framework gap surfaced.

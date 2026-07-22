@@ -253,6 +253,73 @@ One Lead invocation performs at most one lifecycle transition:
 
 The Lead must not own two substantive stages in one invocation. It hands off after each transition rather than chaining implementation, checking, review, repair, and integration inside one context.
 
+### Dispatch-first execution entry
+
+For serious multi-stage execution, the first Lead invocation is a dispatch-first entry: it is limited to exactly one lifecycle transition and performs no substantive stage work before dispatch. This specializes "One lifecycle transition per invocation" for the entry point; it does not relax it.
+
+At entry the Lead may only:
+
+1. validate the compact authoritative state (see "Compact authoritative state");
+2. identify the next authorized stage;
+3. create one bounded stage ticket (see "Bounded dispatch ticket");
+4. dispatch one fresh stage agent (see "Fresh bounded stage agents");
+5. validate one compact receipt;
+6. update the compact authoritative state;
+7. stop.
+
+Only the minimal reads needed to validate routing, authority, compact state, and the next ticket are permitted before dispatch.
+
+Before dispatch the Lead must not:
+
+- inspect the implementation surface broadly;
+- run the baseline or full test suite;
+- map the test blast radius;
+- implement;
+- perform semantic review;
+- consult an advisor;
+- perform RunSkeptic;
+- repair;
+- integrate;
+- execute multiple stages;
+- accumulate "full context."
+
+After validating the receipt and updating compact state, the Lead must immediately stop. In the same invocation it must not launch another stage, inspect the returned implementation, run follow-up checks, add a reassurance review, or continue toward terminal DONE. Inspecting a completed stage after accepting its receipt is permitted only for one named unresolved blocker, a receipt mismatch, or deterministic invalidation (see "Compact authoritative state" and "Checkpoint-first resume and closure fast path").
+
+The next stage requires a fresh Lead invocation carrying only the compact updated state -- never the completed-stage history, worker reasoning, or accumulated context of this one.
+
+Accumulating pre-dispatch context until `prompt too long` is a failed execution path, not thoroughness (see "Context protection").
+
+A serious multi-stage execution begins each Lead invocation from this compact entry contract:
+
+```text
+This invocation is the Lead orchestrator only.
+
+You may perform exactly one lifecycle transition.
+
+Your only authorized work is:
+- validate compact state;
+- dispatch the named next fresh stage agent with one bounded ticket;
+- validate one compact receipt;
+- update compact state;
+- stop.
+
+Do not implement, test, review, advise, repair, integrate, broadly
+inspect the repository, or continue to another stage.
+
+Return only:
+- prior state identity;
+- dispatched stage and role;
+- ticket identity;
+- receipt identity and outcome;
+- updated compact state;
+- next authorized stage;
+- explicit stop confirmation.
+```
+
+The wording may be improved, but the behavioral restrictions above must remain explicit. Keep the mechanism minimal: prefer this template and focused contract tests over a workflow engine, daemon, queue, database, recursive hierarchy, Phase Supervisor, or repository-owned state directory. Add a deterministic wrapper only if tests show a prompt or template contract cannot represent the required enforcement.
+
+The proportionality exception below does not create a bypass: an entry with meaningful context-exhaustion risk, or that would perform review, repair, integration, or repeated work, is not eligible for direct execution and must use dispatch-first entry.
+
 ### Lead prohibitions
 
 Across the lifecycle the Lead must not:
