@@ -200,9 +200,11 @@ Treat an Agent Receipt or Task Closure Receipt as a claim, not authority, until 
 
 ## Stateless orchestration
 
-When the Lead coordinates a multi-stage execution lifecycle, it operates as a practically stateless orchestrator: it owns and advances the lifecycle but performs no substantive stage work itself and does not carry completed-stage history in active context. This section sharpens the "Checkpoint-first resume and closure fast path" discipline into a per-invocation contract. It does not restate the invalidation, capacity, or receipt-authority mechanics defined there, nor the verification vocabulary defined in `AGENTS.md`; it references them.
+When the Lead coordinates a multi-stage execution lifecycle, it operates as a practically stateless orchestrator: it owns and advances the lifecycle but performs no substantive stage work itself and does not carry completed-stage history in active context. As an orchestration controller it needs only orchestration facts to run the lifecycle and never needs to understand the task domain itself; all substantive, information-producing work is routed to fresh bounded subagents outside its context. This section sharpens the "Checkpoint-first resume and closure fast path" discipline into a per-invocation contract. It does not restate the invalidation, capacity, or receipt-authority mechanics defined there, nor the verification vocabulary defined in `AGENTS.md`; it references them.
 
 ### Compact authoritative state
+
+Information may enter Lead context only if the Lead needs that exact information to identify the current state or candidate, select or validate the next authorized transition, determine stage completion, failure, or blockage, update counters or compact state, or decide continue, rebuild, integrate, or stop. Prefer bounded representations — an identifier, status, boolean, count, classification, state delta, blocker code, or evidence reference. This transition-necessity test is the principle behind the whitelist below.
 
 The Lead may retain only this compact authoritative state, held in active context — not a repository state directory, controller, or on-disk store (see "Runtime state and workspace ownership"):
 
@@ -229,6 +231,8 @@ The Lead must not normally retain or ingest:
 
 Summarized completed history and raw evidence are rejected as normal Lead input; an accepted receipt reference and its hash stand in for the evidence. Referenced raw evidence may be opened only for one named unresolved blocker, a receipt mismatch, or deterministic invalidation of an accepted stage (the deterministic invalidation conditions and reopen-smallest-phase rule are defined in "Checkpoint-first resume and closure fast path"). Absent one of these, the Lead does not reconstruct an accepted evidence chain.
 
+Everything the transition-necessity test excludes is substantive information and stays out of Lead context even when important to the underlying work — detailed or large task-derived material, reasoning, investigation history, implementation detail, evidence bodies, raw outputs, broad summaries, explanations, and unsolicited findings. Apply one governing test to every candidate input: does the Lead require this exact information to select, validate, or record the next workflow transition? If no, it must not cross; if only part is required, only that part crosses. Information is not admitted because it was discovered, is relevant, is useful, or is explanatory.
+
 ### Fresh bounded stage agents
 
 Substantive stages are assigned to fresh bounded stage agents. Each is a single-stage instance of the Worker or Checker roles, never a sub-Lead and never a recursive hierarchy:
@@ -240,6 +244,24 @@ Substantive stages are assigned to fresh bounded stage agents. Each is a single-
 - Integrator — performs the deterministic terminal integration.
 
 Each stage agent returns a compact receipt; the Lead validates the receipt and updates state.
+
+### Context boundary contract
+
+The five stage agents above are specializations of one behavioral contract, the Context Boundary Agent: not a new role, but the discipline every fresh bounded subagent doing substantive work outside Lead context already follows, stated generally so it also governs any future stage. A Context Boundary Agent owns one bounded objective, receives only the minimum sufficient inputs, uses the files, tools, models, and services it needs outside Lead context, does the work, persists detailed output externally when it must survive, and returns only the exact orchestration facts its ticket declared. What it must not return is the output side of the boundary already drawn for Lead input: the implementation history, raw logs, diffs, reasoning, narrative, evidence bodies, broad summaries, unsolicited recommendations, and unrelated discoveries the Lead will not hold — plus copied instructions and unchanged state.
+
+Its dispatch is the "Bounded dispatch ticket" expressed with the fields the orchestration boundary requires — one ticket specialized for the lifecycle, not a second format: `task_id`, `objective`, `minimum_inputs`, `permitted_work`, `required_orchestration_facts` (the complete allowlist of facts the agent may return), `artifact_requirement`, `completion_condition`, and `blocker_condition`. A ticket is invalid if it requests a general summary, "anything relevant", all findings, an open-ended recommendation, unspecified supporting detail, or anything that would require the Lead to understand the task domain.
+
+Its receipt is the compact orchestration specialization of the worker receipt: only the fields `task_id`, `outcome`, `artifact_identity`, `orchestration_facts`, `blocker`, and `receipt_identity` may appear, and within `orchestration_facts` only facts named by `required_orchestration_facts` are allowed. Unchanged state is not repeated, detailed results are referenced rather than returned, and a newly surfaced issue returns only the minimum classification needed to route it. Detailed output stays external or referenced; it is never returned into Lead context.
+
+A newly available or necessary task, role, tool, source, model, or interface does not bypass this boundary and gains no authority to expand scope merely by existing or by offering a suggestion. The Lead does not use it directly: it identifies the exact orchestration decision the capability affects, creates one bounded ticket, provides only the minimum inputs, declares the exact orchestration facts allowed back, and accepts only a conforming receipt.
+
+Out-of-ticket findings route through classification only. An agent that discovers material outside its ticket returns exactly one of `acceptance_required`, `blocker_required`, `optional`, or `scope_or_authority_change` — never the substantive content. The Lead routes it without investigating or elaborating it: `acceptance_required` becomes a bounded task only if already authorized; `blocker_required` becomes a bounded task only if necessary to proceed; `optional` is parked; `scope_or_authority_change` stops and returns to the Prompt Builder or owner. A discovery cannot silently expand scope.
+
+Uncertainty does not authorize Lead investigation. On an unexpected condition the Lead may only dispatch one bounded agent for the exact missing orchestration facts, record one compact blocker, apply the frozen transition rule, or stop truthfully; every follow-up question needs a new task identity and its own exact output allowlist.
+
+Enforcement is stated honestly: subagent input isolation may be real while return filtering may be only instruction-level. When schema enforcement or output filtering is available, apply it before exposing a return; when bounded interchange cannot be adequately enforced, stop with `CONTEXT_BOUNDARY_UNENFORCEABLE` rather than claim context protection the runtime cannot provide.
+
+A material change to the accepted prompt, package, acceptance conditions, dispatch or receipt boundaries, or orchestration semantics creates a new artifact identity and invalidates prior verification: it returns to the Prompt Builder when the Task Prompt itself changed, reruns the applicable deterministic checks and the behavioral canary, and resets the consecutive-PASS streak under the reset-on-artifact-change rule already defined in `AGENTS.md` ("Fix Skeptic verification") and "Skeptic verification modes" — it does not define a second reset.
 
 ### One lifecycle transition per invocation
 
