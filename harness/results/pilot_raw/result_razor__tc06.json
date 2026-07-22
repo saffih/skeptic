@@ -1,0 +1,74 @@
+{
+  "findings": [
+    {
+      "id": "F1",
+      "description": "Single shared Redis instance is a hidden single point of failure (SPOF). All five microservices depend on one Redis node. If this instance becomes unavailable, all services lose session storage, cart state, catalog cache, dedup keys, and metrics simultaneously.",
+      "location": "lines 13-21",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["OM1", "CH8"],
+      "evidence": "All five services will use a single shared Redis 7.x instance (`cache-primary.internal:6379`). Redis is deployed on a dedicated m5.2xlarge instance with 32GB RAM.",
+      "confidence": "high"
+    },
+    {
+      "id": "F2",
+      "description": "The consequences section states 'Redis is always available so services can rely on cache reads succeeding' — this is an unfounded availability guarantee with no redundancy mechanism (no replication, no Sentinel, no Cluster, no fallback). It encodes a false assumption into the architecture contract.",
+      "location": "line 33",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["PO1", "CH8"],
+      "evidence": "Redis is always available so services can rely on cache reads succeeding",
+      "confidence": "high"
+    },
+    {
+      "id": "F3",
+      "description": "No isolation between workloads. All five services share the same keyspace and memory pool. A memory spike or key-churn in one service (e.g., AnalyticsEngine) can evict critical keys for another (e.g., session tokens in UserService), causing cascading failures across unrelated services.",
+      "location": "lines 13-20",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["KT1", "OM1"],
+      "evidence": "All five services listed under a single Redis instance with a single 32GB RAM allocation; key isolation is only by prefix naming convention.",
+      "confidence": "high"
+    },
+    {
+      "id": "F4",
+      "description": "Key namespace collision prevention relies solely on a naming convention (service-name prefix). This is a pattern that does not scale — any new contributor or service can accidentally violate it, and there is no enforcement mechanism described.",
+      "location": "line 34",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["KT1", "PO1"],
+      "evidence": "Key namespace collisions are prevented by prefixing keys with the service name",
+      "confidence": "medium"
+    },
+    {
+      "id": "F5",
+      "description": "Session tokens stored in an unredundant cache instance means that a Redis restart or failure would log out all users simultaneously. Session storage typically requires persistence (AOF/RDB) and HA guarantees; neither is mentioned.",
+      "location": "lines 15, 21",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["CH8", "OM1"],
+      "evidence": "Session token storage (UserService) on Redis deployed on a dedicated m5.2xlarge instance — no persistence or HA configuration mentioned.",
+      "confidence": "high"
+    },
+    {
+      "id": "F6",
+      "description": "The ADR conflates multiple concerns (session persistence, transient cache, coordination primitives, real-time aggregation) into a single backing store. These have different durability, eviction, and latency requirements. This architectural decision would be harmful if applied universally by all contributors.",
+      "location": "lines 15-19",
+      "classification": "CONFLICT",
+      "severity": "medium",
+      "triggered_by": ["KT1"],
+      "evidence": "Session token storage, shopping cart state, product catalog cache, notification deduplication keys, and real-time metrics aggregation all routed to the same Redis instance.",
+      "confidence": "high"
+    }
+  ],
+  "clean": [
+    {
+      "location": "lines 25-26 (Consul service discovery with health checks)",
+      "examined_by": ["OM1", "KT1"]
+    },
+    {
+      "location": "lines 29-30 (reduced operational complexity and consistent caching behavior rationale)",
+      "examined_by": ["KT1", "PO1"]
+    }
+  ]
+}

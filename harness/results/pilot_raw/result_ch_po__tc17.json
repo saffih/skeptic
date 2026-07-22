@@ -1,0 +1,126 @@
+{
+  "findings": [
+    {
+      "id": "F1",
+      "description": "transform_batch silently swallows all exceptions via bare `except: pass`. Any error during normalization or enrichment causes the record to be dropped with no logging, no counter increment, and no caller notification.",
+      "location": "lines 74-75",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["PO3", "PO4", "CH3", "CH8"],
+      "evidence": "except Exception:\\n            pass  — no log, no _error_count increment, no re-raise",
+      "confidence": "high"
+    },
+    {
+      "id": "F2",
+      "description": "_processed_count and _error_count are module-level globals incremented by multiple threads without a lock, causing a data race. The counter values used in the final log line are therefore unreliable.",
+      "location": "lines 40-41, 64, 73, 100-102",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["PO2", "PO5", "CH4", "CH6"],
+      "evidence": "_processed_count += 1 inside a threaded worker with no threading.Lock; Python's GIL does not guarantee atomicity for += on shared globals across threads in all implementations.",
+      "confidence": "high"
+    },
+    {
+      "id": "F3",
+      "description": "all_results.extend() is called from multiple threads concurrently with no lock. list.extend is not thread-safe under concurrent access; results may be silently corrupted or partially lost.",
+      "location": "lines 108, 112",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["PO2", "PO3", "CH4"],
+      "evidence": "all_results = [] defined in outer scope; worker calls all_results.extend(transformed) from multiple threads with no synchronization primitive.",
+      "confidence": "high"
+    },
+    {
+      "id": "F4",
+      "description": "normalize_currency returns the unconverted record when no exchange rate is found, yet the caller (transform_batch) treats it as successfully normalized and appends it to results. The warehouse will receive amounts in non-USD currencies labelled as processed, silently corrupting financial data.",
+      "location": "lines 50-53, 69-72",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["PO3", "CH3", "CH8", "PO1"],
+      "evidence": "if rate is None: ... return record  # returns unconverted record silently — comment acknowledges the issue; transform_batch then appends unconverted record to results.",
+      "confidence": "high"
+    },
+    {
+      "id": "F5",
+      "description": "validate_transaction is defined but never called in transform_batch or run_pipeline. Invalid records (missing fields, zero/negative amounts) pass through the entire pipeline and are written to the warehouse.",
+      "location": "lines 17-36, 62-77, 98-127",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["PO3", "PO4", "CH3", "PO1"],
+      "evidence": "validate_transaction function exists; neither transform_batch nor run_pipeline calls it before processing records.",
+      "confidence": "high"
+    },
+    {
+      "id": "F6",
+      "description": "write_results does not commit the database transaction and relies on the caller to commit, but run_pipeline (the only caller visible) never commits. If db_connection auto-commit is off, all written records are lost on connection close with no error raised.",
+      "location": "lines 94-95, 125",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["PO3", "CH3", "CH8", "PO6"],
+      "evidence": "# Don't commit here — let the caller decide; run_pipeline calls write_results but has no db_connection.commit() call.",
+      "confidence": "high"
+    },
+    {
+      "id": "F7",
+      "description": "When num_workers does not evenly divide len(raw_records), integer division truncates batch_size. The last batch covers the remainder via the `else` branch, but if raw_records is empty, batch_size is 0 and all batches are empty — no error is raised, pipeline logs 0 processed silently.",
+      "location": "lines 105-117",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["CH4", "PO3", "PO5"],
+      "evidence": "batch_size = len(raw_records) // num_workers; if raw_records is [], batch_size=0, all slices are empty.",
+      "confidence": "medium"
+    },
+    {
+      "id": "F8",
+      "description": "normalize_currency mutates the input dict in-place (sets record['original_amount'], record['currency'], etc.) before returning it. If the caller retains a reference to the original dict, its data is silently overwritten; this also means the same dict object is re-used if extend/append keeps a reference.",
+      "location": "lines 55-58",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["PO5", "CH6", "CH7"],
+      "evidence": "record['original_amount'] = record['amount'] ... record['amount'] = round(...) — direct mutation of input dict without copying.",
+      "confidence": "high"
+    },
+    {
+      "id": "F9",
+      "description": "_error_count is declared and reset in run_pipeline but is never incremented anywhere in the codebase. The logged metric is always 0, providing a false signal that no errors occurred.",
+      "location": "lines 41, 101-102, 126",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["PO4", "PO3", "CH5"],
+      "evidence": "_error_count = 0 in run_pipeline; logger.info reports _processed_count and written but not _error_count; no site increments _error_count.",
+      "confidence": "high"
+    },
+    {
+      "id": "F10",
+      "description": "run_pipeline resets module-level _processed_count and _error_count to 0 at start. If two pipeline runs overlap (e.g., scheduler triggers a second run before the first finishes), both runs corrupt each other's counters with no guard.",
+      "location": "lines 100-102",
+      "classification": "CONFLICT",
+      "severity": "medium",
+      "triggered_by": ["PO2", "CH6", "PO5"],
+      "evidence": "_processed_count = 0; _error_count = 0 at entry; module-level state shared across concurrent invocations.",
+      "confidence": "medium"
+    }
+  ],
+  "clean": [
+    {
+      "location": "lines 17-36 (validate_transaction schema checks)",
+      "examined_by": ["CH1", "CH2", "PO1"]
+    },
+    {
+      "location": "lines 27-34 (Decimal parsing with exception handling)",
+      "examined_by": ["CH4", "PO3"]
+    },
+    {
+      "location": "lines 85-88 (parameterised SQL query — no string interpolation)",
+      "examined_by": ["PO2"]
+    },
+    {
+      "location": "lines 114-123 (thread start/join loop structure)",
+      "examined_by": ["CH6", "CH7"]
+    },
+    {
+      "location": "lines 70 (UTC timestamp with timezone-aware datetime)",
+      "examined_by": ["PO5"]
+    }
+  ]
+}

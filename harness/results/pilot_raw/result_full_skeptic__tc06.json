@@ -1,0 +1,138 @@
+{
+  "findings": [
+    {
+      "id": "F1",
+      "description": "Single Redis instance is a hard SPOF for all five microservices. Session tokens, shopping carts, product catalog, notification deduplication, and real-time metrics all depend on one host. Any Redis failure or network partition takes down every service simultaneously.",
+      "location": "lines 13-19",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["UQ5", "CH3", "CH4", "REL1", "REL2", "REL3", "PO3", "ST1"],
+      "evidence": "All five services will use a single shared Redis 7.x instance (`cache-primary.internal:6379`). No replica, sentinel, or cluster configuration is mentioned.",
+      "confidence": "high"
+    },
+    {
+      "id": "F2",
+      "description": "The consequence 'Redis is always available so services can rely on cache reads succeeding' is a false invariant. It states an assumption as a guarantee without any mechanism to back it. This hides the SPOF rather than acknowledging it.",
+      "location": "line 33",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["FE1", "PO1", "PO3", "PO4", "UQ4", "CH4"],
+      "evidence": "'Redis is always available so services can rely on cache reads succeeding' — no HA mechanism, no replication, no sentinel/cluster, no circuit breaker or fallback mentioned anywhere.",
+      "confidence": "high"
+    },
+    {
+      "id": "F3",
+      "description": "No fallback or degraded-mode behavior is defined for any service in case Redis is unavailable. If Redis goes down, it is unclear whether services crash, block indefinitely, or serve stale/no data. Failure cost is not bounded.",
+      "location": "lines 13-34",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["CH4", "CH5", "PO3", "PO6", "REL1", "ST7", "OM3"],
+      "evidence": "ADR defines no circuit breaker, no read-through fallback to DB, no graceful degradation path. Session tokens, carts, and rate-limit counters are all blocking paths.",
+      "confidence": "high"
+    },
+    {
+      "id": "F4",
+      "description": "Key namespace collision risk is only partially mitigated. Service-name prefixes prevent cross-service collisions, but there is no versioning scheme or schema registry for keys. A service deploying a changed key format will silently corrupt another service's reads of its own old keys.",
+      "location": "line 34",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["DAT7", "PO3", "FE1", "DAT5"],
+      "evidence": "'Key namespace collisions are prevented by prefixing keys with the service name' — no mention of key versioning or schema evolution strategy.",
+      "confidence": "medium"
+    },
+    {
+      "id": "F5",
+      "description": "Mixing functionally distinct workloads (session auth, shopping carts, deduplication, real-time metrics) on a single Redis instance creates resource contention. A burst in AnalyticsEngine metric writes can evict or delay session reads for UserService.",
+      "location": "lines 13-19",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["CH1", "CH2", "CPX1", "SH1", "SH6", "REL2"],
+      "evidence": "Real-time metrics aggregation and session token storage share the same 32 GB instance. No eviction policy per key-space or per-service memory limits are specified.",
+      "confidence": "high"
+    },
+    {
+      "id": "F6",
+      "description": "No eviction policy or memory limit strategy is stated. At 32 GB RAM, if metrics or catalog data grows unexpectedly, Redis may evict session tokens or idempotency keys, causing silent auth failures or double-charged orders.",
+      "location": "lines 21-22",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["DAT3", "PO3", "PO6", "UQ4", "REL1"],
+      "evidence": "'Redis is deployed on a dedicated m5.2xlarge instance with 32GB RAM.' No maxmemory-policy or per-namespace quotas mentioned.",
+      "confidence": "high"
+    },
+    {
+      "id": "F7",
+      "description": "Service Discovery section (Consul) is architecturally disconnected from the Redis caching decision. It describes inter-service discovery but says nothing about how services discover or reconnect to Redis after a failure or failover. These are separate concerns mixed into one ADR.",
+      "location": "lines 24-27",
+      "classification": "ACTION",
+      "severity": "low",
+      "triggered_by": ["CPX1", "OM7", "ST2", "ARC6"],
+      "evidence": "Service discovery via Consul is described in detail but has no relationship to the Redis caching strategy being decided. It neither references Redis nor is referenced by any Redis-related consequence.",
+      "confidence": "medium"
+    },
+    {
+      "id": "F8",
+      "description": "No monitoring or alerting strategy for Redis is defined. The ADR claims operational simplicity via 'one cache layer to monitor' but specifies no SLOs, no alerting thresholds, no on-call runbook reference.",
+      "location": "lines 29-30",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["REL1", "PO4", "PO6", "FE4", "FE5"],
+      "evidence": "'one Redis instance to back up and monitor' — monitoring is mentioned as a benefit but no monitoring implementation, alerting, or SLO is specified.",
+      "confidence": "high"
+    },
+    {
+      "id": "F9",
+      "description": "Shopping cart state stored in Redis is transient. If Redis is restarted without persistence configured, all in-progress carts are lost with no recovery path mentioned. The ADR does not address persistence settings (RDB/AOF).",
+      "location": "lines 15, 29",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["DAT7", "ST7", "PO3", "UQ4", "OM3"],
+      "evidence": "'Shopping cart state (OrderService)' stored in Redis, and 'one Redis instance to back up' — no persistence configuration or durability guarantee stated.",
+      "confidence": "medium"
+    },
+    {
+      "id": "F10",
+      "description": "The ADR does not address connection pool exhaustion. Five services sharing one Redis endpoint with no stated connection limits could exhaust server-side connections under load, causing all services to fail simultaneously.",
+      "location": "lines 13-19",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["REL2", "DAT1", "PO3", "CH4"],
+      "evidence": "No connection pooling strategy, max connection limits, or timeout configuration mentioned for any of the five services.",
+      "confidence": "medium"
+    },
+    {
+      "id": "F11",
+      "description": "The Consul health-check deregister timeout (30 seconds) is documented for inter-service mesh traffic, but no equivalent Redis liveness check or connection retry policy is defined. Services may hold dead Redis connections indefinitely.",
+      "location": "lines 24-27",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["DAT1", "REL3", "PO3", "ST7"],
+      "evidence": "Consul health checks described in detail; Redis connection management, timeout, and retry policy entirely absent.",
+      "confidence": "medium"
+    },
+    {
+      "id": "F12",
+      "description": "No alternatives were recorded as considered and rejected. The ADR jumps straight to a single shared Redis instance without documenting why per-service caches, Redis Cluster, or Sentinel were ruled out. Future engineers cannot evaluate whether the trade-off still holds.",
+      "location": "lines 7-12",
+      "classification": "ACTION",
+      "severity": "low",
+      "triggered_by": ["FE3", "PO1", "SH6", "ARC5"],
+      "evidence": "Context section describes the problem; no 'Alternatives Considered' section exists. The decision to use a single instance vs. cluster/sentinel is not justified.",
+      "confidence": "high"
+    }
+  ],
+  "clean": [
+    {
+      "location": "lines 1-6 (ADR metadata: title, status, date)",
+      "examined_by": ["UQ1", "UQ2", "ST1"]
+    },
+    {
+      "location": "lines 34 (key prefix namespace isolation)",
+      "examined_by": ["DAT7", "PO3"]
+    },
+    {
+      "location": "lines 24-27 (Consul health-check interval and deregister timeout values)",
+      "examined_by": ["REL1", "DAT6", "ST7"]
+    }
+  ]
+}

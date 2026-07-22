@@ -1,0 +1,54 @@
+{
+  "findings": [
+    {
+      "id": "F1",
+      "description": "Rule 1 demands thorough validation including external service calls (address, phone, email verification), while Rule 2 demands all responses return within 200ms with no loading indicators. External verification calls inherently introduce latency that makes sub-200ms response impossible in the general case. The middle ground of 'validate thoroughly AND respond instantly' keeps both costs: either validation is incomplete (fast but not thorough) or the latency constraint is violated (thorough but slow).",
+      "location": "Rules 1 and 2",
+      "classification": "CONFLICT",
+      "severity": "high",
+      "triggered_by": ["SH1", "SH2", "SH3", "SH6"],
+      "evidence": "Rule 1: 'call external verification services (address, phone, email), and reject any input that does not pass all checks.' Rule 2: 'Form submissions must return a response within 200ms. Users should never wait or see loading indicators during validation.'",
+      "confidence": "high"
+    },
+    {
+      "id": "F2",
+      "description": "Rule 5 creates a security bypass for enterprise email domains by skipping email verification entirely. This is an implicit side-dominance decision (UX/friction-reduction dominates security for enterprise users) with no explicit guard on what 'approved enterprise list' means or who controls it, making the exception a potential attack vector rather than a narrow, safe carve-out.",
+      "location": "Rule 5",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["SH4", "SH5"],
+      "evidence": "Rule 5: 'If the user's email domain is in the approved enterprise list, skip email verification to reduce friction.' No rule defines how the enterprise list is maintained or audited.",
+      "confidence": "high"
+    },
+    {
+      "id": "F3",
+      "description": "Rule 3 instructs the agent to call api.v2.validate() to retrieve localized error messages when a field fails validation. This is an additional external call per failing field, compounding the conflict with Rule 2's 200ms hard limit. There is no indication this call is synchronous-safe within latency budget.",
+      "location": "Rules 2 and 3",
+      "classification": "CONFLICT",
+      "severity": "medium",
+      "triggered_by": ["SH2", "SH3"],
+      "evidence": "Rule 3: 'call api.v2.validate() to get the localized error message for that field.' Rule 2: 'must return a response within 200ms.'",
+      "confidence": "medium"
+    },
+    {
+      "id": "F4",
+      "description": "Rule 6 allows caching business rules for up to 60 seconds. Combined with Rule 1's requirement to 'always validate all user input thoroughly' using the latest rules, there is a window where validation runs against stale rules. The instructions do not resolve which side dominates when a rule update occurs mid-cache window: thoroughness (no cache) vs. performance (60s cache).",
+      "location": "Rules 1 and 6",
+      "classification": "CONFLICT",
+      "severity": "low",
+      "triggered_by": ["SH1", "SH4"],
+      "evidence": "Rule 1: 'Always validate all user input thoroughly.' Rule 6: 'Always use the latest business rules... Cache rules for no more than 60 seconds.'",
+      "confidence": "medium"
+    }
+  ],
+  "clean": [
+    {
+      "location": "Rule 4 (audit logging of authentication attempts)",
+      "examined_by": ["SH1", "SH2", "SH3", "SH4", "SH5", "SH6"]
+    },
+    {
+      "location": "Rule 7 (E.164 international phone number validation)",
+      "examined_by": ["SH1", "SH2", "SH3", "SH4", "SH5", "SH6"]
+    }
+  ]
+}

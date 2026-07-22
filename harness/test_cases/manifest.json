@@ -1,0 +1,187 @@
+{
+  "name": "Skeptic Detection Effectiveness Harness",
+  "version": "1.0.0",
+  "description": "18 test cases across 7 artifact types for evaluating detection question effectiveness",
+  "test_cases": [
+    {
+      "id": "tc01",
+      "directory": "code",
+      "artifact_file": "tc01_bare_except.py",
+      "manifest_file": "tc01_bare_except.manifest.json",
+      "artifact_type": "code",
+      "difficulty": "easy",
+      "issue_count": 3
+    },
+    {
+      "id": "tc02",
+      "directory": "code",
+      "artifact_file": "tc02_implicit_coupling.py",
+      "manifest_file": "tc02_implicit_coupling.manifest.json",
+      "artifact_type": "code",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc03",
+      "directory": "config",
+      "artifact_file": "tc03_stale_config.yaml",
+      "manifest_file": "tc03_stale_config.manifest.json",
+      "artifact_type": "config",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc04",
+      "directory": "config",
+      "artifact_file": "tc04_constants_as_config.json",
+      "manifest_file": "tc04_constants_as_config.manifest.json",
+      "artifact_type": "config",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc05",
+      "directory": "design",
+      "artifact_file": "tc05_over_generalized_api.md",
+      "manifest_file": "tc05_over_generalized_api.manifest.json",
+      "artifact_type": "design",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc06",
+      "directory": "design",
+      "artifact_file": "tc06_hidden_spof.md",
+      "manifest_file": "tc06_hidden_spof.manifest.json",
+      "artifact_type": "design",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc07",
+      "directory": "requirements",
+      "artifact_file": "tc07_untestable_req.md",
+      "manifest_file": "tc07_untestable_req.manifest.json",
+      "artifact_type": "requirements",
+      "difficulty": "easy",
+      "issue_count": 3
+    },
+    {
+      "id": "tc08",
+      "directory": "requirements",
+      "artifact_file": "tc08_solution_without_problem.md",
+      "manifest_file": "tc08_solution_without_problem.manifest.json",
+      "artifact_type": "requirements",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc09",
+      "directory": "tests",
+      "artifact_file": "tc09_never_red_test.py",
+      "manifest_file": "tc09_never_red_test.manifest.json",
+      "artifact_type": "tests",
+      "difficulty": "easy",
+      "issue_count": 3
+    },
+    {
+      "id": "tc10",
+      "directory": "tests",
+      "artifact_file": "tc10_mock_only_test.py",
+      "manifest_file": "tc10_mock_only_test.manifest.json",
+      "artifact_type": "tests",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc11",
+      "directory": "agent_instructions",
+      "artifact_file": "tc11_contradictory_agent.md",
+      "manifest_file": "tc11_contradictory_agent.manifest.json",
+      "artifact_type": "agent_instructions",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc12",
+      "directory": "agent_instructions",
+      "artifact_file": "tc12_overbroad_suppression.md",
+      "manifest_file": "tc12_overbroad_suppression.manifest.json",
+      "artifact_type": "agent_instructions",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc13",
+      "directory": "human_docs",
+      "artifact_file": "tc13_stale_setup_guide.md",
+      "manifest_file": "tc13_stale_setup_guide.manifest.json",
+      "artifact_type": "human_docs",
+      "difficulty": "easy",
+      "issue_count": 3
+    },
+    {
+      "id": "tc14",
+      "directory": "human_docs",
+      "artifact_file": "tc14_hidden_assumptions_doc.md",
+      "manifest_file": "tc14_hidden_assumptions_doc.manifest.json",
+      "artifact_type": "human_docs",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc15",
+      "directory": "code",
+      "artifact_file": "tc15_sql_injection.py",
+      "manifest_file": "tc15_sql_injection.manifest.json",
+      "artifact_type": "code",
+      "difficulty": "easy",
+      "issue_count": 3
+    },
+    {
+      "id": "tc16",
+      "directory": "code",
+      "artifact_file": "tc16_stale_source_of_truth.py",
+      "manifest_file": "tc16_stale_source_of_truth.manifest.json",
+      "artifact_type": "code",
+      "difficulty": "medium",
+      "issue_count": 3
+    },
+    {
+      "id": "tc17",
+      "directory": "mixed",
+      "artifact_file": "tc17_silent_failure_pipeline.py",
+      "manifest_file": "tc17_silent_failure_pipeline.manifest.json",
+      "artifact_type": "code",
+      "difficulty": "hard",
+      "issue_count": 4
+    },
+    {
+      "id": "tc18",
+      "directory": "mixed",
+      "artifact_file": "tc18_accidental_coupling.py",
+      "manifest_file": "tc18_accidental_coupling.manifest.json",
+      "artifact_type": "code",
+      "difficulty": "hard",
+      "issue_count": 3
+    }
+  ],
+  "summary": {
+    "total_test_cases": 18,
+    "total_planted_issues": 55,
+    "artifact_types": {
+      "code": 6,
+      "config": 2,
+      "design": 2,
+      "requirements": 2,
+      "tests": 2,
+      "agent_instructions": 2,
+      "human_docs": 2
+    },
+    "difficulty_distribution": {
+      "easy": 4,
+      "medium": 12,
+      "hard": 2
+    }
+  }
+}

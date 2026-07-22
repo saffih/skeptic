@@ -1,0 +1,52 @@
+{
+  "findings": [
+    {
+      "id": "F1",
+      "description": "Bare `except:` clause silently swallows all exceptions including KeyboardInterrupt, SystemExit, and MemoryError. Errors are never logged, making debugging impossible and hiding issues like malformed URLs, DNS failures, authentication errors, or connection timeouts.",
+      "location": "lines 32-33",
+      "classification": "ACTION",
+      "severity": "high",
+      "triggered_by": ["OM1", "KT1", "PO1", "CH8"],
+      "evidence": "except:\\n    pass — no exception type, no logging, no re-raise. Removing this block would cause the program to crash visibly, which is strictly better than silent failure.",
+      "confidence": "high"
+    },
+    {
+      "id": "F2",
+      "description": "Retry loop retries on every possible exception indiscriminately. A 404, a permissions error, or a programming bug (TypeError, AttributeError) will be retried 3 times with no backoff, wasting time and obscuring the root cause.",
+      "location": "lines 23-33",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["KT1", "PO1", "CH8"],
+      "evidence": "for attempt in range(3): ... except: pass — no distinction between transient network errors (worth retrying) and permanent errors (not worth retrying). KT1 fails: no contributor should apply retry-everything silently as a pattern.",
+      "confidence": "high"
+    },
+    {
+      "id": "F3",
+      "description": "`process_feed` does not handle the case where `output_dir` does not exist, and `output_path.write_text(...)` will raise FileNotFoundError with no surrounding error handling. Combined with F1, upstream errors return None silently, but downstream write errors will surface as unhandled exceptions.",
+      "location": "lines 42-48",
+      "classification": "ACTION",
+      "severity": "medium",
+      "triggered_by": ["CH8", "PO1"],
+      "evidence": "output_path.write_text(...) called without ensuring output_dir exists. No try/except around write. Inconsistent resilience strategy compared to the fetch path.",
+      "confidence": "medium"
+    }
+  ],
+  "clean": [
+    {
+      "location": "lines 1-13 (imports, logging setup, module docstring)",
+      "examined_by": ["OM1", "KT1"]
+    },
+    {
+      "location": "lines 25-31 (successful fetch path, CSV parsing, row logging)",
+      "examined_by": ["OM1", "KT1", "PO1"]
+    },
+    {
+      "location": "lines 35-36 (exhausted-attempts warning and None return)",
+      "examined_by": ["OM1", "CH8"]
+    },
+    {
+      "location": "lines 39-52 (process_feed structure, validation filter, logging)",
+      "examined_by": ["KT1", "PO1"]
+    }
+  ]
+}
