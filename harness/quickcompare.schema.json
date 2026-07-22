@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "quickcompare.comparison/1",
+  "title": "QuickCompare v1 comparison report",
+  "description": "Deterministic contract for comparison.json. Validated by the standard-library validator in quickcompare.py (subset: type, required, properties, enum, items). comparison.md is rendered only from an instance that validates against this schema.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "run_id",
+    "seed",
+    "target_hypothesis",
+    "baseline",
+    "candidate",
+    "manifest_id",
+    "visible_fixture_inventory",
+    "fixture_results",
+    "protected_slots",
+    "budget",
+    "gates",
+    "verdict",
+    "verdict_rule_path"
+  ],
+  "properties": {
+    "schema_version": {"type": "string", "enum": ["quickcompare.comparison/1"]},
+    "run_id": {"type": "string"},
+    "seed": {"type": "string"},
+    "target_hypothesis": {"type": "string"},
+    "baseline": {
+      "type": "object",
+      "required": ["id", "hash", "hash_ok"],
+      "properties": {
+        "id": {"type": "string"},
+        "hash": {"type": "string"},
+        "hash_ok": {"type": "boolean"}
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "required": ["id", "hash", "hash_ok"],
+      "properties": {
+        "id": {"type": "string"},
+        "hash": {"type": "string"},
+        "hash_ok": {"type": "boolean"}
+      }
+    },
+    "manifest_id": {"type": "string"},
+    "visible_fixture_inventory": {"type": "array", "items": {"type": "string"}},
+    "model_settings": {"type": "object"},
+    "runner": {
+      "type": "object",
+      "required": ["generator_argv_hash", "judge_argv_hash"],
+      "properties": {
+        "generator_argv_hash": {"type": "string"},
+        "judge_argv_hash": {"type": "string"}
+      }
+    },
+    "fixture_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "fixture_id",
+          "target_family",
+          "pairwise",
+          "baseline_behavioral_total",
+          "candidate_behavioral_total",
+          "material_win",
+          "material_loss",
+          "candidate_dangerous"
+        ],
+        "properties": {
+          "fixture_id": {"type": "string"},
+          "target_family": {"type": "boolean"},
+          "pairwise": {
+            "type": "string",
+            "enum": ["BASELINE_WIN", "CANDIDATE_WIN", "TIE", "INCOMPARABLE"]
+          },
+          "baseline_behavioral_total": {"type": "integer"},
+          "candidate_behavioral_total": {"type": "integer"},
+          "material_win": {"type": "boolean"},
+          "material_loss": {"type": "boolean"},
+          "candidate_dangerous": {"type": "boolean"}
+        }
+      }
+    },
+    "protected_slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slot", "valid", "result", "win"],
+        "properties": {
+          "slot": {
+            "type": "string",
+            "enum": ["protected_code_testing", "protected_agent_security_procedure"]
+          },
+          "valid": {"type": "boolean"},
+          "result": {"type": "string"},
+          "win": {"type": "boolean"}
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "required": ["generator_calls", "judge_calls", "retry_calls", "total_calls"],
+      "properties": {
+        "generator_calls": {"type": "integer"},
+        "judge_calls": {"type": "integer"},
+        "retry_calls": {"type": "integer"},
+        "total_calls": {"type": "integer"}
+      }
+    },
+    "gates": {
+      "type": "object",
+      "required": ["identity", "symmetry", "blinding", "budget", "schema", "calibration"],
+      "properties": {
+        "identity": {"type": "boolean"},
+        "symmetry": {"type": "boolean"},
+        "blinding": {"type": "boolean"},
+        "budget": {"type": "boolean"},
+        "schema": {"type": "boolean"},
+        "calibration": {"type": "boolean"}
+      }
+    },
+    "blinding_leaks": {"type": "array", "items": {"type": "string"}},
+    "verdict": {
+      "type": "string",
+      "enum": ["IMPROVED", "NO_MATERIAL_CHANGE", "REGRESSED", "INCONCLUSIVE"]
+    },
+    "verdict_rule_path": {"type": "string"},
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}
