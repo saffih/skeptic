@@ -3,10 +3,16 @@
 
 These tests check that AGENTS.md defines Verification, Skeptic verification,
 Pure Skeptic verification, and Fix Skeptic verification as the single
-canonical source, and that agents/lead-agent-prompt.md, agents/task-prompt.md,
-and agents/task-prompt-builder.md reference or specialize those definitions
+canonical source, and that agents/task-prompt.md and
+agents/task-prompt-builder.md reference or specialize those definitions
 instead of restating a competing full definition. skeptic.md must stay
 byte-identical to its pre-existing baseline.
+
+agents/lead-agent-prompt.md is now a compact orchestration-only contract; it
+does not name or cross-reference the AGENTS.md vocabulary. It instead owns a
+narrower current verification rule -- delegate to a Boundary Agent, allowlist
+the receipt fields, and drive a consecutive-PASS streak -- checked separately
+below against its actual current text.
 
 Like the other contract tests in this suite, these check that the written
 contract is present -- not agent behavior or genuine reviewer independence.
@@ -164,47 +170,57 @@ class NoDuplicateFullDefinitionOutsideAgentsMdTests(unittest.TestCase):
         )
 
 
-class LeadAgentPromptReferencesCanonicalVocabularyTests(unittest.TestCase):
+class LeadAgentPromptVerificationContractTests(unittest.TestCase):
+    """`agents/lead-agent-prompt.md` is now a compact orchestration-only
+    contract and no longer restates or cross-references the AGENTS.md
+    verification vocabulary by name. It still owns a narrower, current
+    verification rule: verification is always delegated to a fresh Boundary
+    Agent, its receipt is limited to an explicit field allowlist, and the
+    consecutive-PASS streak is the sole basis for stopping. These tests check
+    that current rule as actually written, instead of the deleted
+    canonical-vocabulary cross-reference and pure/fix mode language."""
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.lead = LEAD_PROMPT.read_text(encoding="utf-8")
 
-    def test_references_agents_md_canonical_vocabulary(self) -> None:
+    def test_verification_is_always_delegated_to_a_boundary_agent(self) -> None:
+        self.assertIn("Verification is always performed by Boundary Agents.", self.lead)
         self.assertIn(
-            "`AGENTS.md` defines the canonical verification vocabulary: `Verification`, "
-            "`Skeptic verification`, `Pure Skeptic verification`, and `Fix Skeptic "
-            "verification`.",
-            self.lead,
-        )
-        self.assertIn(
-            "it does not restate or compete with the canonical definitions",
+            "For RunSkeptic, dispatch a fresh Boundary Agent and permit only this receipt:",
             self.lead,
         )
 
-    def test_lead_must_honor_explicit_pure_or_fix_mode(self) -> None:
+    def test_runskeptic_receipt_is_field_limited(self) -> None:
+        for field in [
+            "candidate_identity",
+            "verdict",
+            "finding_ids",
+            "report_identity",
+            "receipt_identity",
+        ]:
+            self.assertIn(field, self.lead)
+        self.assertIn("The full report must remain outside the Lead context.", self.lead)
+
+    def test_pass_and_action_verdicts_drive_the_streak(self) -> None:
         self.assertIn(
-            "When a user or Task Prompt explicitly requests pure or fix Skeptic "
-            "verification, the Lead must honor the requested mode exactly",
+            "If the verdict is PASS, increment the consecutive PASS count.",
             self.lead,
         )
-        self.assertIn("pure mode never fixes or mutates the artifact", self.lead)
         self.assertIn(
-            "resets the consecutive-PASS streak to zero on any artifact change",
+            "If the verdict is ACTION, reset the PASS count to zero and dispatch a "
+            "fresh Boundary Agent to repair only the identified findings.",
             self.lead,
         )
 
-    def test_lead_forbidden_from_substituting_readiness_gate(self) -> None:
+    def test_any_candidate_change_resets_streak_and_stops_after_three_pass(self) -> None:
         self.assertIn(
-            "The Lead must not substitute that ordinary readiness gate, or any "
-            "single RunSkeptic pass, for an explicitly requested pure or fix "
-            "Skeptic verification",
+            "Any candidate change resets the PASS count to zero.",
             self.lead,
         )
-
-    def test_lead_forbidden_from_post_acceptance_fourth_pass(self) -> None:
         self.assertIn(
-            "A fourth pass, reassurance review, or \"one more check\" after that "
-            "acceptance is forbidden",
+            "Stop verification after three consecutive PASS results on the same "
+            "unchanged candidate.",
             self.lead,
         )
 

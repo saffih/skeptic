@@ -52,7 +52,15 @@ class BuilderExistenceAndAliasTests(unittest.TestCase):
             self.agents,
         )
         self.assertIn("`agents/task-prompt-builder.md`", self.agents)
-        self.assertIn("take precedence over the generic prompt-construction route", self.agents)
+        # The old "take precedence over the generic prompt-construction
+        # route" phrase was removed along with the longer Lead prompt; the
+        # current entry map instead states the aliases route to the Builder
+        # first, ahead of any other handling.
+        self.assertIn(
+            "These four aliases route here first; Task Prompt construction is "
+            "`agents/task-prompt-builder.md`'s job",
+            self.agents,
+        )
         self.assertIn(
             "`agents/task-prompt-builder.md` is authoritative for the objective/verified-plan-to-Task-Prompt build operation",
             self.agents,

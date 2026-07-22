@@ -42,14 +42,31 @@ class TaskPromptContractTests(unittest.TestCase):
             self.task,
         )
         self.assertIn("Do not copy this entire file", self.task)
-        self.assertIn("Do not duplicate its full contract here or in `skeptic.md`.", self.lead)
+        self.assertIn(
+            "an orchestration-only contract of compact state, one Boundary "
+            "Agent dispatch per transition, and structural receipt validation",
+            self.task,
+        )
+        # The Lead's own contract actually matches that description.
+        self.assertIn("Your role is orchestration only.", self.lead)
+        self.assertIn("## Compact receipt", self.lead)
 
     def test_lead_routes_terminal_work_through_task_prompt(self) -> None:
+        # task-prompt.md names lead-agent-prompt.md as the authority for how
+        # the Lead carries out Task Prompt ownership items: by dispatching a
+        # fresh Boundary Agent and validating its compact receipt.
+        self.assertIn(
+            "Per `agents/lead-agent-prompt.md`, each item above is carried "
+            "out by a fresh Boundary Agent dispatched with a bounded "
+            "objective; the Lead selects the task, dispatches the Boundary "
+            "Agent, and validates its compact receipt to decide the next "
+            "state.",
+            self.task,
+        )
         for marker in [
-            "read and apply the current `agents/task-prompt.md`",
-            "Construct a Task Prompt rather than treating one Agent Prompt as the whole task.",
-            "first construct and gate the Task Prompt, then execute it",
-            "Task Closure Receipt",
+            "select the next authorized task",
+            "dispatch one fresh Boundary Agent with a bounded objective",
+            "receive and validate its compact receipt",
         ]:
             self.assertIn(marker, self.lead)
 
@@ -144,8 +161,19 @@ class TaskPromptContractTests(unittest.TestCase):
             "Never let exploration, delegation, or repeated gates silently consume the completion reserve",
             self.skeptic,
         )
+        # The Lead's own PASS-streak rule mirrors the no-silent-pass
+        # invariant: an ACTION verdict or any candidate change resets the
+        # streak, so a task cannot coast to PASS on a stale or locally
+        # passing candidate.
         self.assertIn(
-            'unresolved "ACTION", "DECOMPOSE", or "CONFLICT"',
+            "If the verdict is ACTION, reset the PASS count to zero and "
+            "dispatch a fresh Boundary Agent to repair only the identified "
+            "findings.",
+            self.lead,
+        )
+        self.assertIn(
+            "Stop verification after three consecutive PASS results on the "
+            "same unchanged candidate.",
             self.lead,
         )
 
@@ -283,9 +311,11 @@ class TaskPromptContractTests(unittest.TestCase):
             "State handling belongs to the invoking runtime and the actual task environment",
         ]:
             self.assertIn(marker, self.task)
+        # The Lead's own state contract matches that boundary: it keeps only
+        # a minimal orchestration allowlist and never substantive content.
+        self.assertIn("Keep only the minimum orchestration state", self.lead)
         self.assertIn(
-            "does not own runtime state, workflow storage, or task workspaces",
-            self.lead,
+            "Do not retain substantive task content in Lead state.", self.lead
         )
 
     def test_persistence_is_conditional_not_automatic(self) -> None:
@@ -301,21 +331,24 @@ class TaskPromptContractTests(unittest.TestCase):
             "the environment selects an authorized location: the current runtime, the target repository or workspace, authorized temporary storage, runtime-managed storage, or another user-selected store.",
             self.task,
         )
-        self.assertIn(
-            "choose the storage location from the actual runtime and task environment",
-            self.lead,
-        )
+        # Choosing where to persist is itself repository/external-system
+        # work; the Lead's Core rule delegates it rather than deciding the
+        # location directly.
+        self.assertIn("repository inspection", self.lead)
+        self.assertIn("external-system interaction", self.lead)
 
     def test_skeptic_checkout_is_not_default_workspace(self) -> None:
         self.assertIn("The Skeptic checkout is not the default task workspace.", self.task)
         self.assertIn(
-            "never assume the Skeptic checkout is writable or is the target workspace",
-            self.lead,
+            "Writing to it is valid only when Skeptic itself is the explicit "
+            "target and mutation is authorized.",
+            self.task,
         )
-        self.assertIn(
-            "writing to the Skeptic repository is valid only when Skeptic itself is the explicit target and mutation is authorized.",
-            self.lead,
-        )
+        # The Lead never decides workspace identity itself: repository
+        # inspection and external-system interaction (which would include
+        # checking out or writing to Skeptic) are always delegated.
+        self.assertIn("repository inspection", self.lead)
+        self.assertIn("external-system interaction", self.lead)
 
     def test_location_fields_may_be_not_applicable_for_session_only_work(self) -> None:
         self.assertIn(

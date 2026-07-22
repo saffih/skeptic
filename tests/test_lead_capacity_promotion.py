@@ -9,8 +9,11 @@ promote the receipt, refuse the spot-check, and persist/advance -- not to
 redo the review and burn the closure reserve.
 
 These tests do not prove agent behavior; they freeze the reference decision
-table that agents/lead-agent-prompt.md and agents/task-prompt.md must match,
-and check the governing text is present.
+table that agents/task-prompt.md must match (capacity states and
+action classification now live solely there), plus the analogous
+PASS-streak and receipt-rejection rules that agents/lead-agent-prompt.md's
+current orchestration-only contract uses in their place, and check the
+governing text is present.
 """
 from __future__ import annotations
 
@@ -201,38 +204,53 @@ class ActionClassificationScenarioTests(unittest.TestCase):
 
 
 class GovernanceMarkerTests(unittest.TestCase):
+    """Capacity-state classification (SUFFICIENT/CONSTRAINED/UNSAFE) and the
+    optional-work/re-review rules now live solely in agents/task-prompt.md;
+    the current orchestration-only agents/lead-agent-prompt.md does not
+    restate them. The Lead prompt's own stand-ins for "don't redo accepted
+    work" are its PASS-streak rule (stop after three consecutive PASS on an
+    unchanged candidate) and its structural receipt rejection
+    (CONTEXT_BOUNDARY_VIOLATION on undeclared or substantive content) --
+    checked below against their actual current text."""
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.lead = LEAD_PROMPT.read_text(encoding="utf-8")
         cls.task = TASK_PROMPT.read_text(encoding="utf-8")
 
-    def test_lead_prompt_defines_capacity_states(self) -> None:
+    def test_lead_prompt_defines_minimal_orchestration_state(self) -> None:
         for marker in [
-            "`SUFFICIENT`: the next phase plus verification and closure can still finish.",
-            "`CONSTRAINED`: optional work is forbidden; continue only with required work.",
-            "`UNSAFE`: checkpoint and hand off before further substantive work.",
+            "current_stage",
+            "candidate_identity",
+            "consecutive_passes",
+            "next_action",
+            "blocker",
+            "receipt_identities",
         ]:
             self.assertIn(marker, self.lead)
-
-    def test_lead_prompt_classifies_unplanned_actions(self) -> None:
         self.assertIn(
-            "Classify every unplanned action as `acceptance-required`",
-            self.lead,
-        )
-        self.assertIn(
-            "Optional work is forbidden immediately after any acceptance and whenever capacity is `CONSTRAINED` or `UNSAFE`.",
+            "Do not retain substantive task content in Lead state.",
             self.lead,
         )
 
-    def test_lead_prompt_forbids_rereview_of_valid_acceptance(self) -> None:
+    def test_lead_prompt_stops_after_three_pass_on_unchanged_candidate(self) -> None:
         self.assertIn(
-            "requires persistence and immediate advancement",
+            "Any candidate change resets the PASS count to zero.",
             self.lead,
         )
         self.assertIn(
-            "Do not redo an accepted semantic review, add a spot-check, or reread the accepted candidate for reassurance",
+            "Stop verification after three consecutive PASS results on the same "
+            "unchanged candidate.",
             self.lead,
         )
+
+    def test_lead_prompt_rejects_undeclared_or_substantive_receipt_content(self) -> None:
+        self.assertIn(
+            "If a Boundary Agent returns undeclared or substantive information, "
+            "reject the receipt and stop with:",
+            self.lead,
+        )
+        self.assertIn("CONTEXT_BOUNDARY_VIOLATION", self.lead)
 
     def test_task_prompt_requires_capacity_check_per_phase(self) -> None:
         self.assertIn(
