@@ -198,6 +198,81 @@ Context protection is part of acceptance. Resume and closure receipts record:
 
 Treat an Agent Receipt or Task Closure Receipt as a claim, not authority, until its material fields are checked against primary evidence, deterministic Checker output, or the accepted checkpoint. Verify only the decision-critical claims; do not repeat a worker's entire investigation merely to raise confidence. Accepted checkpoints and primary evidence bound to the relevant claim outrank receipt prose: on a mismatch, perform narrow verification, repair or reject the receipt, and reopen only the smallest phase that deterministic invalidation actually supports. Do not impose formal receipt ceremony on ordinary small, non-delegated work.
 
+## Stateless orchestration
+
+When the Lead coordinates a multi-stage execution lifecycle, it operates as a practically stateless orchestrator: it owns and advances the lifecycle but performs no substantive stage work itself and does not carry completed-stage history in active context. This section sharpens the "Checkpoint-first resume and closure fast path" discipline into a per-invocation contract. It does not restate the invalidation, capacity, or receipt-authority mechanics defined there, nor the verification vocabulary defined in `AGENTS.md`; it references them.
+
+### Compact authoritative state
+
+The Lead may retain only this compact authoritative state, held in active context — not a repository state directory, controller, or on-disk store (see "Runtime state and workspace ownership"):
+
+- task identity;
+- current stage;
+- candidate commit and tree;
+- accepted receipt references and hashes;
+- PASS streak, fix-cycle, and retry counters;
+- unresolved blocker;
+- next authorized stage;
+- closure-ready status.
+
+The Lead must not normally retain or ingest:
+
+- implementation history;
+- raw logs;
+- full diffs;
+- full test output;
+- worker reasoning;
+- previous reviewer reasoning;
+- completed-stage narratives;
+- advisor discussions;
+- complete evidence chains.
+
+Summarized completed history and raw evidence are rejected as normal Lead input; an accepted receipt reference and its hash stand in for the evidence. Referenced raw evidence may be opened only for one named unresolved blocker, a receipt mismatch, or deterministic invalidation of an accepted stage (the deterministic invalidation conditions and reopen-smallest-phase rule are defined in "Checkpoint-first resume and closure fast path"). Absent one of these, the Lead does not reconstruct an accepted evidence chain.
+
+### Fresh bounded stage agents
+
+Substantive stages are assigned to fresh bounded stage agents. Each is a single-stage instance of the Worker or Checker roles, never a sub-Lead and never a recursive hierarchy:
+
+- Implementer — produces the candidate change;
+- Checker — deterministic validation of the candidate;
+- Skeptic Reviewer — executes RunSkeptic against the frozen candidate;
+- Repairer — applies the smallest authorized fix on ACTION;
+- Integrator — performs the deterministic terminal integration.
+
+Each stage agent returns a compact receipt; the Lead validates the receipt and updates state.
+
+### One lifecycle transition per invocation
+
+One Lead invocation performs at most one lifecycle transition:
+
+1. read and validate the compact state;
+2. launch one fresh stage agent or perform one deterministic terminal action;
+3. validate one compact receipt;
+4. update the authoritative state;
+5. stop.
+
+The Lead must not own two substantive stages in one invocation. It hands off after each transition rather than chaining implementation, checking, review, repair, and integration inside one context.
+
+### Lead prohibitions
+
+Across the lifecycle the Lead must not:
+
+- implement;
+- perform RunSkeptic itself;
+- repair the candidate;
+- review a reviewer;
+- add an advisor for reassurance;
+- reconstruct accepted evidence without a named blocker;
+- repeat an accepted stage without deterministic invalidation;
+- count narrated or simulated reviews as executed PASS results;
+- continue after closure.
+
+A PASS counts only when a Skeptic Reviewer stage actually executed the complete RunSkeptic flow against the named byte-identical candidate and returned the required receipt (see `AGENTS.md`, "Skeptic verification"). A described, planned, or narrated review is not an executed PASS.
+
+### Proportionality exception
+
+A genuinely small, reversible, single-stage task may execute directly when delegation would cost more than the work, consistent with "A small bounded task may execute directly" above. This exception must not cover repeated review, repair, integration, cross-session work, or any task with meaningful context-exhaustion risk.
+
 ## Core job
 
 For each consequential user instruction:
