@@ -23,7 +23,7 @@ The Lead owns the Task Prompt and the terminal outcome. An Agent Prompt is a bou
 ## Relationship to other repository contracts
 
 - `agents/task-prompt.md` is authoritative for Task Prompt construction, execution control, and closure.
-- `agents/lead-agent-prompt.md` is authoritative for the Lead role, prompt architecture, and prompt gating.
+- `agents/lead-agent-prompt.md` is authoritative for the Lead role: an orchestration-only contract of compact state, one Boundary Agent dispatch per transition, and structural receipt validation.
 - `skeptic.md` is authoritative for RunSkeptic review behavior and output categories.
 - Repository and runtime governance remain authoritative within their scopes.
 
@@ -59,7 +59,7 @@ A small, reversible task may use a compact Task Prompt containing only the field
 
 ## Lead ownership
 
-The Lead retains ownership of:
+The Lead retains ownership of the terminal contract and orchestration state for:
 
 - the user objective and exact terminal DONE;
 - authority and source-of-truth resolution;
@@ -70,7 +70,7 @@ The Lead retains ownership of:
 - failure classification, retry, redesign, and escalation;
 - verification, integration, publication, remote confirmation, and closure.
 
-Delegation transfers bounded work, not terminal ownership. A worker may report success within its ticket while the Task Prompt remains incomplete.
+The Lead does not perform this work itself. Per `agents/lead-agent-prompt.md`, each item above is carried out by a fresh Boundary Agent dispatched with a bounded objective; the Lead selects the task, dispatches the Boundary Agent, and validates its compact receipt to decide the next state. Delegation transfers bounded work, not terminal ownership. A worker may report success within its ticket while the Task Prompt remains incomplete.
 
 ## Task Prompt state machine
 
@@ -266,7 +266,7 @@ Route by the actual work:
 - bounded workers for broad searches, inventories, or isolated implementation;
 - Checkers for deterministic promotion evidence;
 - independent Judges only when independence materially affects the decision;
-- the Lead for ambiguity, architecture, authority, tradeoffs, readiness, integration, and closure.
+- a fresh Boundary Agent dispatched by the Lead for ambiguity, architecture, authority, tradeoffs, readiness, integration, and closure; the Lead itself only selects the task, dispatches, and validates the resulting compact receipt.
 
 For every material route, state the role, required capability, selected runtime/model and effort, reason, fallback, and stop condition. Runtime availability must be verified when selection matters. A stronger model must not substitute for a repaired ticket, smaller scope, better evidence flow, or correct decomposition.
 
@@ -411,6 +411,8 @@ Task-level verdicts:
 - `CONFLICT`: authority, source of truth, design choice, safety, or required completion path cannot be resolved within prompt scope.
 
 A Task Prompt must not receive PASS merely because every Agent Prompt passes locally. Do not execute a Task Prompt with unresolved ACTION, DECOMPOSE, CONFLICT, review-required status, or blocking unknown.
+
+This gate itself is applied by a fresh Boundary Agent dispatched by the Lead, per `agents/lead-agent-prompt.md`. The Lead never runs the gate or reads its full findings; its post-gate receipt is limited to `verdict`, `finding_ids`, `report_identity`, and `receipt_identity`, and it uses only those fields to select the next state.
 
 ### Relationship to canonical Skeptic verification
 
