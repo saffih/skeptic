@@ -78,13 +78,13 @@ After three consecutive `PASS` verdicts on one unchanged hash, freeze: the verif
 
 ## Task-Prompt construction
 
-Use a Prompt Lead in `DESIGN_PACKAGE` mode (see `agents/lead-agent-prompt.md`).
+Task-Prompt construction is the bounded objective of a fresh Boundary Agent dispatched by the Lead, per the current `agents/lead-agent-prompt.md`.
 
-Before drafting, the Prompt Lead reads and applies the current `AGENTS.md`, `agents/lead-agent-prompt.md`, `agents/task-prompt.md`, the verified plan, and only additional evidence needed to operationalize it. It receives the verified plan and compact evidence — not the full Plan Author or reviewer history.
+Before drafting, this Boundary Agent reads and applies the current `AGENTS.md`, `agents/lead-agent-prompt.md`, `agents/task-prompt.md`, the verified plan, and only additional evidence needed to operationalize it. It receives the verified plan and compact evidence — not the full Plan Author or reviewer history.
 
 It produces:
 
-1. One complete, minimum-sufficient Task Prompt following the `agents/task-prompt.md` contract and template. The Task Prompt must explicitly appoint its execution Lead, require it to read and apply the current repository contracts, state the correct Lead mode, bind task-specific authority/scope/exact-DONE, define starting-state checks and source-of-truth order, define dependency-ready phases, define bounded child tickets and compact receipts, protect Lead context and closure capacity, define evidence identity and persistence where context boundaries require it, define tests/behavioral checks/repair/retry/futility/integration/closure, define truthful blocked states, remain no larger than the verified plan requires, and not execute itself.
+1. One complete, minimum-sufficient Task Prompt following the `agents/task-prompt.md` contract and template. The Task Prompt must explicitly appoint its execution Lead, require it to read and apply the current repository contracts, bind task-specific authority/scope/exact-DONE, define starting-state checks and source-of-truth order, define dependency-ready phases, define bounded child tickets and compact receipts, protect Lead context and closure capacity, define evidence identity and persistence where context boundaries require it, define tests/behavioral checks/repair/retry/futility/integration/closure, define truthful blocked states, remain no larger than the verified plan requires, and not execute itself.
 2. A compact **semantic traceability map**: every material plan requirement mapped to the Task-Prompt section that preserves it, or marked `NOT_APPLICABLE` with a reason. Semantic consolidation is allowed; silent omission, weakening, or unauthorized expansion is not. Assumptions are kept separate from verified facts.
 
 ## Unified Prompt-Build Verification
@@ -99,7 +99,7 @@ Run the complete checklist in one pass:
 
 **C. Dependency integrity** — valid entry phase and complete path to DONE; inputs available before consumption; phase graph acyclic (including semantic cycles such as an artifact requiring approval from its own output); verification follows artifact freeze; integration follows required verification; optional work cannot block mandatory completion; deterministic topological-order check when phases are structurally represented.
 
-**D. Lead-Agent application** — execution agent explicitly appointed Lead; required to read and apply current contracts; correct Lead mode; Lead retains task-level ownership; child roles bounded; no worker can promote its output to task-level DONE; model/effort choices proportionate and feasible.
+**D. Lead-Agent application** — execution agent explicitly appointed Lead; required to read and apply current contracts; Lead retains task-level ownership; child roles bounded; no worker can promote its output to task-level DONE; model/effort choices proportionate and feasible.
 
 **E. Lead-context protection** — Lead receives compact authoritative inputs, not full histories; child roles receive bounded Dispatch Tickets; worker receipts are compact and checkable; raw logs/discussions/large outputs stay outside Lead context absent a named dispute; closure capacity protected by a measurable reserve or substitute; pre-exhaustion stop defined; a replacement Lead could resume from a verified compact handoff if handoff is materially required; the first incomplete phase is identifiable without reconstructing the whole task.
 
@@ -116,7 +116,7 @@ Every receipt names the exact Task-Prompt SHA-256, marks each of the nine catego
 Verdicts and routing:
 
 - `READY` — freeze the exact final Task-Prompt SHA-256 and traceability map.
-- `REPAIR_REQUIRED` — the Prompt Lead repairs the Task Prompt; rerun the complete checklist against the new candidate.
+- `REPAIR_REQUIRED` — a fresh Boundary Agent dispatched by the Lead repairs the Task Prompt; rerun the complete checklist against the new candidate.
 - `PLAN_DEFECT` — return to plan production; count the change against the plan-repair budget; repeat full Plan Skeptic verification; then rebuild the Task Prompt.
 - `BLOCKED` — preserve the exact candidate identity and name the unavailable requirement.
 

@@ -141,9 +141,9 @@ class ContractApplicationTests(unittest.TestCase):
             self.builder,
         )
 
-    def test_prompt_lead_design_package_mode(self) -> None:
+    def test_task_prompt_construction_by_boundary_agent(self) -> None:
         for marker in [
-            "Use a Prompt Lead in `DESIGN_PACKAGE` mode",
+            "Task-Prompt construction is the bounded objective of a fresh Boundary Agent",
             "agents/task-prompt.md` contract and template",
         ]:
             self.assertIn(marker, self.builder)
@@ -178,7 +178,7 @@ class UnifiedPromptBuildVerificationTests(unittest.TestCase):
     def test_verdicts_and_repair_routing(self) -> None:
         for marker in [
             "`READY` — freeze the exact final Task-Prompt SHA-256",
-            "`REPAIR_REQUIRED` — the Prompt Lead repairs the Task Prompt",
+            "`REPAIR_REQUIRED` — a fresh Boundary Agent dispatched by the Lead repairs the Task Prompt",
             "`PLAN_DEFECT` — return to plan production",
             "`BLOCKED` — preserve the exact candidate identity",
         ]:
