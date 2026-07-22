@@ -396,6 +396,113 @@ Confidence and evidence level (optional; not an independent promotion input):
 
 The Lead or a Checker must verify material receipt claims before promoting them into readiness, mutation, integration, publication, or safety decisions. See [Receipt, evidence, checkpoint, and closure authority](#15-receipt-evidence-checkpoint-and-closure-authority) for the full precedence order.
 
+## Recursive execution hierarchy (A/B/C)
+
+This hierarchy controls three things at once -- ownership, information flow, and promotion authority. Hierarchy alone is insufficient unless all three are explicit. Delegation that only moves work down, while all detailed outputs and lifecycle responsibilities still converge on the top Lead, is not this hierarchy.
+
+It is a set of roles and boundaries, not a requirement for genuine nested agents. A runtime with real subagents may place each role in a separate protected context; a single agent realizes the same contract as phase-scoped context boundaries with receipt discipline. The contract must hold with or without nested agents. If a runtime cannot represent the boundary at all, return `CONFLICT` rather than pretending the layer exists.
+
+Role mapping to this document's existing vocabulary:
+
+- A -- Executive Lead is the Lead / Orchestrator defined in "Lead ownership" and `agents/lead-agent-prompt.md`.
+- C -- Worker, Checker, or Reviewer is the bounded execution role; Reviewer is the independent-evaluation role this document also calls Judge.
+- B -- Phase Supervisor is a new bounded layer between A and C, owning one phase.
+
+### A -- Executive Lead
+
+A owns the task objective, authority, global phase state, material conflicts, integration, and closure. A retains only:
+
+- objective and exact DONE;
+- authority and source-of-truth order;
+- phase dependency state;
+- accepted artifact identities;
+- compact material findings and dissent;
+- blockers and remaining feasibility;
+- integration and closure state.
+
+A must not normally receive:
+
+- full Task Prompt copies from children;
+- raw worker reasoning;
+- full logs or diffs;
+- repeated receipts;
+- entire evidence packages.
+
+A opens lower-level evidence only for a named dispute or deterministic invalidation. When a B Supervisor exists, A does not directly manage that phase's C agents; it manages B and consumes B's one upward receipt.
+
+### B -- Phase Supervisor
+
+B owns exactly one bounded phase and:
+
+- creates bounded C tickets;
+- receives C evidence;
+- verifies material receipt claims;
+- handles local bounded repair and retry;
+- preserves dissent and contradictions;
+- produces one compact upward phase receipt to A.
+
+B cannot:
+
+- expand the task objective;
+- claim task-level DONE;
+- accept its own unverified implementation;
+- forward all C output to A;
+- continue optional work after phase acceptance.
+
+Context protection applies recursively. B must use references and bounded receipts rather than accumulating unlimited C history. The context-allocation, compression, and closure disciplines that bind A bind B within its phase. Moving overload from A to B is a failed design, not a solution.
+
+### C -- Worker / Checker / Reviewer
+
+C receives one bounded Dispatch Ticket with role, objective, source of truth, scope, allowed and forbidden actions, output limit, evidence destination, and acceptance and stop rules. C:
+
+- cannot promote its own output across a trust boundary;
+- cannot silently expand scope;
+- reports adjacent findings without acting on them;
+- returns evidence to its B Supervisor, not directly to A.
+
+C reports only to the B Supervisor that dispatched it. It does not claim phase or task completion.
+
+### No self-promotion across a trust boundary
+
+No producer may accept or promote its own output across a trust boundary. An agent that produced or implemented a phase result cannot be the sole acceptor of that same result: acceptance requires an independent Reviewer or a deterministic Checker. This applies at every level -- C cannot self-accept to B, and B cannot self-accept its own implementation as the phase result to A.
+
+### Upward phase receipt (B -> A)
+
+B returns exactly one compact upward phase receipt to A containing only:
+
+- phase ID and status;
+- accepted artifact identity;
+- evidence location and hash;
+- acceptance owner and validation result;
+- material findings;
+- unresolved dissent, contradiction, unknown, or blocker;
+- budget / capacity result;
+- next authorized state.
+
+The receipt carries references and material conclusions, not full evidence. It is a claim until A or a deterministic Checker verifies its material fields. A receipt whose accepted artifact identity, evidence location, or hash is missing cannot be promoted.
+
+Size is bounded by field, not by an arbitrary count: the receipt is exactly the enumerated fields above, and every field that would otherwise embed a log, diff, or full artifact must instead carry a reference (path, ref, hash, line range) and the material conclusion. This is the same compact-receipt convention already used for the [Agent Receipt](#agent-receipt) and [Context allocation and evidence custody](#9-context-allocation-and-evidence-custody); it introduces no new numeric limit.
+
+Minority dissent, contradictions, blockers, and unknowns cannot be silently removed during upward compression. Compression that drops a material dissent, contradiction, unknown, failed case, or minority finding is a defective receipt, not a smaller one.
+
+### Safe hierarchy collapse
+
+The hierarchy is proportional; a missing level must collapse safely rather than be faked. Permit:
+
+- A-only execution for tiny, reversible, non-delegated work;
+- A -> C for one small bounded delegation when creating a B Supervisor would cost more than the work.
+
+Require A -> B -> C when the work materially includes:
+
+- multiple C agents;
+- broad or verbose evidence;
+- implementation plus checking;
+- independent review;
+- repeated evaluation;
+- meaningful context-exhaustion risk.
+
+Collapsed execution does not waive receipt verification, authority boundaries, or exact DONE. A missing layer must not be invented: do not describe a single-context task as if a separate B or C reviewed it, and do not claim independence a collapsed structure did not have. The closure-ready restriction in "Checkpoint-first resume and closure-only execution" still binds a collapsed A: no optional advisor or extra review after any phase is accepted.
+
 ## Task-level Skeptic readiness gate
 
 Before execution and before terminal promotion, apply the current `skeptic.md` at both applicable levels:

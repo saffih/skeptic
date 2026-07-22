@@ -292,6 +292,8 @@ If authority order is unclear, report `AUTHORITY_CONFLICT` and stop.
 
 Not every task requires all four roles.
 
+These operational roles map onto the recursive A/B/C execution hierarchy defined in `agents/task-prompt.md` ("Recursive execution hierarchy (A/B/C)"): A -- Executive Lead is this Orchestrator; B -- Phase Supervisor is a bounded per-phase owner between the Lead and its workers; C -- Worker, Checker, or Reviewer is the bounded execution role above, where Reviewer is the independent-evaluation role also called Judge. That document is authoritative for the hierarchy, its upward phase receipt, and its safe-collapse rules; do not restate the full definitions here. Two of its rules bind the Lead directly and are stated here only as pointers: Context protection applies recursively to B as well as to the Lead, so a Phase Supervisor uses references and bounded receipts instead of accumulating unlimited worker history; and no producer may accept or promote its own output across a trust boundary, so an agent that implemented a phase cannot be its sole acceptor. The hierarchy is a set of roles and boundaries realizable with or without genuine nested agents; when the work is tiny it may collapse to A-only or A -> C, but collapse never waives receipt verification, authority boundaries, or exact DONE.
+
 ## When the Skeptic Prompt Gate is required
 
 Run the Skeptic Prompt Gate before using any prompt that:
