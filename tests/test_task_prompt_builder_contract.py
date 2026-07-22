@@ -156,6 +156,14 @@ class ContractApplicationTests(unittest.TestCase):
         ]:
             self.assertIn(marker, self.builder)
 
+    def test_plan_and_review_work_use_fresh_boundary_agents(self) -> None:
+        for marker in [
+            "A fresh Plan Author Boundary Agent receives the objective",
+            "Each RunSkeptic pass is performed by a fresh Skeptic Reviewer Boundary Agent",
+            "fresh plan-repair Boundary Agent",
+        ]:
+            self.assertIn(marker, self.builder)
+
     def test_semantic_traceability_required(self) -> None:
         for marker in [
             "semantic traceability map",
@@ -191,6 +199,13 @@ class UnifiedPromptBuildVerificationTests(unittest.TestCase):
             "`BLOCKED` — preserve the exact candidate identity",
         ]:
             self.assertIn(marker, self.builder)
+
+    def test_detailed_verification_report_stays_outside_lead_context(self) -> None:
+        self.assertIn("persists a detailed report", self.builder)
+        self.assertIn(
+            "returns to the Lead only the declared compact receipt fields and the report identity",
+            self.builder,
+        )
 
     def test_plan_defect_returns_to_plan_verification(self) -> None:
         self.assertIn("repeat full Plan Skeptic verification", self.builder)
@@ -259,6 +274,13 @@ class ContextProtectionTests(unittest.TestCase):
             "closure capacity is protected",
         ]:
             self.assertIn(marker, self.builder)
+
+    def test_builder_output_is_externalized(self) -> None:
+        self.assertIn("Persist one external builder artifact containing:", self.builder)
+        self.assertIn(
+            "Return to the Lead only: `task_id`, `outcome`, the final Task-Prompt `candidate_identity`",
+            self.builder,
+        )
 
 
 if __name__ == "__main__":

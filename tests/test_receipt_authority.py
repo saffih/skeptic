@@ -96,20 +96,20 @@ def evaluate(case: ReceiptCase) -> Result:
     return Result(Promotion.ALLOW, False, ReceiptAction.NONE, preserve)
 
 
-def requires_formal_receipt(
-    *, delegated: bool, serious_task_prompt: bool, run_skeptic_invoked: bool
-) -> bool:
-    """Proportionality: formal receipt ceremony is not universal."""
-    return delegated or serious_task_prompt or run_skeptic_invoked
+def requires_detailed_report(*, detailed_output_required: bool) -> bool:
+    """Every Boundary Agent returns a compact receipt; a separate detailed
+    report exists only when the task produces detailed output."""
+    return detailed_output_required
 
 
 def decision_owner(
     *, deterministic_facts_complete: bool, requires_authorized_judgment: bool
 ) -> str:
-    """A checker can compute facts; it cannot compute a human-owned judgment."""
+    """A Boundary Agent can compute facts; only the owner supplies a reserved
+    human judgment. The orchestration-only Lead does neither."""
     if requires_authorized_judgment:
-        return "LEAD_OR_OWNER"
-    return "DETERMINISTIC" if deterministic_facts_complete else "UNRESOLVED"
+        return "OWNER"
+    return "BOUNDARY_AGENT" if deterministic_facts_complete else "UNRESOLVED"
 
 
 MATCH_VALID_COMPLETE = dict(
@@ -139,11 +139,12 @@ class CrossFileAuthorityMarkerTests(unittest.TestCase):
         self.assertIn("compact claim-and-evidence index", self.task_prompt)
         self.assertIn("A receipt never outranks the evidence it summarizes", self.task_prompt)
         self.assertIn("identity, scope, inputs, freshness, and acceptance state", self.task_prompt)
-        self.assertIn("not an independent promotion input", self.task_prompt)
+        self.assertIn("block consequential promotion", self.task_prompt)
 
     def test_required_receipts_remain_proportionate(self) -> None:
         self.assertIn("required terminal summary for the whole Task Prompt", self.task_prompt)
-        self.assertIn("small, non-delegated, reversible task", self.task_prompt)
+        self.assertIn("A small Boundary Agent task still returns its declared compact receipt", self.task_prompt)
+        self.assertIn("it need not create a separate detailed report", self.task_prompt)
         self.assertIn("Do not claim RunSkeptic compliance without this receipt", self.skeptic)
 
     def test_closure_receipt_is_not_overclaimed_as_proof(self) -> None:
@@ -178,7 +179,7 @@ class CrossFileAuthorityMarkerTests(unittest.TestCase):
             "an unverified receipt authorizes a consequential transition",
             "receipt prose overrides primary evidence or deterministic state",
             "missing receipt prose causes completed phases to replay",
-            "receipt ceremony becomes mandatory for trivial non-delegated work",
+            "a trivial Boundary Agent task is forced to create a detailed report",
             "a checklist-only RunSkeptic receipt is accepted without evidence",
             "a closure receipt independently invents DONE",
             "artifact type alone does not establish authority",
@@ -211,22 +212,14 @@ class ReceiptAuthorityScenarioTests(unittest.TestCase):
                 self.assertEqual(result.receipt_action, action)
                 self.assertTrue(result.preserve_accepted_outputs)
 
-    def test_trivial_non_delegated_task_needs_no_formal_receipt(self) -> None:
-        self.assertFalse(
-            requires_formal_receipt(
-                delegated=False, serious_task_prompt=False, run_skeptic_invoked=False
-            )
-        )
-        self.assertTrue(
-            requires_formal_receipt(
-                delegated=True, serious_task_prompt=False, run_skeptic_invoked=False
-            )
-        )
+    def test_trivial_boundary_task_needs_no_detailed_report(self) -> None:
+        self.assertFalse(requires_detailed_report(detailed_output_required=False))
+        self.assertTrue(requires_detailed_report(detailed_output_required=True))
 
-    def test_human_owned_judgment_is_not_computed_by_a_checker(self) -> None:
+    def test_human_owned_judgment_is_not_computed_by_lead_or_checker(self) -> None:
         owner = decision_owner(deterministic_facts_complete=True, requires_authorized_judgment=True)
-        self.assertEqual(owner, "LEAD_OR_OWNER")
-        self.assertNotEqual(owner, "DETERMINISTIC")
+        self.assertEqual(owner, "OWNER")
+        self.assertNotEqual(owner, "BOUNDARY_AGENT")
 
     def test_unbound_or_stale_evidence_never_promotes(self) -> None:
         cases = [

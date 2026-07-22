@@ -236,8 +236,8 @@ SH:PF promotion requires:
 6. Unverified evidence with deterministic invalidation
    Given evidence binding remains unverified while the checkpoint is deterministically invalidated, block promotion and reopen the smallest affected phase; verification status must not hide invalidation.
 
-7. Trivial non-delegated task
-   Given one reversible local edit with immediate deterministic verification and no delegation, handoff, publication, or serious Task Prompt requirement, accept compact inline evidence without separate formal Agent Receipt machinery.
+7. Trivial Boundary Agent task
+   Given one reversible local edit with immediate deterministic verification and no detailed-report requirement, require the declared compact Boundary Agent receipt but no separate report artifact or receipt ceremony.
 
 8. Checklist theatre
    Given a RunSkeptic receipt lists all major steps and Thinkers with no material evidence or actual application shown, do not claim RunSkeptic compliance; require evidence for material findings and skipped/unknown areas.
@@ -279,7 +279,7 @@ Reject a proposed Skeptic change if any of these occur:
 - an unverified receipt authorizes a consequential transition
 - receipt prose overrides primary evidence or deterministic state
 - missing receipt prose causes completed phases to replay
-- receipt ceremony becomes mandatory for trivial non-delegated work
+- a trivial Boundary Agent task is forced to create a detailed report when its compact allowlisted receipt is sufficient
 - a checklist-only RunSkeptic receipt is accepted without evidence
 - a closure receipt independently invents DONE
 - persistent state or storage is treated as universally mandatory when no material survival requirement exists

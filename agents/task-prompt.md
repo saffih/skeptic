@@ -116,8 +116,6 @@ A backward transition must name the invalid checkpoint, deterministic evidence, 
 
 Missing prose, summaries, governance receipts, formatting preferences, extra-confidence requests, optional advice, or unfavorable accepted results do not invalidate substantive work.
 
-Before each phase and immediately after each acceptance, a fresh Boundary Agent must return capacity as `SUFFICIENT` (next phase plus verification and closure can still finish), `CONSTRAINED` (optional work is forbidden; continue only with required work), or `UNSAFE` (checkpoint and hand off before further substantive work). The receipt classifies the proposed next action as `acceptance-required`, `blocker-required`, or `optional`; optional work is forbidden immediately after any acceptance and whenever capacity is `CONSTRAINED` or `UNSAFE`. A valid acceptance requires the Lead to persist compact state and immediately advance, not dispatch another semantic review, spot-check, or rereading for reassurance.
-
 When substantive work is complete, enter `CLOSURE_ONLY`. By default, read only:
 
 1. the authoritative checkpoint;
@@ -135,7 +133,7 @@ Missing procedural evidence does not reopen completed phases. Reconstruct only t
 
 `prompt too long`, session exhaustion, forced compression, or unplanned handoff after substantive completion is a failed Task Prompt execution path even when artifacts survive.
 
-`PACKAGE_INCOMPLETE` and `CHECKPOINT_CONFLICT` are operational stop reasons, not Skeptic verdicts. They do not change `PASS`, `ACTION`, `DECOMPOSE`, or `CONFLICT` meanings.
+`CHECKPOINT_CONFLICT` is an operational stop reason, not a Skeptic verdict. It does not change `PASS`, `ACTION`, `DECOMPOSE`, or `CONFLICT` meanings.
 
 ## Required Task Prompt contract
 
@@ -330,6 +328,8 @@ If authority, credentials, network, CI, review, mergeability, or remote state bl
 
 The Task Closure Receipt is the required terminal summary for the whole Task Prompt. It must enumerate each DONE condition, its yes/no result, evidence, delivered refs or artifact identifiers, tests and reviews, protected-state result, unresolved blockers, and residual risk.
 
+A fresh closure Boundary Agent persists this detailed receipt outside Lead context. The Lead receives only its artifact identity, compact outcome, blocker when present, next state, and receipt identity.
+
 For resumed or `CLOSURE_ONLY` execution, it must also include the checkpoint-first resume record, the Boundary-Agent artifact ledger, and any backward-transition authorization. Fill absent procedural fields from deterministic current facts without reopening completed phases.
 
 `Overall DONE: yes` is allowed only when every required terminal condition is verified. Agent Receipts, confidence, and a successful push command are inputs to closure, not substitutes for it, and `Overall DONE: yes` must not contradict deterministic facts or accepted checkpoint state.
@@ -340,7 +340,7 @@ Resolve a material conflict claim-by-claim. Before relying on an artifact, Bound
 
 A Task Closure Receipt is derived from verified terminal conditions; it is not independent evidence that those conditions are true. On a mismatch between a receipt and higher-authority evidence, verify the specific conflicting claim, repair or reject the receipt, and reopen only the smallest phase that deterministic invalidation actually supports. Missing or inaccurate receipt prose alone does not replay completed work.
 
-A small, non-delegated, reversible task may use a compact inline evidence summary in place of formal Agent Receipt ceremony. This does not waive the Task Closure Receipt for a serious Task Prompt or the RunSkeptic Receipt when RunSkeptic is invoked.
+A small Boundary Agent task still returns its declared compact receipt, but it need not create a separate detailed report when no detailed output is required. This does not waive the Task Closure Receipt for a serious Task Prompt or the RunSkeptic report when RunSkeptic is invoked; those detailed artifacts remain outside Lead context and are referenced by identity.
 
 ## Agent Prompt and Dispatch Ticket
 
@@ -362,27 +362,24 @@ Stop conditions:
 Return receipt:
 ```
 
-## Agent Receipt
+## Compact Boundary Agent receipt
 
 ```text
-Role and task:
-Scope completed:
-Files or objects read:
-Commands or tools used:
-Evidence and durable locations:
-Changes made:
-Verification and disconfirming checks:
-Failures, unknowns, and blockers:
-Budget / context result:
-Recommended next action:
-Confidence and evidence level (optional; not an independent promotion input):
+task_id:
+outcome:
+candidate_identity: <when relevant>
+artifact_identity: <when relevant>
+finding_ids: <when relevant>
+blocker: <when relevant>
+next_state:
+receipt_identity:
 ```
 
-A fresh verification Boundary Agent must verify material receipt claims before the Lead may promote them into readiness, mutation, integration, publication, or safety state. See [Receipt, evidence, checkpoint, and closure authority](#15-receipt-evidence-checkpoint-and-closure-authority) for the full precedence order.
+Detailed findings, commands, logs, diffs, test output, evidence bodies, and reasoning are persisted outside Lead context when required. A fresh verification Boundary Agent verifies material evidence and returns only the compact fields declared in its ticket. The Lead validates that structural receipt and advances or stops; it never reads or interprets the detailed artifact. See [Receipt, evidence, checkpoint, and closure authority](#15-receipt-evidence-checkpoint-and-closure-authority) for the full precedence order.
 
 ## Task-level Skeptic readiness gate
 
-Before execution and before terminal promotion, apply the current `skeptic.md` at both applicable levels:
+Before execution and before terminal promotion, dispatch a fresh Skeptic Boundary Agent to apply the current `skeptic.md` at both applicable levels:
 
 1. Agent Prompt level: each child instruction is bounded, authorized, testable, and able to return useful evidence.
 2. Task Prompt level: the aggregate system can realistically traverse its dependency graph and reach exact terminal DONE within the available resources and authority.

@@ -57,11 +57,13 @@ An unsupported "verified plan" label alone is insufficient. Validate the package
 
 ## Plan production and full Plan Skeptic verification
 
-A Plan Author receives the objective, the current required contracts, and only narrowly relevant evidence — no unnecessary drafting history or raw repository dump.
+A fresh Plan Author Boundary Agent receives the objective, the current required contracts, and only narrowly relevant evidence — no unnecessary drafting history or raw repository dump.
 
 The plan proportionately defines: objective and observable terminal DONE; starting-state verification; authority and source-of-truth order; scope, exclusions, and protected state; task/risk classification and the smallest credible alternative; Boundary Agent routing; Lead context protection; dependency-ready phases; evidence and cross-context persistence; deterministic and behavioral verification; repair, retry, futility, integration, and closure; assumptions and residual risk.
 
 **Plan Skeptic verification** is this Builder's specialization of the canonical **Fix Skeptic verification** defined in `AGENTS.md` ("Verification vocabulary"): the artifact identity is fixed to the exact plan bytes and their SHA-256, so a plan-byte change is the fix event that resets the consecutive-PASS count to zero. Do not restate the canonical fix procedure here; apply it as written in `AGENTS.md`, run on the exact plan bytes via the actual current RunSkeptic procedure (`skeptic.md`).
+
+Each RunSkeptic pass is performed by a fresh Skeptic Reviewer Boundary Agent. On `ACTION`, the Lead forwards only the returned `finding_ids` and report identity to a fresh plan-repair Boundary Agent; neither the full report nor repair reasoning enters Lead context.
 
 Builder-specific bounds and receipts:
 
@@ -70,11 +72,11 @@ Builder-specific bounds and receipts:
 - stop early when the remaining review allowance cannot still produce three consecutive passes;
 - preserve every required RunSkeptic receipt and the plan SHA-256 at each attempt.
 
-Failure returns `PLAN_VERIFICATION_BLOCKED` with the latest plan bytes, hash, receipts, findings, and blocker.
+Failure persists a `PLAN_VERIFICATION_BLOCKED` artifact containing the latest plan bytes, hash, review reports, findings, and blocker. The Lead receives only the artifact identity, compact blocker, and next state.
 
 Fresh bounded reviewer contexts are preferred when the runtime provides genuine isolation. When it does not, sequential reviews may satisfy this project's definition of Plan Skeptic verification but must not be described as independent.
 
-After three consecutive `PASS` verdicts on one unchanged hash, freeze: the verified plan, its SHA-256, the three PASS receipts, the objective identity, and any unresolved assumptions.
+After three consecutive `PASS` verdicts on one unchanged hash, freeze externally: the verified plan, its SHA-256, the three PASS report identities, the objective identity, and any unresolved assumptions. Return only the accepted candidate and artifact identities in the compact receipt.
 
 ## Task-Prompt construction
 
@@ -111,7 +113,7 @@ Run the complete checklist in one pass:
 
 **I. Proportionality** — permanent doctrine referenced rather than copied; no unnecessary roles, reviews, tests, persistence, or phases; recursive self-application bounded; no materially smaller prompt preserves the verified plan, evidence, context protection, authority, reversibility, and closure.
 
-Every receipt names the exact Task-Prompt SHA-256, marks each of the nine categories `PASS` or `FAIL` with compact evidence pointers, states the final verdict, and names the required next state.
+The verification Boundary Agent persists a detailed report that names the exact Task-Prompt SHA-256, marks each of the nine categories `PASS` or `FAIL` with evidence pointers, states the final verdict, and names the required next state. It returns to the Lead only the declared compact receipt fields and the report identity.
 
 Verdicts and routing:
 
@@ -129,7 +131,7 @@ Bounds:
 
 ## Builder output
 
-Return:
+Persist one external builder artifact containing:
 
 - the verified plan (or authorized immutable reference), its SHA-256, and the governing-contract identities used;
 - the three same-hash Plan Skeptic PASS receipts;
@@ -138,6 +140,8 @@ Return:
 - the Prompt-Build Verification verdict and its checklist receipt;
 - execution-time assumptions and any blocked-capability notes;
 - explicit confirmation that the Task Prompt was not executed.
+
+Return to the Lead only: `task_id`, `outcome`, the final Task-Prompt `candidate_identity`, the builder `artifact_identity`, any `blocker`, `next_state`, and `receipt_identity`.
 
 ## Non-execution boundary
 

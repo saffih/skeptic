@@ -375,11 +375,33 @@ class TaskPromptContractTests(unittest.TestCase):
 
     def test_operational_resume_stops_preserve_skeptic_verdicts(self) -> None:
         self.assertIn(
-            "`PACKAGE_INCOMPLETE` and `CHECKPOINT_CONFLICT` are operational stop reasons, not Skeptic verdicts.",
+            "`CHECKPOINT_CONFLICT` is an operational stop reason, not a Skeptic verdict.",
             self.task,
         )
+        self.assertNotIn("PACKAGE_INCOMPLETE", self.task)
         for verdict in ["`PASS`", "`ACTION`", "`DECOMPOSE`", "`CONFLICT`"]:
             self.assertIn(verdict, self.task)
+
+    def test_boundary_agent_receipt_is_compact_and_allowlisted(self) -> None:
+        for marker in [
+            "## Compact Boundary Agent receipt",
+            "task_id:",
+            "outcome:",
+            "candidate_identity: <when relevant>",
+            "artifact_identity: <when relevant>",
+            "finding_ids: <when relevant>",
+            "next_state:",
+            "receipt_identity:",
+            "Detailed findings, commands, logs, diffs, test output, evidence bodies, and reasoning are persisted outside Lead context",
+        ]:
+            self.assertIn(marker, self.task)
+        for deleted in [
+            "Files or objects read:",
+            "Commands or tools used:",
+            "Changes made:",
+            "Recommended next action:",
+        ]:
+            self.assertNotIn(deleted, self.task)
 
 
 if __name__ == "__main__":

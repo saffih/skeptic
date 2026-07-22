@@ -302,9 +302,13 @@ class BuilderPlanSkepticVerificationIsASpecializationTests(unittest.TestCase):
 
     def test_freeze_on_three_consecutive_pass_preserved(self) -> None:
         self.assertIn(
-            "After three consecutive `PASS` verdicts on one unchanged hash, freeze: "
-            "the verified plan, its SHA-256, the three PASS receipts, the objective "
-            "identity, and any unresolved assumptions.",
+            "After three consecutive `PASS` verdicts on one unchanged hash, freeze "
+            "externally: the verified plan, its SHA-256, the three PASS report "
+            "identities, the objective identity, and any unresolved assumptions.",
+            self.builder,
+        )
+        self.assertIn(
+            "Return only the accepted candidate and artifact identities in the compact receipt.",
             self.builder,
         )
 
