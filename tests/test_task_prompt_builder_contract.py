@@ -151,7 +151,7 @@ class ContractApplicationTests(unittest.TestCase):
 
     def test_task_prompt_construction_by_boundary_agent(self) -> None:
         for marker in [
-            "Task-Prompt construction is the bounded objective of a fresh Boundary Agent",
+            "Use a fresh Prompt Builder Boundary Agent",
             "agents/task-prompt.md` contract and template",
         ]:
             self.assertIn(marker, self.builder)
@@ -174,11 +174,11 @@ class UnifiedPromptBuildVerificationTests(unittest.TestCase):
             "**A. Plan fidelity and provenance**",
             "**B. Task-Prompt completeness**",
             "**C. Dependency integrity**",
-            "**D. Lead-Agent application**",
+            "**D. Orchestration-only Lead application**",
             "**E. Lead-context protection**",
             "**F. Execution feasibility**",
             "**G. Internal consistency and authority**",
-            "**H. End-to-end Lead dry run**",
+            "**H. End-to-end orchestration dry run**",
             "**I. Proportionality**",
         ]:
             self.assertIn(marker, self.builder)
@@ -186,7 +186,7 @@ class UnifiedPromptBuildVerificationTests(unittest.TestCase):
     def test_verdicts_and_repair_routing(self) -> None:
         for marker in [
             "`READY` — freeze the exact final Task-Prompt SHA-256",
-            "`REPAIR_REQUIRED` — a fresh Boundary Agent dispatched by the Lead repairs the Task Prompt",
+            "`REPAIR_REQUIRED` — a fresh repair Boundary Agent repairs the Task Prompt",
             "`PLAN_DEFECT` — return to plan production",
             "`BLOCKED` — preserve the exact candidate identity",
         ]:
@@ -254,9 +254,9 @@ class ContextProtectionTests(unittest.TestCase):
 
     def test_lead_context_protection_markers_present(self) -> None:
         for marker in [
-            "Lead receives compact authoritative inputs, not full histories",
-            "raw logs/discussions/large outputs stay outside Lead context absent a named dispute",
-            "closure capacity protected by a measurable reserve or substitute",
+            "Lead receives only declared compact orchestration fields and receipt identities",
+            "detailed results remain external",
+            "closure capacity is protected",
         ]:
             self.assertIn(marker, self.builder)
 

@@ -23,11 +23,11 @@ class TaskPromptContractTests(unittest.TestCase):
     def test_canonical_artifact_and_hierarchy_exist(self) -> None:
         self.assertTrue(TASK_PROMPT.exists())
         for marker in [
-            "A Task Prompt is the complete Lead-owned execution contract",
+            "A Task Prompt is the complete execution contract",
             "User objective",
             "-> Task Prompt",
-            "-> Lead Agent Prompt",
-            "-> Agent Prompts / Dispatch Tickets",
+            "-> orchestration-only Lead",
+            "-> Boundary Agent Dispatch Tickets",
             "-> Task Closure Receipt",
         ]:
             self.assertIn(marker, self.task)
@@ -43,8 +43,7 @@ class TaskPromptContractTests(unittest.TestCase):
         )
         self.assertIn("Do not copy this entire file", self.task)
         self.assertIn(
-            "an orchestration-only contract of compact state, one Boundary "
-            "Agent dispatch per transition, and structural receipt validation",
+            "authoritative for the orchestration-only Lead role and Boundary Agent routing",
             self.task,
         )
         # The Lead's own contract actually matches that description.
@@ -52,15 +51,10 @@ class TaskPromptContractTests(unittest.TestCase):
         self.assertIn("## Compact receipt", self.lead)
 
     def test_lead_routes_terminal_work_through_task_prompt(self) -> None:
-        # task-prompt.md names lead-agent-prompt.md as the authority for how
-        # the Lead carries out Task Prompt ownership items: by dispatching a
-        # fresh Boundary Agent and validating its compact receipt.
         self.assertIn(
-            "Per `agents/lead-agent-prompt.md`, each item above is carried "
-            "out by a fresh Boundary Agent dispatched with a bounded "
-            "objective; the Lead selects the task, dispatches the Boundary "
-            "Agent, and validates its compact receipt to decide the next "
-            "state.",
+            "Every inspection, plan, implementation, test, review, judgment, repair, "
+            "verification, integration, publication, remote check, and closure "
+            "operation belongs to a fresh Boundary Agent.",
             self.task,
         )
         for marker in [
@@ -110,8 +104,8 @@ class TaskPromptContractTests(unittest.TestCase):
     def test_context_and_evidence_custody_block_transient_dependencies(self) -> None:
         for marker in [
             "Every expensive or decision-critical phase must persist an authoritative artifact",
-            "Temporary chat, worker memory, transient context, and unverified summaries are not durable evidence.",
-            "Compression must preserve dissent, contradictions, failed cases, unknowns, and minority evidence",
+            "Temporary chat, Boundary Agent memory, transient context, and unverified summaries are not durable evidence.",
+            "External artifacts must preserve dissent, contradictions, failed cases, unknowns, and minority evidence",
             "Remaining budget / feasibility:",
         ]:
             self.assertIn(marker, self.task)
@@ -263,7 +257,7 @@ class TaskPromptContractTests(unittest.TestCase):
 
     def test_closure_ready_state_forbids_optional_review_expansion(self) -> None:
         self.assertIn(
-            'do not add an advisor, Judge, optional review, new inventory, broad analysis, or "one more check"',
+            'do not dispatch an optional review, new inventory, broad analysis, or "one more check"',
             self.task,
         )
         self.assertIn("Optional review after closure-ready", self.governance)
@@ -295,7 +289,7 @@ class TaskPromptContractTests(unittest.TestCase):
             "highest completed phase",
             "first incomplete phase",
             "closure-ready status",
-            "Lead-context files opened and reason",
+            "Boundary-Agent artifact references opened and reason",
             "backward-transition authorization and evidence",
             "## Resume / checkpoint state",
             "Checkpoint / resume state:",

@@ -254,7 +254,7 @@ class GovernanceMarkerTests(unittest.TestCase):
 
     def test_task_prompt_requires_capacity_check_per_phase(self) -> None:
         self.assertIn(
-            "Before each phase and immediately after each acceptance, the Task Prompt requires the Lead to record capacity as `SUFFICIENT`",
+            "Before each phase and immediately after each acceptance, a fresh Boundary Agent must return capacity as `SUFFICIENT`",
             self.task,
         )
         self.assertIn(

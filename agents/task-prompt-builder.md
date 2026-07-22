@@ -4,7 +4,7 @@
 
 The Task-Prompt Builder is the single authoritative operation that turns a user objective, or an already-verified plan, into one verified, execution-ready Task Prompt.
 
-It does not replace `agents/lead-agent-prompt.md`, `agents/task-prompt.md`, or `skeptic.md`. It applies them in one bounded sequence so the user does not have to separately request planning, RunSkeptic, Lead-Agent application, Task-Prompt construction, context protection, or prompt verification.
+It does not replace `agents/lead-agent-prompt.md`, `agents/task-prompt.md`, or `skeptic.md`. It applies them through bounded Boundary Agent tasks so the user does not have to separately request planning, RunSkeptic, Task-Prompt construction, context protection, or prompt verification.
 
 The builder never executes the Task Prompt it produces. It returns it unexecuted.
 
@@ -59,7 +59,7 @@ An unsupported "verified plan" label alone is insufficient. Validate the package
 
 A Plan Author receives the objective, the current required contracts, and only narrowly relevant evidence — no unnecessary drafting history or raw repository dump.
 
-The plan proportionately defines: objective and observable terminal DONE; starting-state verification; authority and source-of-truth order; scope, exclusions, and protected state; task/risk classification and the smallest credible alternative; roles, ownership, and model/effort routing; Lead and worker context protection; dependency-ready phases; evidence and cross-context persistence; deterministic and behavioral verification; repair, retry, futility, integration, and closure; assumptions and residual risk.
+The plan proportionately defines: objective and observable terminal DONE; starting-state verification; authority and source-of-truth order; scope, exclusions, and protected state; task/risk classification and the smallest credible alternative; Boundary Agent routing; Lead context protection; dependency-ready phases; evidence and cross-context persistence; deterministic and behavioral verification; repair, retry, futility, integration, and closure; assumptions and residual risk.
 
 **Plan Skeptic verification** is this Builder's specialization of the canonical **Fix Skeptic verification** defined in `AGENTS.md` ("Verification vocabulary"): the artifact identity is fixed to the exact plan bytes and their SHA-256, so a plan-byte change is the fix event that resets the consecutive-PASS count to zero. Do not restate the canonical fix procedure here; apply it as written in `AGENTS.md`, run on the exact plan bytes via the actual current RunSkeptic procedure (`skeptic.md`).
 
@@ -78,18 +78,18 @@ After three consecutive `PASS` verdicts on one unchanged hash, freeze: the verif
 
 ## Task-Prompt construction
 
-Task-Prompt construction is the bounded objective of a fresh Boundary Agent dispatched by the Lead, per the current `agents/lead-agent-prompt.md`.
+Use a fresh Prompt Builder Boundary Agent. The Lead only dispatches this bounded task and receives its compact receipt.
 
-Before drafting, this Boundary Agent reads and applies the current `AGENTS.md`, `agents/lead-agent-prompt.md`, `agents/task-prompt.md`, the verified plan, and only additional evidence needed to operationalize it. It receives the verified plan and compact evidence — not the full Plan Author or reviewer history.
+Before drafting, the Prompt Builder Boundary Agent reads and applies the current `AGENTS.md`, `agents/lead-agent-prompt.md`, `agents/task-prompt.md`, the verified plan, and only additional evidence needed to operationalize it. It receives the verified plan and compact evidence — not the full Plan Author or reviewer history.
 
 It produces:
 
-1. One complete, minimum-sufficient Task Prompt following the `agents/task-prompt.md` contract and template. The Task Prompt must explicitly appoint its execution Lead, require it to read and apply the current repository contracts, bind task-specific authority/scope/exact-DONE, define starting-state checks and source-of-truth order, define dependency-ready phases, define bounded child tickets and compact receipts, protect Lead context and closure capacity, define evidence identity and persistence where context boundaries require it, define tests/behavioral checks/repair/retry/futility/integration/closure, define truthful blocked states, remain no larger than the verified plan requires, and not execute itself.
+1. One complete, minimum-sufficient Task Prompt following the `agents/task-prompt.md` contract and template. The Task Prompt must appoint an orchestration-only Lead, bind task-specific authority/scope/exact-DONE, define starting-state checks and source-of-truth order, define dependency-ready fresh Boundary Agent tasks with bounded tickets and compact receipts, protect Lead context and closure capacity, define evidence identity and persistence where context boundaries require it, define tests/behavioral checks/repair/retry/futility/integration/closure, define truthful blocked states, remain no larger than the verified plan requires, and not execute itself.
 2. A compact **semantic traceability map**: every material plan requirement mapped to the Task-Prompt section that preserves it, or marked `NOT_APPLICABLE` with a reason. Semantic consolidation is allowed; silent omission, weakening, or unauthorized expansion is not. Assumptions are kept separate from verified facts.
 
 ## Unified Prompt-Build Verification
 
-Use one bounded, read-only Prompt-Build Checker against the exact candidate Task Prompt, its SHA-256, the verified plan, and the traceability map. For serious tasks, use a fresh context that did not draft the candidate; if the runtime cannot provide that independence and independence is materially required, return `BLOCKED`, otherwise disclose that the review was same-context.
+Use one fresh, bounded, read-only Prompt-Build Verification Boundary Agent against the exact candidate Task Prompt, its SHA-256, the verified plan, and the traceability map. For serious tasks, use a fresh context that did not draft the candidate; if the runtime cannot provide that independence and independence is materially required, return `BLOCKED`, otherwise disclose that the review was same-context.
 
 Run the complete checklist in one pass:
 
@@ -99,15 +99,15 @@ Run the complete checklist in one pass:
 
 **C. Dependency integrity** — valid entry phase and complete path to DONE; inputs available before consumption; phase graph acyclic (including semantic cycles such as an artifact requiring approval from its own output); verification follows artifact freeze; integration follows required verification; optional work cannot block mandatory completion; deterministic topological-order check when phases are structurally represented.
 
-**D. Lead-Agent application** — execution agent explicitly appointed Lead; required to read and apply current contracts; Lead retains task-level ownership; child roles bounded; no worker can promote its output to task-level DONE; model/effort choices proportionate and feasible.
+**D. Orchestration-only Lead application** — execution Lead is appointed only to maintain compact state, dispatch one fresh Boundary Agent per substantive task, validate declared receipt fields, and advance or stop; no Boundary Agent can promote its own output to task-level DONE.
 
-**E. Lead-context protection** — Lead receives compact authoritative inputs, not full histories; child roles receive bounded Dispatch Tickets; worker receipts are compact and checkable; raw logs/discussions/large outputs stay outside Lead context absent a named dispute; closure capacity protected by a measurable reserve or substitute; pre-exhaustion stop defined; a replacement Lead could resume from a verified compact handoff if handoff is materially required; the first incomplete phase is identifiable without reconstructing the whole task.
+**E. Lead-context protection** — Lead receives only declared compact orchestration fields and receipt identities; fresh Boundary Agents receive bounded Dispatch Tickets; detailed results remain external; closure capacity is protected; a replacement Lead can resume from compact state without substantive history.
 
 **F. Execution feasibility** — the whole workflow, including verification and closure, can fit; expensive phases and prerequisites identified; retries/reviews bounded; optional work cannot consume the completion reserve; unavailable tools/permissions/credentials/isolation are checked before expensive work; truthful failure/blocked outcome; process cost proportionate to task value and risk.
 
 **G. Internal consistency and authority** — paths, refs, hashes, models, role names, permissions, and pass counts agree; the stated review budget can mathematically satisfy its gate; Reviewer permissions are read-only where independence is claimed; no instruction both requires and forbids the same action; fallback routes preserve acceptance criteria; no lower-authority role receives a higher-authority decision.
 
-**H. End-to-end Lead dry run** — without mutating the target, walk through: the Lead's first action; the evidence completing preflight; the first dependency-ready phase; the receipt/evidence returned to the Lead; the continue/repair/retry/handoff/stop rule; the evidence permitting integration; the evidence permitting terminal DONE. If the walkthrough cannot reach DONE without guessing, the verdict cannot be `READY`.
+**H. End-to-end orchestration dry run** — without mutating the target, walk through: the first Boundary Agent dispatch; the compact receipt completing preflight; the first dependency-ready task; the continue/repair/retry/handoff/stop route; and the receipt identities permitting integration and terminal DONE. If the walkthrough cannot reach DONE without guessing, the verdict cannot be `READY`.
 
 **I. Proportionality** — permanent doctrine referenced rather than copied; no unnecessary roles, reviews, tests, persistence, or phases; recursive self-application bounded; no materially smaller prompt preserves the verified plan, evidence, context protection, authority, reversibility, and closure.
 
@@ -116,7 +116,7 @@ Every receipt names the exact Task-Prompt SHA-256, marks each of the nine catego
 Verdicts and routing:
 
 - `READY` — freeze the exact final Task-Prompt SHA-256 and traceability map.
-- `REPAIR_REQUIRED` — a fresh Boundary Agent dispatched by the Lead repairs the Task Prompt; rerun the complete checklist against the new candidate.
+- `REPAIR_REQUIRED` — a fresh repair Boundary Agent repairs the Task Prompt; rerun the complete checklist against the new candidate.
 - `PLAN_DEFECT` — return to plan production; count the change against the plan-repair budget; repeat full Plan Skeptic verification; then rebuild the Task Prompt.
 - `BLOCKED` — preserve the exact candidate identity and name the unavailable requirement.
 

@@ -154,7 +154,7 @@ Every behavior-changing Skeptic proposal must be tested against these cases:
    Given P1-P6 complete while the P0 receipt and deterministic counts are missing, enter `CLOSURE_ONLY`, fill only the missing fields, issue the Task Closure Receipt, and do not replay completed phases.
 
 2. Accepted result and extra confidence
-   Given an accepted controller result and a Lead request for extra confidence, verify identity, input and result hashes, acceptance, and required counts, then close without recomputation.
+   Given an accepted controller result and a request for extra confidence, dispatch only the required closure verification Boundary Agent; verify identity, input and result hashes, acceptance, and required counts, then close without recomputation.
 
 3. Deterministic checkpoint invalidation
    Given a checkpoint hash mismatch, reopen only the smallest evidenced phase, preserve unaffected evidence, and record renewed feasibility.
@@ -168,40 +168,40 @@ Every behavior-changing Skeptic proposal must be tested against these cases:
 6. Context exhaustion after substantive completion
    Given broad rereading after completion reaches `prompt too long`, mark the Task Prompt execution path failed; surviving artifacts do not convert that execution into success.
 
-### Lead execution-mode regression scenarios
+### Boundary Agent execution-routing regression scenarios
 
 1. Predesigned benchmark package
-   Given a supplied Task Prompt, controller, fixtures, validator, scorer, resumable state, and explicit execution request, classify `EXECUTE_PACKAGE`, validate and run the supplied controller, and do not design another orchestration framework.
+   Given a supplied Task Prompt, controller, fixtures, validator, scorer, resumable state, and explicit execution request, dispatch a fresh execution Boundary Agent to validate and run the supplied controller; the Lead does not inspect or rebuild it.
 
 2. Large matrix without machinery
-   Given a long natural-language plan for repeated calls but no controller, validator, durable state, or recovery command, return `PACKAGE_INCOMPLETE`, list the missing artifacts, and do not build and execute a substantial replacement controller in the same Lead session.
+   Given a long natural-language plan for repeated calls but no controller, validator, durable state, or recovery command, the assigned Boundary Agent returns a blocker artifact identifying the missing machinery; the Lead receives only the blocker identity and does not design a replacement.
 
 3. Small one-off task
-   Given one reversible local edit, a focused failing test, and trivial rollback, execute directly without controller, agent team, or package ceremony.
+   Given one reversible local edit, a focused failing test, and trivial rollback, dispatch one fresh Boundary Agent without controller or package ceremony.
 
 4. Validator defect after successful generation
-   Given valid expensive outputs whose semantically equivalent field headings are rejected, repair the validator, revalidate existing outputs, and do not regenerate valid outputs.
+   Given valid expensive outputs whose semantically equivalent field headings are rejected, a fresh repair Boundary Agent repairs the validator and a later fresh verification Boundary Agent revalidates existing outputs; neither regenerates valid outputs.
 
 5. Complete batch cannot fit
    When the first calls fit but the complete batch plus judging, verification, persistence, and closure does not fit the remaining session or call budget, do not launch the batch; pilot, reduce, hand off, or stop. Generic context protection is not sufficient feasibility evidence.
 
 6. Closure-only missing receipt fields
-   Given P1-P6 complete while the P0 receipt and four deterministic counts are missing, enter `CLOSURE_ONLY`, fill only the missing fields, issue the closure receipt, and do not replay, recompute, call an advisor, or broadly read raw outputs.
+   Given P1-P6 complete while the P0 receipt and four deterministic counts are missing, dispatch a closure Boundary Agent to fill only the missing fields and issue the closure artifact; do not replay, recompute, or broadly read raw outputs.
 
 7. Accepted controller result needs no independent confirmation
-   Given an accepted controller result and a Lead desire for confirmation, verify identity, inputs, hash, acceptance, and required counts, then close without recomputation.
+   Given an accepted controller result and a desire for confirmation, dispatch only the required closure verification Boundary Agent to verify identity, inputs, hash, acceptance, and required counts, then close without recomputation.
 
 8. Proven checkpoint invalidation
    Given a deterministic checkpoint hash mismatch, reopen only the smallest evidenced phase, preserve unaffected evidence, and record renewed feasibility.
 
-9. Optional advisor after closure-ready
-   Given closure-ready state and an advisor not required by the frozen terminal contract, do not call the advisor; close.
+9. Optional review after closure-ready
+   Given closure-ready state and a review not required by the frozen terminal contract, do not dispatch it; close.
 
 10. Resume at the first incomplete phase
     Given a lifecycle listing P0-P6 while authoritative state proves P0-P5 complete, start at P6 without replaying earlier phases.
 
 11. Context exhaustion after completion
-    Given broad rereading after substantive completion reaches `prompt too long`, treat context protection as failed; surviving artifacts do not make that Lead execution successful.
+    Given a Lead receives broad substantive output after completion and reaches `prompt too long`, treat the context boundary as failed; surviving artifacts do not make that orchestration successful.
 
 ### SH:PF executable coverage
 
@@ -245,8 +245,8 @@ SH:PF promotion requires:
 9. Controller result versus receipt prose
    Given a deterministic controller reports failure or incomplete while the closure receipt says `Overall DONE: yes`, reject terminal promotion, let the controller/primary evidence win, repair the closure receipt, and do not regenerate accepted expensive work unless its outputs are invalid.
 
-10. Honest judgment remains with Lead
-   Given deterministic facts are complete while the terminal decision still requires an authorized product, architecture, or safety judgment, do not treat a checker as able to compute that judgment; the Lead or owner decides, and facts and the decision are recorded separately.
+10. Honest judgment remains human-owned
+   Given deterministic facts are complete while the terminal decision still requires an authorized product, architecture, or safety judgment, do not treat a verification Boundary Agent as able to compute that judgment; the authorized owner decides, and facts and the decision are recorded separately.
 
 Binding requirements:
 
