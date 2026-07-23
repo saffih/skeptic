@@ -10,6 +10,7 @@ import math
 import re
 import statistics
 import sys
+import unicodedata
 from pathlib import Path
 
 
@@ -31,6 +32,88 @@ MANDATORY_CASE_FIELDS = {
 }
 INTERNAL_DECISIONS = {"PASS", "ACTION", "CONFLICT"}
 FINAL_CATEGORIES = {"HANDLED", "CONFLICT"}
+SCORER_VERSION = "scorer-v2"
+SCORE_SCHEMA_VERSION = "skeptic-golden-score/2"
+
+_DASHES = dict.fromkeys(map(ord, "\u2010\u2011\u2012\u2013\u2014\u2015\u2212"), "-")
+_APOSTROPHES = dict.fromkeys(map(ord, "\u2018\u2019\u02bc\uff07"), "'")
+_WORD_RE = re.compile(r"[\w]+(?:'[\w]+)?", re.UNICODE)
+_INTERNAL_LABELS = (
+    ("post patch finding status", 3),
+    ("post fix finding status", 3),
+    ("post patch decision", 3),
+    ("post fix decision", 3),
+    ("internal finding decision", 2),
+    ("internal finding category", 2),
+    ("internal decision", 2),
+    ("finding razor category", 2),
+    ("finding decision", 2),
+    ("finding category", 2),
+    ("internal category", 2),
+    ("case decision", 1),
+    ("decision", 1),
+)
+_FINAL_LABELS = (
+    "final task output category",
+    "final output category",
+    "final task outcome",
+    "final category",
+)
+_RECEIPT_FIELDS = {
+    "source": ("source read",),
+    "permission": ("permission mode",),
+    "done": ("done statement", "done"),
+    "steps": ("major steps run", "major steps"),
+    "thinkers": (
+        "thinkers considered",
+        "thinkers consulted",
+        "thinker coverage",
+        "lenses applied",
+        "thinkers",
+    ),
+    "evidence": ("evidence used", "findings", "evidence"),
+    "decision": ("decision path", "decision"),
+    "verification": ("verification performed", "verification"),
+    "unresolved": (
+        "unresolved conflicts unknowns",
+        "unresolved conflicts",
+        "unresolved unknowns",
+        "unresolved",
+        "unknowns",
+    ),
+    "final": _FINAL_LABELS,
+}
+
+# Versioned, bounded equivalents for terms already present in golden-case intent.
+# These are exact normalized phrases, not fuzzy or embedding-based matches.
+_TERM_EQUIVALENTS = {
+    "untrusted": ("lower trust",),
+    "payment status": ("payment eligibility",),
+    "source of truth": ("effective port",),
+    "not equally": ("outranks",),
+    "secondary": ("defer", "deferred"),
+    "first": ("before",),
+    "do not delay": ("without waiting",),
+    "consequence": ("harm",),
+    "weight": ("greater", "outweigh", "dominate"),
+    "false simplicity": ("false simplification",),
+    "fewer lines": ("shorter code", "code length"),
+    "not safer": ("not simpler", "does not demonstrate correctness"),
+    "not automatically": ("not simpler", "does not demonstrate"),
+    "chesterton": ("om cf",),
+    "coercion": ("coercive",),
+    "meaningful consent": ("freely made choice",),
+    "not genuinely voluntary": ("contradicts an ordinary meaning of voluntary",),
+    "non retaliatory": ("no adverse employment consequence",),
+    "whole system": ("system outcome",),
+    "unfalsifiable": ("unfalsifiability", "observation capable of showing failure"),
+    "not needed": ("no present requirement", "no current alternative implementation"),
+    "single formatter": ("stable formatter",),
+    "when evidence": ("committed requirement",),
+    "proportionate": ("disproportionate",),
+    "ship": ("release",),
+    "safer": ("simpler",),
+}
 
 
 class BenchmarkError(ValueError):
@@ -156,52 +239,230 @@ def validate_cases(cases: list[dict]) -> dict:
     }
 
 
+def normalize_for_matching(text: str) -> str:
+    """Normalize formatting while preserving lexical and negation distinctions."""
+    value = unicodedata.normalize("NFKC", text).translate(_DASHES).translate(_APOSTROPHES)
+    return " ".join(match.group(0).casefold() for match in _WORD_RE.finditer(value))
+
+
+def _tokens(text: str) -> list[str]:
+    normalized = normalize_for_matching(text)
+    return normalized.split() if normalized else []
+
+
+def _token_forms(token: str) -> set[str]:
+    """Return conservative inflectional forms without substring matching."""
+    forms = {token}
+    if len(token) > 4 and token.endswith("ies"):
+        forms.add(token[:-3] + "y")
+    if len(token) > 4 and token.endswith("s") and not token.endswith("ss"):
+        forms.add(token[:-1])
+    for suffix in ("ing", "ed", "es"):
+        if len(token) > len(suffix) + 2 and token.endswith(suffix):
+            base = token[: -len(suffix)]
+            forms.update((base, base + "e"))
+            if len(base) > 2 and base[-1] == base[-2]:
+                forms.add(base[:-1])
+    if len(token) > 6 and token.endswith("ment"):
+        base = token[:-4]
+        forms.add(base[:-1] if len(base) > 2 and base[-1] == base[-2] else base)
+    return forms
+
+
+def _tokens_equivalent(left: str, right: str) -> bool:
+    return bool(_token_forms(left) & _token_forms(right))
+
+
+def _phrase_positions(tokens: list[str], phrase: str) -> list[tuple[int, int]]:
+    wanted = _tokens(phrase)
+    if not wanted or len(wanted) > len(tokens):
+        return []
+    width = len(wanted)
+    return [
+        (index, index + width)
+        for index in range(len(tokens) - width + 1)
+        if all(
+            _tokens_equivalent(actual, expected)
+            for actual, expected in zip(tokens[index : index + width], wanted)
+        )
+    ]
+
+
+def _group_positions(text: str, group: list[str]) -> list[tuple[int, int]] | None:
+    tokens = _tokens(text)
+    positions: list[tuple[int, int]] = []
+    for term in group:
+        normalized_term = normalize_for_matching(term)
+        alternatives = (term, *_TERM_EQUIVALENTS.get(normalized_term, ()))
+        matches = [
+            position
+            for alternative in alternatives
+            for position in _phrase_positions(tokens, alternative)
+        ]
+        if not matches:
+            return None
+        positions.append(min(matches))
+    return positions
+
+
 def concept_matches(text: str, concept: dict) -> bool:
-    lowered = text.casefold()
-    return any(all(term.casefold() in lowered for term in group) for group in concept["patterns"])
+    return any(_group_positions(text, group) is not None for group in concept["patterns"])
+
+
+def _is_negated(tokens: list[str], positions: list[tuple[int, int]]) -> bool:
+    start = min(position[0] for position in positions)
+    end = max(position[1] for position in positions)
+    lead = tokens[max(0, start - 5) : end]
+    tail = tokens[end : min(len(tokens), end + 12)]
+    lead_pairs = set(zip(lead, lead[1:]))
+    tail_pairs = set(zip(tail, tail[1:]))
+    negating_pairs = {
+        ("do", "not"),
+        ("does", "not"),
+        ("did", "not"),
+        ("must", "not"),
+        ("should", "not"),
+        ("can", "not"),
+        ("could", "not"),
+        ("will", "not"),
+        ("would", "not"),
+    }
+    negating_words = {
+        "never",
+        "cannot",
+        "reject",
+        "rejects",
+        "rejected",
+        "forbid",
+        "forbids",
+        "forbidden",
+        "prohibit",
+        "prohibits",
+        "refuse",
+        "refuses",
+    }
+    unsafe_predicate = any(
+        tail[index] == "unsafe"
+        and bool({"is", "are", "be"} & set(tail[max(0, index - 3) : index]))
+        for index in range(len(tail))
+    )
+    return bool(
+        lead_pairs & negating_pairs
+        or set(lead) & negating_words
+        or ("special", "pleading") in tail_pairs
+        or unsafe_predicate
+    )
+
+
+def forbidden_concept_matches(text: str, concept: dict) -> bool:
+    """Match a forbidden concept within one clause unless that clause rejects it."""
+    clauses = re.split(r"(?:\r?\n)+|(?<=[.!?;])\s+", text)
+    for clause in clauses:
+        tokens = _tokens(clause)
+        for group in concept["patterns"]:
+            positions = _group_positions(clause, group)
+            if positions is not None and not _is_negated(tokens, positions):
+                return True
+    return False
+
+
+def _labeled_value(words: list[str], label: str, allowed: set[str]) -> str | None:
+    label_words = label.split()
+    if words[: len(label_words)] != label_words:
+        return None
+    for word in words[len(label_words) :]:
+        value = word.upper()
+        if value in allowed:
+            return value
+    return None
+
+
+def _next_heading_value(lines: list[str], index: int, allowed: set[str]) -> str | None:
+    for later in lines[index + 1 :]:
+        words = _tokens(later)
+        if not words:
+            continue
+        value = words[0].upper()
+        return value if value in allowed else None
+    return None
 
 
 def extract_decisions(text: str) -> tuple[str | None, str | None]:
+    lines = text.splitlines()
+    internal_candidates: list[tuple[int, int, str]] = []
+    final_candidates: list[tuple[int, str]] = []
+    for index, line in enumerate(lines):
+        words = _tokens(line)
+        if not words:
+            continue
+        for label, priority in _INTERNAL_LABELS:
+            value = _labeled_value(words, label, INTERNAL_DECISIONS)
+            if value is None and words == label.split():
+                value = _next_heading_value(lines, index, INTERNAL_DECISIONS)
+            if value is not None:
+                internal_candidates.append((priority, index, value))
+                break
+        for label in _FINAL_LABELS:
+            value = _labeled_value(words, label, FINAL_CATEGORIES)
+            if value is None and words == label.split():
+                value = _next_heading_value(lines, index, FINAL_CATEGORIES)
+            if value is not None:
+                final_candidates.append((index, value))
+                break
     internal = None
-    final = None
-    internal_patterns = (
-        r"(?im)^\s*(?:case|finding|internal)?\s*decision\s*:\s*(PASS|ACTION|CONFLICT)\b",
-        r"(?im)^\s*finding category\s*:\s*(PASS|ACTION|CONFLICT)\b",
-    )
-    for pattern in internal_patterns:
-        match = re.search(pattern, text)
-        if match:
-            internal = match.group(1).upper()
-            break
-    final_match = re.search(
-        r"(?im)^\s*final output category\s*:\s*(HANDLED|CONFLICT)\b", text
-    )
-    if final_match:
-        final = final_match.group(1).upper()
+    if internal_candidates:
+        internal = max(internal_candidates, key=lambda candidate: (candidate[0], candidate[1]))[2]
+    final = max(final_candidates, default=(0, None), key=lambda candidate: candidate[0])[1]
     return internal, final
 
 
+def _receipt_field(line: str, *, allow_heading: bool = False) -> str | None:
+    words = _tokens(line)
+    for field, aliases in _RECEIPT_FIELDS.items():
+        for alias in aliases:
+            alias_words = alias.split()
+            if words[: len(alias_words)] == alias_words and (
+                len(words) > len(alias_words) or allow_heading and words == alias_words
+            ):
+                return field
+    return None
+
+
 def has_runskeptic_receipt(text: str) -> bool:
-    anchors = (
-        "source read:",
-        "permission mode:",
-        "done statement:",
-        "major steps run:",
-        "thinkers considered:",
-        "evidence used:",
-        "decision path:",
-        "verification performed:",
-        "unresolved conflicts / unknowns:",
-        "final output category:",
+    lines = text.splitlines()
+    receipt_index = next(
+        (
+            index
+            for index, line in enumerate(lines)
+            if "runskeptic receipt" in normalize_for_matching(line)
+        ),
+        None,
     )
-    lowered = text.casefold()
-    count = sum(anchor in lowered for anchor in anchors)
-    return (
-        "runskeptic receipt" in lowered
-        and "source read:" in lowered
-        and "final output category:" in lowered
-        and count >= 8
-    )
+    if receipt_index is None:
+        return False
+    receipt_lines = lines[receipt_index + 1 :]
+    fields: set[str] = set()
+    for index, line in enumerate(receipt_lines):
+        field = _receipt_field(line)
+        if field is not None:
+            fields.add(field)
+            continue
+        heading_field = _receipt_field(line, allow_heading=True)
+        if heading_field is None:
+            continue
+        next_words: list[str] = []
+        next_line = ""
+        for later in receipt_lines[index + 1 :]:
+            next_words = _tokens(later)
+            if next_words:
+                next_line = later
+                break
+        next_is_field_heading = next_line.lstrip().startswith("#") and _receipt_field(
+            next_line, allow_heading=True
+        ) is not None
+        if next_words and not next_is_field_heading:
+            fields.add(heading_field)
+    return fields == set(_RECEIPT_FIELDS)
 
 
 def normalize_response_set(value) -> tuple[dict | None, list[dict]]:
@@ -238,7 +499,7 @@ def score_response(case: dict, response: str) -> dict:
     forbidden = [
         concept["name"]
         for concept in case["forbidden_concepts"]
-        if concept_matches(response, concept)
+        if forbidden_concept_matches(response, concept)
     ]
     internal, final = extract_decisions(response)
     compatible = internal in case["expected_decisions"]
@@ -316,7 +577,12 @@ def score_run(cases: list[dict], response_value) -> dict:
         if result["critical"] and result["forbidden_triggered"]
     ]
     return {
-        "schema_version": "skeptic-golden-score/1",
+        "schema_version": SCORE_SCHEMA_VERSION,
+        "scorer_version": SCORER_VERSION,
+        "scoring_note": (
+            "Deterministic interpretation only; scoring does not execute a model "
+            "or mutate response, Skeptic, or case content."
+        ),
         "metadata": metadata,
         "cases": results,
         "aggregate": aggregate,
@@ -326,6 +592,16 @@ def score_run(cases: list[dict], response_value) -> dict:
 
 
 def compare_scores(baseline: dict, candidate: dict) -> dict:
+    base_scorer = baseline.get("scorer_version", "scorer-v1")
+    cand_scorer = candidate.get("scorer_version", "scorer-v1")
+    if base_scorer != cand_scorer:
+        return {
+            "verdict": "uncontrolled",
+            "controlled": False,
+            "reason": "scorer versions differ",
+            "critical_regressions": [],
+            "per_case": [],
+        }
     base_meta = baseline.get("metadata")
     cand_meta = candidate.get("metadata")
     controlled = (

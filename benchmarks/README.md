@@ -19,7 +19,9 @@ The benchmark is not an academic evaluation framework, model runner, provider in
 
 Each case has a unique ID, title, category, critical flag, current Skeptic Thinker tags, artifact, compatible internal decisions, required concepts, forbidden concepts, and maintenance notes.
 
-A concept contains alternative pattern groups. Matching is case-insensitive. A concept matches when every term in any one group occurs anywhere in the response. For example, `[["trust boundary"], ["untrusted", "boundary"]]` matches either the first phrase or both terms in the second group. Patterns represent important ideas, not mandatory prose; keep them narrow enough to avoid accidental matches.
+A concept contains alternative pattern groups. Matching is case-insensitive. A concept matches when every term in any one group occurs anywhere in the response. Scorer V2 normalizes Markdown, punctuation, Unicode dashes, hyphenation, whitespace, capitalization, and conservative inflections; it then uses word-bounded phrases rather than raw substrings. A small explicit equivalence table covers documented phrasing variants without fuzzy matching. For example, `[["trust boundary"], ["untrusted", "boundary"]]` matches either the first phrase or both terms in the second group. Patterns represent important ideas, not mandatory prose; keep them narrow enough to avoid accidental matches.
+
+Forbidden concepts use the same bounded matching within one clause. Explicit nearby rejection cues such as “do not,” “reject,” or “unsafe” suppress that clause’s forbidden match. This deterministic negation rule is intentionally narrow and cannot resolve every possible linguistic scope.
 
 The current Thinker families are `CH`, `OM`, `FE`, `PO`, `KT`, and `SH`. Systems-flow cases use current aspects such as `CH:CR`, `CH:SO`, and `SH:WL`; this benchmark does not invent a separate family.
 
@@ -69,13 +71,15 @@ Per case, scoring records:
 - presence of a recognizable current RunSkeptic receipt;
 - word, character, and estimated token counts.
 
-`HANDLED` is never treated as `PASS`. Receipt detection requires the receipt heading, source and final-category labels, and most current receipt fields; it intentionally avoids exact whole-output matching. Estimated tokens are `ceil(character_count / 4)` and are explicitly not provider billing data.
+`HANDLED` is never treated as `PASS`. Scorer V2 extracts only structurally labeled internal and final decisions, including common Markdown/table forms; an explicit post-fix or post-patch status supersedes the corresponding pre-fix decision. Receipt detection requires a receipt heading and all required semantic fields, with bounded label aliases in lists, tables, bold labels, or headings. It does not accept isolated keywords in ordinary prose. Estimated tokens are `ceil(character_count / 4)` and are explicitly not provider billing data.
+
+Benchmark version and scorer version are separate. Every newly generated score records `scorer_version`; the current value is `scorer-v2`. Baseline V1 raw responses and its original `score.json` remain immutable historical evidence. A separate `score.scorer-v2.json` reinterprets those same responses without rerunning a model, changing Skeptic, or changing cases. Original and diagnostic scores may coexist, but their numeric difference is a measurement-layer change, not a behavioral improvement.
 
 Quality points are `required matches + compatible decision + receipt - 2 × forbidden findings`. Aggregates include required-concept recall, critical misses, critical forbidden findings, compatibility rate, receipt compliance rate, and median estimated output tokens.
 
 ## Comparison policy
 
-Comparison is controlled only when both score files contain equal, nonempty model/runtime/settings metadata. Missing or differing metadata produces `uncontrolled`.
+Comparison is controlled only when both score files use the same scorer version and contain equal, nonempty model/runtime/settings metadata. A missing scorer version is treated as historical `scorer-v1`; missing or differing runtime metadata or differing scorer versions produces `uncontrolled`.
 
 For controlled comparisons:
 
@@ -125,4 +129,6 @@ Add one realistic failure mode or clean false-positive trap, use current Skeptic
 
 ## Limitations
 
-This benchmark is small and directional; twelve cases are not statistically significant. Keyword/concept matching can produce false positives and false negatives. Human review remains necessary for close comparisons. Visible cases can be gamed, receipt presence does not prove review quality, and estimated tokens are not billing data. Results are not proof of universal correctness or safety. Future protected or independently written cases may be needed before high-stakes promotion decisions.
+This benchmark is small and directional; twelve cases are not statistically significant. Deterministic concept matching can produce false positives and false negatives, bounded negation cannot understand arbitrary scope, and synonym expansion can overmatch future wording. Receipt structure does not prove reasoning quality. Human review remains necessary for close comparisons. Visible cases can be gamed, and estimated tokens are not billing data. Results are not proof of universal correctness or safety. Future protected or independently written cases may be needed before high-stakes promotion decisions.
+
+For any Skeptic experiment, freeze one scorer version and use it for both baseline and candidate. Never compare a historical score produced by one scorer directly with a candidate score produced by another as evidence of behavioral change.
