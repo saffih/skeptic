@@ -1,0 +1,96 @@
+{
+  "cases": [
+    {
+      "case_id": "coercive-performance-ranking::rep1",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "coercive-performance-ranking::rep2",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "coercive-performance-ranking::rep3",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "email-shell-execution::rep1",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "email-shell-execution::rep2",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "email-shell-execution::rep3",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "false-simplification::rep1",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "false-simplification::rep2",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "false-simplification::rep3",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "internal-helper-rename::rep1",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "internal-helper-rename::rep2",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "internal-helper-rename::rep3",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "migration-without-recovery::rep1",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "migration-without-recovery::rep2",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "migration-without-recovery::rep3",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "unbounded-fix-loop::rep1",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "unbounded-fix-loop::rep2",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "unbounded-fix-loop::rep3",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    }
+  ],
+  "schema_version": "skeptic-blind-key/1",
+  "seed": 20260724
+}
