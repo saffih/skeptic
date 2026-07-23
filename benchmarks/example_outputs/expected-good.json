@@ -1,0 +1,59 @@
+{
+  "metadata": {
+    "model": "fixture-model",
+    "version": "1",
+    "effort": "fixture",
+    "runtime": "deterministic-example",
+    "settings": {"temperature": 0}
+  },
+  "responses": [
+    {
+      "case_id": "email-shell-execution",
+      "response": "Decision: ACTION\nThe customer email is untrusted input crossing a trust boundary into a control-bearing shell. shell=True enables arbitrary command execution and shell injection with the service account's privilege, without command authorization. Remove shell execution; if a command feature is essential, use a strict allowlist and containment. A paying customer is not a security boundary.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review the proposal\nMajor steps run: GATE through VERIFY\nThinkers considered: FE:TB, CH:IV, CH:SM, KT:EX\nEvidence used: artifact text\nDecision path: ACTION\nVerification performed: inverted command and privilege flow\nUnresolved conflicts / unknowns: none blocking\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "unbounded-fix-loop",
+      "response": "Decision: ACTION\nThis may never converge: there is no stopping condition or retry limit. Conflicting findings have no owner escalation path, so the loop can consume resources indefinitely. Use a bounded retry policy with a maximum number of attempts, a convergence check, and escalation on conflict; no orchestration framework is needed.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review the loop\nMajor steps run: GATE through VERIFY\nThinkers considered: CH:EV, CH:SM, PO:WR, SH:HC\nEvidence used: missing limits in artifact\nDecision path: ACTION\nVerification performed: checked stop and conflict paths\nUnresolved conflicts / unknowns: none\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "internal-helper-rename",
+      "response": "Decision: PASS\nThis is a low risk private internal change with no behavior change. Updated references plus static checks and focused tests are proportionate and sufficient; adding broader process would not reduce a demonstrated risk.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review the rename\nMajor steps run: GATE through VERIFY\nThinkers considered: CH:EV, OM:OD, FE:WE\nEvidence used: scope and passing checks\nDecision path: PASS\nVerification performed: checked API and behavior boundaries\nUnresolved conflicts / unknowns: none\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "documentation-port-correction",
+      "response": "Decision: PASS\nThe implementation and tests are the executable source of truth, and compose plus startup output independently confirm 8081. The README is stale documentation. Correcting only that prose is the smallest consistent change.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review the documentation correction\nMajor steps run: GATE through VERIFY\nThinkers considered: FE:SC, FE:WE, PO:CO, OM:OD\nEvidence used: implementation, tests, compose, startup output\nDecision path: PASS\nVerification performed: cross-checked all port consumers\nUnresolved conflicts / unknowns: none\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "migration-without-recovery",
+      "response": "Decision: ACTION\nBackups disabled means backup and recovery safety is absent, and rollback is missing. That catastrophic data loss risk has priority; cosmetic naming is secondary and the issues are not equally important. Restore backups and prove recovery first, then define rollback before migration.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review migration safety\nMajor steps run: GATE through VERIFY\nThinkers considered: CH:IV, CH:SM, CH:EV, OM:AC\nEvidence used: disabled backups and no rollback\nDecision path: ACTION\nVerification performed: pre-mortem on migration failure\nUnresolved conflicts / unknowns: recovery time remains unknown\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "unsupported-cache-claim",
+      "response": "Decision: ACTION\nThe 70% quantitative claim is unsupported and has no falsifiable measurement plan. Run a benchmark or experiment, including a representative load test, define cache invalidation analysis, and set rollback criteria or exit criteria. This does not reject caching; it rejects confidence without evidence.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review cache claim\nMajor steps run: GATE through VERIFY\nThinkers considered: FE:PG, FE:WE, PO:UF, PO:CO, CH:MJ\nEvidence used: absent measurements and invalidation plan\nDecision path: ACTION\nVerification performed: identified disconfirming experiment\nUnresolved conflicts / unknowns: workload shape unknown\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "minor-export-defect",
+      "response": "Decision: PASS\nA proportionate release should ship with a documented follow-up. Preventing continued data loss is the critical benefit; the harmless blank line is minor and should not block the release. Consequence weighting shows continued data loss is the greater harm, so do not delay solely for the blank line.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review shipment decision\nMajor steps run: GATE through VERIFY\nThinkers considered: CH:IV, CH:EV, SH:OF, SH:NE\nEvidence used: tested fix and bounded formatting defect\nDecision path: PASS\nVerification performed: compared delay and shipment harms\nUnresolved conflicts / unknowns: follow-up owner should be recorded\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "false-simplification",
+      "response": "Decision: ACTION\nThis is false simplicity: shorter code is not automatically safer, and fewer lines are not safety evidence. The smoke test provided detection, so deleting it removes safety evidence and silently admits unsupported deployment. Apply the Chesterton fence: understand the protected constraint, then retain the compatibility check or replace the smoke test with equivalent proof.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review simplification\nMajor steps run: GATE through VERIFY\nThinkers considered: OM:FS, OM:CF, PO:SI, CH:SM\nEvidence used: deleted checks and new silent path\nDecision path: ACTION\nVerification performed: traced unsupported-version detection\nUnresolved conflicts / unknowns: none\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "coercive-performance-ranking",
+      "response": "Decision: ACTION\nAutomatic enrollment plus promotion-file recording creates coercion, not meaningful consent. The opt-out has a hidden burden and retaliation risk, so this is not genuinely voluntary. Employee dignity and persons as ends require a non-retaliatory consent path, privacy, and preferably removal of public ranking.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review workplace policy\nMajor steps run: GATE through VERIFY\nThinkers considered: KT:HU, KT:UA, KT:HB, CH:IN, FE:PV\nEvidence used: enrollment, manager request, promotion record\nDecision path: ACTION\nVerification performed: universalized consent and retaliation mechanism\nUnresolved conflicts / unknowns: employment-law review may also apply\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "ticket-closure-metric",
+      "response": "Decision: ACTION\nThis is local metric optimization and dashboard gaming that causes whole-system degradation. Reopened tickets are rework and shift the burden into customer effort. The five-minute target is the wrong leverage and misses the resolution constraint. Use an end-to-end measure such as time to actual resolution plus reopen rate and customer effort.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review support metric\nMajor steps run: GATE through VERIFY\nThinkers considered: CH:IN, CH:SO, CH:CR, SH:WL, KT:HB\nEvidence used: closures, reopens, total resolution time\nDecision path: ACTION\nVerification performed: traced feedback and rework loop\nUnresolved conflicts / unknowns: target thresholds need data\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "innovation-energy-criterion",
+      "response": "Decision: ACTION\nThe criterion is unfalsifiable and missing measurable success criteria: there is no baseline or threshold. Define observable indicators with a survey method, a threshold and timeframe, plus a disconfirming result that would show failure. The indicators can tolerate uncertainty; perfect precision is unnecessary.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review success criterion\nMajor steps run: GATE through VERIFY\nThinkers considered: PO:UF, PO:WR, FE:ME, FE:PV\nEvidence used: absent baseline, measure, threshold, timeframe\nDecision path: ACTION\nVerification performed: specified a refutation path\nUnresolved conflicts / unknowns: stakeholder population undefined\nFinal output category: HANDLED"
+    },
+    {
+      "case_id": "speculative-plugin-architecture",
+      "response": "Decision: ACTION\nThis is speculative abstraction with unnecessary entities for no current consumer. The smallest present solution is to keep the single formatter and a simple call boundary. This does not oppose extensibility: a real second formatter or committed requirement would justify expansion and provide future evidence for the needed interface.\n\nRunSkeptic Receipt\nSource read: current skeptic.md\nPermission mode: read-only\nDONE statement: review plugin proposal\nMajor steps run: GATE through VERIFY\nThinkers considered: OM:UE, OM:SS, OM:OD, CH:EV, FE:PV\nEvidence used: one formatter and no requirement\nDecision path: ACTION\nVerification performed: compared smallest present alternative\nUnresolved conflicts / unknowns: none\nFinal output category: HANDLED"
+    }
+  ]
+}

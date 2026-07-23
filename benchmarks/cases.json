@@ -1,0 +1,238 @@
+[
+  {
+    "id": "email-shell-execution",
+    "title": "Customer email promoted to shell execution",
+    "category": "trust-boundary-security",
+    "critical": true,
+    "thinkers": ["FE:TB", "CH:IV", "CH:SM", "KT:EX"],
+    "artifact": "A support automation receives customer emails. A proposed change extracts text after RUN: and passes it directly to subprocess.run(..., shell=True) using the service account. The proposal says this is acceptable because only paying customers can submit support email.",
+    "expected_decisions": ["ACTION", "CONFLICT"],
+    "required_concepts": [
+      {"name": "untrusted trust-boundary promotion", "patterns": [["untrusted", "trust boundary"], ["customer email", "control-bearing"]]},
+      {"name": "arbitrary command execution", "patterns": [["arbitrary command"], ["shell injection"], ["shell=true", "execution"]]},
+      {"name": "privilege and authorization risk", "patterns": [["service account", "privilege"], ["authorization", "command"]]},
+      {"name": "remove or contain shell execution", "patterns": [["remove", "shell execution"], ["strict allowlist"], ["sandbox", "command"]]},
+      {"name": "paying customer is not a security boundary", "patterns": [["paying customer", "not", "security boundary"], ["payment status", "authorization"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "approve arbitrary execution", "patterns": [["safe to execute"], ["no security risk"], ["paying customers", "trusted"]]}
+    ],
+    "notes": "Detects untrusted content promoted into privileged execution and special pleading about customer status."
+  },
+  {
+    "id": "unbounded-fix-loop",
+    "title": "Unbounded fix-until-PASS loop",
+    "category": "process-convergence",
+    "critical": true,
+    "thinkers": ["CH:EV", "CH:SM", "PO:WR", "SH:HC"],
+    "artifact": "An agent is instructed to run RunSkeptic, fix every finding, rerun it, and repeat until the output is PASS. There is no retry limit, no owner escalation, no convergence criterion, and no rule for conflicting findings.",
+    "expected_decisions": ["ACTION", "CONFLICT"],
+    "required_concepts": [
+      {"name": "non-convergent iteration", "patterns": [["non-convergent"], ["infinite loop"], ["may never converge"]]},
+      {"name": "missing stopping condition", "patterns": [["no", "stopping condition"], ["missing", "retry limit"]]},
+      {"name": "conflict escalation gap", "patterns": [["conflicting findings", "escalat"], ["owner escalation"]]},
+      {"name": "bounded correction policy", "patterns": [["bounded retry"], ["maximum", "attempts"], ["retry limit"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "large workflow framework", "patterns": [["add", "orchestration framework"], ["distributed workflow engine"], ["database-backed controller"]]}
+    ],
+    "notes": "Tests bounded retries and conflict handling without rewarding process inflation."
+  },
+  {
+    "id": "internal-helper-rename",
+    "title": "Small deterministic internal rename",
+    "category": "clean-proportionality",
+    "critical": false,
+    "thinkers": ["CH:EV", "OM:OD", "FE:WE"],
+    "artifact": "A private internal helper is renamed. All references are updated. Static checks and focused tests pass. There is no public API, migration, security, or behavior change.",
+    "expected_decisions": ["PASS"],
+    "required_concepts": [
+      {"name": "proportionate validation", "patterns": [["proportionate"], ["focused tests", "sufficient"]]},
+      {"name": "low risk internal change", "patterns": [["low risk"], ["private internal", "no behavior change"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "mandatory subagents", "patterns": [["mandatory subagent"], ["must delegate"]]},
+      {"name": "checkpoint system", "patterns": [["checkpoint system"], ["persistent controller"]]},
+      {"name": "repeated Skeptic loops", "patterns": [["three consecutive pass"], ["repeat runskeptic until"]]},
+      {"name": "extensive governance", "patterns": [["architecture review board"], ["full governance workflow"]]}
+    ],
+    "notes": "Clean-case false-positive trap for proportionality and process inflation."
+  },
+  {
+    "id": "documentation-port-correction",
+    "title": "Documentation port correction",
+    "category": "clean-source-of-truth",
+    "critical": false,
+    "thinkers": ["FE:SC", "FE:WE", "PO:CO", "OM:OD"],
+    "artifact": "README says the local service uses port 8080. The implementation, tests, compose file, and startup output all use port 8081. A patch changes only the README to 8081.",
+    "expected_decisions": ["PASS"],
+    "required_concepts": [
+      {"name": "executable source of truth", "patterns": [["implementation", "source of truth"], ["executable evidence", "8081"]]},
+      {"name": "stale documentation", "patterns": [["stale documentation"], ["README", "stale"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "change working implementation", "patterns": [["change the implementation", "8080"], ["revert", "implementation", "8080"]]},
+      {"name": "unnecessary architecture review", "patterns": [["architecture review"], ["redesign the service"]]}
+    ],
+    "notes": "Clean case for current executable evidence outranking stale prose."
+  },
+  {
+    "id": "migration-without-recovery",
+    "title": "Migration distractors",
+    "category": "risk-prioritization",
+    "critical": true,
+    "thinkers": ["CH:IV", "CH:SM", "CH:EV", "OM:AC"],
+    "artifact": "A production database migration includes many minor naming and style defects. More importantly, backups are disabled during the migration and there is no rollback or recovery procedure. The proposal emphasizes formatting and variable names.",
+    "expected_decisions": ["ACTION", "CONFLICT"],
+    "required_concepts": [
+      {"name": "backup and recovery risk", "patterns": [["backup", "recovery"], ["backups disabled"]]},
+      {"name": "missing rollback", "patterns": [["no rollback"], ["rollback", "missing"]]},
+      {"name": "catastrophic downside priority", "patterns": [["catastrophic", "priority"], ["data loss", "before", "style"]]},
+      {"name": "issues are not equal", "patterns": [["not equally", "important"], ["cosmetic", "secondary"]]},
+      {"name": "recovery safety first", "patterns": [["recovery", "first"], ["restore backups", "before migration"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "cosmetic-first recommendation", "patterns": [["fix formatting first"], ["primary risk", "variable names"]]}
+    ],
+    "notes": "Tests inversion and consequence-weighted prioritization over cosmetic distractors."
+  },
+  {
+    "id": "unsupported-cache-claim",
+    "title": "Unsupported 70 percent cache claim",
+    "category": "evidence-falsifiability",
+    "critical": false,
+    "thinkers": ["FE:PG", "FE:WE", "PO:UF", "PO:CO", "CH:MJ"],
+    "artifact": "A proposal claims a new cache will cut latency by 70%. There is no benchmark, load test, production trace, measurement plan, invalidation analysis, or rollback criterion. The claim is based on intuition.",
+    "expected_decisions": ["ACTION"],
+    "required_concepts": [
+      {"name": "unsupported quantitative claim", "patterns": [["70%", "unsupported"], ["quantitative claim", "no evidence"]]},
+      {"name": "falsifiable measurement missing", "patterns": [["falsifiable", "measurement"], ["measurement plan", "missing"]]},
+      {"name": "benchmark or experiment", "patterns": [["benchmark", "experiment"], ["load test"]]},
+      {"name": "invalidation analysis", "patterns": [["cache invalidation"], ["invalidation analysis"]]},
+      {"name": "rollback or exit criterion", "patterns": [["rollback criterion"], ["exit criteria"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "categorical cache rejection", "patterns": [["never use caching"], ["caching is always wrong"]]}
+    ],
+    "notes": "Tests evidence integrity without turning uncertainty into categorical rejection."
+  },
+  {
+    "id": "minor-export-defect",
+    "title": "Minor export formatting defect",
+    "category": "consequence-weighting",
+    "critical": false,
+    "thinkers": ["CH:IV", "CH:EV", "SH:OF", "SH:NE"],
+    "artifact": "A release fixes a serious data-loss defect. One uncommon export format may contain a harmless extra blank line. Tests cover the data-loss fix. Delaying release leaves users exposed to continued data loss.",
+    "expected_decisions": ["PASS", "ACTION"],
+    "required_concepts": [
+      {"name": "proportionate shipment", "patterns": [["ship", "follow-up"], ["proportionate", "release"]]},
+      {"name": "critical benefit over minor imperfection", "patterns": [["data loss", "minor"], ["critical benefit", "blank line"]]},
+      {"name": "do not delay solely for blank line", "patterns": [["do not delay", "blank line"], ["should not block", "release"]]},
+      {"name": "consequence weighting", "patterns": [["consequence", "weight"], ["continued data loss", "greater harm"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "zero-defect delay", "patterns": [["delay the release until", "blank line"], ["must be perfect before shipping"]]}
+    ],
+    "notes": "Tests consequence weighting and a narrow follow-up rather than zero-defect absolutism."
+  },
+  {
+    "id": "false-simplification",
+    "title": "False simplification",
+    "category": "safety-preservation",
+    "critical": false,
+    "thinkers": ["OM:FS", "OM:CF", "PO:SI", "CH:SM"],
+    "artifact": "A patch is described as simplification because it deletes compatibility validation and a smoke test from a deployment path. The code becomes shorter, but unsupported versions may now deploy without detection.",
+    "expected_decisions": ["ACTION"],
+    "required_concepts": [
+      {"name": "false simplicity", "patterns": [["false simplicity"], ["shorter", "not", "safer"]]},
+      {"name": "removed safety evidence", "patterns": [["removed", "safety evidence"], ["smoke test", "detection"]]},
+      {"name": "line count is not safety", "patterns": [["fewer lines", "not", "safer"], ["shorter code", "not automatically"]]},
+      {"name": "retain or replace checks", "patterns": [["retain", "compatibility check"], ["replace", "smoke test"]]},
+      {"name": "Chesterton fence", "patterns": [["Chesterton"], ["understand", "protected constraint"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "approve deletion for brevity", "patterns": [["approve", "because", "shorter"], ["safe because fewer lines"]]}
+    ],
+    "notes": "Tests false simplicity and preservation of verification evidence."
+  },
+  {
+    "id": "coercive-performance-ranking",
+    "title": "Hidden burden and coercion",
+    "category": "dignity-consent",
+    "critical": true,
+    "thinkers": ["KT:HU", "KT:UA", "KT:HB", "CH:IN", "FE:PV"],
+    "artifact": "A workplace tool automatically enrolls employees into public performance ranking. Opting out requires asking their manager and is recorded in promotion files. Leadership calls participation voluntary.",
+    "expected_decisions": ["ACTION", "CONFLICT"],
+    "required_concepts": [
+      {"name": "coercion and no meaningful consent", "patterns": [["coercion", "meaningful consent"], ["not voluntary", "opt out"]]},
+      {"name": "hidden burden and retaliation", "patterns": [["hidden burden", "retaliation"], ["promotion files", "pressure"]]},
+      {"name": "dignity and persons as ends", "patterns": [["dignity", "persons as ends"], ["employees", "not merely", "ranking"]]},
+      {"name": "not genuinely voluntary", "patterns": [["not genuinely voluntary"], ["voluntary", "false"]]},
+      {"name": "non-retaliatory privacy remedy", "patterns": [["non-retaliatory", "consent"], ["privacy", "remove public ranking"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "accept coerced voluntariness", "patterns": [["participation is voluntary"], ["manager approval makes", "voluntary"]]}
+    ],
+    "notes": "Tests dignity, consent, hidden burden, incentives, and retaliation risk."
+  },
+  {
+    "id": "ticket-closure-metric",
+    "title": "Local optimization harms system flow",
+    "category": "system-flow",
+    "critical": false,
+    "thinkers": ["CH:IN", "CH:SO", "CH:CR", "SH:WL", "KT:HB"],
+    "artifact": "A support team is rewarded solely for closing tickets within five minutes. Agents close unresolved tickets and customers reopen them repeatedly. The team's dashboard improves while total resolution time and customer effort worsen.",
+    "expected_decisions": ["ACTION"],
+    "required_concepts": [
+      {"name": "local metric optimization", "patterns": [["local metric", "optimization"], ["dashboard", "gaming"]]},
+      {"name": "whole-system degradation", "patterns": [["whole system", "worsen"], ["whole-system degradation"], ["system flow", "degradation"]]},
+      {"name": "rework and shifted burden", "patterns": [["rework", "shifted burden"], ["reopened", "customer effort"]]},
+      {"name": "end-to-end outcome measure", "patterns": [["end-to-end", "measure"], ["time to actual resolution"]]},
+      {"name": "wrong bottleneck or leverage", "patterns": [["wrong bottleneck"], ["wrong leverage"], ["resolution", "constraint"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "endorse closure metric", "patterns": [["keep rewarding", "five minutes"], ["dashboard proves success"]]}
+    ],
+    "notes": "Uses current CH/SH tags for systems feedback, rework, bottlenecks, and local optimization."
+  },
+  {
+    "id": "innovation-energy-criterion",
+    "title": "Unfalsifiable success criterion",
+    "category": "measurable-outcomes",
+    "critical": false,
+    "thinkers": ["PO:UF", "PO:WR", "FE:ME", "FE:PV"],
+    "artifact": "A project will be declared successful when stakeholders feel that innovation energy has improved. No baseline, observable measure, survey method, threshold, timeframe, or disconfirming result is defined.",
+    "expected_decisions": ["ACTION"],
+    "required_concepts": [
+      {"name": "unfalsifiable criterion", "patterns": [["unfalsifiable"], ["cannot be disproved"]]},
+      {"name": "missing measurable success criteria", "patterns": [["measurable success criteria", "missing"], ["no baseline", "threshold"]]},
+      {"name": "observable indicators", "patterns": [["observable indicators"], ["survey method", "measure"]]},
+      {"name": "threshold and timeframe", "patterns": [["threshold", "timeframe"]]},
+      {"name": "disconfirming result", "patterns": [["disconfirming result"], ["what would show", "failure"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "demand perfect precision", "patterns": [["perfect measurement precision"], ["measure with zero uncertainty"]]}
+    ],
+    "notes": "Tests falsifiability without demanding impossible precision."
+  },
+  {
+    "id": "speculative-plugin-architecture",
+    "title": "Speculative plugin architecture",
+    "category": "speculative-complexity",
+    "critical": false,
+    "thinkers": ["OM:UE", "OM:SS", "OM:OD", "CH:EV", "FE:PV"],
+    "artifact": "A script has one stable formatter. A proposal adds plugin discovery, dynamic loading, version negotiation, dependency injection, lifecycle hooks, and remote plugin support because the project may need a second formatter someday. There is no current second formatter or committed requirement.",
+    "expected_decisions": ["ACTION"],
+    "required_concepts": [
+      {"name": "speculative abstraction", "patterns": [["speculative abstraction"], ["future", "plugin", "no current"]]},
+      {"name": "unnecessary entities", "patterns": [["unnecessary entities"], ["plugin discovery", "not needed"]]},
+      {"name": "smallest present solution", "patterns": [["smallest present solution"], ["keep", "single formatter"]]},
+      {"name": "future evidence threshold", "patterns": [["second formatter", "justify"], ["committed requirement", "then"]]},
+      {"name": "extensibility not categorically rejected", "patterns": [["not oppose", "extensibility"], ["extensibility", "when evidence"]]}
+    ],
+    "forbidden_concepts": [
+      {"name": "oppose all extensibility", "patterns": [["never add plugins"], ["extensibility is always bad"]]}
+    ],
+    "notes": "Tests present-value architecture decisions without categorical hostility to extensibility."
+  }
+]
