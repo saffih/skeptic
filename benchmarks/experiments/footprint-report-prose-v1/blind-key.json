@@ -1,0 +1,66 @@
+{
+  "cases": [
+    {
+      "case_id": "coercive-performance-ranking",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "documentation-port-correction",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "email-shell-execution",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "false-simplification",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "innovation-energy-criterion",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "internal-helper-rename",
+      "source_for_A": "input_a",
+      "source_for_B": "input_b"
+    },
+    {
+      "case_id": "migration-without-recovery",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "minor-export-defect",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "speculative-plugin-architecture",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "ticket-closure-metric",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "unbounded-fix-loop",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    },
+    {
+      "case_id": "unsupported-cache-claim",
+      "source_for_A": "input_b",
+      "source_for_B": "input_a"
+    }
+  ],
+  "schema_version": "skeptic-blind-key/1",
+  "seed": 12345
+}

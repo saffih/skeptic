@@ -1,0 +1,46 @@
+{
+  "schema_version": "skeptic-experiment-manifest/1",
+  "experiment_id": "footprint-report-prose-v1",
+  "branch": "experiment/footprint-report-prose-v1",
+  "starting_main_sha": "534aab276bff65d05b4d3129242d61dc87df4c73",
+  "expected_main_sha_matched": true,
+  "scorer_version": "scorer-v2",
+  "schema": "skeptic-golden-score/2",
+  "control_skeptic_sha256": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169",
+  "candidate_skeptic_sha256": "500859af32ce1e24b1246e670f7f78789e5fd0143fe219b37906351623e8d8eb",
+  "cases_sha256": "d05687857a66fc6b4ada02b272ed29ed98ddcdbeec0827bb4293387e5629b4de",
+  "control_prompt_packet_sha256": "597994394018d916feda766a4261634408f2c45546b0c4793d59213aafc5de69",
+  "candidate_prompt_packet_sha256": "8906b2c942e441eab325b9a83a26efc944dd86916b13fb22eaa5e2bdac27a6f3",
+  "runtime": {
+    "provider": "OpenAI",
+    "runtime": "Codex CLI 0.145.0 via ChatGPT authentication",
+    "model": "gpt-5.6-sol",
+    "effort": "high",
+    "sandbox": "read-only",
+    "ephemeral": true,
+    "ignore_rules": true,
+    "ignore_user_config": true,
+    "web_search": false,
+    "context_isolation": "fresh codex exec --ephemeral process per case, empty temp working directory"
+  },
+  "case_count": 12,
+  "critical_case_count": 4,
+  "canary_cases": [
+    "email-shell-execution",
+    "internal-helper-rename"
+  ],
+  "canary_result": "pass (4/4 runs complete, non-empty, valid decision + receipt, no truncation)",
+  "comparison_controlled": true,
+  "comparison_verdict": "baseline_better",
+  "blind_judge": {
+    "method": "fresh isolated Claude subagent, no access to labels, arm identity, or aggregate scores before judgment",
+    "seed": 12345,
+    "control_wins": 3,
+    "candidate_wins": 1,
+    "tie": 8,
+    "unusable": 0
+  },
+  "acceptance_verdict": "CANDIDATE_REJECTED",
+  "skeptic_md_reverted": true,
+  "final_skeptic_sha256_on_branch": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169"
+}

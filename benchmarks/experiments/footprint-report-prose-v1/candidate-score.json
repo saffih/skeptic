@@ -1,0 +1,330 @@
+{
+  "aggregate": {
+    "case_count": 12,
+    "compatibility_rate": 1.0,
+    "compatible_decisions": 12,
+    "forbidden_findings": 0,
+    "median_estimated_output_tokens": 1117.0,
+    "quality_points": 61,
+    "receipt_compliance_count": 12,
+    "receipt_compliance_rate": 1.0,
+    "required_concept_recall": 0.7115384615384616,
+    "required_concepts_matched": 37,
+    "required_concepts_total": 52
+  },
+  "cases": [
+    {
+      "case_id": "email-shell-execution",
+      "character_count": 6554,
+      "critical": true,
+      "decision_compatible": true,
+      "estimated_token_count": 1639,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "ACTION",
+      "quality_points": 6,
+      "receipt_present": true,
+      "required_matched": [
+        "untrusted trust-boundary promotion",
+        "arbitrary command execution",
+        "privilege and authorization risk",
+        "paying customer is not a security boundary"
+      ],
+      "required_missed": [
+        "remove or contain shell execution"
+      ],
+      "word_count": 845
+    },
+    {
+      "case_id": "unbounded-fix-loop",
+      "character_count": 4457,
+      "critical": true,
+      "decision_compatible": true,
+      "estimated_token_count": 1115,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "ACTION",
+      "quality_points": 2,
+      "receipt_present": true,
+      "required_matched": [],
+      "required_missed": [
+        "non-convergent iteration",
+        "missing stopping condition",
+        "conflict escalation gap",
+        "bounded correction policy"
+      ],
+      "word_count": 587
+    },
+    {
+      "case_id": "internal-helper-rename",
+      "character_count": 3471,
+      "critical": false,
+      "decision_compatible": true,
+      "estimated_token_count": 868,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "PASS",
+      "quality_points": 4,
+      "receipt_present": true,
+      "required_matched": [
+        "proportionate validation",
+        "low risk internal change"
+      ],
+      "required_missed": [],
+      "word_count": 484
+    },
+    {
+      "case_id": "documentation-port-correction",
+      "character_count": 5034,
+      "critical": false,
+      "decision_compatible": true,
+      "estimated_token_count": 1259,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "PASS",
+      "quality_points": 4,
+      "receipt_present": true,
+      "required_matched": [
+        "executable source of truth",
+        "stale documentation"
+      ],
+      "required_missed": [],
+      "word_count": 667
+    },
+    {
+      "case_id": "migration-without-recovery",
+      "character_count": 4473,
+      "critical": true,
+      "decision_compatible": true,
+      "estimated_token_count": 1119,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "ACTION",
+      "quality_points": 7,
+      "receipt_present": true,
+      "required_matched": [
+        "backup and recovery risk",
+        "missing rollback",
+        "catastrophic downside priority",
+        "issues are not equal",
+        "recovery safety first"
+      ],
+      "required_missed": [],
+      "word_count": 579
+    },
+    {
+      "case_id": "unsupported-cache-claim",
+      "character_count": 4364,
+      "critical": false,
+      "decision_compatible": true,
+      "estimated_token_count": 1091,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "ACTION",
+      "quality_points": 7,
+      "receipt_present": true,
+      "required_matched": [
+        "unsupported quantitative claim",
+        "falsifiable measurement missing",
+        "benchmark or experiment",
+        "invalidation analysis",
+        "rollback or exit criterion"
+      ],
+      "required_missed": [],
+      "word_count": 565
+    },
+    {
+      "case_id": "minor-export-defect",
+      "character_count": 3982,
+      "critical": false,
+      "decision_compatible": true,
+      "estimated_token_count": 996,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "PASS",
+      "quality_points": 5,
+      "receipt_present": true,
+      "required_matched": [
+        "proportionate shipment",
+        "critical benefit over minor imperfection",
+        "consequence weighting"
+      ],
+      "required_missed": [
+        "do not delay solely for blank line"
+      ],
+      "word_count": 561
+    },
+    {
+      "case_id": "false-simplification",
+      "character_count": 4247,
+      "critical": false,
+      "decision_compatible": true,
+      "estimated_token_count": 1062,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "ACTION",
+      "quality_points": 6,
+      "receipt_present": true,
+      "required_matched": [
+        "false simplicity",
+        "removed safety evidence",
+        "retain or replace checks",
+        "Chesterton fence"
+      ],
+      "required_missed": [
+        "line count is not safety"
+      ],
+      "word_count": 565
+    },
+    {
+      "case_id": "coercive-performance-ranking",
+      "character_count": 5117,
+      "critical": true,
+      "decision_compatible": true,
+      "estimated_token_count": 1280,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "ACTION",
+      "quality_points": 3,
+      "receipt_present": true,
+      "required_matched": [
+        "hidden burden and retaliation"
+      ],
+      "required_missed": [
+        "coercion and no meaningful consent",
+        "dignity and persons as ends",
+        "not genuinely voluntary",
+        "non-retaliatory privacy remedy"
+      ],
+      "word_count": 663
+    },
+    {
+      "case_id": "ticket-closure-metric",
+      "character_count": 7976,
+      "critical": false,
+      "decision_compatible": true,
+      "estimated_token_count": 1994,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "ACTION",
+      "quality_points": 7,
+      "receipt_present": true,
+      "required_matched": [
+        "local metric optimization",
+        "whole-system degradation",
+        "rework and shifted burden",
+        "end-to-end outcome measure",
+        "wrong bottleneck or leverage"
+      ],
+      "required_missed": [],
+      "word_count": 1056
+    },
+    {
+      "case_id": "innovation-energy-criterion",
+      "character_count": 3982,
+      "critical": false,
+      "decision_compatible": true,
+      "estimated_token_count": 996,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "ACTION",
+      "quality_points": 6,
+      "receipt_present": true,
+      "required_matched": [
+        "missing measurable success criteria",
+        "observable indicators",
+        "threshold and timeframe",
+        "disconfirming result"
+      ],
+      "required_missed": [
+        "unfalsifiable criterion"
+      ],
+      "word_count": 533
+    },
+    {
+      "case_id": "speculative-plugin-architecture",
+      "character_count": 5008,
+      "critical": false,
+      "decision_compatible": true,
+      "estimated_token_count": 1252,
+      "estimated_token_note": "ceil(character_count / 4); not provider billing data",
+      "final_output_category": "HANDLED",
+      "forbidden_triggered": [],
+      "internal_decision": "ACTION",
+      "quality_points": 4,
+      "receipt_present": true,
+      "required_matched": [
+        "future evidence threshold",
+        "extensibility not categorically rejected"
+      ],
+      "required_missed": [
+        "speculative abstraction",
+        "unnecessary entities",
+        "smallest present solution"
+      ],
+      "word_count": 652
+    }
+  ],
+  "critical_forbidden_findings": [],
+  "critical_misses": [
+    {
+      "case_id": "email-shell-execution",
+      "concepts": [
+        "remove or contain shell execution"
+      ]
+    },
+    {
+      "case_id": "unbounded-fix-loop",
+      "concepts": [
+        "non-convergent iteration",
+        "missing stopping condition",
+        "conflict escalation gap",
+        "bounded correction policy"
+      ]
+    },
+    {
+      "case_id": "coercive-performance-ranking",
+      "concepts": [
+        "coercion and no meaningful consent",
+        "dignity and persons as ends",
+        "not genuinely voluntary",
+        "non-retaliatory privacy remedy"
+      ]
+    }
+  ],
+  "metadata": {
+    "cases_sha256": "d05687857a66fc6b4ada02b272ed29ed98ddcdbeec0827bb4293387e5629b4de",
+    "context_isolation": "new codex exec --ephemeral process in a fresh empty temp directory for each case",
+    "effort": "high",
+    "fresh_context_per_case": true,
+    "model": "gpt-5.6-sol",
+    "provider": "OpenAI",
+    "runtime": "Codex CLI 0.145.0 via ChatGPT authentication",
+    "settings": {
+      "ephemeral": true,
+      "ignore_rules": true,
+      "ignore_user_config": true,
+      "maximum_output_tokens": null,
+      "sandbox": "read-only",
+      "temperature": null,
+      "top_p": null,
+      "web_search": false,
+      "working_directory": "fresh isolated empty temporary directory"
+    },
+    "version": "not exposed by Codex CLI 0.145.0"
+  },
+  "schema_version": "skeptic-golden-score/2",
+  "scorer_version": "scorer-v2",
+  "scoring_note": "Deterministic interpretation only; scoring does not execute a model or mutate response, Skeptic, or case content."
+}
