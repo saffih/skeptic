@@ -1,0 +1,74 @@
+{
+  "acceptance": {
+    "all_outputs_complete": true,
+    "all_prompts_from_one_packet": true,
+    "all_settings_identical": true,
+    "benchmark_or_skeptic_modified_during_run": false,
+    "case_count": 12,
+    "execution_contamination_found": false,
+    "fresh_context_per_case": true,
+    "raw_response_text_preserved": true,
+    "unique_case_ids": 12,
+    "verdict": "BASELINE_V1_READY_WITH_LIMITATIONS"
+  },
+  "artifacts": {
+    "responses_sha256": "0bc01bd19ecfd9fbd4699fa5d46c91707eed007d27129c205aaaf8b94158fec0",
+    "score_sha256": "45a99625d0d1ac5d5e1da025c6a118d1a47ece8595ed286730575d3fd1a04e03"
+  },
+  "baseline_id": "baseline-v1",
+  "execution": {
+    "actual_cost_exposed": false,
+    "actual_input_tokens": 284271,
+    "actual_output_tokens": 33148,
+    "completed_at": "2026-07-23T16:16:36.630681+00:00",
+    "median_elapsed_seconds": 69.392804,
+    "started_at": "2026-07-23T16:02:25.068700+00:00",
+    "total_elapsed_seconds": 851.550678
+  },
+  "inputs": {
+    "cases_sha256": "d05687857a66fc6b4ada02b272ed29ed98ddcdbeec0827bb4293387e5629b4de",
+    "prompt_packet_committed": false,
+    "prompt_packet_sha256": "2b3efaec2ff5b254eba1a7535f0fc51b74f231ca5268b5fe33cb7e90a5f501b7",
+    "repository_sha": "5f205b47ddca0117f7973c23b8a549150c3ca57a",
+    "skeptic_sha256": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169"
+  },
+  "retention": {
+    "committed": [
+      "README.md",
+      "metadata.json",
+      "responses.json",
+      "score.json",
+      "manual-audit.md"
+    ],
+    "external_temporary_only": [
+      "generated prompt packet",
+      "canary outputs",
+      "Codex JSONL event streams",
+      "Codex warning logs",
+      "temporary CLI runner"
+    ]
+  },
+  "runtime": {
+    "context_isolation": "new codex exec --ephemeral process in a fresh empty directory for each case",
+    "context_window_tokens_exposed": 272000,
+    "effort": "high",
+    "model": "gpt-5.6-sol",
+    "model_version": "not exposed by Codex CLI 0.145.0",
+    "provider": "OpenAI",
+    "runtime": "Codex CLI 0.145.0 via ChatGPT authentication",
+    "settings": {
+      "ephemeral": true,
+      "ignore_rules": true,
+      "ignore_user_config": true,
+      "maximum_output_tokens": null,
+      "sandbox": "read-only",
+      "temperature": null,
+      "top_p": null,
+      "web_search": false,
+      "working_directory": "fresh isolated empty temporary directory"
+    },
+    "system_developer_context": "Codex CLI 0.145.0 built-in noninteractive context was not separately versioned or exposed; the exact generated benchmark prompt was supplied as user input; the isolated working directory contained no AGENTS.md",
+    "tool_access": "Codex built-in capabilities under a read-only sandbox; web search not enabled; no tool calls occurred"
+  },
+  "schema_version": "skeptic-baseline-metadata/1"
+}
