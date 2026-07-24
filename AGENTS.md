@@ -12,13 +12,19 @@ Entry map. Load only the artifact needed for the current use:
   -> `agents/task-prompt-builder.md`
   - Aliases (text after the alias is the objective): `TP: <objective>`, `Create task prompt for: <objective>`, `Create a task prompt for: <objective>`, `Task prompt for: <objective>`
   - These four aliases route here first; Task Prompt construction is `agents/task-prompt-builder.md`'s job.
+- Select model class, reasoning effort, delegation, or escalation
+  -> `agents/model-routing.md`
+- Define or validate a delegated model-agent return
+  -> `agents/agent-return.md`
 
 Ownership:
 
-- `skeptic.md` is authoritative for RunSkeptic behavior and output categories.
-- `agents/lead-agent-prompt.md` is authoritative for the lightweight Lead role, including direct execution, optional delegation, and deterministic validation.
+- `skeptic.md` is authoritative for RunSkeptic behavior, its specialized receipt, and output categories.
+- `agents/lead-agent-prompt.md` is authoritative for the lightweight Lead role, including direct execution, optional delegation, downstream acceptance, and deterministic validation.
 - `agents/task-prompt.md` is authoritative for proportional Task Prompt content and workflow guidance.
 - `agents/task-prompt-builder.md` is authoritative for the objective-or-plan-to-Task-Prompt build operation and its four aliases.
+- `agents/model-routing.md` is authoritative for portable cost-aware model routing and escalation guidance.
+- `agents/agent-return.md` is authoritative for the universal delegated model-agent completion envelope.
 - Editing `skeptic.md` requires explicit authority. Do not edit "skeptic.md" unless explicitly authorized.
 
 Architectural boundary:

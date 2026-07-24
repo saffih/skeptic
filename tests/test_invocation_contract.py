@@ -94,7 +94,7 @@ class EntryMapTests(unittest.TestCase):
         route_lines = [
             line.strip() for line in self.text.splitlines() if line.strip().startswith("-> `")
         ]
-        self.assertEqual(len(route_lines), 4)
+        self.assertEqual(len(route_lines), 6)
         destinations = {line[len("-> `"):-1] for line in route_lines}
         self.assertEqual(
             destinations,
@@ -103,6 +103,8 @@ class EntryMapTests(unittest.TestCase):
                 "agents/lead-agent-prompt.md",
                 "agents/task-prompt.md",
                 "agents/task-prompt-builder.md",
+                "agents/model-routing.md",
+                "agents/agent-return.md",
             },
         )
 
@@ -120,12 +122,12 @@ class EntryMapTests(unittest.TestCase):
     def test_entry_map_states_ownership_rules(self) -> None:
         self.assertIn("load only", self.text.lower())
         self.assertIn(
-            "`skeptic.md` is authoritative for RunSkeptic behavior and output categories.",
+            "`skeptic.md` is authoritative for RunSkeptic behavior, its specialized receipt, and output categories.",
             self.text,
         )
         self.assertIn(
             "`agents/lead-agent-prompt.md` is authoritative for the lightweight Lead role, "
-            "including direct execution, optional delegation, and deterministic validation.",
+            "including direct execution, optional delegation, downstream acceptance, and deterministic validation.",
             self.text,
         )
         self.assertIn(
