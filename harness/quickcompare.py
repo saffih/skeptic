@@ -18,6 +18,9 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -29,7 +32,7 @@ GENERATOR_PROTOCOL = "quickcompare.generator/1"
 JUDGE_PROTOCOL = "quickcompare.judge/1"
 COMPARISON_SCHEMA_VERSION = "quickcompare.comparison/1"
 CALIBRATION_SCHEMA_VERSION = "quickcompare.calibration/1"
-RESUME_SCHEMA_VERSION = "quickcompare.resume/1"
+RESUME_SCHEMA_VERSION = "quickcompare.resume/2"
 
 BEHAVIORAL_DIMS = (
     "material_detection",
@@ -70,25 +73,93 @@ def canonical_hash(obj):
     return sha256_hex(canonical_bytes(obj))
 
 
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as handle:
+        for block in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(block)
+    return digest.hexdigest()
+
+
+def ensure_owner_only_directory(path):
+    """Create or repair a private directory used for protected-derived raw data."""
+    path = Path(path)
+    if path.exists():
+        if path.is_symlink() or not path.is_dir():
+            raise ValueError("raw path is not a real directory: {0}".format(path))
+    else:
+        path.mkdir(parents=True, mode=0o700)
+    path.chmod(0o700)
+
+
+def write_owner_only(path, text):
+    """Write a private text file without relying on the process umask."""
+    path = Path(path)
+    flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+    if hasattr(os, "O_NOFOLLOW"):
+        flags |= os.O_NOFOLLOW
+    descriptor = os.open(str(path), flags, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+        handle.write(text)
+    path.chmod(0o600)
+
+
+def runner_implementation_identity(argv, explicit_identity=None):
+    """Return a content identity for cache safety, or None when unbound.
+
+    Normal executable/script runners are bound to bytes of their executable and
+    every file argument. Indirect module or command-string launchers require an
+    explicit immutable identity in ``runner_identities`` because argv cannot
+    identify their implementation completely.
+    """
+    argv = list(argv)
+    explicit = None if explicit_identity is None else str(explicit_identity)
+    indirect = any(token in ("-m", "-c", "-") for token in argv)
+    files = []
+
+    if argv:
+        executable = shutil.which(argv[0]) or argv[0]
+        executable_path = Path(executable)
+        if executable_path.is_file():
+            files.append({"path": str(executable_path.resolve()),
+                          "sha256": sha256_file(executable_path)})
+    for token in argv[1:]:
+        path = Path(token)
+        if path.is_file():
+            files.append({"path": str(path.resolve()), "sha256": sha256_file(path)})
+
+    implementation = None
+    if files and not indirect:
+        implementation = canonical_hash({"argv": argv, "files": files})
+    if explicit is not None:
+        return canonical_hash({"explicit_identity": explicit,
+                               "implementation": implementation})
+    return implementation
+
+
 # --- Reuse / resume binding --------------------------------------------------
 
 
 def output_binding(run_id, artifact_hash, fixture_id, side, runner_argv,
-                   model_settings, rubric, seed, schema_version=COMPARISON_SCHEMA_VERSION):
+                   model_settings, rubric, seed, schema_version=COMPARISON_SCHEMA_VERSION,
+                   runner_identity=None):
     """Identity that a previously produced output must match to be reused.
 
-    A resume is valid only when run identity, artifact, fixture, side, runner,
-    model/settings, rubric, seed, and schema version all match. Any material
-    change to these invalidates reuse. Repairing only a parser, renderer, or
-    validator does not change this binding, so valid outputs are revalidated,
-    not regenerated.
+    A resume is valid only when run identity, artifact, fixture, side, actual
+    runner implementation (or explicit immutable identity), model/settings,
+    rubric, seed, and schema version all match. Any material change to these
+    invalidates reuse. Repairing only a parser, renderer, or validator does not
+    change this binding, so valid outputs are revalidated, not regenerated.
     """
+    if runner_identity is None:
+        runner_identity = runner_implementation_identity(runner_argv)
     return canonical_hash({
         "run_id": run_id,
         "artifact_hash": artifact_hash,
         "fixture_id": fixture_id,
         "side": side,
         "runner_argv": list(runner_argv),
+        "runner_implementation_identity": runner_identity,
         "model_settings": model_settings,
         "rubric": rubric,
         "seed": seed,
@@ -534,6 +605,10 @@ class ResponseCache(object):
         self.invalid_file = False
         if not self.enabled or not self.path.exists():
             return
+        if self.path.is_symlink() or not self.path.is_file():
+            self.invalid_file = True
+            return
+        self.path.chmod(0o600)
         try:
             payload = load_json(self.path)
         except (OSError, json.JSONDecodeError):
@@ -574,15 +649,17 @@ class ResponseCache(object):
             "entries": self.entries,
         }
         temporary = self.path.with_name(self.path.name + ".tmp")
-        temporary.write_text(
-            json.dumps(payload, indent=2, sort_keys=True) + "\n",
-            encoding="utf-8",
-        )
+        write_owner_only(
+            temporary, json.dumps(payload, indent=2, sort_keys=True) + "\n")
         temporary.replace(self.path)
+        self.path.chmod(0o600)
 
 
-def response_cache_binding(config, kind, request, argv):
+def response_cache_binding(config, kind, request, argv, runner_identity,
+                           upstream_identities=()):
     """Bind reuse to every material input controlled by QuickCompare."""
+    if runner_identity is None or any(identity is None for identity in upstream_identities):
+        return None
     return canonical_hash({
         "schema_version": RESUME_SCHEMA_VERSION,
         "comparison_schema_version": COMPARISON_SCHEMA_VERSION,
@@ -591,6 +668,8 @@ def response_cache_binding(config, kind, request, argv):
         "kind": kind,
         "request_id": request["request_id"],
         "runner_argv": list(argv),
+        "runner_implementation_identity": runner_identity,
+        "upstream_implementation_identities": list(upstream_identities),
         "model_settings": config.get("model_settings", {}),
     })
 
@@ -664,7 +743,7 @@ def run_comparison(config, output_dir):
     output_dir = Path(output_dir)
     raw_dir = output_dir / "raw"
     output_dir.mkdir(parents=True, exist_ok=True)
-    raw_dir.mkdir(parents=True, exist_ok=True)
+    ensure_owner_only_directory(raw_dir)
 
     seed = config["seed"]
     run_id = config["run_id"]
@@ -681,6 +760,11 @@ def run_comparison(config, output_dir):
     budget = Budget()
     cache = ResponseCache(
         raw_dir / "response_cache.json", bool(config.get("resume", False)))
+    runner_identities = config.get("runner_identities", {})
+    generator_identity = runner_implementation_identity(
+        config["generator_argv"], runner_identities.get("generator"))
+    judge_identity = runner_implementation_identity(
+        config["judge_argv"], runner_identities.get("judge"))
     raw_records = []
     fixture_results = []
     protected_status = []
@@ -734,12 +818,14 @@ def run_comparison(config, output_dir):
             config["generator_argv"], gen_baseline_req, timeout_s,
             max_retries, budget, raw_records, "generator", cache,
             response_cache_binding(
-                config, "generator", gen_baseline_req, config["generator_argv"]))
+                config, "generator", gen_baseline_req, config["generator_argv"],
+                generator_identity))
         out_candidate, err_c = _run_side(
             config["generator_argv"], gen_candidate_req, timeout_s,
             max_retries, budget, raw_records, "generator", cache,
             response_cache_binding(
-                config, "generator", gen_candidate_req, config["generator_argv"]))
+                config, "generator", gen_candidate_req, config["generator_argv"],
+                generator_identity))
 
         if out_baseline is None or out_candidate is None:
             symmetry_ok = False
@@ -775,7 +861,8 @@ def run_comparison(config, output_dir):
             config["judge_argv"], judge_req, timeout_s, max_retries,
             budget, raw_records, "judge", cache,
             response_cache_binding(
-                config, "judge", judge_req, config["judge_argv"]))
+                config, "judge", judge_req, config["judge_argv"], judge_identity,
+                (generator_identity,)))
 
         if judge_resp is None:
             symmetry_ok = False
@@ -932,8 +1019,9 @@ def _write_outputs(output_dir, raw_dir, result, raw_records):
     (output_dir / "runtime_manifest.json").write_text(
         json.dumps(runtime_manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     # Raw per-call records are non-publishable (may reference protected runs).
-    (raw_dir / "call_records.json").write_text(
-        json.dumps(raw_records, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    write_owner_only(
+        raw_dir / "call_records.json",
+        json.dumps(raw_records, indent=2, sort_keys=True) + "\n")
 
 
 # --- Markdown rendering (from validated JSON only) --------------------------

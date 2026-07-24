@@ -7,10 +7,12 @@ temporary directory and deletes them after assertions.
 """
 
 import json
+import stat
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -282,6 +284,70 @@ class ResumePipelineTests(unittest.TestCase):
             self.assertEqual(result["resume"]["reused_calls"], 0)
             self.assertEqual(result["budget"]["generator_calls"], 16)
             self.assertEqual(result["budget"]["judge_calls"], 8)
+
+    def test_runner_script_change_in_place_invalidates_all_reuse(self):
+        """A stable argv must not reuse outputs from changed runner code."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            _write_fake_runners(tmp)
+            config, _ = _write_pilot_config(tmp)
+            config["resume"] = True
+            out = tmp / "out"
+            qc.run_comparison(config, out)
+
+            runner = tmp / "gen.py"
+            runner.write_text(runner.read_text(encoding="utf-8") + "\n# revised\n",
+                              encoding="utf-8")
+            result, _ = qc.run_comparison(config, out)
+
+            self.assertEqual(result["resume"]["reused_calls"], 0)
+            self.assertEqual(result["budget"]["generator_calls"], 16)
+            self.assertEqual(result["budget"]["judge_calls"], 8)
+
+
+class RawPermissionTests(unittest.TestCase):
+    def test_raw_directory_and_raw_files_are_owner_only(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            _write_fake_runners(tmp)
+            config, _ = _write_pilot_config(tmp)
+            config["resume"] = True
+            out = tmp / "out"
+            raw = out / "raw"
+            raw.mkdir(parents=True)
+            raw.chmod(0o755)
+            qc.run_comparison(config, out)
+
+            self.assertEqual(stat.S_IMODE(raw.stat().st_mode), 0o700)
+            self.assertEqual(
+                stat.S_IMODE((raw / "response_cache.json").stat().st_mode),
+                0o600,
+            )
+            self.assertEqual(
+                stat.S_IMODE((raw / "call_records.json").stat().st_mode),
+                0o600,
+            )
+
+    def test_cache_temporary_file_is_owner_only_before_replace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "raw" / "response_cache.json"
+            path.parent.mkdir()
+            cache = qc.ResponseCache(path, True)
+            observed = []
+            original_replace = Path.replace
+
+            def inspect_replace(source, target):
+                observed.append(stat.S_IMODE(source.stat().st_mode))
+                return original_replace(source, target)
+
+            response = {
+                "protocol_version": qc.GENERATOR_PROTOCOL,
+                "request_id": "request",
+            }
+            with mock.patch.object(Path, "replace", new=inspect_replace):
+                cache.put("binding", response)
+
+            self.assertEqual(observed, [0o600])
 
 
 # --- Runner protocol and shell safety ---------------------------------------
