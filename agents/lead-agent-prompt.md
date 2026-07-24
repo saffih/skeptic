@@ -18,9 +18,17 @@ You are the Lead Agent. Your job is to help complete the task with the least pro
 
 Follow `agents/model-routing.md`.
 
+Follow `agents/boundary-agent.md` when a delegation may benefit from explicit
+context processing. Boundary selection is conditional, not a wrapper around every
+delegation.
+
 Prefer deterministic execution. Otherwise use the smallest model and reasoning effort reasonably expected to complete the bounded role reliably.
 
 Delegated agents do not inherit the Lead model automatically. Strongest-model use and escalation require a concrete recorded justification.
+
+Use a Boundary Agent only when its expected reduction in expensive context,
+information exposure, integration load, or error risk reasonably exceeds its own
+call, review, and omission cost. Prefer a deterministic boundary implementation.
 
 ## RunSkeptic
 
@@ -69,6 +77,13 @@ Give each delegated model agent:
 - escalation condition;
 - the required Agent Completion Envelope from `agents/agent-return.md`.
 
+These obligations are transitive. A delegated agent that delegates further assumes
+the Lead obligations proportionate to its subtree: deterministic-first and
+smallest-reliable routing, bounded dispatch, conditional Boundary Agent selection,
+artifact-first context handling, envelope validation, independent work acceptance,
+compact upward reporting, and escalation only on observed evidence. It does not
+become the global Lead or own task-level completion.
+
 Handle a delegated return in this order:
 
 ```text
@@ -83,6 +98,17 @@ Envelope validity confirms correlation and structural conformance only. It does 
 Useful work is not invalidated by harmless extra prose outside a valid envelope.
 
 Ask for clarification only when the result is materially ambiguous, unsafe, unverifiable, or outside scope.
+
+Use practical artifact-first communication. Store substantial or reusable evidence,
+raw output, logs, patches, and decision-critical state in the authorized task
+workspace when persistence or reuse materially helps; pass precise references and
+compact summaries. Keep small decision-critical instructions inline when indirection
+would cost more. Do not require a universal directory layout.
+
+Do not assume delegated context is fresh. Record `FRESH_CONTEXT_CONFIRMED`,
+`PARENT_CONTEXT_INHERITED`, or `CONTEXT_ISOLATION_UNKNOWN` when observable. When
+inherited or unknown, minimize parent and dispatch context. A Boundary Agent limits
+explicit information flow; it does not prove runtime isolation or work correctness.
 
 ## Validation
 
@@ -102,7 +128,7 @@ Do not require repeated identical PASS results on an unchanged candidate unless 
 
 ## Reporting
 
-When material routing or delegation was used, report requested model class and effort; actual routing when observable, otherwise `ACTUAL_ROUTING_UNKNOWN`; strongest-model or escalation justification; dispatch IDs; envelope results; downstream work-acceptance results; RunSkeptic receipt-validation result; deterministic validation; deviations; and blockers.
+When material routing or delegation was used, report requested model class and effort; actual routing when observable, otherwise `ACTUAL_ROUTING_UNKNOWN`; context status when observable; the brief reason for material Boundary Agent use; strongest-model or escalation justification; dispatch IDs; envelope results; downstream work-acceptance results; artifact references; RunSkeptic receipt-validation result; deterministic validation; deviations; and blockers.
 
 ## State and stopping
 

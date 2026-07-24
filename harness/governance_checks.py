@@ -29,6 +29,8 @@ RECEIPT_ALIASES = {
 }
 STEPS = ("GATE", "FUNDAMENTAL SCAN", "MAP", "CONFIDENCE", "STABILIZE", "EVIDENCE", "DECIDE", "ACT", "VERIFY", "LEARN")
 THINKERS = ("CH", "OM", "FE", "PO", "KT", "SH")
+BOUNDARY_VALID = "BOUNDARY_GOVERNANCE_VALID"
+BOUNDARY_INVALID = "BOUNDARY_GOVERNANCE_INVALID"
 
 
 def normalize(value: str) -> str:
@@ -151,6 +153,73 @@ def check_skeptic_receipt(text: str, expected_source: str | None = None, expecte
     return {"result": "SKEPTIC_SUBSTANTIVE_RERUN_REQUIRED" if defects else "SKEPTIC_RECEIPT_VALID", "fields": fields, "defects": defects}
 
 
+def check_boundary_governance(text: str) -> dict:
+    """Reject explicit boundary contradictions without requiring ceremony."""
+    value = normalize(text)
+    defects: list[str] = []
+
+    def asserted(phrase: str) -> bool:
+        for match in re.finditer(re.escape(phrase), value):
+            prefix = value[: match.start()].split()[-5:]
+            if not ({"not", "never", "cannot"} & set(prefix)):
+                return True
+        return False
+
+    contradictions = {
+        "Boundary Agent cannot be mandatory for every delegation": (
+            "boundary agent is required for every delegation",
+            "must use a boundary agent for every delegation",
+        ),
+        "Boundary Agent cannot prove substantive correctness": (
+            "boundary agent proves substantive correctness",
+            "boundary agent guarantees substantive correctness",
+            "boundary agent proves the work is correct",
+        ),
+        "Boundary Agent cannot prove runtime isolation": (
+            "boundary agent proves runtime isolation",
+            "boundary agent guarantees runtime isolation",
+        ),
+        "delegated context cannot be assumed fresh": (
+            "delegated contexts are always fresh",
+            "every delegated context is fresh",
+            "delegation always creates a fresh context",
+        ),
+        "boundary routing cannot default to the strongest model": (
+            "boundary agent must use the strongest model",
+            "always use the strongest model for boundary",
+            "boundary processing always uses the strongest model",
+        ),
+    }
+    for defect, phrases in contradictions.items():
+        if any(asserted(phrase) for phrase in phrases):
+            defects.append(defect)
+
+    recursive = any(
+        phrase in value
+        for phrase in (
+            "recursive delegation",
+            "delegated agents may delegate",
+            "delegates further",
+            "subagents may delegate",
+        )
+    )
+    if recursive:
+        required = {
+            "transitive subtree rule": "transitive",
+            "deterministic-first routing": "deterministic first",
+            "conditional Boundary Agent selection": "boundary agent",
+            "completion-envelope validation": "agent completion envelope",
+            "independent work acceptance": "independent work acceptance",
+            "compact upward reporting": "compact upward reporting",
+        }
+        defects.extend(
+            f"recursive delegation missing {label}"
+            for label, marker in required.items()
+            if marker not in value
+        )
+    return {"result": BOUNDARY_INVALID if defects else BOUNDARY_VALID, "defects": defects}
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
@@ -163,16 +232,20 @@ def main() -> int:
     receipt.add_argument("--expected-source")
     receipt.add_argument("--expected-source-sha")
     receipt.add_argument("--require-task-prompt", action="store_true")
-    for child in (agent, receipt):
+    boundary = sub.add_parser("boundary-governance")
+    boundary.add_argument("input_file")
+    for child in (agent, receipt, boundary):
         child.add_argument("--json", action="store_true")
     args = parser.parse_args()
     text = Path(args.input_file).read_text(encoding="utf-8")
     if args.command == "agent-envelope":
         result = check_agent_envelope(text, args.expected_dispatch_id, args.output_required)
-    else:
+    elif args.command == "skeptic-receipt":
         result = check_skeptic_receipt(text, args.expected_source, args.expected_source_sha, args.require_task_prompt)
+    else:
+        result = check_boundary_governance(text)
     print(json.dumps(result, indent=2, sort_keys=True) if args.json else result["result"])
-    return 0 if result["result"] in {"AGENT_ENVELOPE_VALID", "SKEPTIC_RECEIPT_VALID"} else 1
+    return 0 if result["result"] in {"AGENT_ENVELOPE_VALID", "SKEPTIC_RECEIPT_VALID", BOUNDARY_VALID} else 1
 
 
 if __name__ == "__main__":

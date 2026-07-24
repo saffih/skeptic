@@ -16,6 +16,8 @@ Entry map. Load only the artifact needed for the current use:
   -> `agents/model-routing.md`
 - Define or validate a delegated model-agent return
   -> `agents/agent-return.md`
+- Select or operate a conditional context-processing boundary around delegation
+  -> `agents/boundary-agent.md`
 
 Ownership:
 
@@ -25,6 +27,7 @@ Ownership:
 - `agents/task-prompt-builder.md` is authoritative for the objective-or-plan-to-Task-Prompt build operation and its four aliases.
 - `agents/model-routing.md` is authoritative for portable cost-aware model routing and escalation guidance.
 - `agents/agent-return.md` is authoritative for the universal delegated model-agent completion envelope.
+- `agents/boundary-agent.md` is authoritative for conditional boundary processing, artifact-first context discipline, and truthful context-isolation status.
 - Editing `skeptic.md` requires explicit authority. Do not edit "skeptic.md" unless explicitly authorized.
 
 Architectural boundary:

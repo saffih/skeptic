@@ -34,6 +34,11 @@ Allowed validation values: `PASS`, `FAIL`, `NOT_RUN`, `NOT_APPLICABLE`, `UNKNOWN
 
 Optional fields: `changed`, `check`, `next`.
 
+Keep the return compact. `output`, `changed`, or `check` may contain precise
+authorized artifact references instead of substantial inline content. Store raw
+work in the authorized task workspace when persistence or reuse materially helps;
+keep small decision-critical results inline when indirection would cost more.
+
 ## Mechanical result
 
 The deterministic checker returns one of:

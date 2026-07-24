@@ -56,6 +56,26 @@ A delegated model role must state:
 
 Delegated agents do not inherit the Lead model or effort automatically.
 
+## Boundary routing
+
+Use `agents/boundary-agent.md` conditionally when context processing has material
+expected value. A compact direct delegation needs no Boundary Agent.
+
+Route boundary work in this order:
+
+1. deterministic tool or script;
+2. free or local agent when available, exposed, and reliable;
+3. smallest low-effort model reasonably expected to perform the transformation;
+4. a stronger route only after observed insufficiency or when semantic omission
+   risk materially requires it.
+
+The boundary route does not inherit the substantive worker's model or effort.
+Do not claim that a free/local route exists unless the runtime exposes it.
+
+Routing and context discipline are transitive when a delegated orchestrator
+delegates further, proportionate to its subtree; this does not transfer global
+Lead ownership or task-level completion.
+
 ## Escalation
 
 Escalate only when observed evidence shows that the assigned route is insufficient. Record the failed route, the observed defect or uncertainty, why an unchanged retry is unlikely to help, and the expected benefit of escalation.

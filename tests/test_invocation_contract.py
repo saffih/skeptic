@@ -94,7 +94,7 @@ class EntryMapTests(unittest.TestCase):
         route_lines = [
             line.strip() for line in self.text.splitlines() if line.strip().startswith("-> `")
         ]
-        self.assertEqual(len(route_lines), 6)
+        self.assertEqual(len(route_lines), 7)
         destinations = {line[len("-> `"):-1] for line in route_lines}
         self.assertEqual(
             destinations,
@@ -105,6 +105,7 @@ class EntryMapTests(unittest.TestCase):
                 "agents/task-prompt-builder.md",
                 "agents/model-routing.md",
                 "agents/agent-return.md",
+                "agents/boundary-agent.md",
             },
         )
 
@@ -136,6 +137,10 @@ class EntryMapTests(unittest.TestCase):
         )
         self.assertIn(
             "`agents/task-prompt-builder.md` is authoritative for the objective-or-plan-to-Task-Prompt build operation",
+            self.text,
+        )
+        self.assertIn(
+            "`agents/boundary-agent.md` is authoritative for conditional boundary processing",
             self.text,
         )
         self.assertIn(
