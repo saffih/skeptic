@@ -29,6 +29,7 @@ GENERATOR_PROTOCOL = "quickcompare.generator/1"
 JUDGE_PROTOCOL = "quickcompare.judge/1"
 COMPARISON_SCHEMA_VERSION = "quickcompare.comparison/1"
 CALIBRATION_SCHEMA_VERSION = "quickcompare.calibration/1"
+RESUME_SCHEMA_VERSION = "quickcompare.resume/1"
 
 BEHAVIORAL_DIMS = (
     "material_detection",
@@ -250,6 +251,11 @@ def build_judge_request(run_id, fixture, output_a, output_b):
         "rubric": {
             "behavioral_dimensions": list(BEHAVIORAL_DIMS),
             "scale": "0-2 per dimension for each anonymous output",
+            "comparison_rules": [
+                "Judge substance, not length, formatting, confidence, or polish.",
+                "Materially equivalent outputs tie even when wording or format differs.",
+                "Extra length alone cannot improve any behavioral dimension.",
+            ],
             "expected_material_mechanism": fixture["expected_material_mechanism"],
             "acceptable_alternative_findings": fixture["acceptable_alternative_findings"],
             "prohibited_false_positives": fixture["prohibited_false_positives"],
@@ -484,6 +490,7 @@ class Budget(object):
         self.generator = 0
         self.judge = 0
         self.retry = 0
+        self.reused = 0
 
     @property
     def total(self):
@@ -502,6 +509,7 @@ class Budget(object):
             "generator_calls": self.generator,
             "judge_calls": self.judge,
             "retry_calls": self.retry,
+            "reused_calls": self.reused,
             "total_calls": self.total,
             "caps": {
                 "generator": BUDGET_GENERATOR,
@@ -510,6 +518,81 @@ class Budget(object):
                 "total": BUDGET_TOTAL,
             },
         }
+
+
+class ResponseCache(object):
+    """Private, atomic cache for validated runner responses.
+
+    Responses live under ``raw/`` because they may derive from protected fixture
+    content. They never enter comparison.json or comparison.md.
+    """
+
+    def __init__(self, path, enabled):
+        self.path = Path(path)
+        self.enabled = bool(enabled)
+        self.entries = {}
+        self.invalid_file = False
+        if not self.enabled or not self.path.exists():
+            return
+        try:
+            payload = load_json(self.path)
+        except (OSError, json.JSONDecodeError):
+            self.invalid_file = True
+            return
+        if (
+            payload.get("schema_version") != RESUME_SCHEMA_VERSION
+            or not isinstance(payload.get("entries"), dict)
+        ):
+            self.invalid_file = True
+            return
+        self.entries = payload["entries"]
+
+    def get(self, binding, request, kind):
+        if not self.enabled:
+            return None
+        entry = self.entries.get(binding)
+        if not isinstance(entry, dict):
+            return None
+        response = entry.get("response")
+        if not isinstance(response, dict):
+            return None
+        expected_protocol = (
+            GENERATOR_PROTOCOL if kind == "generator" else JUDGE_PROTOCOL
+        )
+        if response.get("protocol_version") != expected_protocol:
+            return None
+        if response.get("request_id") != request.get("request_id"):
+            return None
+        return response
+
+    def put(self, binding, response):
+        if not self.enabled:
+            return
+        self.entries[binding] = {"response": response}
+        payload = {
+            "schema_version": RESUME_SCHEMA_VERSION,
+            "entries": self.entries,
+        }
+        temporary = self.path.with_name(self.path.name + ".tmp")
+        temporary.write_text(
+            json.dumps(payload, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        temporary.replace(self.path)
+
+
+def response_cache_binding(config, kind, request, argv):
+    """Bind reuse to every material input controlled by QuickCompare."""
+    return canonical_hash({
+        "schema_version": RESUME_SCHEMA_VERSION,
+        "comparison_schema_version": COMPARISON_SCHEMA_VERSION,
+        "run_id": config["run_id"],
+        "seed": config["seed"],
+        "kind": kind,
+        "request_id": request["request_id"],
+        "runner_argv": list(argv),
+        "model_settings": config.get("model_settings", {}),
+    })
 
 
 def _read_artifact(spec):
@@ -527,8 +610,21 @@ def _read_artifact(spec):
     }
 
 
-def _run_side(argv, request, timeout_s, max_retries, budget, raw_records, kind):
+def _run_side(argv, request, timeout_s, max_retries, budget, raw_records, kind,
+              cache=None, cache_binding=None):
     """Run one runner call with bounded retry on classified transient errors."""
+    cached = cache.get(cache_binding, request, kind) if cache and cache_binding else None
+    if cached is not None:
+        budget.reused += 1
+        raw_records.append({
+            "kind": kind,
+            "attempt": None,
+            "reused": True,
+            "binding": cache_binding,
+            "request_hash": sha256_hex(canonical_bytes(request)),
+        })
+        return cached, None
+
     attempt = 0
     while True:
         # The primary attempt counts against the generator/judge cap; every
@@ -553,6 +649,8 @@ def _run_side(argv, request, timeout_s, max_retries, budget, raw_records, kind):
             elif response.get("request_id") != request["request_id"]:
                 error = "identity_echo_mismatch"
         if error is None:
+            if cache and cache_binding:
+                cache.put(cache_binding, response)
             return response, None
         if attempt < max_retries and _classify_transient(error):
             attempt += 1
@@ -581,6 +679,8 @@ def run_comparison(config, output_dir):
     candidate = _read_artifact(config["candidate"])
 
     budget = Budget()
+    cache = ResponseCache(
+        raw_dir / "response_cache.json", bool(config.get("resume", False)))
     raw_records = []
     fixture_results = []
     protected_status = []
@@ -632,10 +732,14 @@ def run_comparison(config, output_dir):
         gen_candidate_req = build_generator_request(run_id, fixture, candidate, model_settings)
         out_baseline, err_b = _run_side(
             config["generator_argv"], gen_baseline_req, timeout_s,
-            max_retries, budget, raw_records, "generator")
+            max_retries, budget, raw_records, "generator", cache,
+            response_cache_binding(
+                config, "generator", gen_baseline_req, config["generator_argv"]))
         out_candidate, err_c = _run_side(
             config["generator_argv"], gen_candidate_req, timeout_s,
-            max_retries, budget, raw_records, "generator")
+            max_retries, budget, raw_records, "generator", cache,
+            response_cache_binding(
+                config, "generator", gen_candidate_req, config["generator_argv"]))
 
         if out_baseline is None or out_candidate is None:
             symmetry_ok = False
@@ -669,7 +773,9 @@ def run_comparison(config, output_dir):
 
         judge_resp, err_j = _run_side(
             config["judge_argv"], judge_req, timeout_s, max_retries,
-            budget, raw_records, "judge")
+            budget, raw_records, "judge", cache,
+            response_cache_binding(
+                config, "judge", judge_req, config["judge_argv"]))
 
         if judge_resp is None:
             symmetry_ok = False
@@ -730,7 +836,7 @@ def run_comparison(config, output_dir):
 
     result = _assemble_comparison(
         config, baseline, candidate, manifest, fixture_results,
-        protected_status, budget, gates, verdict, rule_path, leaks)
+        protected_status, budget, gates, verdict, rule_path, leaks, cache)
 
     # Schema self-validation; a failure flips the schema gate and re-verdicts.
     schema = load_json(config.get("schema_path", REPO_ROOT / "harness" / "quickcompare.schema.json"))
@@ -748,7 +854,8 @@ def run_comparison(config, output_dir):
 
 
 def _assemble_comparison(config, baseline, candidate, manifest, fixture_results,
-                         protected_status, budget, gates, verdict, rule_path, leaks):
+                         protected_status, budget, gates, verdict, rule_path, leaks,
+                         cache=None):
     visible_results = []
     for fr in fixture_results:
         if fr.get("protected"):
@@ -794,6 +901,12 @@ def _assemble_comparison(config, baseline, candidate, manifest, fixture_results,
         "fixture_results": visible_results,
         "protected_slots": protected_public,
         "budget": budget.as_dict(),
+        "resume": {
+            "enabled": bool(config.get("resume", False)),
+            "reused_calls": budget.reused,
+            "cache_entries": len(cache.entries) if cache is not None else 0,
+            "cache_file_valid": not cache.invalid_file if cache is not None else True,
+        },
         "gates": gates,
         "blinding_leaks": leaks,
         "verdict": verdict,
@@ -1085,6 +1198,12 @@ Protected holdouts:
   unless both slots are present, commitment-valid, and loss-free.
 
 Budgets (eight-fixture full run): 16 generator, 8 judge, <=2 retry, 26 total.
+
+Resume:
+  Set ``resume`` to true in run.json to reuse only validated responses whose
+  request, runner, model settings, seed, run identity, and schema binding are
+  unchanged. The private cache lives under output-dir/raw; an invalid cache is
+  ignored and regenerated rather than trusted.
 
 Exit codes:
   0  command completed and produced a valid report (verdict may be REGRESSED,

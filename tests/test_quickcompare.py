@@ -195,6 +195,15 @@ class BlindingTests(unittest.TestCase):
         self.assertIn("key:baseline", leaks)
         self.assertTrue(any(l.startswith("value:deadbeef") for l in leaks))
 
+    def test_judge_rubric_does_not_reward_length_or_format(self):
+        fixture = _minimal_fixture("f1")
+        request = qc.build_judge_request(
+            "run", fixture, {"structured_review": {}}, {"structured_review": {}})
+        rules = " ".join(request["rubric"]["comparison_rules"]).lower()
+        self.assertIn("length", rules)
+        self.assertIn("format", rules)
+        self.assertIn("materially equivalent", rules)
+
 
 # --- Reuse / resume binding invalidation ------------------------------------
 
@@ -219,6 +228,60 @@ class ReuseBindingTests(unittest.TestCase):
         self.assertNotEqual(base, self._base(seed="s2"))
         self.assertNotEqual(base, self._base(side="candidate"))
         self.assertNotEqual(base, self._base(runner_argv=["python3", "h.py"]))
+
+
+class ResumePipelineTests(unittest.TestCase):
+    def test_second_identical_run_reuses_bound_outputs(self):
+        """Resume must reuse validated outputs, not merely expose a hash helper."""
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            _write_fake_runners(tmp)
+            config, _ = _write_pilot_config(tmp)
+            config["resume"] = True
+            out = tmp / "out"
+
+            first, _ = qc.run_comparison(config, out)
+            second, _ = qc.run_comparison(config, out)
+
+            self.assertEqual(first["verdict"], second["verdict"])
+            self.assertEqual(second["budget"]["generator_calls"], 0)
+            self.assertEqual(second["budget"]["judge_calls"], 0)
+            self.assertEqual(second["resume"]["reused_calls"], 24)
+
+    def test_material_binding_change_invalidates_resume(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            _write_fake_runners(tmp)
+            config, _ = _write_pilot_config(tmp)
+            config["resume"] = True
+            out = tmp / "out"
+            qc.run_comparison(config, out)
+
+            changed = dict(config)
+            changed["seed"] = "different-order-seed"
+            result, _ = qc.run_comparison(changed, out)
+
+            self.assertEqual(result["resume"]["reused_calls"], 0)
+            self.assertEqual(result["budget"]["generator_calls"], 16)
+            self.assertEqual(result["budget"]["judge_calls"], 8)
+
+    def test_invalid_cache_fails_closed_and_regenerates(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            _write_fake_runners(tmp)
+            config, _ = _write_pilot_config(tmp)
+            config["resume"] = True
+            out = tmp / "out"
+            qc.run_comparison(config, out)
+            (out / "raw" / "response_cache.json").write_text(
+                "not json\n", encoding="utf-8")
+
+            result, _ = qc.run_comparison(config, out)
+
+            self.assertFalse(result["resume"]["cache_file_valid"])
+            self.assertEqual(result["resume"]["reused_calls"], 0)
+            self.assertEqual(result["budget"]["generator_calls"], 16)
+            self.assertEqual(result["budget"]["judge_calls"], 8)
 
 
 # --- Runner protocol and shell safety ---------------------------------------

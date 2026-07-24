@@ -106,7 +106,18 @@
         "generator_calls": {"type": "integer"},
         "judge_calls": {"type": "integer"},
         "retry_calls": {"type": "integer"},
+        "reused_calls": {"type": "integer"},
         "total_calls": {"type": "integer"}
+      }
+    },
+    "resume": {
+      "type": "object",
+      "required": ["enabled", "reused_calls", "cache_entries", "cache_file_valid"],
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "reused_calls": {"type": "integer"},
+        "cache_entries": {"type": "integer"},
+        "cache_file_valid": {"type": "boolean"}
       }
     },
     "gates": {
