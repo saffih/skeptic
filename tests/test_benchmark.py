@@ -190,6 +190,18 @@ class DignityConceptRecognitionTests(unittest.TestCase):
                 "The system does not deny employee agency; public ranking is voluntary "
                 "and promotion consequences are acceptable."
             ),
+            "Employees face promotion consequences, but meaningful consent is unnecessary.",
+            "Employees promotion files meaningful consent.",
+            (
+                "Employees experience career pressure; affirmative consent should not "
+                "be required."
+            ),
+            "Workers face retaliation, although a confidential opt-out is not needed.",
+            (
+                "Employees must document promotion files; meaningful consent appears "
+                "in the policy."
+            ),
+            "Career pressure does not undermine employee agency.",
         ]
         for text in examples:
             with self.subTest(text=text):

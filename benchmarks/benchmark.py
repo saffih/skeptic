@@ -128,7 +128,7 @@ _DIGNITY_SUBJECTS = (
     "participant",
     "participants",
 )
-_DIGNITY_MECHANISMS = (
+_DIGNITY_HARMS = (
     "coercion",
     "coercive",
     "retaliation",
@@ -143,28 +143,45 @@ _DIGNITY_MECHANISMS = (
     "adverse employment consequences",
     "manager gate",
     "manager disclosure",
-    "treated as instruments",
-    "instrumental treatment",
-    "denies employee agency",
-    "deny employee agency",
+)
+_DIGNITY_AGENCY_OUTCOMES = (
+    "agency",
+    "autonomy",
+    "meaningful consent",
+    "non-voluntary",
+    "not voluntary",
 )
 _DIGNITY_PROTECTIONS = (
-    "autonomous person",
-    "autonomous persons",
     "meaningful consent",
     "affirmative consent",
     "freely consent",
     "freely chosen",
     "freely made choice",
-    "non-voluntary",
-    "not voluntary",
     "confidential exit",
     "confidential opt-out",
-    "without retaliation",
-    "without promotion consequences",
-    "no adverse employment consequence",
-    "no adverse employment consequences",
+    "employee agency",
+    "autonomous person",
+    "autonomous persons",
 )
+_DIGNITY_RELATIONS = {
+    "coerce",
+    "coerces",
+    "deny",
+    "denies",
+    "erode",
+    "erodes",
+    "impair",
+    "impairs",
+    "make",
+    "makes",
+    "prevent",
+    "prevents",
+    "render",
+    "renders",
+    "undermine",
+    "undermines",
+}
+_DIGNITY_REQUIREMENTS = {"must", "need", "needs", "require", "required", "requires"}
 _DIGNITY_ENDORSEMENTS = (
     "voluntarily accept",
     "voluntarily accepts",
@@ -370,17 +387,88 @@ def _contains_phrase(tokens: list[str], phrases: tuple[str, ...]) -> bool:
     return any(_phrase_positions(tokens, phrase) for phrase in phrases)
 
 
+def _phrase_position(tokens: list[str], phrases: tuple[str, ...]) -> tuple[int, int] | None:
+    return next(
+        (
+            position
+            for phrase in phrases
+            for position in _phrase_positions(tokens, phrase)
+        ),
+        None,
+    )
+
+
+def _phrase_is_rejected(tokens: list[str], position: tuple[int, int]) -> bool:
+    start, end = position
+    window = tokens[max(0, start - 3) : min(len(tokens), end + 6)]
+    pairs = set(zip(window, window[1:]))
+    triples = set(zip(window, window[1:], window[2:]))
+    return bool(
+        {"reject", "rejects", "rejected", "unnecessary"} & set(window)
+        or pairs & {("not", "needed"), ("not", "required"), ("need", "not")}
+        or triples & {("should", "not", "be"), ("is", "not", "needed")}
+    )
+
+
+def _harm_undermines_agency(tokens: list[str]) -> bool:
+    harm = _phrase_position(tokens, _DIGNITY_HARMS)
+    outcome = _phrase_position(tokens, _DIGNITY_AGENCY_OUTCOMES)
+    if harm is None or outcome is None or _phrase_is_rejected(tokens, outcome):
+        return False
+    span_start = min(harm[0], outcome[0])
+    span_end = max(harm[1], outcome[1])
+    relations = [
+        (index, index + 1)
+        for index in range(span_start, span_end)
+        if tokens[index] in _DIGNITY_RELATIONS
+    ]
+    return any(not _is_negated(tokens, [position]) for position in relations)
+
+
+def _required_agency_protection(tokens: list[str]) -> bool:
+    protection = _phrase_position(tokens, _DIGNITY_PROTECTIONS)
+    harm = _phrase_position(tokens, _DIGNITY_HARMS)
+    if protection is None or harm is None or _phrase_is_rejected(tokens, protection):
+        return False
+    start, end = protection
+    before = tokens[max(0, start - 2) : start]
+    after = tokens[end : min(len(tokens), end + 5)]
+    required = bool(
+        _DIGNITY_REQUIREMENTS & set(before)
+        or "requires" in after
+        or "require" in after
+        or after[:2] in (["is", "required"], ["are", "required"])
+    )
+    protective_remedy = (
+        _contains_phrase(tokens, ("no adverse employment consequence",))
+        and _contains_phrase(tokens, ("affirmative consent", "meaningful consent"))
+    )
+    return required or protective_remedy
+
+
+def _rejects_instrumental_treatment(tokens: list[str]) -> bool:
+    instruments = _phrase_position(tokens, ("treated as instruments",))
+    autonomous = _phrase_position(tokens, ("autonomous persons", "autonomous person"))
+    return bool(
+        instruments
+        and autonomous
+        and not _phrase_is_rejected(tokens, autonomous)
+        and "rather" in tokens[instruments[0] : autonomous[1]]
+        and "than" in tokens[instruments[0] : autonomous[1]]
+    )
+
+
 def _matches_dignity_semantics(text: str) -> bool:
-    """Recognize bounded agency protection, not isolated dignity vocabulary."""
+    """Recognize a bounded relationship, not dignity-term co-occurrence."""
     units = re.split(r"(?:\r?\n)+|(?<=[.!?])\s+", text)
     for unit in units:
         tokens = _tokens(unit)
         if not tokens or _contains_phrase(tokens, _DIGNITY_ENDORSEMENTS):
             continue
-        if (
-            _contains_phrase(tokens, _DIGNITY_SUBJECTS)
-            and _contains_phrase(tokens, _DIGNITY_MECHANISMS)
-            and _contains_phrase(tokens, _DIGNITY_PROTECTIONS)
+        if _contains_phrase(tokens, _DIGNITY_SUBJECTS) and (
+            _harm_undermines_agency(tokens)
+            or _required_agency_protection(tokens)
+            or _rejects_instrumental_treatment(tokens)
         ):
             return True
     return False
