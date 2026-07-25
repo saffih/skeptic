@@ -49,6 +49,8 @@ Every RunSkeptic report must include a compact receipt:
 
 Do not claim RunSkeptic compliance without this receipt.
 
+A RunSkeptic receipt indexes the review and its evidence; it is not independent proof or authority. A material receipt claim that conflicts with primary evidence must be corrected or left unresolved.
+
 Flow: GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
 
 ## 0. Gate
@@ -116,6 +118,7 @@ For every meaningful entity: file, module, function, config, doc, test, system, 
 - What must always be true?
 - What breaks it?
 - How do we know it works?
+- Does this solve a current verified need, or speculate about a future one?
 
 ## 3. Thinkers
 
@@ -134,7 +137,7 @@ Look for:
 - `CH:MJ` misjudgment: confidence without evidence, coherent stories without verification, one-lens thinking, assumptions as facts
 - `CH:CP` competence gaps: deciding without enough evidence or domain understanding
 - `CH:SM` weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
-- `CH:CR` constraint risk: effort targets a non-bottleneck while the real system constraint, queue, or blocker remains unchanged
+- `CH:CR` constraint risk: effort targets something other than the system constraint, queue, or blocker currently limiting the outcome
 - `CH:EV` effort-value alignment: effort, cost, rigor, process, or resource use is disproportionate to expected value, material risk reduction, decision importance, available resources, or the probability of reaching a completed useful outcome
 - `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
 
@@ -151,6 +154,10 @@ Look for:
 - `OM:OD` oversized design: more structure than outcome, evidence, safety, responsibility, or reversibility requires
 - `OM:AC` avoidable complexity from misplaced boundaries, mixed concerns, or missing small guards
 - `OM:CF` Chesterton fence: removing or replacing structure before understanding what constraint it protected
+
+When structure or process is material, compare it with the smallest credible alternative that could achieve the required outcome. Remove structure that adds no necessary evidence, safety, responsibility, reversibility, or material value.
+
+Do not simplify by deleting protections whose purpose is not understood. When substantial structure remains, state briefly why the smaller alternative is insufficient.
 
 Report when something can be removed, merged, moved, simplified, or guarded without losing required outcome, evidence, responsibility, reversibility, or safety.
 
@@ -211,11 +218,16 @@ Look for:
 - `SH:FB` forced balance: the artifact tries to satisfy both sides when one side should dominate
 - `SH:NE` narrow exception needed: one side should be default, but the other side needs a narrow protected exception
 - `SH:HC` hidden conflict: product, architecture, safety, ownership, or priority decision is required
-- `SH:WL` wrong leverage: the chosen side, middle, or exception does not address the constraint limiting the outcome
+- `SH:WL` wrong leverage: within a genuine trade-off, the chosen side, middle, or exception does not materially affect the outcome it is intended to improve
+- `SH:PF` dominance/frontier: a live option is retained even though another feasible option is no worse on every material protected dimension and better on at least one
 
-If no real opposing forces or invalid middle are present, SH = NOT_APPLICABLE.
+Do not eliminate an option when dominance depends on stale or uncertain evidence, unsupported causation, aggregation that hides a subgroup or tail, omitted feasibility, reversibility or information value, mismatched time horizons, or a disputed weighting of consequences. When dominance is not supported, preserve the live trade-off or report the missing evidence.
 
-Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, requires an explicit tradeoff decision, or misses the real leverage point.
+Distinguish `CH:CR`, `SH:WL`, and `SH:PF` by whether the defect is the limiting constraint, the chosen intervention, or the live option set. Do not duplicate findings; when one explains another, merge them in STABILIZE.
+
+If no real opposing forces, invalid middle, or live option comparison are present, SH = NOT_APPLICABLE.
+
+Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, requires an explicit tradeoff decision, misses the real leverage point, or retains a proven dominated option.
 
 
 ## 4. Structural Checks

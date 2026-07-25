@@ -37,7 +37,7 @@ class PromotionCheckTests(unittest.TestCase):
     def test_core_contract_preserved(self):
         for marker in [
             "`RunSkeptic` is the formal invocation string",
-            "Treat `skeptic.md` as the runtime source of truth.",
+            "Treat the source under review as the runtime source of truth.",
             "Apply the current recipe exactly and in order.",
             "Every task ends as HANDLED or CONFLICT.",
         ]:
