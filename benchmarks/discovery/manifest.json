@@ -1,0 +1,86 @@
+{
+  "suite_id": "shadow-discovery-v1",
+  "version": 1,
+  "status": "non-gating",
+  "gating": false,
+  "pinned_main": "8d99e3bf5c8b41e5c52eabadaf14b3abef835d38",
+  "archive_source": "197bf70d35ce791de7de7499a58bb2a4f970450e",
+  "description": "Six original discovery fixtures for mechanisms selected by the corrected shadow-scenario audit. The suite has no scorer and cannot gate promotion.",
+  "cases": [
+    {
+      "id": "SD01",
+      "path": "cases/SD01-completion-feasibility.json",
+      "category": "execution-feasibility",
+      "source_ids": [
+        "TaskPromptScenario.feasible_as_one_task",
+        "TaskPromptScenario.protected_completion_reserve",
+        "skeptic-tests.md:full-flow-18",
+        "skeptic-tests.md:boundary-case-5"
+      ]
+    },
+    {
+      "id": "SD02",
+      "path": "cases/SD02-conditional-progressive-durability.json",
+      "category": "conditional-durability",
+      "source_ids": [
+        "TaskPromptScenario.persistence_required",
+        "TaskPromptScenario.persistence_plan_adequate",
+        "skeptic-tests.md:full-flow-21",
+        "skeptic-tests.md:full-flow-22"
+      ]
+    },
+    {
+      "id": "SD03",
+      "path": "cases/SD03-repair-without-replay.json",
+      "category": "repair-without-replay",
+      "source_ids": [
+        "skeptic-tests.md:checkpoint-validator-defect",
+        "skeptic-tests.md:receipt-authority-3",
+        "skeptic-tests.md:receipt-authority-9"
+      ]
+    },
+    {
+      "id": "SD04",
+      "path": "cases/SD04-dominance-unproven-evidence.json",
+      "category": "dominance-evidence-quality",
+      "source_ids": [
+        "PF08",
+        "PF09",
+        "PF13"
+      ]
+    },
+    {
+      "id": "SD05",
+      "path": "cases/SD05-aggregation-hides-minority-harm.json",
+      "category": "aggregation-minority-harm",
+      "source_ids": [
+        "PF06",
+        "PF10",
+        "PF11"
+      ]
+    },
+    {
+      "id": "SD06",
+      "path": "cases/SD06-long-tail-option-value.json",
+      "category": "frontier-option-value",
+      "source_ids": [
+        "PF07",
+        "PF14",
+        "PF15"
+      ]
+    }
+  ],
+  "promotion_requirements": [
+    "Generate a fresh current-main baseline with one frozen model configuration.",
+    "Demonstrate that each case exposes a distinct material miss or useful control.",
+    "Review false positives manually before moving any case into the stable benchmark.",
+    "Change neither Skeptic nor scorer in the same controlled comparison."
+  ],
+  "exclusions": [
+    "Historical model responses and judge outputs",
+    "Private or protected holdout content",
+    "Generated scores or baseline conclusions",
+    "Former lifecycle controllers, checkpoint state machines, and receipt gates",
+    "Automatic promotion into the stable benchmark"
+  ]
+}

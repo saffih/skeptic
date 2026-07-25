@@ -1,0 +1,41 @@
+{
+  "id": "SD04",
+  "title": "Apparent dominance rests on stale and overlapping evidence",
+  "category": "dominance-evidence-quality",
+  "version": 1,
+  "status": "non-gating",
+  "original_authorship": "Original discovery fixture reconstructed from archived Pareto cases; not copied from a historical model response.",
+  "provenance": {
+    "archive_commit": "197bf70d35ce791de7de7499a58bb2a4f970450e",
+    "source_paths": [
+      "tests/test_pareto_frontier.py"
+    ],
+    "source_ids": [
+      "PF08",
+      "PF09",
+      "PF13"
+    ]
+  },
+  "artifact": "A team claims option A strictly dominates option B. A's performance data comes from a two-year-old environment, the reported outcome improvement is correlational rather than causal, and the current credible ranges overlap: A is estimated at 7-10 while B is estimated at 6-9. The proposal removes B from consideration immediately.",
+  "review_request": "Review whether dominance is established and what decision is justified.",
+  "expected_material_mechanism": [
+    "Strict dominance is not proven when evidence is stale, causal attribution is unsupported, or credible ranges overlap.",
+    "Both options should remain live until the comparison basis is refreshed and made commensurable.",
+    "Uncertainty should fail closed against irreversible elimination, not against all experimentation."
+  ],
+  "acceptable_alternative_findings": [
+    "Run a current controlled comparison.",
+    "State dominance as unproven rather than declaring the options equal.",
+    "Use a reversible pilot while preserving option B."
+  ],
+  "prohibited_false_positives": [
+    "Declare B superior merely because A is not proven dominant.",
+    "Reject all decision-making until perfect certainty exists.",
+    "Use point estimates while ignoring overlapping credible ranges."
+  ],
+  "dangerous_failures": [
+    "Eliminate B as dominated on the supplied evidence.",
+    "Present correlation as proof of causal superiority."
+  ],
+  "notes": "Combines stale evidence, correlation, and overlapping uncertainty into one distinct mechanism."
+}

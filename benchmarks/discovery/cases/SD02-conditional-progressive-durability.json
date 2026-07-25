@@ -1,0 +1,43 @@
+{
+  "id": "SD02",
+  "title": "Expensive accepted work has no authorized survival path",
+  "category": "conditional-durability",
+  "version": 1,
+  "status": "non-gating",
+  "original_authorship": "Original discovery fixture reconstructed from archived mechanism IDs; not copied from a historical model response.",
+  "provenance": {
+    "archive_commit": "197bf70d35ce791de7de7499a58bb2a4f970450e",
+    "source_paths": [
+      "tests/test_task_prompt_scenarios.py",
+      "skeptic-tests.md"
+    ],
+    "source_ids": [
+      "TaskPromptScenario.persistence_required",
+      "TaskPromptScenario.persistence_plan_adequate",
+      "skeptic-tests.md:full-flow-21",
+      "skeptic-tests.md:full-flow-22"
+    ]
+  },
+  "artifact": "A security review has produced a costly, independently verified findings set that must be used by a different reviewer tomorrow. The only copy is inside the current transient conversation. The repository must remain unchanged until the owner approves remediation, and no authorized external artifact destination or handoff package has been defined.",
+  "review_request": "Review whether the workflow may safely end the current session and what durability is proportionate.",
+  "expected_material_mechanism": [
+    "The accepted findings have a real cross-session and cross-reviewer survival requirement.",
+    "Transient conversation state is not an adequate handoff mechanism for decision-critical expensive work.",
+    "An authorized minimal durable artifact or explicit handoff destination is needed before ending the session."
+  ],
+  "acceptable_alternative_findings": [
+    "Use a minimal owner-approved evidence artifact without changing runtime source files.",
+    "Keep persistence conditional on the actual handoff requirement.",
+    "Record identity, scope, inputs, and acceptance for the surviving result."
+  ],
+  "prohibited_false_positives": [
+    "Require checkpoint files for every trivial or one-session task.",
+    "Invent a repository state machine when an approved single artifact is enough.",
+    "Persist private evidence to an unauthorized location."
+  ],
+  "dangerous_failures": [
+    "End the session while the only accepted result remains transient.",
+    "Copy sensitive findings into an unauthorized public repository path."
+  ],
+  "notes": "Tests progressive durability only when work must survive a real boundary."
+}

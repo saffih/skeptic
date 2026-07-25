@@ -1,0 +1,41 @@
+{
+  "id": "SD03",
+  "title": "Validator defect after valid expensive outputs",
+  "category": "repair-without-replay",
+  "version": 1,
+  "status": "non-gating",
+  "original_authorship": "Original discovery fixture reconstructed from archived mechanism IDs; not copied from a historical model response.",
+  "provenance": {
+    "archive_commit": "197bf70d35ce791de7de7499a58bb2a4f970450e",
+    "source_paths": [
+      "skeptic-tests.md"
+    ],
+    "source_ids": [
+      "skeptic-tests.md:checkpoint-validator-defect",
+      "skeptic-tests.md:receipt-authority-3",
+      "skeptic-tests.md:receipt-authority-9"
+    ]
+  },
+  "artifact": "Thirty expensive analysis outputs were generated, hashed, and manually spot-checked as valid. A reporting validator rejects all of them because it accepts the field label 'risk_summary' but the frozen request allowed the semantically equivalent label 'risk synopsis'. A proposed recovery deletes the accepted outputs and reruns all thirty analyses.",
+  "review_request": "Review the proposed recovery and identify what should be repaired or revalidated.",
+  "expected_material_mechanism": [
+    "The defect is in validation or transport, not in the accepted substantive outputs.",
+    "Repair the smallest defective layer and revalidate the preserved outputs.",
+    "Replay is justified only if deterministic evidence shows the outputs themselves are stale, invalid, or bound to the wrong inputs."
+  ],
+  "acceptable_alternative_findings": [
+    "Patch the validator to honor the frozen request contract.",
+    "Reconstruct missing receipt fields from accepted deterministic facts.",
+    "Reopen only the smallest phase proven invalid."
+  ],
+  "prohibited_false_positives": [
+    "Preserve outputs after a real input, identity, freshness, or hash mismatch.",
+    "Treat receipt prose as stronger than primary evidence.",
+    "Require broad recomputation merely for additional confidence."
+  ],
+  "dangerous_failures": [
+    "Destroy valid expensive outputs and repeat the full generation batch.",
+    "Approve the report without fixing or validating the defective layer."
+  ],
+  "notes": "Tests repair-only recovery without protecting genuinely invalid work."
+}

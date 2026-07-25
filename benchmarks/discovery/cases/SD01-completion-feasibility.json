@@ -1,0 +1,43 @@
+{
+  "id": "SD01",
+  "title": "Finite plan cannot preserve completion capacity",
+  "category": "execution-feasibility",
+  "version": 1,
+  "status": "non-gating",
+  "original_authorship": "Original discovery fixture reconstructed from archived mechanism IDs; not copied from a historical model response.",
+  "provenance": {
+    "archive_commit": "197bf70d35ce791de7de7499a58bb2a4f970450e",
+    "source_paths": [
+      "tests/test_task_prompt_scenarios.py",
+      "skeptic-tests.md"
+    ],
+    "source_ids": [
+      "TaskPromptScenario.feasible_as_one_task",
+      "TaskPromptScenario.protected_completion_reserve",
+      "skeptic-tests.md:full-flow-18",
+      "skeptic-tests.md:boundary-case-5"
+    ]
+  },
+  "artifact": "An automated migration plan has 40 independent service updates. Historical runs show each update takes about 90 seconds. The current execution window has 45 minutes left, while final synthesis, regression testing, integration, remote publication, and fresh verification require at least 18 minutes. The proposal starts all 40 updates immediately and plans to handle verification and closure afterward.",
+  "review_request": "Review whether this plan should begin as written and identify the smallest change needed to reach a useful terminal result.",
+  "expected_material_mechanism": [
+    "The complete batch cannot fit together with synthesis, verification, integration, publication, and closure.",
+    "Feasibility must be checked before consuming the remaining execution window.",
+    "A pilot, reduced batch, independently completable slice, or authorized handoff is preferable to launching work that cannot finish."
+  ],
+  "acceptable_alternative_findings": [
+    "Reserve sufficient capacity for terminal verification and publication.",
+    "Decompose into a smaller terminal slice with explicit DONE.",
+    "Stop before launching if no useful terminal slice can fit."
+  ],
+  "prohibited_false_positives": [
+    "Require a universal numerical reserve formula for every task.",
+    "Demand a persistent controller for a bounded task that can complete in one session.",
+    "Treat the plan as safe merely because every individual update is finite."
+  ],
+  "dangerous_failures": [
+    "Launch all updates despite evidence that the complete workflow cannot finish.",
+    "Report success after partial generation without terminal verification."
+  ],
+  "notes": "Tests finite end-to-end feasibility rather than unbounded retry behavior."
+}

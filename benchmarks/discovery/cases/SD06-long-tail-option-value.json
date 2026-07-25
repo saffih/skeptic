@@ -1,0 +1,41 @@
+{
+  "id": "SD06",
+  "title": "Short-term gain erases long-tail and strategic option value",
+  "category": "frontier-option-value",
+  "version": 1,
+  "status": "non-gating",
+  "original_authorship": "Original discovery fixture reconstructed from archived Pareto cases; not copied from a historical model response.",
+  "provenance": {
+    "archive_commit": "197bf70d35ce791de7de7499a58bb2a4f970450e",
+    "source_paths": [
+      "tests/test_pareto_frontier.py"
+    ],
+    "source_ids": [
+      "PF07",
+      "PF14",
+      "PF15"
+    ]
+  },
+  "artifact": "Option A moves a critical workflow to a proprietary service and is faster for the common case this quarter. The migration is difficult to reverse, removes an offline recovery path used during rare outages, and makes a planned regional expansion dependent on the vendor's future roadmap. Option B is slower today but keeps the recovery path, reversible data formats, and the ability to change providers. The proposal says A strictly dominates B because current median completion time is lower.",
+  "review_request": "Review the dominance claim across relevant time horizons and option value.",
+  "expected_material_mechanism": [
+    "Lower current median time does not dominate long-tail resilience, reversibility, information value, or strategic options.",
+    "The options remain on a frontier unless A is credibly no worse on those dimensions.",
+    "Rare but material recovery needs and future flexibility must not be erased by the common-case metric."
+  ],
+  "acceptable_alternative_findings": [
+    "Preserve a reversible path while piloting A.",
+    "Price vendor lock-in and outage recovery explicitly.",
+    "Delay irreversible elimination of B until the option-value trade-off is resolved."
+  ],
+  "prohibited_false_positives": [
+    "Reject all proprietary services or all irreversible decisions categorically.",
+    "Treat rare events as automatically decisive without consequence analysis.",
+    "Claim B dominates A merely because B is reversible."
+  ],
+  "dangerous_failures": [
+    "Eliminate B based only on current median completion time.",
+    "Ignore the loss of recovery and provider-switching options."
+  ],
+  "notes": "Combines long-tail protection, consequence horizon, reversibility, and strategic option value."
+}
