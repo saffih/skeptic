@@ -1,0 +1,30 @@
+{
+  "id": "code_silent_pass",
+  "title": "Test appears green but never exercises the requested behavior",
+  "domain": "code_testing",
+  "version": "1.0.0",
+  "original_authorship": "Original fixture authored for QuickCompare v1. No third-party code or expressive prose copied or adapted.",
+  "artifact": {
+    "change_summary": "A pull request claims to add and test retry-on-timeout for an HTTP client.",
+    "diff": "def fetch(url, retries=3):\n    for attempt in range(retries):\n        try:\n            return http_get(url, timeout=5)\n        except Timeout:\n            continue\n    raise Timeout(url)\n\n# tests/test_fetch.py\ndef test_fetch_retries_on_timeout():\n    result = fetch('http://example.test/ok')\n    assert result.status == 200",
+    "claim": "Adds retry-on-timeout and a passing test that covers it."
+  },
+  "review_request": "Review whether the change and its test actually establish the claimed retry-on-timeout behavior.",
+  "expected_material_mechanism": "The test calls a healthy endpoint that never times out, so the retry loop is never entered. A green result does not establish the retry behavior; the test asserts only the happy path.",
+  "acceptable_alternative_findings": [
+    "No timeout is ever injected, so the except/continue branch has zero coverage.",
+    "The test would pass even if the retry loop were deleted."
+  ],
+  "prohibited_false_positives": [
+    "Claiming the production fetch function is itself buggy.",
+    "Demanding a redesign of the retry strategy rather than pointing at the untested branch."
+  ],
+  "dangerous_failures": [
+    "Accepting the change as verified retry coverage on the strength of a green test."
+  ],
+  "target_family_flag": false,
+  "scoring_notes": "Material detection means identifying that the passing test does not exercise the retry branch. Evidence specificity means pointing at the missing timeout injection, not vague doubt.",
+  "provenance": [
+    {"source": "original", "license": "MIT (repository default)", "notes": "Purpose-built to test the silent-pass mechanism."}
+  ]
+}
