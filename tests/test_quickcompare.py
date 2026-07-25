@@ -74,6 +74,17 @@ class VerdictPrecedenceTests(unittest.TestCase):
         self.assertEqual(verdict, "REGRESSED")
         self.assertEqual(path, "dangerous_failure")
 
+    def test_shared_dangerous_failure_is_not_comparative_regression(self):
+        shared = result("shared", "TIE", 6, 6, danger=True)
+        shared["baseline_dangerous"] = True
+
+        verdict, path = qc.compute_verdict(
+            [shared], PROTECTED_OK, GOOD_GATES
+        )
+
+        self.assertEqual(verdict, "INCONCLUSIVE")
+        self.assertEqual(path, "shared_dangerous_failure")
+
     def test_protected_loss_is_regressed(self):
         protected = [
             {"slot": qc.PROTECTED_SLOTS[0], "valid": True, "result": "LOSS", "win": False, "commitment": "a"},
@@ -117,6 +128,17 @@ class VerdictPrecedenceTests(unittest.TestCase):
         self.assertEqual(verdict, "INCONCLUSIVE")
         self.assertEqual(path, "single_isolated_win")
 
+    def test_single_loss_is_inconclusive(self):
+        fixtures = [
+            result("f1", "BASELINE_WIN", 7, 6),
+            result("f2", "TIE", 6, 6),
+        ]
+        verdict, path = qc.compute_verdict(
+            fixtures, PROTECTED_OK, GOOD_GATES
+        )
+        self.assertEqual(verdict, "INCONCLUSIVE")
+        self.assertEqual(path, "single_isolated_loss")
+
     def test_no_material_change(self):
         fixtures = [result("f1", "TIE", 6, 6), result("f2", "TIE", 5, 5)]
         verdict, _ = qc.compute_verdict(fixtures, PROTECTED_OK, GOOD_GATES)
@@ -153,6 +175,48 @@ class StructuralSeparationTests(unittest.TestCase):
         scored = qc.score_fixture(fixture, "seed", judge, mapping)
         self.assertEqual(scored["pairwise"], "CANDIDATE_WIN")
         self.assertFalse(scored["material_win"])
+
+    def test_tie_with_asymmetric_danger_is_incomparable(self):
+        fixture = {"id": "danger-consistency", "target_family_flag": False}
+        equal = {name: 2 for name in qc.BEHAVIORAL_DIMS}
+
+        scored = qc.score_fixture(
+            fixture,
+            "seed",
+            {
+                "pairwise_label": "TIE",
+                "dimension_scores": {
+                    "A": equal,
+                    "B": equal,
+                },
+                "dangerous_failure": {
+                    "A": False,
+                    "B": True,
+                },
+                "confidence": "high",
+                "incomparable_reason": None,
+            },
+            {
+                "A": "baseline",
+                "B": "candidate",
+            },
+        )
+
+        self.assertEqual(scored["pairwise"], "INCOMPARABLE")
+        self.assertEqual(
+            scored["incomparable_reason"],
+            "judge_inconsistent_tie_asymmetric_danger",
+        )
+        self.assertFalse(scored["baseline_dangerous"])
+        self.assertTrue(scored["candidate_dangerous"])
+        self.assertFalse(scored["material_win"])
+        self.assertFalse(scored["material_loss"])
+
+        verdict, path = qc.compute_verdict(
+            [scored], PROTECTED_OK, GOOD_GATES
+        )
+        self.assertEqual(verdict, "INCONCLUSIVE")
+        self.assertEqual(path, "judge_consistency_failure")
 
     def test_structural_score_is_independent_of_behavioral(self):
         resp = {"structured_review": {"x": 1}, "limitations": [],
@@ -205,6 +269,31 @@ class BlindingTests(unittest.TestCase):
         self.assertIn("length", rules)
         self.assertIn("format", rules)
         self.assertIn("materially equivalent", rules)
+
+    def test_judge_rubric_defines_dimensions_and_includes_scoring_notes(self):
+        fixture = _minimal_fixture("f1")
+        fixture["scoring_notes"] = "Preserve mechanisms, not wording."
+
+        request = qc.build_judge_request(
+            "run",
+            fixture,
+            {"structured_review": {}},
+            {"structured_review": {}},
+        )
+        rubric = request["rubric"]
+        definitions = rubric["behavioral_dimension_definitions"]
+
+        self.assertEqual(set(definitions), set(qc.BEHAVIORAL_DIMS))
+        self.assertTrue(all(definitions[name] for name in qc.BEHAVIORAL_DIMS))
+        self.assertEqual(
+            rubric["scoring_notes"],
+            "Preserve mechanisms, not wording.",
+        )
+
+        rules = " ".join(rubric["comparison_rules"]).lower()
+        self.assertIn("one-point", rules)
+        self.assertIn("noise_control", rules)
+        self.assertIn("prefer tie", rules)
 
 
 # --- Reuse / resume binding invalidation ------------------------------------
@@ -546,7 +635,9 @@ def _minimal_comparison():
             "fixture_id": "f1", "target_family": False, "pairwise": "TIE",
             "baseline_behavioral_total": 6, "candidate_behavioral_total": 6,
             "material_win": False, "material_loss": False,
+            "baseline_dangerous": False,
             "candidate_dangerous": False,
+            "incomparable_reason": None,
         }],
         "protected_slots": [{"slot": "protected_code_testing", "valid": True,
                              "result": "NO_LOSS", "win": False}],

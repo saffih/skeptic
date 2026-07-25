@@ -79,7 +79,11 @@
           "candidate_behavioral_total": {"type": "integer"},
           "material_win": {"type": "boolean"},
           "material_loss": {"type": "boolean"},
-          "candidate_dangerous": {"type": "boolean"}
+          "baseline_dangerous": {"type": "boolean"},
+          "candidate_dangerous": {"type": "boolean"},
+          "incomparable_reason": {
+            "type": ["string", "null"]
+          }
         }
       }
     },
