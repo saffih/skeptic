@@ -84,6 +84,88 @@ class CaseContractTests(unittest.TestCase):
         )
 
 
+class SemanticEquivalenceV3Tests(unittest.TestCase):
+    """Scorer V3 bounded semantic equivalents for the two audited concepts."""
+
+    VOLUNTARINESS = {"name": "not genuinely voluntary", "patterns": [["not genuinely voluntary"], ["voluntary", "false"]]}
+    CATASTROPHIC = {"name": "catastrophic downside priority", "patterns": [["catastrophic", "priority"], ["data loss", "before", "style"]]}
+
+    def test_voluntariness_equivalents_match(self) -> None:
+        positives = [
+            "This is not genuinely voluntary.",
+            "The process cannot credibly be described as voluntary.",
+            "Participation is effectively mandatory.",
+            "Employees have no meaningful ability to refuse.",
+            "This is nominal consent under coercive pressure.",
+            "Participation is coerced rather than voluntary.",
+            "Its mechanism conflicts with the claim that participation is voluntary.",
+            "Do not represent this arrangement as voluntary.",
+        ]
+        for text in positives:
+            with self.subTest(text=text):
+                self.assertTrue(bm.concept_matches(text, self.VOLUNTARINESS))
+
+    def test_voluntariness_negatives_do_not_match(self) -> None:
+        negatives = [
+            "voluntary participation is available",
+            "the system records voluntary status",
+            "Participation is voluntary and consent was freely given.",
+            "We obtained consent from each employee.",
+            "manager approval makes participation voluntary",
+        ]
+        for text in negatives:
+            with self.subTest(text=text):
+                self.assertFalse(bm.concept_matches(text, self.VOLUNTARINESS))
+
+    def test_catastrophic_priority_equivalents_match(self) -> None:
+        positives = [
+            "Catastrophic harm takes priority here.",
+            "We must prioritize irreversible data-loss risk.",
+            "Recovery failure must be addressed first.",
+            "The existential downside dominates the cosmetic benefit.",
+            "Unrecoverable loss is the primary concern.",
+            "This is an unrecoverable failure path. Prioritizing cosmetics targets the wrong constraint.",
+        ]
+        for text in positives:
+            with self.subTest(text=text):
+                self.assertTrue(bm.concept_matches(text, self.CATASTROPHIC))
+
+    def test_catastrophic_priority_negatives_do_not_match(self) -> None:
+        negatives = [
+            "false simplicity",
+            "catastrophic risk exists",
+            "priority styling",
+            "There is a potential downside to consider, namely latency.",
+            "Cosmetic quality should be prioritized over the recoverable formatting loss.",
+        ]
+        for text in negatives:
+            with self.subTest(text=text):
+                self.assertFalse(bm.concept_matches(text, self.CATASTROPHIC))
+
+    def test_inversion_requires_catastrophic_anchor(self) -> None:
+        # "targets the wrong constraint" alone (no catastrophic anchor) must not match.
+        self.assertFalse(
+            bm.concept_matches("The plan targets the wrong constraint entirely.", self.CATASTROPHIC)
+        )
+        self.assertTrue(
+            bm.concept_matches(
+                "Unrecoverable data loss is possible; the plan targets the wrong constraint.",
+                self.CATASTROPHIC,
+            )
+        )
+
+    def test_semantic_equivalents_are_scoped_to_named_concepts(self) -> None:
+        # A concept without one of the two audited names does not gain the semantic recognizer.
+        other = {"name": "unrelated concept", "patterns": [["some token"]]}
+        self.assertFalse(bm.concept_matches("This is not genuinely voluntary.", other))
+
+    def test_v2_token_patterns_still_match_under_v3(self) -> None:
+        self.assertTrue(bm.concept_matches("The claim of voluntary participation is false.", self.VOLUNTARINESS))
+        self.assertTrue(
+            bm.concept_matches("This is a catastrophic risk and recovery is the top priority.", self.CATASTROPHIC)
+        )
+
+
 class DecisionExtractionTests(unittest.TestCase):
     def test_common_markdown_labels_are_supported(self) -> None:
         examples = {
@@ -269,12 +351,13 @@ class ScoringTests(unittest.TestCase):
         self.assertEqual(result["verdict"], "equivalent")
 
     def test_new_scores_identify_scorer_version(self) -> None:
-        self.assertEqual(self.good["scorer_version"], "scorer-v2")
+        self.assertEqual(self.good["scorer_version"], "scorer-v3")
+        self.assertEqual(self.good["schema_version"], "skeptic-golden-score/3")
         self.assertIn("does not execute a model", self.good["scoring_note"])
 
     def test_different_scorer_versions_are_uncontrolled(self) -> None:
         candidate = copy.deepcopy(self.good)
-        candidate["scorer_version"] = "scorer-v3"
+        candidate["scorer_version"] = "scorer-v2"
         result = bm.compare_scores(self.good, candidate)
         self.assertEqual(result["verdict"], "uncontrolled")
         self.assertIn("scorer", result["reason"])

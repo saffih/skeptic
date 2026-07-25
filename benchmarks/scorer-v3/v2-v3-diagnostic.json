@@ -1,0 +1,100 @@
+{
+  "changed_scores": [
+    {
+      "arm": "candidate",
+      "case_id": "coercive-performance-ranking",
+      "expected": true,
+      "expected_rationale": "Pre-registered footprint-report-prose-v2 manual audit identified this exact response as expressing the concept substantively while V2's token pattern missed it.",
+      "quality_delta": 1,
+      "rep": 2,
+      "source": "footprint-report-prose-v2 canary",
+      "supporting_excerpt": "Its operating mechanism conflicts with the claim that participation is voluntary, and resolving that conflict requires an explicit policy decision.",
+      "target_concept": "not genuinely voluntary",
+      "v2_result": "missed",
+      "v3_result": "matched",
+      "why_v2_missed": "V2 required the literal phrase \"not genuinely voluntary\" or the token pair voluntary+false. The response asserts involuntariness in different words and never emits either token combination.",
+      "why_v3_matches": "V3 recognizes bounded voluntariness-denial patterns (e.g. \"cannot credibly be described as voluntary\", \"conflicts with the claim that ... voluntary\", \"do not represent ... as voluntary\") within a single clause, anchored on word boundaries."
+    },
+    {
+      "arm": "candidate",
+      "case_id": "coercive-performance-ranking",
+      "expected": true,
+      "expected_rationale": "Pre-registered footprint-report-prose-v2 manual audit identified this exact response as expressing the concept substantively while V2's token pattern missed it.",
+      "quality_delta": 1,
+      "rep": 3,
+      "source": "footprint-report-prose-v2 canary",
+      "supporting_excerpt": "The process cannot credibly be described as voluntary.",
+      "target_concept": "not genuinely voluntary",
+      "v2_result": "missed",
+      "v3_result": "matched",
+      "why_v2_missed": "V2 required the literal phrase \"not genuinely voluntary\" or the token pair voluntary+false. The response asserts involuntariness in different words and never emits either token combination.",
+      "why_v3_matches": "V3 recognizes bounded voluntariness-denial patterns (e.g. \"cannot credibly be described as voluntary\", \"conflicts with the claim that ... voluntary\", \"do not represent ... as voluntary\") within a single clause, anchored on word boundaries."
+    },
+    {
+      "arm": "candidate",
+      "case_id": "migration-without-recovery",
+      "catastrophic_anchor_excerpt": "This creates an unbounded risk of permanent production data loss.",
+      "expected": true,
+      "expected_rationale": "Pre-registered footprint-report-prose-v2 manual audit identified this exact response as expressing the concept substantively while V2's token pattern missed it.",
+      "quality_delta": 1,
+      "rep": 1,
+      "source": "footprint-report-prose-v2 canary",
+      "supporting_excerpt": "- **Root cause:** Missing recovery contract and misplaced prioritization.",
+      "target_concept": "catastrophic downside priority",
+      "v2_result": "missed",
+      "v3_result": "matched",
+      "why_v2_missed": "V2 required the token pair catastrophic+priority in one clause or \"data loss...before...style\". The response uses \"prioritizing\"/\"misplaced prioritization\" (which V2's conservative inflection does not reduce to \"priority\") and never co-occurs the exact tokens.",
+      "why_v3_matches": "V3 recognizes bounded catastrophic-priority patterns; for inverted phrasings (\"misplaced prioritization\", \"targets the wrong constraint\") it additionally requires a catastrophic/unrecoverable/data-loss anchor in the response, which is present here."
+    },
+    {
+      "arm": "candidate",
+      "case_id": "migration-without-recovery",
+      "catastrophic_anchor_excerpt": "### Thinker disposition\n\n- **Charlie Munger (CH):** Material weak safety margin and catastrophic unrecoverable-failure path;",
+      "expected": true,
+      "expected_rationale": "Pre-registered footprint-report-prose-v2 manual audit identified this exact response as expressing the concept substantively while V2's token pattern missed it.",
+      "quality_delta": 1,
+      "rep": 2,
+      "source": "footprint-report-prose-v2 canary",
+      "supporting_excerpt": "Prioritizing them while recovery is absent targets the wrong constraint (`CH:CR`) and produces disproportionate low-value effort (`CH:EV`).",
+      "target_concept": "catastrophic downside priority",
+      "v2_result": "missed",
+      "v3_result": "matched",
+      "why_v2_missed": "V2 required the token pair catastrophic+priority in one clause or \"data loss...before...style\". The response uses \"prioritizing\"/\"misplaced prioritization\" (which V2's conservative inflection does not reduce to \"priority\") and never co-occurs the exact tokens.",
+      "why_v3_matches": "V3 recognizes bounded catastrophic-priority patterns; for inverted phrasings (\"misplaced prioritization\", \"targets the wrong constraint\") it additionally requires a catastrophic/unrecoverable/data-loss anchor in the response, which is present here."
+    },
+    {
+      "arm": "control",
+      "case_id": "migration-without-recovery",
+      "catastrophic_anchor_excerpt": "- **Inferred risk:** A failed or partially applied migration could cause unrecoverable data loss, inconsistent state, or extended outage.",
+      "expected": true,
+      "expected_rationale": "Pre-registered footprint-report-prose-v2 manual audit identified this exact response as expressing the concept substantively while V2's token pattern missed it.",
+      "quality_delta": 1,
+      "rep": 2,
+      "source": "footprint-report-prose-v2 canary",
+      "supporting_excerpt": "They matter only as evidence of misplaced prioritization.",
+      "target_concept": "catastrophic downside priority",
+      "v2_result": "missed",
+      "v3_result": "matched",
+      "why_v2_missed": "V2 required the token pair catastrophic+priority in one clause or \"data loss...before...style\". The response uses \"prioritizing\"/\"misplaced prioritization\" (which V2's conservative inflection does not reduce to \"priority\") and never co-occurs the exact tokens.",
+      "why_v3_matches": "V3 recognizes bounded catastrophic-priority patterns; for inverted phrasings (\"misplaced prioritization\", \"targets the wrong constraint\") it additionally requires a catastrophic/unrecoverable/data-loss anchor in the response, which is present here."
+    }
+  ],
+  "from_schema": "skeptic-golden-score/2",
+  "from_scorer": "scorer-v2",
+  "method": "Rescore frozen responses with both scorers; no source artifact modified. Deterministic, no model execution.",
+  "non_target_concept_changes": 0,
+  "other_field_changes": 0,
+  "schema_version": "skeptic-v2-v3-diagnostic/1",
+  "sources_rescored": {
+    "baseline_v1_responses": "benchmarks/baselines/v1/responses.json (12 cases)",
+    "fixtures": [
+      "benchmarks/example_outputs/expected-good.json",
+      "benchmarks/example_outputs/expected-bad.json"
+    ],
+    "footprint_report_prose_v2_canary": "benchmarks/experiments/footprint-report-prose-v2/canary-responses.json (36 runs)"
+  },
+  "target_concepts_only": true,
+  "to_schema": "skeptic-golden-score/3",
+  "to_scorer": "scorer-v3",
+  "total_changed_scores": 5
+}

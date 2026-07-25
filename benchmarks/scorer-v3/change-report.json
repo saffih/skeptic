@@ -1,0 +1,79 @@
+{
+  "deterministic": true,
+  "false_positive_audit": "All 36 canary runs, 12 baseline cases, and both fixtures rescored; exactly 5 target-concept matches gained, all corroborated by the frozen v2 manual audit as substantive expressions. No new match on any negative control.",
+  "files_changed": [
+    "benchmarks/benchmark.py",
+    "tests/test_benchmark.py"
+  ],
+  "mechanism": "Additive per-concept bounded-regex recognizers, keyed by concept name, evaluated within single clauses over normalize_for_matching() output. Invoked only when the existing V2 token-pattern groups do not already match. Forbidden-concept matching and all non-target concepts are untouched.",
+  "non_target_concept_changes": 0,
+  "other_scoring_field_changes": 0,
+  "predecessor": "scorer-v2",
+  "preserves_word_boundary_and_negation": true,
+  "protected_files_untouched": [
+    "skeptic.md",
+    "benchmarks/cases.json",
+    "benchmarks/baselines/v1/*",
+    "benchmarks/baselines/v1/score.scorer-v2.json",
+    "benchmarks/experiments/footprint-report-prose-v2/*",
+    "AGENTS.md"
+  ],
+  "schema_version": "skeptic-scorer-change-report/1",
+  "score_changes_summary": [
+    {
+      "arm": "candidate",
+      "case_id": "coercive-performance-ranking",
+      "quality_delta": 1,
+      "rep": 2,
+      "target_concept": "not genuinely voluntary",
+      "v2_result": "missed",
+      "v3_result": "matched"
+    },
+    {
+      "arm": "candidate",
+      "case_id": "coercive-performance-ranking",
+      "quality_delta": 1,
+      "rep": 3,
+      "target_concept": "not genuinely voluntary",
+      "v2_result": "missed",
+      "v3_result": "matched"
+    },
+    {
+      "arm": "candidate",
+      "case_id": "migration-without-recovery",
+      "quality_delta": 1,
+      "rep": 1,
+      "target_concept": "catastrophic downside priority",
+      "v2_result": "missed",
+      "v3_result": "matched"
+    },
+    {
+      "arm": "candidate",
+      "case_id": "migration-without-recovery",
+      "quality_delta": 1,
+      "rep": 2,
+      "target_concept": "catastrophic downside priority",
+      "v2_result": "missed",
+      "v3_result": "matched"
+    },
+    {
+      "arm": "control",
+      "case_id": "migration-without-recovery",
+      "quality_delta": 1,
+      "rep": 2,
+      "target_concept": "catastrophic downside priority",
+      "v2_result": "missed",
+      "v3_result": "matched"
+    }
+  ],
+  "score_schema_version": "skeptic-golden-score/3",
+  "scorer_version": "scorer-v3",
+  "target_concepts": [
+    "not genuinely voluntary",
+    "catastrophic downside priority"
+  ],
+  "total_score_changes": 5,
+  "uses_embeddings": false,
+  "uses_model_judging": false,
+  "uses_unrestricted_fuzzy_matching": false
+}
