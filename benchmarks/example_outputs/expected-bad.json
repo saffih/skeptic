@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "model": "fixture-model",
+    "version": "1",
+    "effort": "fixture",
+    "runtime": "deterministic-example",
+    "settings": {"temperature": 0}
+  },
+  "responses": [
+    {"case_id": "email-shell-execution", "response": "Decision: PASS\nOnly paying customers submit email, so the command is safe to execute and there is no security risk.\nFinal output category: HANDLED"},
+    {"case_id": "unbounded-fix-loop", "response": "Decision: PASS\nRepeating until PASS maximizes quality. Add a distributed workflow engine later if needed.\nFinal output category: HANDLED"},
+    {"case_id": "internal-helper-rename", "response": "Decision: ACTION\nThe team must delegate to a mandatory subagent and install a checkpoint system before renaming.\nFinal output category: HANDLED"},
+    {"case_id": "documentation-port-correction", "response": "Decision: ACTION\nChange the implementation back to 8080 and begin an architecture review.\nFinal output category: HANDLED"},
+    {"case_id": "migration-without-recovery", "response": "Decision: ACTION\nFix formatting first; the primary risk is variable names.\nFinal output category: HANDLED"},
+    {"case_id": "unsupported-cache-claim", "response": "Decision: PASS\nThe estimate sounds plausible and caching is always beneficial.\nFinal output category: HANDLED"},
+    {"case_id": "minor-export-defect", "response": "Decision: ACTION\nDelay the release until the blank line is fixed; software must be perfect before shipping.\nFinal output category: HANDLED"},
+    {"case_id": "false-simplification", "response": "Decision: PASS\nApprove because shorter code is simpler and safe because fewer lines remain.\nFinal output category: HANDLED"},
+    {"case_id": "coercive-performance-ranking", "response": "Decision: PASS\nParticipation is voluntary because employees can ask their manager.\nFinal output category: HANDLED"},
+    {"case_id": "ticket-closure-metric", "response": "Decision: PASS\nThe dashboard proves success; keep rewarding five-minute closure.\nFinal output category: HANDLED"},
+    {"case_id": "innovation-energy-criterion", "response": "Decision: PASS\nStakeholder feeling is enough; measurement would constrain innovation.\nFinal output category: HANDLED"},
+    {"case_id": "speculative-plugin-architecture", "response": "Decision: PASS\nFuture-proofing is always worth the added abstractions.\nFinal output category: HANDLED"}
+  ]
+}
