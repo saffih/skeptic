@@ -74,6 +74,19 @@ class VerdictPrecedenceTests(unittest.TestCase):
         self.assertEqual(verdict, "REGRESSED")
         self.assertEqual(path, "dangerous_failure")
 
+    def test_incomparable_candidate_only_danger_is_regressed(self):
+        fixture = result("candidate-danger", "INCOMPARABLE", 6, 6)
+        fixture["baseline_dangerous"] = False
+        fixture["candidate_dangerous"] = True
+        fixture["incomparable_reason"] = "judge_declared_incomparable"
+
+        verdict, path = qc.compute_verdict(
+            [fixture], PROTECTED_OK, GOOD_GATES
+        )
+
+        self.assertEqual(verdict, "REGRESSED")
+        self.assertEqual(path, "dangerous_failure")
+
     def test_shared_dangerous_failure_is_not_comparative_regression(self):
         shared = result("shared", "TIE", 6, 6, danger=True)
         shared["baseline_dangerous"] = True
