@@ -1,0 +1,56 @@
+{
+  "baseline": {
+    "expected_hash": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169",
+    "id": "skeptic-baseline-197bf70",
+    "path": "/Users/saffi/code/skeptic-candidate1-validation/skeptic.md"
+  },
+  "candidate": {
+    "expected_hash": "4b9a690e17b38499d056fbc72afda4ce502243638e0f5473497025be4f28b5f9",
+    "id": "skeptic-candidate-chat-1",
+    "path": "/Users/saffi/code/skeptic-candidate1-validation/calibration/chat-candidate-1/skeptic-candidate-chat-1.md"
+  },
+  "generator_argv": [
+    "python3",
+    "/Users/saffi/code/skeptic-candidate1-validation/calibration/chat-candidate-1/quickcompare-shadow/runners/codex_generator.py"
+  ],
+  "judge_argv": [
+    "python3",
+    "/Users/saffi/code/skeptic-candidate1-validation/calibration/chat-candidate-1/quickcompare-shadow/runners/codex_judge.py"
+  ],
+  "limitations": [
+    "Visible regression-screen batch with 3 cases.",
+    "No protected holdouts.",
+    "Cannot establish improvement or general equivalence.",
+    "Model outputs are stochastic.",
+    "Generator and judge use the same model family.",
+    "Judge uses a fresh ephemeral context and higher reasoning effort.",
+    "Behavioral dimensions have operational definitions.",
+    "A one-point noise-only difference is non-material when all core dimensions are equal and neither output is dangerous.",
+    "Interpret only as a behavioral regression screen."
+  ],
+  "manifest": "/Users/saffi/code/skeptic-candidate1-validation/calibration/chat-candidate-1/quickcompare-shadow/manifest-batch-2-remaining-rubric-v2.json",
+  "model_settings": {
+    "generator": {
+      "model": "gpt-5.6-luna",
+      "provider": "openai-codex-cli",
+      "reasoning_effort": "low"
+    },
+    "judge": {
+      "context": "fresh-ephemeral",
+      "independence_limitation": "Same model family as generator; separate context and higher reasoning effort.",
+      "model": "gpt-5.6-luna",
+      "provider": "openai-codex-cli",
+      "reasoning_effort": "high"
+    }
+  },
+  "output_dir": "/Users/saffi/code/skeptic-candidate1-validation/calibration/chat-candidate-1/quickcompare-shadow/results/batch-2-remaining-rubric-v2",
+  "resume": false,
+  "retry": {
+    "max_retries": 0
+  },
+  "run_id": "candidate1-shadow-batch-2-rubric-v2-20260725",
+  "schema_path": "/Users/saffi/code/skeptic-candidate1-validation/harness/quickcompare.schema.json",
+  "seed": "candidate1-shadow-batch-2-rubric-v2-seed-v1",
+  "target_hypothesis": "The compact candidate preserves material detection, evidence specificity, protected boundaries, and noise control across shadow Batch 2.",
+  "timeout_s": 300
+}

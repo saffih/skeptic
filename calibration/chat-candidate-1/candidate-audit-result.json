@@ -1,0 +1,169 @@
+{
+  "baseline": {
+    "bytes": 36626,
+    "estimated_tokens_chars4": 9156,
+    "estimated_tokens_words133": 7185,
+    "git_blob_sha": "63602be10e0e532ce512aaac0ea6a4d3cd67ce09",
+    "lines": 791,
+    "words": 5402
+  },
+  "candidate": {
+    "bytes": 27952,
+    "estimated_tokens_chars4": 6988,
+    "estimated_tokens_words133": 5063,
+    "git_blob_sha": "dc33edff9c09b151546540a910bc94817889fedc",
+    "lines": 504,
+    "words": 3807
+  },
+  "checks": {
+    "all_baseline_aspect_tags_present": true,
+    "all_baseline_companion_refs_present": true,
+    "all_output_terms_present": true,
+    "all_receipt_fields_present": true,
+    "no_new_companion_dependency": true,
+    "protected_doctrines_represented": true,
+    "stage_order_valid": true
+  },
+  "delta_percent": {
+    "bytes": -23.68,
+    "estimated_tokens_chars4": -23.68,
+    "estimated_tokens_words133": -29.53,
+    "lines": -36.28,
+    "words": -29.53
+  },
+  "details": {
+    "baseline_companion_refs": [
+      "agents/task-prompt.md",
+      "run skeptic.md",
+      "skeptic-questions.md",
+      "skeptic.md"
+    ],
+    "candidate_companion_refs": [
+      "agents/task-prompt.md",
+      "run skeptic.md",
+      "skeptic-questions.md",
+      "skeptic.md"
+    ],
+    "doctrines": {
+      "act_verify_learn": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "bounded_retries": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "completion_reserve": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "conditional_persistence": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "confidence_unknowns": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "decision_paths": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "dignity_persons_as_ends": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "evidence_levels": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "expert_review": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "fairness_hidden_burden": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "false_simplicity": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "final_outcomes": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "pareto_minority": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "promotion_block": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "razor": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "receipt_not_proof": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "sift": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "smallest_credible_alternative": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "source_of_truth": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "stabilization": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "structural_domain_checks": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "tag_semantics": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "task_prompt_feasibility": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "terminal_completion": {
+        "missing_patterns": [],
+        "pass": true
+      },
+      "trust_boundary": {
+        "missing_patterns": [],
+        "pass": true
+      }
+    },
+    "missing_aspect_tags": [],
+    "missing_companion_refs": [],
+    "missing_output_terms": [],
+    "missing_receipt_fields": [],
+    "new_companion_refs": [],
+    "stage_positions": {
+      "## 0. Gate": 2097,
+      "## 0.5. Fundamental Scan": 7257,
+      "## 1. Map - Detect Only": 7738,
+      "## 10. Act": 20440,
+      "## 11. Verify": 21105,
+      "## 12. Learn": 21739,
+      "## 6. Detection Confidence": 17034,
+      "## 7. Stabilize": 17980,
+      "## 8. Evidence Levels": 18566,
+      "## 9. Decide": 19352
+    }
+  },
+  "overall_mechanical_pass": true,
+  "warning": "Mechanical guard only; passing does not establish semantic or behavioral equivalence."
+}

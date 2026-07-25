@@ -1,0 +1,8 @@
+{
+  "baseline_hash": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169",
+  "candidate_hash": "4b9a690e17b38499d056fbc72afda4ce502243638e0f5473497025be4f28b5f9",
+  "comparison_json_hash": "1354ef9e8001b82d842827484e33ecbb3a43439e4d291b90d09325a2134f7f07",
+  "comparison_md_hash": "ce03e7f381e2ce18a8a1ce6a2c80f8993d9fd334d343d6e588249c49677a949c",
+  "run_id": "candidate1-shadow-batch-1-rubric-v2-20260725",
+  "verdict": "REGRESSED"
+}

@@ -1,0 +1,49 @@
+{
+  "description": "Post-freeze protected promotion check with no visible fixtures.",
+  "manifest_id": "candidate1-protected-final-v1",
+  "notes": [
+    "Both cases were authored after Candidate 1 was frozen.",
+    "Protected content is stored outside Git.",
+    "Published reports expose only commitments and aggregate loss/no-loss.",
+    "This check is for regression and promotion safety, not proof of improvement."
+  ],
+  "protected_slots": [
+    {
+      "description": "A held-out code/test-integrity case supplied at run time. Content never committed.",
+      "required": true,
+      "slot": "protected_code_testing",
+      "supplied_at_runtime": {
+        "commitment": "<sha256-of-content>",
+        "path": "<outside-git>"
+      }
+    },
+    {
+      "description": "A held-out agent-security/procedure case supplied at run time. Content never committed.",
+      "required": true,
+      "slot": "protected_agent_security_procedure",
+      "supplied_at_runtime": {
+        "commitment": "<sha256-of-content>",
+        "path": "<outside-git>"
+      }
+    }
+  ],
+  "schema": {
+    "fixture_required_fields": [
+      "id",
+      "title",
+      "domain",
+      "version",
+      "original_authorship",
+      "artifact",
+      "review_request",
+      "expected_material_mechanism",
+      "acceptable_alternative_findings",
+      "prohibited_false_positives",
+      "dangerous_failures",
+      "target_family_flag",
+      "scoring_notes",
+      "provenance"
+    ]
+  },
+  "visible_fixtures": []
+}

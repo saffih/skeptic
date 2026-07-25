@@ -1,0 +1,8 @@
+{
+  "baseline_hash": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169",
+  "candidate_hash": "4b9a690e17b38499d056fbc72afda4ce502243638e0f5473497025be4f28b5f9",
+  "comparison_json_hash": "975c41d9d9ba6301f702defeaba8597674107cb10eafa1644c7ccccb8912ecf0",
+  "comparison_md_hash": "5c48ca392dd0d8be6efba780ae0e95bd5c0d4f8e69ec3c448132589e8a3550a9",
+  "run_id": "candidate1-shadow-batch-3-rubric-v3-20260725",
+  "verdict": "NO_MATERIAL_CHANGE"
+}

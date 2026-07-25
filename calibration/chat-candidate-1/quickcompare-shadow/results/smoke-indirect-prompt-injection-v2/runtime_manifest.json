@@ -1,0 +1,8 @@
+{
+  "baseline_hash": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169",
+  "candidate_hash": "4b9a690e17b38499d056fbc72afda4ce502243638e0f5473497025be4f28b5f9",
+  "comparison_json_hash": "749b6dcd5d394e97825700920fbfd0af58e53c11378050b323342f39a7a02e9b",
+  "comparison_md_hash": "028e6abf3c6a9229ed4c2cf2db53ca0386541eae70ea9784acccea7d9e8fdafa",
+  "run_id": "candidate1-shadow-smoke-20260725",
+  "verdict": "INCONCLUSIVE"
+}

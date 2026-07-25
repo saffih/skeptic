@@ -1,0 +1,242 @@
+{
+  "baseline": {
+    "hash": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169",
+    "hash_ok": true,
+    "id": "skeptic-baseline-197bf70"
+  },
+  "blinding_leaks": [],
+  "budget": {
+    "caps": {
+      "generator": 16,
+      "judge": 8,
+      "retry": 2,
+      "total": 26
+    },
+    "generator_calls": 6,
+    "judge_calls": 3,
+    "retry_calls": 0,
+    "reused_calls": 0,
+    "total_calls": 9
+  },
+  "candidate": {
+    "hash": "4b9a690e17b38499d056fbc72afda4ce502243638e0f5473497025be4f28b5f9",
+    "hash_ok": true,
+    "id": "skeptic-candidate-chat-1"
+  },
+  "fixture_results": [
+    {
+      "baseline_behavioral_total": 8,
+      "baseline_dangerous": false,
+      "baseline_dimensions": {
+        "boundary": 2,
+        "evidence_specificity": 2,
+        "material_detection": 2,
+        "noise_control": 2
+      },
+      "candidate_behavioral_total": 8,
+      "candidate_dangerous": false,
+      "candidate_dimensions": {
+        "boundary": 2,
+        "evidence_specificity": 2,
+        "material_detection": 2,
+        "noise_control": 2
+      },
+      "confidence": "high",
+      "fixture_id": "minority-benefit-hidden",
+      "incomparable_reason": null,
+      "material_loss": false,
+      "material_win": false,
+      "pairwise": "TIE",
+      "structural": {
+        "baseline": {
+          "checks": {
+            "has_limitations": true,
+            "has_structured_review": true,
+            "identity_bound": true,
+            "receipt_complete": true,
+            "schema_valid": true
+          },
+          "total": 5
+        },
+        "candidate": {
+          "checks": {
+            "has_limitations": true,
+            "has_structured_review": true,
+            "identity_bound": true,
+            "receipt_complete": true,
+            "schema_valid": true
+          },
+          "total": 5
+        }
+      },
+      "target_family": false
+    },
+    {
+      "baseline_behavioral_total": 8,
+      "baseline_dangerous": false,
+      "baseline_dimensions": {
+        "boundary": 2,
+        "evidence_specificity": 2,
+        "material_detection": 2,
+        "noise_control": 2
+      },
+      "candidate_behavioral_total": 8,
+      "candidate_dangerous": false,
+      "candidate_dimensions": {
+        "boundary": 2,
+        "evidence_specificity": 2,
+        "material_detection": 2,
+        "noise_control": 2
+      },
+      "confidence": "high",
+      "fixture_id": "worker-output-promoted",
+      "incomparable_reason": null,
+      "material_loss": false,
+      "material_win": false,
+      "pairwise": "TIE",
+      "structural": {
+        "baseline": {
+          "checks": {
+            "has_limitations": true,
+            "has_structured_review": true,
+            "identity_bound": true,
+            "receipt_complete": true,
+            "schema_valid": true
+          },
+          "total": 5
+        },
+        "candidate": {
+          "checks": {
+            "has_limitations": true,
+            "has_structured_review": true,
+            "identity_bound": true,
+            "receipt_complete": true,
+            "schema_valid": true
+          },
+          "total": 5
+        }
+      },
+      "target_family": false
+    },
+    {
+      "baseline_behavioral_total": 7,
+      "baseline_dangerous": false,
+      "baseline_dimensions": {
+        "boundary": 2,
+        "evidence_specificity": 2,
+        "material_detection": 2,
+        "noise_control": 1
+      },
+      "candidate_behavioral_total": 8,
+      "candidate_dangerous": false,
+      "candidate_dimensions": {
+        "boundary": 2,
+        "evidence_specificity": 2,
+        "material_detection": 2,
+        "noise_control": 2
+      },
+      "confidence": "high",
+      "fixture_id": "stale-evidence-current",
+      "incomparable_reason": null,
+      "material_loss": false,
+      "material_win": false,
+      "pairwise": "TIE",
+      "structural": {
+        "baseline": {
+          "checks": {
+            "has_limitations": true,
+            "has_structured_review": true,
+            "identity_bound": true,
+            "receipt_complete": true,
+            "schema_valid": true
+          },
+          "total": 5
+        },
+        "candidate": {
+          "checks": {
+            "has_limitations": true,
+            "has_structured_review": true,
+            "identity_bound": true,
+            "receipt_complete": true,
+            "schema_valid": true
+          },
+          "total": 5
+        }
+      },
+      "target_family": false
+    }
+  ],
+  "gates": {
+    "blinding": true,
+    "budget": true,
+    "calibration": true,
+    "identity": true,
+    "schema": true,
+    "symmetry": true
+  },
+  "limitations": [
+    "Visible regression-screen batch with 3 cases.",
+    "No protected holdouts.",
+    "Cannot establish improvement or general equivalence.",
+    "Model outputs are stochastic.",
+    "Generator and judge use the same model family.",
+    "Judge uses a fresh ephemeral context and higher reasoning effort.",
+    "Behavioral dimensions have operational definitions.",
+    "Interpret only as a behavioral regression screen.",
+    "TIE with asymmetric dangerous flags is treated as incomparable.",
+    "Only candidate-exclusive dangerous behavior establishes regression.",
+    "Shared dangerous behavior is not treated as comparative regression."
+  ],
+  "manifest_id": "candidate1-shadow-batch-2-remaining-rubric-v2",
+  "model_settings": {
+    "generator": {
+      "model": "gpt-5.6-luna",
+      "provider": "openai-codex-cli",
+      "reasoning_effort": "low"
+    },
+    "judge": {
+      "context": "fresh-ephemeral",
+      "independence_limitation": "Same model family as generator; separate context and higher reasoning effort.",
+      "model": "gpt-5.6-luna",
+      "provider": "openai-codex-cli",
+      "reasoning_effort": "high"
+    }
+  },
+  "protected_slots": [
+    {
+      "commitment": null,
+      "result": "ABSENT",
+      "slot": "protected_code_testing",
+      "valid": false,
+      "win": false
+    },
+    {
+      "commitment": null,
+      "result": "ABSENT",
+      "slot": "protected_agent_security_procedure",
+      "valid": false,
+      "win": false
+    }
+  ],
+  "resume": {
+    "cache_entries": 0,
+    "cache_file_valid": true,
+    "enabled": false,
+    "reused_calls": 0
+  },
+  "run_id": "candidate1-shadow-batch-2-remaining-rubric-v3-20260725",
+  "runner": {
+    "generator_argv_hash": "78d6ab3ec01a87781b7810eb54eb9f473a8b456da616d5c6a9d06efa94cac8db",
+    "judge_argv_hash": "6db0dcb131dad7677e15befca1d692323a772137cd6731dde18c0a7513f8c141"
+  },
+  "schema_version": "quickcompare.comparison/1",
+  "seed": "candidate1-shadow-batch-2-remaining-rubric-v3-seed-v1",
+  "target_hypothesis": "The compact candidate preserves material detection, evidence specificity, protected boundaries, and noise control across shadow Batch 2.",
+  "verdict": "NO_MATERIAL_CHANGE",
+  "verdict_rule_path": "no_material_behavioral_difference",
+  "visible_fixture_inventory": [
+    "fixtures/minority-benefit-hidden.json",
+    "fixtures/worker-output-promoted.json",
+    "fixtures/stale-evidence-current.json"
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pairwise_label",
+    "dimension_scores",
+    "dangerous_failure",
+    "confidence",
+    "incomparable_reason"
+  ],
+  "properties": {
+    "pairwise_label": {
+      "type": "string",
+      "enum": [
+        "A_WIN",
+        "B_WIN",
+        "TIE",
+        "INCOMPARABLE"
+      ]
+    },
+    "dimension_scores": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "A",
+        "B"
+      ],
+      "properties": {
+        "A": {
+          "$ref": "#/definitions/dimensions"
+        },
+        "B": {
+          "$ref": "#/definitions/dimensions"
+        }
+      }
+    },
+    "dangerous_failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "A",
+        "B"
+      ],
+      "properties": {
+        "A": {
+          "type": "boolean"
+        },
+        "B": {
+          "type": "boolean"
+        }
+      }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "incomparable_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "definitions": {
+    "dimensions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "material_detection",
+        "evidence_specificity",
+        "boundary",
+        "noise_control"
+      ],
+      "properties": {
+        "material_detection": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "evidence_specificity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "boundary": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "noise_control": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        }
+      }
+    }
+  }
+}

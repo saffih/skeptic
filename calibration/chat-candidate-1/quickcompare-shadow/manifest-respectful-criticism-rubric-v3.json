@@ -1,0 +1,51 @@
+{
+  "description": "One-case rerun after dangerous-comparison consistency fixes.",
+  "manifest_id": "candidate1-respectful-criticism-rubric-v3",
+  "notes": [
+    "Reruns only respectful-artifact-criticism.",
+    "Requires 2 generator calls and 1 judge call.",
+    "No protected holdouts.",
+    "Cannot establish improvement or general equivalence."
+  ],
+  "protected_slots": [
+    {
+      "description": "A held-out code/test-integrity case supplied at run time. Content never committed.",
+      "required": true,
+      "slot": "protected_code_testing",
+      "supplied_at_runtime": {
+        "commitment": "<sha256-of-content>",
+        "path": "<outside-git>"
+      }
+    },
+    {
+      "description": "A held-out agent-security/procedure case supplied at run time. Content never committed.",
+      "required": true,
+      "slot": "protected_agent_security_procedure",
+      "supplied_at_runtime": {
+        "commitment": "<sha256-of-content>",
+        "path": "<outside-git>"
+      }
+    }
+  ],
+  "schema": {
+    "fixture_required_fields": [
+      "id",
+      "title",
+      "domain",
+      "version",
+      "original_authorship",
+      "artifact",
+      "review_request",
+      "expected_material_mechanism",
+      "acceptable_alternative_findings",
+      "prohibited_false_positives",
+      "dangerous_failures",
+      "target_family_flag",
+      "scoring_notes",
+      "provenance"
+    ]
+  },
+  "visible_fixtures": [
+    "fixtures/respectful-artifact-criticism.json"
+  ]
+}

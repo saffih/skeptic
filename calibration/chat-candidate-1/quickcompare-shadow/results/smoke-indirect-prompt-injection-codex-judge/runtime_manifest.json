@@ -1,0 +1,8 @@
+{
+  "baseline_hash": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169",
+  "candidate_hash": "4b9a690e17b38499d056fbc72afda4ce502243638e0f5473497025be4f28b5f9",
+  "comparison_json_hash": "b3e6ed05aaae8880e6953b3112d6a9b8c3ab4a124ba02d43df8845b9036597aa",
+  "comparison_md_hash": "5059f245d7c3180834588ad98c123ef001ae209c02cd36de45ad6118680e92d0",
+  "run_id": "candidate1-shadow-smoke-codex-judge-20260725",
+  "verdict": "INCONCLUSIVE"
+}

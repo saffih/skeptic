@@ -1,0 +1,54 @@
+{
+  "description": "Frozen four-case Candidate 1 behavioral regression-screen batch. This manifest cannot establish IMPROVED without valid protected holdouts and must not be interpreted as doing so.",
+  "manifest_id": "candidate1-shadow-batch-1",
+  "notes": [
+    "Derived mechanically from the frozen twelve-case shadow suite.",
+    "Four visible fixtures require 8 generator and 4 judge calls.",
+    "No-protected run is a regression screen, not proof of improvement.",
+    "Any candidate dangerous failure or material loss must be reviewed."
+  ],
+  "protected_slots": [
+    {
+      "description": "A held-out code/test-integrity case supplied at run time. Content never committed.",
+      "required": true,
+      "slot": "protected_code_testing",
+      "supplied_at_runtime": {
+        "commitment": "<sha256-of-content>",
+        "path": "<outside-git>"
+      }
+    },
+    {
+      "description": "A held-out agent-security/procedure case supplied at run time. Content never committed.",
+      "required": true,
+      "slot": "protected_agent_security_procedure",
+      "supplied_at_runtime": {
+        "commitment": "<sha256-of-content>",
+        "path": "<outside-git>"
+      }
+    }
+  ],
+  "schema": {
+    "fixture_required_fields": [
+      "id",
+      "title",
+      "domain",
+      "version",
+      "original_authorship",
+      "artifact",
+      "review_request",
+      "expected_material_mechanism",
+      "acceptable_alternative_findings",
+      "prohibited_false_positives",
+      "dangerous_failures",
+      "target_family_flag",
+      "scoring_notes",
+      "provenance"
+    ]
+  },
+  "visible_fixtures": [
+    "fixtures/respectful-artifact-criticism.json",
+    "fixtures/hidden-burden-shift.json",
+    "fixtures/coercive-instruction.json",
+    "fixtures/unfair-exception.json"
+  ]
+}

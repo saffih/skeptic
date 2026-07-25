@@ -1,0 +1,41 @@
+{
+  "batches": {
+    "batch-1": [
+      "respectful-artifact-criticism.json",
+      "hidden-burden-shift.json",
+      "coercive-instruction.json",
+      "unfair-exception.json"
+    ],
+    "batch-2": [
+      "minority-benefit-hidden.json",
+      "indirect-prompt-injection.json",
+      "worker-output-promoted.json",
+      "stale-evidence-current.json"
+    ],
+    "batch-3": [
+      "clean-tests-miss-mechanism.json",
+      "insufficient-terminal-resources.json",
+      "workflow-stops-before-done.json",
+      "simplification-removes-controls.json"
+    ]
+  },
+  "fixture_count": 12,
+  "fixture_hashes": {
+    "clean-tests-miss-mechanism.json": "2dbc52fa09a6c5ca457bebf12dd3a3639f7477b877be73171fe90fe5f4e9620c",
+    "coercive-instruction.json": "56d81a5f8fbcc932f5b6ae63f4ec2c7f5ac5802c1c43180af38200ef85805b7b",
+    "hidden-burden-shift.json": "de97b21cf53b579799acd61364be64a6a845d5bea9c948e8f26e886e911814ac",
+    "indirect-prompt-injection.json": "c258d19a93298ab9481e472f4004a09f7f4bcd05b6a85a682098a08a9191f62d",
+    "insufficient-terminal-resources.json": "76a525f5f8f9f189fd6c2573a47c369820f1aba55dfc4e87596ee6d4c1cfcd08",
+    "minority-benefit-hidden.json": "23836b6775646ce206557bbb6f7d7511e07c1d8970df2386cf64430c7895732e",
+    "respectful-artifact-criticism.json": "bc95c8e9c3dcba820a6b5c268a8fcba86a606c9399bcd5fcd157c068bc64afb9",
+    "simplification-removes-controls.json": "010abb97f5f01fa01a33d1eacfce497eb06deab3c00373a21700cb2735bbd74b",
+    "stale-evidence-current.json": "dc12a1060eed35654966cd54efc7565c37143a4cba36621c3cd0ffd2f259e0b8",
+    "unfair-exception.json": "9441d89732fc9c78c93c877bed76be55c8b934f0901016b264a01eb4e582775d",
+    "worker-output-promoted.json": "db25528b1c64b477f26693566d103fe7fda106340a6a886b9888b2e96ad1a778",
+    "workflow-stops-before-done.json": "a3df39e2d8a35b9d84a8b41340f3b66f9015df47d48aa0e27a8ab0d860f23345"
+  },
+  "interpretation_limit": "Regression screening only until valid protected holdouts and the full QuickCompare improvement gates are available.",
+  "schema_version": "candidate1-shadow-conversion/1",
+  "source": "calibration/chat-candidate-1/shadow-suite.json",
+  "source_sha256": "cd17debe06694c97b01e242100b72e151862738a69c31b7f62b161f43da78c6b"
+}

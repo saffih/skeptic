@@ -1,0 +1,8 @@
+{
+  "baseline_hash": "18ec8655724fcf1e35238c5fc0547414aa389d999467a2002f9d4e82f59f3169",
+  "candidate_hash": "4b9a690e17b38499d056fbc72afda4ce502243638e0f5473497025be4f28b5f9",
+  "comparison_json_hash": "f2e45a5ca12a48c85fdde333e4e7b3416b3a202943fa22196c19feae2e0199f6",
+  "comparison_md_hash": "36c95a83473330d09cb117b87426b9643f836898bf3e1d29f7c53bc4bfd779c3",
+  "run_id": "candidate1-protected-final-v1-20260725",
+  "verdict": "NO_MATERIAL_CHANGE"
+}

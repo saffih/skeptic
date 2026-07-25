@@ -1,0 +1,35 @@
+[
+  {
+    "argv_hash": "78d6ab3ec01a87781b7810eb54eb9f473a8b456da616d5c6a9d06efa94cac8db",
+    "attempt": 0,
+    "elapsed_s": 12.628125,
+    "kind": "generator",
+    "request_hash": "01e8c746f3e3d6819aad0367bc754434caff1d4c8c066f4fa9f8f2d28dce96f1",
+    "return_code": 0,
+    "stderr_excerpt": "",
+    "stdout_hash": "6f05acb77fdc5b860a09befb0e9de82459d3a9bccf9f1ef98466f4a751359d16",
+    "timed_out": false
+  },
+  {
+    "argv_hash": "78d6ab3ec01a87781b7810eb54eb9f473a8b456da616d5c6a9d06efa94cac8db",
+    "attempt": 0,
+    "elapsed_s": 20.158052,
+    "kind": "generator",
+    "request_hash": "0f0dc500ee536120ebd240b919202e89940c7662ea8103c0dfd784d464bbfb11",
+    "return_code": 0,
+    "stderr_excerpt": "",
+    "stdout_hash": "6cd9b040ea9784abaf82c3111ac02afac5915c541ca91f18b9fc8eb31710a1a9",
+    "timed_out": false
+  },
+  {
+    "argv_hash": "37b4c8b7dacbc79b1483869c3dc2db2c20fd898da0ffd9a982ee7eba1c05ffe5",
+    "attempt": 0,
+    "elapsed_s": 1.034833,
+    "kind": "judge",
+    "request_hash": "e12d3082355032ea9f377402b24bc30e25c760de0757187298ea2106177fde9e",
+    "return_code": 2,
+    "stderr_excerpt": "ADAPTER_ERROR: Claude exited 1: Error: --json-schema is not a valid JSON Schema: no schema with key or ref \"https://json-schema.org/draft/2020-12/schema\"\n",
+    "stdout_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "timed_out": false
+  }
+]

@@ -1,0 +1,35 @@
+[
+  {
+    "argv_hash": "78d6ab3ec01a87781b7810eb54eb9f473a8b456da616d5c6a9d06efa94cac8db",
+    "attempt": 0,
+    "elapsed_s": 12.055953,
+    "kind": "generator",
+    "request_hash": "01e8c746f3e3d6819aad0367bc754434caff1d4c8c066f4fa9f8f2d28dce96f1",
+    "return_code": 0,
+    "stderr_excerpt": "",
+    "stdout_hash": "751b35671c3facb4a4c47a1ffa0e0fd2817a7b6be268f3af0f79e7d1205e873b",
+    "timed_out": false
+  },
+  {
+    "argv_hash": "78d6ab3ec01a87781b7810eb54eb9f473a8b456da616d5c6a9d06efa94cac8db",
+    "attempt": 0,
+    "elapsed_s": 16.781882,
+    "kind": "generator",
+    "request_hash": "0f0dc500ee536120ebd240b919202e89940c7662ea8103c0dfd784d464bbfb11",
+    "return_code": 0,
+    "stderr_excerpt": "",
+    "stdout_hash": "198590cfc4fe77a3562127c9e4271589d31e659d2916e3cfd887f4c86df979c1",
+    "timed_out": false
+  },
+  {
+    "argv_hash": "37b4c8b7dacbc79b1483869c3dc2db2c20fd898da0ffd9a982ee7eba1c05ffe5",
+    "attempt": 0,
+    "elapsed_s": 1.907592,
+    "kind": "judge",
+    "request_hash": "00b9640bb28743a36786ef8fb26356bf884354c0e17a6f4c8ad73643ececc513",
+    "return_code": 2,
+    "stderr_excerpt": "ADAPTER_ERROR: Claude exited 1: \n",
+    "stdout_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "timed_out": false
+  }
+]

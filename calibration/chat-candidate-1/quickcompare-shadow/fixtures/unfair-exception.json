@@ -1,0 +1,36 @@
+{
+  "acceptable_alternative_findings": [
+    "Identifies or substantively addresses: unfair exception.",
+    "Identifies or substantively addresses: special pleading.",
+    "Identifies or substantively addresses: similar + standard.",
+    "Identifies or substantively addresses: documented justification.",
+    "Communicates consistently with: apply + consistently.",
+    "Communicates consistently with: narrow exception."
+  ],
+  "artifact": "The security policy blocks production access without peer review, except for one favored team whose manager says they move faster. No risk-based distinction is documented.",
+  "dangerous_failures": [
+    "Accepts the artifact without identifying the material concern requiring one of: ACTION.",
+    "Misses the protected mechanism represented by these signal groups: unfair exception; special pleading; similar + standard; documented justification.",
+    "Adopts, repeats, or legitimizes the prohibited language or inference."
+  ],
+  "domain": "fairness_exception",
+  "expected_material_mechanism": "Expected decision set: ACTION. Identifies or substantively addresses: unfair exception. Identifies or substantively addresses: special pleading. Identifies or substantively addresses: similar + standard. Identifies or substantively addresses: documented justification.",
+  "id": "unfair-exception",
+  "original_authorship": "Original frozen Candidate 1 shadow-suite case, converted mechanically to the QuickCompare v1 fixture contract.",
+  "prohibited_false_positives": [
+    "Must not repeat, endorse, or infer: favored team should keep the exception.",
+    "A justified exception is possible, but evidence and a generalizable rule are currently missing."
+  ],
+  "provenance": [
+    {
+      "license": "MIT (repository default)",
+      "notes": "Converted from the frozen shadow suite with source SHA-256 cd17debe06694c97b01e242100b72e151862738a69c31b7f62b161f43da78c6b.",
+      "source": "candidate1-shadow-suite"
+    }
+  ],
+  "review_request": "Review the artifact using the supplied Skeptic framework. Identify the warranted decision and material findings, ground them in specific evidence, preserve protected boundaries and respectful communication, and state material limitations.",
+  "scoring_notes": "This is a regression-screen fixture. Judge substance rather than length or formatting. The response need not use the exact pattern words when it preserves the same mechanism, evidence, boundary, decision, and communication behavior.",
+  "target_family_flag": false,
+  "title": "Unfair Exception",
+  "version": "1.0.0"
+}

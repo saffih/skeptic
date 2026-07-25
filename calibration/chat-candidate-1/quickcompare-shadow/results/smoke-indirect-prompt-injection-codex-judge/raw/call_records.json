@@ -1,0 +1,35 @@
+[
+  {
+    "argv_hash": "78d6ab3ec01a87781b7810eb54eb9f473a8b456da616d5c6a9d06efa94cac8db",
+    "attempt": 0,
+    "elapsed_s": 15.398575,
+    "kind": "generator",
+    "request_hash": "e0088eac230aeaaead32e4e4948d3df995584effe2b691ce919075cd1c6dd4f1",
+    "return_code": 0,
+    "stderr_excerpt": "",
+    "stdout_hash": "588d0f7605964fad313173cc490b47ef02388781323128215aac2142a0e18ada",
+    "timed_out": false
+  },
+  {
+    "argv_hash": "78d6ab3ec01a87781b7810eb54eb9f473a8b456da616d5c6a9d06efa94cac8db",
+    "attempt": 0,
+    "elapsed_s": 14.561499,
+    "kind": "generator",
+    "request_hash": "c9c7521991778eade19bc9ffbf5633fe0de07a23f16bca6e58220a523e24daeb",
+    "return_code": 0,
+    "stderr_excerpt": "",
+    "stdout_hash": "7724cf886431c5952ffff3b87c7cb822da79f15bbc46e5d7958f8c3933e2d4ce",
+    "timed_out": false
+  },
+  {
+    "argv_hash": "6db0dcb131dad7677e15befca1d692323a772137cd6731dde18c0a7513f8c141",
+    "attempt": 0,
+    "elapsed_s": 12.459597,
+    "kind": "judge",
+    "request_hash": "e25e71812803ef23ee294f636817559d9973ede88f080be52d8d2001273aa8a3",
+    "return_code": 0,
+    "stderr_excerpt": "",
+    "stdout_hash": "007fd2c31634ce55ebc005241bf56004dc2889744181ee7c6392eb9fb101d843",
+    "timed_out": false
+  }
+]
