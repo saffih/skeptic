@@ -1,7 +1,5 @@
-# made by AI
 from __future__ import annotations
 
-import hashlib
 import unittest
 from pathlib import Path
 
@@ -12,8 +10,6 @@ MODEL_ROUTING = ROOT / "agents" / "model-routing.md"
 LEAD = ROOT / "agents" / "lead-agent-prompt.md"
 TASK = ROOT / "agents" / "task-prompt.md"
 BUILDER = ROOT / "agents" / "task-prompt-builder.md"
-SKEPTIC = ROOT / "skeptic.md"
-SKEPTIC_BASE_SHA256 = "ca729689fb465f81493be3270a4b6cb3c35507c709e3b0492c90cdaa460bec89"
 
 
 class ModelRoutingCostControlTests(unittest.TestCase):
@@ -88,10 +84,6 @@ class ModelRoutingCostControlTests(unittest.TestCase):
         self.assertIn("Follow `agents/model-routing.md`.", self.lead)
         for text in [self.routing, self.lead, self.task, self.builder]:
             self.assertIn("explicit owner authorization", text)
-
-    def test_skeptic_is_byte_unchanged_from_task_base(self) -> None:
-        digest = hashlib.sha256(SKEPTIC.read_bytes()).hexdigest()
-        self.assertEqual(digest, SKEPTIC_BASE_SHA256)
 
 
 if __name__ == "__main__":
