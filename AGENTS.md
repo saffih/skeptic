@@ -19,6 +19,21 @@ Entry map. Load only the artifact needed for the current use:
 - Select or operate a conditional context-processing boundary around delegation
   -> `agents/boundary-agent.md`
 
+Usage modes:
+
+Standalone or externally supplied Skeptic:
+- A user may supply `skeptic.md` directly and ask an agent to read and apply it outside this repository.
+- `skeptic.md` must therefore remain independently usable and must not assume that this checkout, its agent framework, or companion files are available.
+- Apply the portable prompt/task-feasibility checks contained in `skeptic.md`.
+- Read optional supplied extensions such as `skeptic-questions.md` or another domain/task question file only when provided or explicitly referenced.
+- Extensions may expand detection but must not weaken, replace, or override the core.
+
+Repository-integrated Skeptic:
+- Use the entry map above to load the applicable agent or question companions.
+- `skeptic.md` remains authoritative for reasoning, evidence, decisions, safe action, verification, and RunSkeptic output.
+- Files under `agents/` govern repository-specific orchestration, role boundaries, delegation, persistence, handoffs, completion reserves, integration, and closure.
+- Repository-specific orchestration machinery should not be copied into every standalone Skeptic invocation.
+
 Ownership:
 
 - `skeptic.md` is authoritative for RunSkeptic behavior, its specialized receipt, and output categories.
