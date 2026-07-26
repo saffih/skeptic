@@ -1,17 +1,19 @@
 # Skeptic - Detect, Reason, Fix, Verify
 
-AI-executable framework for safe system improvement.
+AI-executable framework for safe review and improvement.
 
 Rules:
 - Correct action over fast action.
-- If detection confidence is insufficient, do not act.
-- Add process only when it prevents a known failure mode.
+- If detection confidence is insufficient, do not fix or promote; gather evidence, decompose, or escalate.
+- Add process only when it addresses a specific credible failure mode.
 
 ## Invocation Contract
 
 `RunSkeptic` is the formal invocation string for this framework.
 
 Aliases: `beskeptic`, `apply Skeptic`, `Skeptic review`, `run skeptic.md`.
+
+The invocation selects the framework; the request determines permission and stopping conditions. Runs are read-only unless fixing is explicitly authorized; verification emphasis or iterative repetition must also be requested.
 
 When invoked:
 1. Read the actual current `skeptic.md`, or an explicitly supplied candidate Skeptic file, before analysis.
@@ -27,6 +29,8 @@ When invoked:
 11. Verify the recommendation against the framework.
 12. State unresolved conflicts, unknowns, skipped areas, and missing evidence.
 13. If the source under review is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
+
+An explicit invocation may additionally name companion files; they add context but do not replace or override the designated Skeptic source.
 
 Each repeated run is a new invocation for source-freshness purposes: perform Rule 1 again. An earlier read does not satisfy a later run.
 
