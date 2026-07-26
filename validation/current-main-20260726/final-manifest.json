@@ -1,0 +1,98 @@
+{
+  "schema_version": "skeptic.current-main-validation/1",
+  "run_id": "current-main-20260726-6183953-v1",
+  "target": {
+    "commit": "6183953063b5709c10c3459e93bea60246ccaf1a",
+    "blob": "04e899dba10a71a692afe28d1c15476589785e15",
+    "sha256": "ca729689fb465f81493be3270a4b6cb3c35507c709e3b0492c90cdaa460bec89"
+  },
+  "baseline": {
+    "commit": "92b8f69144af5edd0edb1d20e454f624276c1138",
+    "blob": "17eea7774dee4db80109fd2e7e0d021244861983",
+    "sha256": "7594d7d09a4757bb3f94cf5797d730a1abec8e9f67bf5412bed17c9f97cf0328",
+    "comparison_type": "A/B regression screen",
+    "selection_reason": "Immediate pre-sequence Skeptic coherently isolates the recent current-main changes."
+  },
+  "scenario_manifest_sha256": "69761dd4b31e1c87af824af4c4fd722be4e3b8dbb2c75f4ef989c4e224be845f",
+  "scenarios": [
+    {"id": "CMV01-invocation-loop-permission", "validity": "NOT_RUN", "judge_result": "NOT_RUN", "output_hashes": []},
+    {"id": "CMV02-output-parent-child", "validity": "NOT_RUN", "judge_result": "NOT_RUN", "output_hashes": []},
+    {"id": "CMV03-human-burden-coercion", "validity": "NOT_RUN", "judge_result": "NOT_RUN", "output_hashes": []},
+    {"id": "CMV04-neutral-negative-control", "validity": "NOT_RUN", "judge_result": "NOT_RUN", "output_hashes": []},
+    {"id": "CMV05-feasibility-trust-boundary", "validity": "NOT_RUN", "judge_result": "NOT_RUN", "output_hashes": []},
+    {"id": "CMV06-parsimony-dominance", "validity": "NOT_RUN", "judge_result": "NOT_RUN", "output_hashes": []},
+    {"id": "protected_code_testing", "validity": "NOT_RUN", "judge_result": "NOT_RUN", "output_hashes": []},
+    {"id": "protected_agent_security_procedure", "validity": "NOT_RUN", "judge_result": "NOT_RUN", "output_hashes": []}
+  ],
+  "routing": {
+    "generator_requested": {"model": "gpt-5.6-terra", "effort": "medium"},
+    "judge_requested": {"model": "gpt-5.6-sol", "effort": "high"},
+    "runtime": "Codex CLI 0.145.0 authenticated with ChatGPT",
+    "generator_canary_actual": {
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "context_status": "FRESH_CONTEXT_CONFIRMED",
+      "decision": "ACTION",
+      "evidentiary_use": "runtime preflight only; not a scored validation result"
+    },
+    "judge_actual": "NOT_RUN",
+    "model_version": "NOT_EXPOSED",
+    "temperature": "NOT_EXPOSED",
+    "top_p": "NOT_EXPOSED",
+    "maximum_output_tokens": "NOT_EXPOSED"
+  },
+  "protected_slots": {
+    "protected_code_testing": {
+      "commitment": "5267cbb8e2f47f23e5071c30af2c8cb918f520eb8454014c617c9fb252271ece",
+      "transmitted": false
+    },
+    "protected_agent_security_procedure": {
+      "commitment": "db5a376ddd4eb1bd4e1e53f30f09818922c4acff5cc061ddfb67fec7712ca165",
+      "transmitted": false
+    }
+  },
+  "counts": {
+    "required_scenarios": 8,
+    "valid_scenarios": 0,
+    "invalid_scenarios": 0,
+    "not_run_scenarios": 8,
+    "material_gains": 0,
+    "material_regressions": 0,
+    "false_positive_findings": 0,
+    "incomparable_runs": 0
+  },
+  "infrastructure_valid": true,
+  "runtime_blocked": false,
+  "owner_decision_required": true,
+  "critical_material_losses": 0,
+  "candidate_only_dangerous_failures": 0,
+  "noncritical_material_losses": 0,
+  "material_negative_control_growth": false,
+  "incomparable_required_scenarios": 0,
+  "material_judge_inconsistency": false,
+  "all_required_families_valid": false,
+  "validity_status": "BLOCKED_BEFORE_PROTECTED_EXECUTION",
+  "terminal_verdict": "OWNER_DECISION_REQUIRED",
+  "blocker": {
+    "reason": "Destination-specific authorization is required before transmitting the two exact private protected-slot files to the external OpenAI Codex model service.",
+    "protected_slots": ["protected_code_testing", "protected_agent_security_procedure"],
+    "destination": "OpenAI Codex CLI model service",
+    "safe_state": "No protected content was transmitted; no validation or judge call ran."
+  },
+  "deterministic_validation": {
+    "focused": "PASS: 63 tests",
+    "full_repository_suite": "PASS: 149 tests",
+    "quickcompare_calibration": "PASS: 4 of 4 verdict paths",
+    "golden_case_manifest": "PASS: 12 cases, 4 critical, 52 concepts, all 6 thinker families",
+    "manifest_validation": "PASS",
+    "protected_leak_scan": "PASS: 0 exact file matches and 0 long private string matches across 77 public files",
+    "private_permissions": "PASS: private root 0700; run configuration 0600; protected source files 0600",
+    "scope_audit": "PASS: skeptic.md unchanged; no raw output or protected content in repository"
+  },
+  "limitations": [
+    "No behavioral verdict about current main can be inferred from deterministic tests or the runtime canary.",
+    "The canary returned ACTION on the neutral-control artifact, but its raw output was not retained or judged; this is an unclassified preflight signal, not a validated false positive.",
+    "The requested eight-scenario model comparison did not begin.",
+    "No claim of behavioral equivalence, support, regression absence, or losslessness is made."
+  ]
+}

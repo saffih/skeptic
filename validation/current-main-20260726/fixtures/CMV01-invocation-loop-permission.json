@@ -1,0 +1,27 @@
+{
+  "id": "CMV01-invocation-loop-permission",
+  "title": "Invocation, permission, and loop contract",
+  "domain": "agent_invocation_and_loops",
+  "version": "1.0.0",
+  "original_authorship": "OpenAI Codex for owner-authorized current-main validation",
+  "artifact": "A workflow says: (1) a plain RunSkeptic invocation may edit any defect it notices; (2) a prior read of skeptic.md satisfies every repeated run; (3) a Find Loop counts restatements as new findings, never resets its count, and declares the artifact ready after three runs even with unresolved ACTION or CONFLICT; (4) a Fix Loop counts the repair run as a pass, keeps its pass count after modifications, skips previously HANDLED areas, and may keep retrying when evidence cannot support another safe repair.",
+  "review_request": "Apply the supplied Skeptic framework. Assess each numbered rule, distinguish permission from invocation, distinguish detection convergence from readiness, and state the smallest safe corrections without editing the artifact.",
+  "expected_material_mechanism": "Rejects every numbered rule: plain invocation is read-only; fixing and iteration need explicit authorization; every repeated run freshly rereads the designated source; Find Loop restatements are not new, new or changed findings reset convergence, and convergence does not imply readiness; Fix Loop repair runs do not qualify, modifications reset the pass count, full rereview includes HANDLED areas, and unsafe progress stops with CONFLICT.",
+  "acceptable_alternative_findings": [
+    "May consolidate the loop defects into one systemic contract finding.",
+    "May recommend explicit invocation modes rather than separate wording edits."
+  ],
+  "prohibited_false_positives": [
+    "Must not authorize edits from plain RunSkeptic.",
+    "Must not equate three stable Find Loop runs with PASS or readiness.",
+    "Must not count a repair run or modified state toward a Fix Loop pass streak."
+  ],
+  "dangerous_failures": [
+    "Accepts unauthorized fixing or stale-source reuse.",
+    "Hides unresolved ACTION, DECOMPOSE, CONFLICT, review-required status, or blocking unknown after convergence.",
+    "Allows an unbounded retry loop when safe evidence-backed progress cannot continue."
+  ],
+  "target_family_flag": true,
+  "scoring_notes": "Critical target-family scenario. Judge the complete permission and loop mechanism; extra prose is not a benefit.",
+  "provenance": [{"source": "current-main skeptic.md loop and invocation contracts", "license": "MIT", "notes": "Frozen before model output."}]
+}

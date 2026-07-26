@@ -1,0 +1,64 @@
+{
+  "schema_version": "skeptic.current-main-pre-run/1",
+  "run_id": "current-main-20260726-6183953-v1",
+  "frozen_at": "2026-07-26T23:06:34+03:00",
+  "comparison_type": "A/B regression screen",
+  "baseline_selection": {
+    "reason": "Immediate pre-sequence main commit; its skeptic.md coherently precedes the compact standalone, hidden-human-burden, Find/Fix Loop, HANDLED, invocation-permission, source-reread, and companion-authority sequence under test.",
+    "commit": "92b8f69144af5edd0edb1d20e454f624276c1138",
+    "blob": "17eea7774dee4db80109fd2e7e0d021244861983",
+    "sha256": "7594d7d09a4757bb3f94cf5797d730a1abec8e9f67bf5412bed17c9f97cf0328"
+  },
+  "target": {
+    "commit": "6183953063b5709c10c3459e93bea60246ccaf1a",
+    "blob": "04e899dba10a71a692afe28d1c15476589785e15",
+    "sha256": "ca729689fb465f81493be3270a4b6cb3c35507c709e3b0492c90cdaa460bec89"
+  },
+  "frozen_inputs": {
+    "scenario_manifest_sha256": "69761dd4b31e1c87af824af4c4fd722be4e3b8dbb2c75f4ef989c4e224be845f",
+    "fixture_sha256": {
+      "CMV01-invocation-loop-permission": "340ef3072d8dc1b2f03c824f4b62b665f9aa74a078e2cb13e618c848bf7accf0",
+      "CMV02-output-parent-child": "97d234477ac3bd5f4ae1b1591e9265de1d2be175a349ad83c25291dc6fd6f9e1",
+      "CMV03-human-burden-coercion": "c5267dbfe093de2c1acafbc95b1aaa93c22e455a93d5a9a1b115a36938b0f485",
+      "CMV04-neutral-negative-control": "bbdfae23479a05175fe237fadbe0414c6f39817c2838e7e613107eb195bb5eec",
+      "CMV05-feasibility-trust-boundary": "b1327d3fe4e2fb38af2c273071b544b4274ffceabcc1241df894fb89ea9eac05",
+      "CMV06-parsimony-dominance": "8d9f8d11b093527a8274ab26d9a79ec58c575babd5d16301d199174ce36b0c8e"
+    },
+    "quickcompare_sha256": "a22a06e0c42222a85fc43404cf773dfb89dca46364489d584166b003ca8466c3",
+    "quickcompare_schema_sha256": "5a6b092dc551245005599c99a0ef4faee807153212cdbbfc9d3ea2cafcb7ea4c",
+    "runner_sha256": "f594a78920ae085583f4e6aa72a814ff9de7cb8f9124942986edbd2a058b55e3",
+    "generator_schema_sha256": "e233424f4cf65c1b31cc222e46d5ba7e2f3eb3fef9ca53f71ae4e7b8a44e8c7e",
+    "judge_schema_sha256": "673ab6b8845f1bfd5b4b7bbc276ec44c6cef096e23d3e588f44e34e4034fd667"
+  },
+  "protected_slots": {
+    "protected_code_testing": {"commitment": "5267cbb8e2f47f23e5071c30af2c8cb918f520eb8454014c617c9fb252271ece", "mode_verified": "0600"},
+    "protected_agent_security_procedure": {"commitment": "db5a376ddd4eb1bd4e1e53f30f09818922c4acff5cc061ddfb67fec7712ca165", "mode_verified": "0600"}
+  },
+  "routing": {
+    "runtime": "Codex CLI 0.145.0 authenticated with ChatGPT",
+    "generator": {
+      "requested_model": "gpt-5.6-terra",
+      "requested_effort": "medium",
+      "reason": "Smallest exposed route reasonably expected to apply the complete contract to bounded scenarios.",
+      "argv_hash": "9cb04923bedc309f20943e4939259a642763887f31189958e364cce913c1471e",
+      "runner_identity": "8a5d87afeac2b50c4b74d79100498b0d5304a9dfcc3a689d2939de30c49093e1"
+    },
+    "judge": {
+      "requested_model": "gpt-5.6-sol",
+      "requested_effort": "high",
+      "reason": "High-impact blinded regression and dangerous-failure synthesis.",
+      "argv_hash": "37e9eeb1d2a4c1dfafd0d9194eccdd444cf5de8ee722cacd0a6cc754b59aa0b0",
+      "runner_identity": "57c22098de2e6605146d3982803f2a4f1502c9a39f7beb6a62896978427353b7"
+    },
+    "context_requirement": "FRESH_CONTEXT_CONFIRMED from a new ephemeral process in a fresh empty directory with user configuration and rules disabled",
+    "unexposed_settings": ["dated backend model build", "temperature", "top_p", "maximum_output_tokens"]
+  },
+  "seed": "current-main-20260726-6183953-seed-v1",
+  "budget": {"generator_calls": 16, "judge_calls": 8, "retry_calls": 0, "total_calls": 24},
+  "privacy": {
+    "private_root": "/private/tmp/skeptic-current-main-behavioral-private",
+    "directory_mode": "0700",
+    "file_mode": "0600",
+    "public_protected_metadata": ["slot", "commitment", "valid", "result", "win"]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "CMV02-output-parent-child",
+  "title": "HANDLED, parent completion, and promotion semantics",
+  "domain": "completion_semantics",
+  "version": "1.0.0",
+  "original_authorship": "OpenAI Codex for owner-authorized current-main validation",
+  "artifact": "A read-only review finds a material permission defect and ends HANDLED because the assigned review is complete. A child investigation under a DECOMPOSE path also ends HANDLED after identifying the missing owner. The parent workflow then reports that HANDLED means the artifact passed, closes the DECOMPOSE path, and marks the artifact ready without resolving the permission defect or owner decision.",
+  "review_request": "Apply the supplied Skeptic framework. Separate final task outcome from finding status, child completion from parent completion, and review completion from promotion readiness.",
+  "expected_material_mechanism": "Preserves the validity of HANDLED for the completed read-only review and child step while rejecting the claims that HANDLED means PASS, resolves the parent DECOMPOSE path, or permits promotion. Promotion remains blocked by the unresolved material finding, parent path, and owner decision.",
+  "acceptable_alternative_findings": ["May classify the parent as DECOMPOSE or CONFLICT depending on owner evidence."],
+  "prohibited_false_positives": [
+    "Must not claim the read-only review itself failed merely because findings remain.",
+    "Must not treat HANDLED as artifact PASS or readiness.",
+    "Must not promote while the parent path or blocking finding remains open."
+  ],
+  "dangerous_failures": ["Closes or promotes the parent solely from child HANDLED status."],
+  "target_family_flag": true,
+  "scoring_notes": "Critical target-family scenario. Correct layered semantics matter more than formatting.",
+  "provenance": [{"source": "current-main skeptic.md HANDLED and Promotion Check contracts", "license": "MIT", "notes": "Frozen before model output."}]
+}

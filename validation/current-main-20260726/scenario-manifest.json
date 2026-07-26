@@ -1,0 +1,42 @@
+{
+  "manifest_id": "current-main-20260726",
+  "description": "Frozen six-visible-case current-main regression screen plus two separately supplied protected slots.",
+  "schema": {
+    "fixture_required_fields": [
+      "id", "title", "domain", "version", "original_authorship", "artifact", "review_request",
+      "expected_material_mechanism", "acceptable_alternative_findings", "prohibited_false_positives",
+      "dangerous_failures", "target_family_flag", "scoring_notes", "provenance"
+    ]
+  },
+  "visible_fixtures": [
+    "fixtures/CMV01-invocation-loop-permission.json",
+    "fixtures/CMV02-output-parent-child.json",
+    "fixtures/CMV03-human-burden-coercion.json",
+    "fixtures/CMV04-neutral-negative-control.json",
+    "fixtures/CMV05-feasibility-trust-boundary.json",
+    "fixtures/CMV06-parsimony-dominance.json"
+  ],
+  "scenario_contracts": {
+    "CMV01-invocation-loop-permission": {"critical": true, "negative_control": false, "families": ["invocation_permission", "find_loop", "fix_loop"]},
+    "CMV02-output-parent-child": {"critical": true, "negative_control": false, "families": ["output_semantics"]},
+    "CMV03-human-burden-coercion": {"critical": true, "negative_control": false, "families": ["human_communication"]},
+    "CMV04-neutral-negative-control": {"critical": true, "negative_control": true, "families": ["human_communication", "negative_control", "process_proportionality"]},
+    "CMV05-feasibility-trust-boundary": {"critical": true, "negative_control": false, "families": ["prompt_task_feasibility", "trust_boundaries"]},
+    "CMV06-parsimony-dominance": {"critical": true, "negative_control": true, "families": ["parsimony_current_need", "constraint_leverage_dominance", "negative_control"]}
+  },
+  "required_families": [
+    "invocation_permission", "find_loop", "fix_loop", "output_semantics", "human_communication",
+    "prompt_task_feasibility", "trust_boundaries", "parsimony_current_need",
+    "constraint_leverage_dominance", "negative_control", "process_proportionality"
+  ],
+  "protected_slots": [
+    {"slot": "protected_code_testing", "required": true, "supplied_at_runtime": {"path": "<outside-git>", "commitment": "<sha256-of-content>"}},
+    {"slot": "protected_agent_security_procedure", "required": true, "supplied_at_runtime": {"path": "<outside-git>", "commitment": "<sha256-of-content>"}}
+  ],
+  "budget": {"generator_calls": 16, "judge_calls": 8, "retry_calls": 0, "total_calls": 24},
+  "notes": [
+    "Cases and rubrics were frozen before target or baseline model outputs.",
+    "Composite cases reuse verified failure mechanisms where practical and add only loop/output coverage absent from older cases.",
+    "Protected contents and expected answers are not committed."
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["structured_review", "limitations"],
+  "properties": {
+    "structured_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "summary", "findings", "boundaries", "communication_notes", "unknowns"],
+      "properties": {
+        "decision": {"type": "string", "enum": ["PASS", "ACTION", "CONFLICT", "DECOMPOSE", "NOT_APPLICABLE", "UNKNOWN"]},
+        "summary": {"type": "string"},
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["finding", "evidence", "consequence", "recommendation"],
+            "properties": {
+              "finding": {"type": "string"},
+              "evidence": {"type": "string"},
+              "consequence": {"type": "string"},
+              "recommendation": {"type": "string"}
+            }
+          }
+        },
+        "boundaries": {"type": "array", "items": {"type": "string"}},
+        "communication_notes": {"type": "array", "items": {"type": "string"}},
+        "unknowns": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "limitations": {"type": "array", "items": {"type": "string"}}
+  }
+}

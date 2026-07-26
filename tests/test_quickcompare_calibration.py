@@ -162,6 +162,55 @@ class QuickCompareCalibrationTests(unittest.TestCase):
         self.assertFalse(scored["material_win"])
         self.assertFalse(scored["material_loss"])
 
+    def test_13_one_point_noise_only_difference_is_not_material(self):
+        fixture = {"id": "minor-noise", "target_family_flag": False}
+        baseline = {
+            "material_detection": 2,
+            "evidence_specificity": 2,
+            "boundary": 2,
+            "noise_control": 2,
+        }
+        candidate = dict(baseline, noise_control=1)
+
+        scored = qc.score_fixture(
+            fixture,
+            "s",
+            {
+                "pairwise_label": "A_WIN",
+                "dimension_scores": {"A": baseline, "B": candidate},
+                "dangerous_failure": {"A": False, "B": False},
+            },
+            {"A": "baseline", "B": "candidate"},
+        )
+
+        self.assertEqual(scored["pairwise"], "BASELINE_WIN")
+        self.assertFalse(scored["material_win"])
+        self.assertFalse(scored["material_loss"])
+
+    def test_14_two_point_noise_only_difference_can_be_material(self):
+        fixture = {"id": "large-noise", "target_family_flag": False}
+        baseline = {
+            "material_detection": 2,
+            "evidence_specificity": 2,
+            "boundary": 2,
+            "noise_control": 2,
+        }
+        candidate = dict(baseline, noise_control=0)
+
+        scored = qc.score_fixture(
+            fixture,
+            "s",
+            {
+                "pairwise_label": "A_WIN",
+                "dimension_scores": {"A": baseline, "B": candidate},
+                "dangerous_failure": {"A": False, "B": False},
+            },
+            {"A": "baseline", "B": "candidate"},
+        )
+
+        self.assertTrue(scored["material_loss"])
+        self.assertFalse(scored["material_win"])
+
     def test_built_in_calibration_is_byte_stable(self):
         first = json.dumps(qc.run_calibration(), sort_keys=True)
         second = json.dumps(qc.run_calibration(), sort_keys=True)

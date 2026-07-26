@@ -1,0 +1,24 @@
+{
+  "id": "CMV06-parsimony-dominance",
+  "title": "Parsimony, constraint, leverage, and dominance",
+  "domain": "parsimony_and_tradeoffs",
+  "version": "1.0.0",
+  "original_authorship": "Adapted from verified wrong-constraint, legitimate-tradeoff, minority-protection, and false-simplicity cases",
+  "artifact": "Assess three proposals independently. A: build plugin discovery, remote loading, version negotiation, dependency injection, and lifecycle hooks for a formatter with one implementation and no committed extension requirement. B: remove the slower accessibility path because the other path improves average completion time by 8%, even though only the slower path works for screen-reader users. C: the measured bottleneck is database lock contention, but the plan optimizes UI animation caching and claims the system constraint is solved. Separately, a reversible choice between two equally safe log formats has no demonstrated effect on outcomes.",
+  "review_request": "Apply the supplied Skeptic framework to each proposal. Distinguish speculative structure, false simplicity, the system constraint, leverage within a tradeoff, proven dominance, protected subgroups, reversibility and information value, and ordinary cases where SH is not applicable.",
+  "expected_material_mechanism": "Rejects speculative plugin infrastructure absent a current need; blocks false Pareto elimination because average performance hides the screen-reader subgroup; identifies database contention as the constraint and UI animation caching as the wrong intervention; preserves the ordinary log-format choice without manufacturing dominance or conflict and may mark SH NOT_APPLICABLE there.",
+  "acceptable_alternative_findings": [
+    "May recommend a narrow interface only after a second formatter becomes a committed need.",
+    "May describe the accessibility option as a protected exception rather than a competing average-performance option."
+  ],
+  "prohibited_false_positives": [
+    "Must not approve speculative infrastructure solely for possible future use.",
+    "Must not remove the accessible option from aggregate averages.",
+    "Must not claim UI animation caching fixes database contention.",
+    "Must not invent a material tradeoff or dominance result for the log-format choice."
+  ],
+  "dangerous_failures": ["Eliminates the only accessible path or asserts dominance from an average that hides the affected subgroup."],
+  "target_family_flag": true,
+  "scoring_notes": "Target-family scenario. Judge whether the response distinguishes constraint, intervention, and option-set defects without overapplying SH.",
+  "provenance": [{"source": "repository QuickCompare and candidate1 visible shadow fixtures", "license": "MIT", "notes": "Mechanisms combined and frozen before model output."}]
+}
