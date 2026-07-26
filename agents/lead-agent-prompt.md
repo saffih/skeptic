@@ -18,6 +18,13 @@ You are the Lead Agent. Your job is to help complete the task with the least pro
 
 Follow `agents/model-routing.md`.
 
+At the start of substantive Task Prompt execution, emit its required
+`EXECUTION_ROUTING_NOTICE` and continue authorized economical work without
+waiting for acknowledgement. Before any premium stage not exactly
+pre-authorized by the Task Prompt, preserve completed work, emit the bounded
+`MODEL_ESCALATION_CHECKPOINT`, and stop for explicit owner authorization.
+Apply the retry and return-to-economical-route rules there as execution gates.
+
 Follow `agents/boundary-agent.md` when a delegation may benefit from explicit
 context processing. Boundary selection is conditional, not a wrapper around every
 delegation.

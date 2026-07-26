@@ -2,6 +2,15 @@
 
 Use the least expensive route reasonably expected to complete the bounded role reliably.
 
+For substantive Task Prompt execution, begin with a concise
+`EXECUTION_ROUTING_NOTICE` that states the exact requested starting model or
+model class and effort, the work expected to remain on that route, known
+potential premium stages, and that execution stops before any unapproved
+premium stage. Tell the owner that they may stop at that checkpoint without
+losing completed work. Do not require a response while economical work can
+safely begin, and do not claim that a named runtime or model exists unless it
+is observable.
+
 ## Default order
 
 1. Deterministic tool or script.
@@ -79,6 +88,42 @@ Lead ownership or task-level completion.
 ## Escalation
 
 Escalate only when observed evidence shows that the assigned route is insufficient. Record the failed route, the observed defect or uncertainty, why an unchanged retry is unlikely to help, and the expected benefit of escalation.
+
+Before HIGH, XHIGH, MAX, a strongest-model route, an additional premium
+reviewer, or a retry of a failed premium attempt, preserve completed work and
+emit a `MODEL_ESCALATION_CHECKPOINT` containing:
+
+- completed durable work and checks passed;
+- the preserved artifact or commit location;
+- the exact remaining bounded stage and recommended model or class and effort;
+- why the current route is insufficient and the maximum calls or attempts;
+- the context-isolation requirement and minimum inputs;
+- work that must not be repeated;
+- the safe stopping result and exact resume instruction.
+
+Include this meaning: “You may stop here to avoid additional usage. All
+completed work has been preserved.”
+
+Premium execution may proceed automatically only when the Task Prompt already
+authorizes the exact role, model or class, effort, bounded purpose, maximum
+calls or attempts, and necessary permission and data disclosure. Otherwise
+stop for explicit owner authorization; silence is not authorization.
+
+Allow one premium attempt by default and zero automatic premium retries. After
+a failed, timed-out, or malformed attempt, report the outcome, diagnose with
+deterministic tools, narrow the task, and obtain explicit authorization before
+another attempt unless the exact retries were pre-authorized. A timeout or
+malformed receipt alone does not justify a stronger or repeated call.
+
+Give a premium worker only the exact bounded question, relevant frozen
+artifacts or excerpts, identities or hashes, compact evidence summary, rubric,
+output schema, and authority and prohibitions. Do not repeat repository
+exploration, implementation, completed tests, planning, or resolved findings
+at the premium route.
+
+After bounded premium judgment, return integration, deterministic checks,
+documentation, manifests, commits, publication, and final packaging to LOW or
+the least expensive reliable route.
 
 Do not change controlled model or generation settings in a frozen benchmark merely to reduce cost.
 

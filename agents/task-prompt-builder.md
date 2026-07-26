@@ -24,6 +24,15 @@ These forms are equivalent. The text after the alias is the objective:
 
 The conformance check asks whether deterministic work was identified where appropriate; delegation is justified and roles are bounded; requested model class and reasoning effort are proportionate; delegated roles do not inherit the Lead model implicitly; strongest-model use or escalation is justified; acceptance and deterministic validation are sufficient without duplication; every delegated model role has a dispatch ID and Agent Completion Envelope; envelope validation is followed by independent work acceptance; material Boundary Agent use is conditional and routed at the lowest reliable cost; substantial reusable context is artifact-backed when practical; context-isolation claims are evidence-based; recursive delegation carries transitive subtree obligations and compact upward reporting; every RunSkeptic invocation is followed by receipt validation; and frozen benchmark variables remain controlled.
 
+For substantive prompts where model cost may be material, also check that the
+prompt selects the least expensive reliable starting route, requires the
+`EXECUTION_ROUTING_NOTICE`, identifies likely premium roles early, and either
+pre-authorizes each premium stage with the exact bounded fields required by
+`agents/model-routing.md` or stops for explicit owner authorization at a
+`MODEL_ESCALATION_CHECKPOINT`. Require zero automatic premium retries by
+default, a minimum escalation package, no repetition of completed economical
+work, and return to an economical route after premium judgment.
+
 For a substantive build, use the proportional planning and RunSkeptic guidance in `agents/task-prompt.md`. A materially changed plan is reviewed again; harmless wording changes are not.
 
 ## Output
@@ -37,3 +46,10 @@ For a substantive Task Prompt, append one compact status:
 - `PROMPT_CONFORMANCE_UNVERIFIABLE`
 
 Briefly identify any material assumption or unresolved blocker. Do not add delegation, receipt, persistence, review, or state machinery unless it materially improves correctness, safety, continuity, or verification for the specific task.
+
+When model cost may be material, append a compact launch recommendation after
+the unexecuted Task Prompt: recommended starting model or class, recommended
+effort, potential later premium role, whether that role is pre-authorized, and
+confirmation that execution will stop before unapproved premium work. Do not
+add this cost machinery to trivial read-only prompts or one-command
+deterministic work.
