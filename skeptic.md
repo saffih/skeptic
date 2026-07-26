@@ -28,6 +28,8 @@ When invoked:
 12. State unresolved conflicts, unknowns, skipped areas, and missing evidence.
 13. If the source under review is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
 
+Each repeated run is a new invocation for source-freshness purposes: perform Rule 1 again. An earlier read does not satisfy a later run.
+
 ### RunSkeptic Receipt
 
 Every RunSkeptic report must include a compact receipt:
@@ -46,6 +48,33 @@ Every RunSkeptic report must include a compact receipt:
 Do not claim RunSkeptic compliance without this receipt.
 
 A RunSkeptic receipt indexes the review and its evidence; it is not independent proof or authority. A material receipt claim that conflicts with primary evidence must be corrected or left unresolved.
+
+### Loop Invocations
+
+`RunSkeptic Find Loop` invokes repeated full read-only RunSkeptic reviews. Unless the explicit invocation sets another count, stop only after three consecutive runs produce no new meaningful finding and no material change to an existing finding.
+
+For each Find Loop run:
+- freshly read the designated current Skeptic source and execute the complete recipe
+- re-evaluate the complete artifact and all previous findings
+- make no modifications
+- stabilize duplicates and distinguish new findings from restatements
+- record new, changed, resolved, and still-open findings
+- reset the consecutive-run count after any new or materially changed finding
+
+Find Loop convergence means detection stabilized; it does not mean the artifact passed or is ready. Report every unresolved ACTION, DECOMPOSE path, CONFLICT, review-required status, and blocking unknown.
+
+`RunSkeptic Fix Loop` invokes repeated full RunSkeptic review-and-fix cycles. Unless the explicit invocation sets another count, stop successfully only after three consecutive qualifying passes on the same unchanged artifact state.
+
+For each Fix Loop run:
+- freshly read the designated current Skeptic source and execute the complete recipe
+- re-evaluate the complete artifact, including all previously HANDLED areas
+- fix every authorized material issue that DECIDE validly classifies as FIX
+- verify every change immediately
+- after any change, restart the complete review and reset the consecutive-pass count
+
+A repair run does not count as a qualifying pass. A run qualifies only when no change is made, every material finding is PASS, all required verification passes, and no unresolved ACTION, DECOMPOSE path, CONFLICT, review-required status, or blocking unknown remains.
+
+If safe evidence-backed progress cannot continue, stop with CONFLICT rather than loop indefinitely or claim completion.
 
 Flow: GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
 
@@ -211,6 +240,7 @@ Find patterns that should not become general rules.
 - `KT:IR` inconsistent rule: contradicts itself when applied broadly or symmetrically
 - `KT:UA` unfair asymmetry: similar actors, cases, users, files, or decisions are treated differently without justification
 - `KT:HB` hidden burden: works only by shifting ambiguity, cost, or cleanup to someone else
+- `KT:HHB` hidden human burden: appears successful only by shifting avoidable ambiguity, cognitive load, repeated back-and-forth, coordination effort, delay, cost, risk, or cleanup onto another person or group
 
 
 ### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
@@ -305,7 +335,7 @@ Merge findings sharing:
 - data, boundary, responsibility, interface
 - source of truth, failure mode, root cause
 
-Classify root cause:
+Classify the issue and its root cause or detection gap:
 - local bug
 - missing test
 - missing contract
@@ -329,7 +359,7 @@ Raw findings remain PROVISIONAL until stabilized.
 
 ## 8. Evidence Levels
 
-Before DECIDE, classify every finding.
+Before DECIDE, assign every finding its applicable evidence level or levels.
 
 - OBSERVED: directly seen in code, tests, config, docs, or runtime behavior.
 - REPRODUCED: confirmed with failing test, probe, command, or execution.
@@ -346,7 +376,7 @@ Rules:
 
 ## 9. Decide
 
-Choose one path per stabilized issue.
+For each stabilized issue, decide whether it requires FIX, DECOMPOSE, or CONFLICT; otherwise record why no action is required.
 
 ### FIX
 
@@ -432,7 +462,7 @@ Use evidence, not confidence.
 
 Check:
 - red -> green for bug fixes when possible
-- 3-5 manual spot checks
+- 3-5 targeted spot checks when applicable; scale further checks to risk and evidence
 - end-to-end trace from entry to output
 - constraints: correctness, safety, performance, cost, context, maintainability
 - pre-mortem: 3 concrete failure modes addressed before action
@@ -451,7 +481,7 @@ Trigger DOUBLE-LOOP when:
 - same fix category appears 3+ times
 - same conflict appears 2+ times
 - following a rule worsens outcomes
-- expectation feels arbitrary
+- expectation lacks a clear rationale, authority, or evidence basis
 - local fixes repeatedly reveal same structure problem
 - repeated misses show detection coverage failure
 
@@ -472,6 +502,10 @@ Every task ends as HANDLED or CONFLICT.
 ### HANDLED
 
 Use for verified fixes, completed decomposed steps, or low-risk logged issues.
+
+HANDLED means the assigned Skeptic task or item was completed according to its permission and scope. It does not mean the reviewed artifact passed, is ready, or has no open issues.
+
+A completed read-only review may be HANDLED while explicitly reporting unresolved findings. A completed decomposed step may be HANDLED while its parent DECOMPOSE path remains open. The Promotion Check still blocks readiness while any blocking item remains unresolved.
 
 Each item includes:
 - issue
@@ -505,7 +539,7 @@ Check:
 - OM: unnecessary structure, false simplicity, speculation, oversized design, avoidable complexity, or an unexplained protected constraint
 - FE: stale claims, weak mechanism or evidence, hidden limits, unclear value, or an unvalidated trust-boundary transition
 - PO: unfalsifiable claims, confirmation-only proof, contradiction, weak refutation, silent invalidity, or overclaim
-- KT: harmful universalization, special pleading, inconsistent rules, unfair asymmetry, or hidden burden
+- KT: harmful universalization, special pleading, inconsistent rules, unfair asymmetry, hidden burden, or hidden human burden
 - SH: opposing forces, fake middles, forced balance, needed exceptions, hidden conflict, wrong leverage, or unproven dominance
 - backward dependencies, forward constraints, and staleness
 
@@ -555,7 +589,7 @@ Aspect tags are defined in §3:
 - OM: `OM:UE`, `OM:FS`, `OM:SS`, `OM:OD`, `OM:AC`, `OM:CF`
 - FE: `FE:SC`, `FE:ME`, `FE:WY`, `FE:HL`, `FE:WE`, `FE:PG`, `FE:PV`, `FE:TB`
 - PO: `PO:UF`, `PO:CO`, `PO:CN`, `PO:WR`, `PO:SI`, `PO:OC`
-- KT: `KT:HU`, `KT:EX`, `KT:IR`, `KT:UA`, `KT:HB`
+- KT: `KT:HU`, `KT:EX`, `KT:IR`, `KT:UA`, `KT:HB`, `KT:HHB`
 - SH: `SH:OF`, `SH:FM`, `SH:FB`, `SH:NE`, `SH:HC`, `SH:WL`, `SH:PF`
 - `SH:PF`: Pareto frontier / proven dominance
 
