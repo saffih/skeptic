@@ -6,7 +6,7 @@ These templates define a minimal file-based protocol for a future task-specific 
 
 - `task.md` identifies the task, authority, evidence, constraints, and requested routing.
 - `body.md` tells a cheap Body how to dispatch planning, apply TP or OTP acceptance, seal a plan, execute it, and record results.
-- `brain.md` tells a temporary Brain how to create the complete plan without executing the task.
+- `brain.md` tells the single temporary Brain how to create the complete Execution Plan and Acceptance Plan without executing the task.
 - `plan.md` is the Brain's output and becomes immutable after Body acceptance.
 - `receipt.md` records dispatch, routing, OTP budget accounting when applicable, the accepted plan hash, execution, and final verification.
 
@@ -14,12 +14,14 @@ The future workflow is:
 
 Task is written to `task.md`
 → cheap Body reads `task.md`
-→ if planning is required, cheap Body invokes temporary Brain
+→ cheap Body invokes exactly one temporary Brain for OTP planning
 → Brain reads referenced files
 → Brain writes `plan.md`
-→ Body performs bounded acceptance checks
-→ Body records the accepted plan hash
+→ Body verifies and seals the Execution and Acceptance Plans
 → Body executes the plan
+→ deterministic validator runs
+→ pre-authorized final review runs, if any
+→ Body performs final acceptance
 → Body writes `receipt.md`
 
 Handoffs use file references. Large sources remain in referenced authoritative files; summaries may aid navigation but do not replace those files. The accepted `plan.md` is sealed by recording its SHA-256, which the Body verifies again at completion. `receipt.md` is the execution record.

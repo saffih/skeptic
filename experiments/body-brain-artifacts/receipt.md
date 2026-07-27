@@ -23,6 +23,12 @@
 - Skeptic review executions:
 - Retry executions:
 - Budget deviations:
+- Planning completion:
+- Acceptance Plan present:
+- Final review required:
+- Final review mode:
+- Final review reason:
+- Deterministic validation requirements:
 
 ## Brain dispatch
 
@@ -37,6 +43,7 @@
 - Plan accepted:
 - Acceptance checks:
 - Plan SHA-256:
+- Acceptance Plan sealed with plan:
 
 ## Execution
 
@@ -50,9 +57,24 @@
 - Deviation:
 - Reason:
 
+## Deterministic validation
+
+- Validator status:
+- Validator receipt:
+- Validation failure stop:
+
+## Final review
+
+- Authorized mode:
+- Review invoked:
+- Review receipt:
+- Review deviations:
+
 ## Final verification
 
 - Final plan SHA-256:
 - Plan unchanged:
 - Success criteria:
+- Final acceptance inputs:
+- Body final acceptance:
 - Final status:
