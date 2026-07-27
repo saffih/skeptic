@@ -11,7 +11,7 @@ Entry map. Load only the artifact needed for the current use:
 - Create a Task Prompt from a user objective or plan
   -> `agents/task-prompt-builder.md`
   - Aliases (text after the alias is the objective): `TP: <objective>`, `Create task prompt for: <objective>`, `Create a task prompt for: <objective>`, `Task prompt for: <objective>`
-  - These four aliases route here first; Task Prompt construction is `agents/task-prompt-builder.md`'s job.
+  - For any alias, first read `agents/task-prompt-builder.md` before interpreting or responding, then process the complete user request according to it. If the file cannot be read, stop visibly with `TASK_PROMPT_BUILDER_UNAVAILABLE`. Do not route an alias directly to `agents/task-prompt.md`.
 - Select model class, reasoning effort, delegation, or escalation
   -> `agents/model-routing.md`
 - Define or validate a delegated model-agent return

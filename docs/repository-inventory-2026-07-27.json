@@ -1,0 +1,52 @@
+{
+  "inventory_date": "2026-07-27",
+  "repository": "git@github.com:saffih/skeptic.git",
+  "default_branch": "main",
+  "authoritative_main": "local_main_at_final_verification",
+  "remote_main": "b812f86a52577cb7604e5bd8fdd25aa8e37972f4",
+  "worktree": {"path": "/Users/saffi/code/skeptic", "branch": "main", "clean_at_inventory": true, "ahead_of_origin_main": 6},
+  "tracked_file_count": 58,
+  "functional_areas": {
+    "specification": ["skeptic.md", "skeptic-questions.md", "skeptic-tests.md"],
+    "orchestration_contracts": ["AGENTS.md", "agents/lead-agent-prompt.md", "agents/task-prompt.md", "agents/model-routing.md", "agents/agent-return.md", "agents/boundary-agent.md"],
+    "quickcompare": ["harness/quickcompare.py", "harness/quickcompare.schema.json", "harness/quick-v1-manifest.json", "harness/fixtures/quick-v1/visible"],
+    "benchmark": ["benchmarks/benchmark.py", "benchmarks/judge.py", "benchmarks/cases.json", "benchmarks/baselines/v1", "benchmarks/discovery"],
+    "tests": ["tests"],
+    "governance_and_plans": ["plans", "docs"]
+  },
+  "generated_or_ignored": ["benchmarks/results/", ".pytest_cache/", ".skeptic-uv-cache/", "__pycache__/", ".claude/"],
+  "worktrees": [
+    {"path": "/private/tmp/claude-501/-Users-saffi-code-skeptic-ab-plan/9aac337e-7e3f-422a-8933-bb77a1b5d219/scratchpad/quickcompare-calibration-wt", "head": "197bf70d35ce791de7de7499a58bb2a4f970450e", "branch": "calibration/quickcompare-20260724"},
+    {"path": "/private/tmp/skeptic-baseline-92b8f69-wt", "head": "92b8f69144af5edd0edb1d20e454f624276c1138", "branch": null},
+    {"path": "/private/tmp/skeptic-cleanup-rebaseline-current-main-wt", "head": "4641ff0045984308b3639683c8aee8a91b00804d", "branch": "codex/cleanup-rebaseline-and-validate-current-skeptic"},
+    {"path": "/Users/saffi/code/skeptic-ab-plan", "head": "d849572c90c7071ea57b5f37d17481d6672458c8", "branch": "agents/lead-agent-prompt-orchestration-only"},
+    {"path": "/Users/saffi/code/skeptic-candidate1-validation", "head": "57382a230f8a4175ad42aba54ab2554073b6b5a8", "branch": "agent/promote-compact-skeptic-candidate1-clean"},
+    {"path": "/Users/saffi/code/skeptic-compact-current-main", "head": "47ac9cf4d443fc25eb690586e0190a652596cefa", "branch": "candidate/compact-skeptic-current-main"}
+  ],
+  "candidate_evidence": {
+    "candidate_1_original": {"commit": "f587069", "payload": "calibration/chat-candidate-1/skeptic-candidate-chat-1.md", "lines": 504, "bytes": 27952, "sha256": "4b9a690e17b38499d056fbc72afda4ce502243638e0f5473497025be4f28b5f9", "status": "historical_candidate_keep_separate"},
+    "candidate_1_branch_revision": {"commit": "6107264", "payload": "skeptic.md", "lines": 511, "bytes": 28166, "status": "compatibility_branch_keep_separate"},
+    "candidate_1_repaired": {"commit": "57382a2", "payload": "skeptic.md", "lines": 526, "sha256": "b1b9ed42e428c226f8fd8852c8d3c96b3f7cf88ec6527925d7020bde1b76eeea", "status": "promotion_blocked_without_fresh_behavioral_proof"}
+  },
+  "notable_unmerged_refs": [
+    {"ref": "origin/benchmark/scorer-v3-semantic-equivalence", "head": "b55e3a0", "value": "scorer repair; conflict risk against current main; preserve as evidence"},
+    {"ref": "origin/agents/lead-agent-prompt-orchestration-only", "head": "d849572", "value": "lead contract history; old-base broad divergence; preserve as evidence"},
+    {"ref": "origin/calibration/quickcompare-20260724", "head": "197bf70", "value": "cache identity and raw privacy repair; preserve calibration receipt"},
+    {"ref": "origin/codex/cleanup-rebaseline-and-validate-current-skeptic", "head": "4641ff0", "value": "current-main behavior-screen preparation; preserve as evidence"},
+    {"ref": "origin/repair/candidate1-compat", "head": "6107264", "value": "original candidate and calibration bundle; not canonical"}
+  ],
+  "pull_requests": {
+    "status": "observed_read_only",
+    "source": "gh pr list --state all --limit 100, 2026-07-27",
+    "relevant": [
+      {"number": 2, "state": "OPEN", "head": "integrate-karpathy-coding-discipline", "value": "detection-effectiveness harness and compact variant; not current canonical"},
+      {"number": 4, "state": "CLOSED", "head": "claude/lead-agent-prompt-artifact-9rd2na", "value": "superseded Lead hardening history; current contracts are on main"},
+      {"number": 18, "state": "CLOSED", "head": "agent/promote-compact-skeptic-candidate1-clean", "value": "Candidate 1 compatibility and fail-closed repair; keep separate"},
+      {"number": 20, "state": "OPEN", "head": "codex/cleanup-rebaseline-and-validate-current-skeptic", "value": "current-main behavior-screen preparation; unmerged"},
+      {"number": 21, "state": "MERGED", "head": "agent/cost-aware-model-escalation", "value": "cost-aware routing now present on remote main"}
+    ],
+    "safe_action": "do_not_close_or_delete; remote integration remains unauthorized"
+  },
+  "remote_mutations": "none",
+  "secrets": "not inspected; metadata and paths only"
+}
