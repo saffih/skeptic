@@ -8,6 +8,21 @@
 - Body route observed:
 - Brain route requested:
 - Brain route observed:
+- Planning mode:
+- Maximum Brain invocations:
+- Brain invocations:
+- Additional agents allowed:
+- Additional agents used:
+- Requested Body route:
+- Requested Brain route:
+- Observed Body route:
+- Observed Brain route:
+- Files inspected:
+- Benchmark executions:
+- QuickCompare executions:
+- Skeptic review executions:
+- Retry executions:
+- Budget deviations:
 
 ## Brain dispatch
 
