@@ -1,6 +1,9 @@
 # Body-Brain Artifacts
 
-These templates define a minimal file-based protocol for a future task-specific workspace. The Body coordinates and executes, the temporary Brain reasons and plans, and files carry durable state.
+These legacy templates are retained for compatibility. The canonical
+file-based protocol is in `experiments/target-task-artifacts/`; the Body
+coordinates and executes, the temporary Brain reasons and plans, and files
+carry durable state.
 
 - `task.md` identifies the task, authority, evidence, constraints, and requested routing.
 - `body.md` tells a cheap Body how to dispatch planning, accept and seal a plan, execute it, and record results.
@@ -24,7 +27,6 @@ Handoffs use file references. Large sources remain in referenced authoritative f
 
 These are templates, not active runtime state. No Body-Brain execution experiment has yet proven this artifact set.
 
-`agents/otp-protocol.md` defines the `OTP:`/`TT:` triggers that activate this
-lifecycle. Its inline lifecycle is sufficient for a bounded single-session
-task; using these files is an optional way to carry the same lifecycle across
-files or sessions, not a requirement.
+`agents/target-task.md` defines the canonical Target Task lifecycle. The
+legacy `agents/otp-protocol.md` and this directory remain readable
+compatibility surfaces for existing callers.

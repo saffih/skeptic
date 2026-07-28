@@ -1,5 +1,10 @@
 # OTP: Optimized Task Prompt Protocol
 
+Compatibility note: the canonical Target Task contract is
+`agents/target-task.md`. This file preserves the established OTP wording and
+receipt vocabulary for existing callers; it must be read as an adapter to the
+canonical Target Task lifecycle, not as a competing protocol.
+
 OTP activates a full plan-seal-execute-validate-review-accept-receipt
 lifecycle for one Target Task. It is provider-neutral: any capable model or
 runtime, including Claude, must be able to complete it using this file alone.
