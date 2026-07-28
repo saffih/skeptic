@@ -73,6 +73,13 @@ linear Body growth. Unexpected cumulative growth triggers a boundary and
 state-management diagnosis. The protocol makes no exact token-size claim
 unless the runtime exposes reliable measurements.
 
+The context-pressure gate is explicit: when the exercise emits
+`BODY_ROTATION_REQUIRED`, the Body checkpoints, verifies checkpoint identity
+and plan hash, preserves evidence, stops, and resumes only through a
+genuinely fresh Body. Deterministic checkpoint verification cannot prove
+fresh runtime context; absent an observable fresh Luna Body, resume remains
+blocked.
+
 ### No reasoning reconstruction
 
 The Body is never required to reconstruct prior reasoning. Reasoning no longer
@@ -127,8 +134,10 @@ compress meaning without changing it. It never silently promotes a worker
 report to fact.
 
 Every material claim is classified as `WORKER_REPORTED`, `DIRECTLY_OBSERVED`,
-`DETERMINISTICALLY_VALIDATED`, `INFERRED`, or `UNRESOLVED`. Only accepted,
-appropriately validated claims enter the Body ledger.
+`DETERMINISTICALLY_VALIDATED`, `INDEPENDENTLY_REVIEWED`, `INFERRED`, or
+`UNRESOLVED`. Handoff validation is structural only. A validator-backed
+acceptance transition admits only appropriately validated claims to the Body
+ledger; independent review additionally binds reviewer identity and basis.
 
 ## 4. Information flow
 
@@ -276,3 +285,42 @@ and reviewers may analyze broadly. The Body retains only the owned task,
 immutable plan identity, current position, accepted validated facts, open risks
 and blockers, evidence references, and next authorized action. No additional
 material enters the Body unless the next decision genuinely requires it.
+
+## 15. Promotion review and trust-boundary amendments
+
+Claims are classified as `WORKER_REPORTED`, `DIRECTLY_OBSERVED`,
+`DETERMINISTICALLY_VALIDATED`, `INDEPENDENTLY_REVIEWED`, `INFERRED`, or
+`UNRESOLVED`. Handoff validation checks structure and provenance only. A
+separate Body acceptance transition admits only directly observed or
+deterministically validated claims with a validator-backed evidence reference
+to `ACCEPTED_VALIDATED_CLAIMS`; independently reviewed claims additionally
+require reviewer identity and acceptance basis.
+
+The complete Acceptance Plan schema contains `TASK_ID`, `OBJECTIVE`, `DONE`,
+`SCOPE`, `PROHIBITIONS`, `SOURCE_OF_TRUTH_ORDER`, `ASSUMPTIONS`, `UNKNOWNS`,
+`STEPS`, `VALIDATION`, `HANDOFF`, `STOP_CONDITIONS`, `RETRIEVAL_CONDITIONS`,
+`ESCALATION_CONDITIONS`, `REVIEW_MODE`, and `SUCCESS_CRITERIA`. Each step
+contains `STEP_ID`, `OBJECTIVE`, `DIRECT_INPUTS`, `REFERENCED_INPUTS`,
+`DEPENDENCIES`, `AUTHORITY`, `PROHIBITIONS`, `ACTIONS`, `OUTPUTS`,
+`VALIDATION`, `HANDOFF_REQUIREMENTS`, `RETRIEVAL_CONDITIONS`,
+`ESCALATION_CONDITIONS`, and `STOP_CONDITIONS`. Duplicate IDs, missing
+dependencies, cycles, unbounded authority, and missing final validation are
+rejected before sealing.
+
+Resume verifies sealed-plan content, all references, checkpoint version,
+current/completed step identities, evidence, dependencies, next-action
+authorization, and blockers. Step authorization rejects unknown, out-of-order,
+dependency-incomplete, evidence-free, failed, or already accepted steps.
+Repetition requires explicit retry reason, prior result, authority, expected new
+evidence, and maximum attempts.
+
+Substantive RunSkeptic is a bounded Brain-level role, not receipt lint. MEDIUM
+is for narrow low-risk semantic review; repository-wide architecture or
+promotion review uses HIGH by default. XHIGH requires unresolved architectural
+conflict, materially conflicting evidence, or inadequate HIGH confidence. The
+Brain independently retrieves primary evidence and records requested routing,
+actual routing or `ACTUAL_ROUTING_UNKNOWN`, context, and independence. A Find
+Loop requires fresh complete reviews until three stabilized runs. A Fix Loop
+reviews after every repair, then requires three independent complete qualifying
+passes on the same unchanged artifact. Lint, replay, skipped analysis, and
+ceremonial checks do not count.

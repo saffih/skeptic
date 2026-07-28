@@ -96,6 +96,11 @@ class TargetTaskContextContractTests(unittest.TestCase):
         self.assertTrue(result["state"]["plan_unchanged"])
         self.assertEqual(tuple(result["handoff_fields"]), HANDOFF_FIELDS)
         self.assertLess(result["body_state_size"], result["baseline"]["bytes"])
+        self.assertEqual(result["body_rotation"]["status"], "BODY_ROTATION_REQUIRED")
+        self.assertTrue(result["body_rotation"]["verified"])
+        self.assertTrue(result["body_rotation"]["stopped_before_resume"])
+        self.assertEqual(result["body_rotation"]["resume_owner"], "FRESH_LUNA_BODY")
+        self.assertEqual(result["body_rotation"]["checkpoint"]["PLAN_HASH"], result["plan_hash"])
 
 
 if __name__ == "__main__":

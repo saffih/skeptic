@@ -1,32 +1,29 @@
 # Target Task validation receipt
 
-Date: 2026-07-28
-Implementation route: GPT-5.6 Sol LOW; actual runtime routing is not independently exposed.
+COMMIT_SHA: PENDING_FINAL_COMMIT
+DATE: 2026-07-28
+IMPLEMENTATION_ROUTE: GPT-5.6 Sol LOW; actual runtime route not independently exposed
+REQUESTED_ROUTING: GPT-5.6 Sol LOW routine implementation; HIGH Brain RunSkeptic reviews
+ACTUAL_ROUTING: ACTUAL_ROUTING_UNKNOWN
+TEST_COMMANDS: `python3 -m unittest tests.test_target_task_lifecycle tests.test_target_task_context_contract tests.test_target_task_architecture tests.test_target_task_routing`; `python3 -m unittest discover -s tests -p 'test*.py'`; `git diff --check`
+TARGETED_TEST_COUNT: 33
+FULL_TEST_COUNT: 183
+PASS_COUNT: 183
+FAIL_COUNT: 0
+SKIP_COUNT: 0
+GIT_DIFF_CHECK: PASS
 
-## Interruption and resume exercise
+DETERMINISTIC_LIFECYCLE_SIMULATION: PASS — plan/schema, checkpoint integrity, resume authorization, retry/non-repetition, and terminal invariants.
+DETERMINISTIC_BOUNDARY_SIMULATION: PASS — metadata-only baseline, bounded byte retrieval, typed handoffs, and context-growth checks.
+REAL_INTERRUPTION_RESUME_EXERCISE: BLOCKED
+REASON: no genuine invocation/session boundary and durable cross-invocation resume capability is observable in this environment.
+MISSING_RUNTIME_CAPABILITY: genuine invocation boundary and durable runtime resume service.
+REAL_AGENT_BOUNDARY_EXERCISE: PASS for bounded delegated transport; runtime context isolation remains unknown. Dispatch and envelope evidence: `experiments/target-task-artifacts/boundary-acceptance-TT-BOUNDARY-REPAIR-002.md`.
+ACTUAL_RUNTIME_ISOLATION: UNKNOWN
+ACTUAL_CONTEXT_REDUCTION: NOT_CLAIMED
 
-- Harness: `harness/target_task_lifecycle.py`
-- Test: `tests/test_target_task_lifecycle.py::TargetTaskLifecycleTests.test_interruption_resume_and_completed_step_nonrepetition`
-- Observed result: `PASS`
-- Evidence: an accepted `S1` remains in `COMPLETED_STEPS_AND_EVIDENCE`; resume continues at `S2` and does not silently repeat `S1`.
-- Integrity exercise: `test_plan_and_checkpoint_identity_mismatch_blocks` observed `TargetTaskIntegrityError` (`PASS`).
+RUNSKEPTIC_EVIDENCE_REFERENCE: `experiments/target-task-artifacts/runskeptic-receipt.md` (R-001 through R-005 repair reviews; all non-qualifying)
+ENVIRONMENT_LIMITATIONS: actual model/version/effort, fresh runtime isolation, genuine interruption/resume, and remote-current state are not observable here.
+UNKNOWN_OR_UNPROVEN_PROPERTIES: real interruption/resume; promotion qualification; three qualifying passes; actual routing; runtime isolation; worker substantive correctness absent independent evidence.
 
-## Agent-boundary and retrieval exercise
-
-- Harness: `harness/target_task_context_pressure.py`
-- Test: `tests/test_target_task_context_contract.py::TargetTaskContextContractTests.test_pressure_experiment_preserves_correctness_and_limits_reads`
-- Observed context status: `CONTEXT_ISOLATION_UNKNOWN`
-- Observed result: `PASS`
-- Evidence: the worker contradiction produced `HANDOFF_SUFFICIENT: NO`; focused retrieval resolved the authoritative value; large irrelevant artifacts were not read; the receipt made no runtime-isolation or token-reduction claim.
-
-## Validation commands
-
-```text
-python3 -m unittest tests.test_target_task_lifecycle tests.test_target_task_context_contract tests.test_target_task_routing
-python3 -m unittest discover -s tests -p 'test*.py'
-git diff --check
-```
-
-The full suite passed with 177 tests at the time of this receipt. This harness
-is deterministic evidence of protocol mechanics, not proof of model-runtime
-isolation.
+STATUS: BLOCKED — the real interruption/resume requirement remains an explicit CONFLICT. Deterministic tests do not substitute for the required real exercise.

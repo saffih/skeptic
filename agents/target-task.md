@@ -127,7 +127,7 @@ when its omission cannot reasonably change the recipient's next authorized
 action, validation obligation, or material risk judgment.
 
 Distinguish worker-reported facts, directly observed facts, deterministically
-validated facts, inferences, and unresolved claims. A sufficient handoff lets
+validated facts, independently reviewed facts, inferences, and unresolved claims. A sufficient handoff lets
 the recipient safely continue, stop, validate, retrieve, replan, escalate, or
 reject.
 
@@ -173,6 +173,12 @@ minimize parent state and dispatches and make no stronger leakage claim.
 
 ## Durable checkpoint and resume
 
+When a bounded pressure exercise emits `BODY_ROTATION_REQUIRED`, the Body
+must persist and verify the compact checkpoint, preserve raw evidence, stop
+before continuation, and resume only through a genuinely fresh Body. A
+deterministic checkpoint check is not fresh runtime evidence. If a fresh Luna
+Body cannot be observed, resume is blocked rather than simulated as complete.
+
 Persist a checkpoint after plan acceptance and every accepted material step.
 It contains task, authority, plan reference/hash, execution/context status,
 current step, completed-step evidence, accepted claims, findings, blockers,
@@ -192,10 +198,20 @@ constraints may apply to all writes, not only deliverables.
 ## Review, statuses, and receipt
 
 The sealed plan selects the final review mode. Deterministic validation must
-precede review, and RunSkeptic receipts are validated under `skeptic.md`.
-For this harness-defining task, RunSkeptic Fix Loop requires three
-consecutive valid passes with no new meaningful findings; unchanged ceremonial
-passes do not count.
+precede review, and RunSkeptic receipts are validated under the authoritative
+current `skeptic.md`. Substantive RunSkeptic is a bounded Brain-level role:
+MEDIUM may cover narrow low-risk semantic review, while repository-wide
+architecture/promotion review uses HIGH by default and XHIGH only for an
+unresolved conflict or inadequate HIGH confidence. The Brain independently
+retrieves primary evidence; an implementer summary is never sufficient.
+
+A Find Loop performs fresh-source complete reviews until three consecutive
+stabilized runs. A Fix Loop performs a fresh complete review after every repair,
+then requires three independent complete qualifying passes on the same
+unchanged artifact. Receipt lint, replay, skipped/abbreviated analysis, and a
+fresh no-finding review are distinct: only the complete independent review
+qualifies. Receipt-format repair alone does not require substantive rerun unless
+it exposes a missing substantive operation.
 
 Canonical terminal statuses are `TARGET_TASK_ACCEPTED`,
 `TARGET_TASK_REJECTED`, `TARGET_TASK_BLOCKED`, and

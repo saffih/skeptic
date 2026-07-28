@@ -132,3 +132,15 @@ Do not change controlled model or generation settings in a frozen benchmark mere
 Record requested model class and effort. Record actual runtime, model, version, effort, and exposed settings only when observable.
 
 When actual routing is hidden, report `ACTUAL_ROUTING_UNKNOWN`. Do not claim verified routing.
+
+Substantive RunSkeptic is a bounded Brain-level role. Deterministic receipt
+lint is not RunSkeptic reasoning. Use MEDIUM only for narrow low-risk semantic
+review; use HIGH by default for repository-wide architecture or promotion
+review. XHIGH requires unresolved architectural conflict, materially conflicting
+evidence, or inadequate HIGH confidence, and is never automatic. The Brain
+retrieves primary evidence independently. An underpowered, incomplete,
+non-independent, or context-degraded review cannot qualify as a promotion pass.
+Record `RUNSKEPTIC_MODEL_PER_RUN`, `RUNSKEPTIC_REASONING_LEVEL_PER_RUN`,
+`RUNSKEPTIC_CONTEXT_STATUS_PER_RUN`, `RUNSKEPTIC_INDEPENDENCE_PER_RUN`,
+`RUNSKEPTIC_REPAIR_RUNS`, `RUNSKEPTIC_QUALIFYING_PASSES`, and
+`RUNSKEPTIC_FINAL_CATEGORY`.

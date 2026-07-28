@@ -39,9 +39,20 @@ call, review, and omission cost. Prefer a deterministic boundary implementation.
 
 ## RunSkeptic
 
-RunSkeptic is primarily a planning check.
+Substantive RunSkeptic is a bounded Brain-level review, not receipt lint. A
+narrow low-risk semantic review may use MEDIUM; repository-wide architecture
+or promotion review uses HIGH by default, with XHIGH only for unresolved
+architectural conflict, materially conflicting evidence, or inadequate HIGH
+confidence. The Brain independently retrieves current `skeptic.md`, primary
+architecture, exact candidate, changed files, tests, and exercise evidence;
+the implementer summary is only an index.
 
-Do not repeat it automatically during execution or after every change.
+Current `skeptic.md` controls the loop. A Find Loop requires fresh complete
+reviews until three consecutive stabilized runs. A Fix Loop reviews fresh after
+every repair; after the artifact is unchanged, three complete independent
+qualifying passes are required. Receipt lint, replay, skipped analysis, and
+abbreviation do not count; a fresh complete no-finding pass is not ceremonial.
+Do not use prior wording to skip these passes.
 
 Run it again only when:
 
@@ -62,7 +73,10 @@ Whenever RunSkeptic is invoked:
 3. run deterministic receipt lint;
 4. use bounded semantic conformance only when deterministic lint cannot decide;
 5. repair a harmless receipt-format defect without rerunning the review;
-6. rerun RunSkeptic only when a required substantive operation was absent or the plan changed materially.
+6. record requested model/reasoning, actual routing or
+   `ACTUAL_ROUTING_UNKNOWN`, context status, and independence;
+7. rerun after every substantive repair and complete the required qualifying
+   passes on the unchanged artifact.
 
 Do not repeat receipt checks on unchanged content merely to accumulate PASS results.
 

@@ -61,6 +61,17 @@ class TargetTaskRoutingTests(unittest.TestCase):
         )
         self.assertNotIn("agents/otp-protocol.md` is authoritative", canonical)
 
+    def test_runskeptic_is_brain_high_and_loop_precedence_is_explicit(self) -> None:
+        architecture = (ROOT / "architecture/target-task-architecture.md").read_text(encoding="utf-8")
+        lead = (ROOT / "agents/lead-agent-prompt.md").read_text(encoding="utf-8")
+        routing = (ROOT / "agents/model-routing.md").read_text(encoding="utf-8")
+        for text in (architecture, lead, routing):
+            self.assertIn("bounded Brain-level", text)
+            self.assertIn("HIGH", text)
+            self.assertIn("ACTUAL_ROUTING_UNKNOWN", text)
+        self.assertIn("three independent complete qualifying", architecture)
+        self.assertIn("Receipt lint, replay, skipped analysis", lead)
+
 
 if __name__ == "__main__":
     unittest.main()
