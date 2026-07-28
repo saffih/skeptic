@@ -1,6 +1,6 @@
 # Bounded execution envelope
 
-`harness/execution_envelope.py` defines the Slice 2 Body boundary. Task inputs,
+`capabilities/execution_envelope/execution_envelope.py` defines the Slice 2 Body boundary. Task inputs,
 role returns, and command receipts have fixed fields, canonical JSON, UTF-8 byte
 limits, short-string limits, and verified repository-relative artifact references.
 Large plans, reports, source, diffs, transcripts, reasoning, and command output

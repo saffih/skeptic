@@ -12,7 +12,7 @@ import errno
 from pathlib import Path
 from typing import Any
 
-from harness.body_state import (
+from capabilities.body_state.body_state import (
     MAX_ID_BYTES,
     MAX_PATH_BYTES,
     MAX_STATE_BYTES,

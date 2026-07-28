@@ -3,7 +3,7 @@
 - task identity: TT-BODY-BOUNDED-EXECUTION-SLICE-002
 - objective: add a bounded execution envelope and file-backed command receipts while preserving Slice 1 metadata-only state.
 - scope: one contract document, one standard-library helper, examples, focused tests, and minimal template/entry-map updates.
-- authoritative inputs: `AGENTS.md`, `agents/body-state.md`, `harness/body_state.py`, `experiments/body-brain-artifacts/brain.md`, `skeptic.md`, and the supplied Target Task.
+- authoritative inputs: `AGENTS.md`, `capabilities/body_state/body_state.md`, `capabilities/body_state/body_state.py`, `experiments/body-brain-artifacts/brain.md`, `skeptic.md`, and the supplied Target Task.
 - prohibitions: do not edit `skeptic.md`; do not add checkpoint, resume, rotation, pressure, retrieval, service, dependency, or unrelated cleanup behavior; do not modify protected local-main evidence.
 
 ## Material assumptions and unknowns

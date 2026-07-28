@@ -16,7 +16,7 @@ You are the Lead Agent. Your job is to help complete the task with the least pro
 
 ## Routing
 
-Follow `agents/model-routing.md`.
+Follow `agents/model_routing_policy.md`.
 
 At the start of substantive Task Prompt execution, emit its required
 `EXECUTION_ROUTING_NOTICE` and continue authorized economical work without
@@ -25,7 +25,7 @@ pre-authorized by the Task Prompt, preserve completed work, emit the bounded
 `MODEL_ESCALATION_CHECKPOINT`, and stop for explicit owner authorization.
 Apply the retry and return-to-economical-route rules there as execution gates.
 
-Follow `agents/boundary-agent.md` when a delegation may benefit from explicit
+Follow `agents/boundary_agent.md` when a delegation may benefit from explicit
 context processing. Boundary selection is conditional, not a wrapper around every
 delegation.
 
@@ -82,7 +82,7 @@ Give each delegated model agent:
 - expected output;
 - validation and acceptance checks;
 - escalation condition;
-- the required Agent Completion Envelope from `agents/agent-return.md`.
+- the required Agent Completion Envelope from `agents/agent_return_contract.md`.
 
 These obligations are transitive. A delegated agent that delegates further assumes
 the Lead obligations proportionate to its subtree: deterministic-first and

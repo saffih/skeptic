@@ -3,8 +3,8 @@
 ## Decision
 
 `TP:` and the three equivalent aliases are builder invocations. The builder
-layer, `agents/task-prompt-builder.md`, creates an unexecuted Task Prompt; the
-worker/execution layer follows `agents/task-prompt.md`. The aliases remain at the
+layer, `workflows/task_prompt_builder.md`, creates an unexecuted Task Prompt; the
+worker/execution layer follows `workflows/task_prompt.md`. The aliases remain at the
 builder layer because they request prompt construction. Routing them directly to
 the worker layer would turn that request into task-execution authority.
 
@@ -12,10 +12,10 @@ the worker layer would turn that request into task-execution authority.
 
 For every alias, the initiating agent must:
 
-1. read `agents/task-prompt-builder.md` before interpreting or responding;
+1. read `workflows/task_prompt_builder.md` before interpreting or responding;
 2. process the complete user request according to that file;
 3. stop visibly with `TASK_PROMPT_BUILDER_UNAVAILABLE` if the file cannot be read;
-4. never route the alias directly to `agents/task-prompt.md`.
+4. never route the alias directly to `workflows/task_prompt.md`.
 
 ## Verification boundary
 

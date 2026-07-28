@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from .body_state import (
+from capabilities.body_state.body_state import (
     BodyStateError,
     MAX_STATE_BYTES,
     SHA256_RE,

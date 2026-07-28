@@ -2,25 +2,25 @@
 
 The Body coordinates and executes. The Brain reasons and plans. Files carry durable state.
 
-Before consuming or handing off compact state, validate it with `harness/body_state.py`; reject the state and stop on any validation failure. The Body carries only the fields and artifact metadata defined in `agents/body-state.md`; large evidence remains external.
+Before consuming or handing off compact state, validate it with `capabilities/body_state/body_state.py`; reject the state and stop on any validation failure. The Body carries only the fields and artifact metadata defined in `capabilities/body_state/body_state.md`; large evidence remains external.
 
-Validate task and role boundaries with `harness/execution_envelope.py`. Run one
+Validate task and role boundaries with `capabilities/execution_envelope/execution_envelope.py`. Run one
 command through its file-backed runner; for mutations, supply exact repository,
 worktree, branch, HEAD, cleanliness, and authorization expectations.
 
 When the authorized action is one exact text range, validate and execute the
-request with `harness/focused_retrieval.py`; keep the Body state and source
+request with `capabilities/focused_retrieval/focused_retrieval.py`; keep the Body state and source
 artifacts external and pass only its bounded result metadata onward.
 
 When a fully validated metadata-only Body state needs persistence, create one
-immutable checkpoint with `harness/checkpoint.py`. The checkpoint embeds the
+immutable checkpoint with `capabilities/immutable_checkpoint/immutable_checkpoint.py`. The checkpoint embeds the
 validated Body snapshot and can be structurally validated without the origin;
 full validation rechecks its referenced repository artifacts. Publication is
 create-only and stops after readback; it never resumes or executes the next
 authorized action.
 
 When a fresh Body process must restart from one Slice 4 checkpoint, use
-`harness/resume.py` with `agents/resume.md`. It admits only an exact, fully
+`capabilities/restart_admission/restart_admission.py` with `capabilities/restart_admission/restart_admission.md`. It admits only an exact, fully
 validated checkpoint, preserves the completed-step list, rejects a current step
 already completed, and materializes the exact canonical snapshot to a new
 external path. READY and BLOCKED are admission outcomes; restart never executes

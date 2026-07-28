@@ -6,8 +6,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from harness import focused_retrieval as fr
-from harness.body_state import validate_state_bytes, validate_state_structure_bytes
+from capabilities.focused_retrieval import focused_retrieval as fr
+from capabilities.body_state.body_state import validate_state_bytes, validate_state_structure_bytes
 
 
 def canonical(value):
@@ -132,7 +132,7 @@ class FocusedRetrievalTests(unittest.TestCase):
         def counted(path, *args, **kwargs):
             if Path(path).name == "source.txt": calls.append(path)
             return original(path, *args, **kwargs)
-        with patch("harness.focused_retrieval.Path.open", new=counted):
+        with patch("capabilities.focused_retrieval.focused_retrieval.Path.open", new=counted):
             code, raw = self.execute(START_LINE=1, END_LINE=1, MAX_EXCERPT_BYTES=64)
         self.assertEqual(code, 0); self.assertEqual(len(calls), 1); self.assertEqual(json.loads(raw)["EXCERPT"], "small\n")
 

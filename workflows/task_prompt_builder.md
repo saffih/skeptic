@@ -15,7 +15,7 @@ These forms are equivalent. The text after the alias is the objective:
 
 ## Workflow
 
-1. Read the current `AGENTS.md`, `agents/lead-agent-prompt.md`, `agents/task-prompt.md`, and only the additional evidence needed for the objective.
+1. Read the current `AGENTS.md`, `agents/lead_agent.md`, `workflows/task_prompt.md`, and only the additional evidence needed for the objective.
 2. Identify the objective, scope, constraints, success criteria, permitted actions, and relevant prohibited actions.
 3. Ask for clarification only when a material ambiguity would make the result unsafe, unverifiable, or outside authority.
 4. Produce the smallest Task Prompt that preserves the required outcome, safety boundaries, and verification.
@@ -28,12 +28,12 @@ For substantive prompts where model cost may be material, also check that the
 prompt selects the least expensive reliable starting route, requires the
 `EXECUTION_ROUTING_NOTICE`, identifies likely premium roles early, and either
 pre-authorizes each premium stage with the exact bounded fields required by
-`agents/model-routing.md` or stops for explicit owner authorization at a
+`agents/model_routing_policy.md` or stops for explicit owner authorization at a
 `MODEL_ESCALATION_CHECKPOINT`. Require zero automatic premium retries by
 default, a minimum escalation package, no repetition of completed economical
 work, and return to an economical route after premium judgment.
 
-For a substantive build, use the proportional planning and RunSkeptic guidance in `agents/task-prompt.md`. A materially changed plan is reviewed again; harmless wording changes are not.
+For a substantive build, use the proportional planning and RunSkeptic guidance in `workflows/task_prompt.md`. A materially changed plan is reviewed again; harmless wording changes are not.
 
 ## Output
 

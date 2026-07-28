@@ -13,7 +13,7 @@ For substantive work:
 
 1. specify the starting model or model class and reasoning effort, work expected
    to remain there, and any likely premium roles;
-2. require the `EXECUTION_ROUTING_NOTICE` from `agents/model-routing.md`;
+2. require the `EXECUTION_ROUTING_NOTICE` from `agents/model_routing_policy.md`;
 3. make a concise plan;
 4. select deterministic work, direct work, delegation, model class, and reasoning effort proportionately;
 5. RunSkeptic on the plan once;
@@ -40,11 +40,11 @@ Do not add routing notices or escalation machinery to those trivial tasks.
 
 Delegation is optional. Use it only when it clearly improves isolation, specialization, parallelism, protected context, or review.
 
-Boundary processing is also optional. Use `agents/boundary-agent.md` only when its
+Boundary processing is also optional. Use `agents/boundary_agent.md` only when its
 expected context, exposure, integration, or error-risk reduction exceeds its own
 cost. Direct compact delegation remains valid.
 
-When delegating to a model agent, specify a unique dispatch ID; bounded objective, scope, authority, and prohibitions; requested model class and reasoning effort; expected output and acceptance checks; escalation condition; and the Agent Completion Envelope required by `agents/agent-return.md`.
+When delegating to a model agent, specify a unique dispatch ID; bounded objective, scope, authority, and prohibitions; requested model class and reasoning effort; expected output and acceptance checks; escalation condition; and the Agent Completion Envelope required by `agents/agent_return_contract.md`.
 
 A valid envelope confirms the return protocol, not the work. Apply role-specific acceptance before integration.
 

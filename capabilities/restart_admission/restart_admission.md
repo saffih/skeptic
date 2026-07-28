@@ -1,6 +1,6 @@
 # Validated restart admission
 
-`harness/resume.py` admits one exact Slice 4 checkpoint for a fresh Body
+`capabilities/restart_admission/restart_admission.py` admits one exact Slice 4 checkpoint for a fresh Body
 process. The request binds the checkpoint path, SHA-256, and byte size plus task
 and sealed-plan identity. Admission reads the checkpoint once, performs full
 checkpoint and referenced-artifact validation, rejects duplicate completed

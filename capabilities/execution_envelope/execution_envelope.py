@@ -9,7 +9,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
-from .body_state import ARTIFACT_FIELDS, BodyStateError, _hash_file, _path, _short
+from capabilities.body_state.body_state import ARTIFACT_FIELDS, BodyStateError, _hash_file, _path, _short
 
 TASK_ENVELOPE_LIMIT = 8192
 ROLE_RETURN_LIMIT = 4096

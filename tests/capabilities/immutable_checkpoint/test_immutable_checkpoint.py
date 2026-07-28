@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from harness.checkpoint import (
+from capabilities.immutable_checkpoint.immutable_checkpoint import (
     CHECKPOINT_MAX_BYTES,
     REQUEST_MAX_BYTES,
     CheckpointError,
@@ -95,8 +95,8 @@ class CheckpointTests(unittest.TestCase):
 
     def test_cli_external_identity_binding(self):
         receipt = self.create(); path = self.workspace / receipt["CHECKPOINT_PATH"]
-        command = [sys.executable, "-m", "harness.checkpoint", "validate", str(path), "--expected-sha256", receipt["CHECKPOINT_SHA256"], "--expected-byte-size", str(receipt["CHECKPOINT_BYTE_SIZE"])]
-        result = subprocess.run(command, cwd=Path(__file__).parents[1], capture_output=True, text=True)
+        command = [sys.executable, "-m", "capabilities.immutable_checkpoint.immutable_checkpoint", "validate", str(path), "--expected-sha256", receipt["CHECKPOINT_SHA256"], "--expected-byte-size", str(receipt["CHECKPOINT_BYTE_SIZE"])]
+        result = subprocess.run(command, cwd=Path(__file__).parents[3], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('"CHECKPOINT_ID"', result.stdout)
     def test_limits_unknown_and_unsafe_paths(self):
@@ -116,11 +116,11 @@ class CheckpointTests(unittest.TestCase):
         seen = []; real_mkstemp = __import__("tempfile").mkstemp
         def mkstemp(*args, **kwargs):
             result = real_mkstemp(*args, **kwargs); seen.append(Path(result[1])); return result
-        with patch("harness.checkpoint.tempfile.mkstemp", side_effect=mkstemp), patch("harness.checkpoint.os.fsync", wraps=os.fsync) as fsync:
+        with patch("capabilities.immutable_checkpoint.immutable_checkpoint.tempfile.mkstemp", side_effect=mkstemp), patch("capabilities.immutable_checkpoint.immutable_checkpoint.os.fsync", wraps=os.fsync) as fsync:
             self.create()
         self.assertTrue(seen and seen[0].parent.resolve() == (self.workspace / "checkpoints").resolve()); self.assertGreaterEqual(fsync.call_count, 2); self.assertFalse(seen[0].exists())
         existing = self.workspace / "checkpoints/race.json"; existing.write_bytes(b"keep")
-        with patch("harness.checkpoint.os.link", side_effect=FileExistsError("race")):
+        with patch("capabilities.immutable_checkpoint.immutable_checkpoint.os.link", side_effect=FileExistsError("race")):
             with self.assertRaises(CheckpointError) as caught: self.create(dict(self.request_value, CHECKPOINT_PATH="checkpoints/race.json"))
         self.assertEqual(caught.exception.code, "TARGET_EXISTS"); self.assertEqual(existing.read_bytes(), b"keep")
         self.assertFalse(any(p.name.startswith(".race.json.tmp-") for p in (self.workspace / "checkpoints").iterdir()))
@@ -131,7 +131,7 @@ class CheckpointTests(unittest.TestCase):
             calls[0] += 1
             if calls[0] == 2: raise OSError("directory fsync failed")
             return real_fsync(fd)
-        with patch("harness.checkpoint.os.fsync", side_effect=fail_directory):
+        with patch("capabilities.immutable_checkpoint.immutable_checkpoint.os.fsync", side_effect=fail_directory):
             with self.assertRaises(CheckpointError) as caught: self.create()
         self.assertEqual(caught.exception.phase, "AFTER_PUBLICATION")
         self.assertTrue(caught.exception.final_checkpoint_exists)
@@ -142,7 +142,7 @@ class CheckpointTests(unittest.TestCase):
         def unsupported(path, *args):
             if str(path).endswith("checkpoints"): raise OSError(__import__("errno").ENOTSUP, "unsupported")
             return real_open(path, *args)
-        with patch("harness.checkpoint.os.open", side_effect=unsupported):
+        with patch("capabilities.immutable_checkpoint.immutable_checkpoint.os.open", side_effect=unsupported):
             receipt = self.create()
         self.assertEqual(receipt["DURABILITY_MODE"], "ATOMIC_HARD_LINK_FILE_FSYNC_ONLY")
 
@@ -151,14 +151,14 @@ class CheckpointTests(unittest.TestCase):
         def publish_then_corrupt(source, target):
             real_link(source, target)
             Path(target).write_bytes(b"corrupted-after-publication")
-        with patch("harness.checkpoint.os.link", side_effect=publish_then_corrupt):
+        with patch("capabilities.immutable_checkpoint.immutable_checkpoint.os.link", side_effect=publish_then_corrupt):
             with self.assertRaises(CheckpointError) as caught: self.create()
         self.assertEqual(caught.exception.phase, "AFTER_PUBLICATION")
         self.assertTrue(caught.exception.final_checkpoint_exists)
         self.assertFalse(caught.exception.final_bytes_verified)
 
     def test_creation_receipt_failure_reports_post_publication_state(self):
-        with patch("harness.checkpoint._receipt", side_effect=CheckpointError("RECEIPT_GENERATION")):
+        with patch("capabilities.immutable_checkpoint.immutable_checkpoint._receipt", side_effect=CheckpointError("RECEIPT_GENERATION")):
             with self.assertRaises(CheckpointError) as caught: self.create()
         self.assertEqual(caught.exception.phase, "AFTER_PUBLICATION")
         self.assertTrue(caught.exception.final_checkpoint_exists)

@@ -13,7 +13,7 @@ evidence. Generated benchmark results remain runtime-owned and ignored.
 ## RunSkeptic planning receipt
 
 - Source read: current `skeptic.md`; its content matches the remote-main source at `b812f86a52577cb7604e5bd8fdd25aa8e37972f4`; final local consolidation HEAD is recorded below.
-- Companion files: `AGENTS.md`, `agents/task-prompt.md`, `agents/lead-agent-prompt.md`, and `agents/model-routing.md`.
+- Companion files: `AGENTS.md`, `workflows/task_prompt.md`, `agents/lead_agent.md`, and `agents/model_routing_policy.md`.
 - Permission: read-only review of the execution plan.
 - Major steps: Gate, Fundamental Scan, Map, all Thinkers, structural checks, selective domain checks, confidence, stabilization, evidence, decision, and verification planning.
 - Thinkers: Charlie Munger, Occam, Feynman, Popper, Kant, and Saffi/SH; SH applied to the preservation-versus-cleanup tradeoff.

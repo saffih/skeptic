@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from harness.execution_envelope import (
+from capabilities.execution_envelope.execution_envelope import (
     COMMAND_RECEIPT_LIMIT,
     ROLE_RETURN_LIMIT,
     TASK_ENVELOPE_LIMIT,
@@ -170,8 +170,8 @@ class EnvelopeTests(unittest.TestCase):
         self.assertEqual(receipt["status"], "BLOCKED"); self.assertFalse(marker.exists())
 
     def test_slice_1_body_state_compatibility(self):
-        from harness.body_state import validate_state_file
-        self.assertEqual(validate_state_file(Path("experiments/body-brain-artifacts/examples/body-state.json"), repository_root=Path.cwd())["TASK_ID"], "TT-BODY-METADATA-SLICE-001")
+        from capabilities.body_state.body_state import validate_state_file
+        self.assertEqual(validate_state_file(Path("capabilities/body_state/examples/body-state.json"), repository_root=Path.cwd())["TASK_ID"], "TT-BODY-METADATA-SLICE-001")
 
 
 if __name__ == "__main__":

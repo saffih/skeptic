@@ -12,8 +12,8 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from harness.body_state import MAX_ID_BYTES, MAX_PATH_BYTES, MAX_STATE_BYTES, BodyStateError, SHA256_RE, validate_state_bytes, validate_state_structure_bytes
-from harness.checkpoint import CHECKPOINT_MAX_BYTES, CheckpointError, validate_checkpoint_bytes
+from capabilities.body_state.body_state import MAX_ID_BYTES, MAX_PATH_BYTES, MAX_STATE_BYTES, BodyStateError, SHA256_RE, validate_state_bytes, validate_state_structure_bytes
+from capabilities.immutable_checkpoint.immutable_checkpoint import CHECKPOINT_MAX_BYTES, CheckpointError, validate_checkpoint_bytes
 
 REQUEST_MAX_BYTES = 8192
 RECEIPT_MAX_BYTES = 4096

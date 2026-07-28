@@ -1,0 +1,1 @@
+"""Concept-owned deterministic capabilities."""

@@ -1,6 +1,6 @@
 import hashlib, json, tempfile, unittest
 from pathlib import Path
-from harness.body_state import MAX_STATE_BYTES, BodyStateError, validate_state_bytes, validate_state_file
+from capabilities.body_state.body_state import MAX_STATE_BYTES, BodyStateError, validate_state_bytes, validate_state_file
 
 def enc(value): return (json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
@@ -38,12 +38,12 @@ class BodyStateTests(unittest.TestCase):
         with self.assertRaises(BodyStateError) as c: validate_state_file(p,repository_root=self.root,expected_task_id="other")
         self.assertEqual(c.exception.code,"TASK_ID_MISMATCH")
     def test_templates_reference_the_single_contract(self):
-        root = Path(__file__).parents[1]
+        root = Path(__file__).parents[3]
         body = (root / "experiments/body-brain-artifacts/body.md").read_text()
         readme = (root / "experiments/body-brain-artifacts/README.md").read_text()
         agents = (root / "AGENTS.md").read_text()
-        self.assertIn("harness/body_state.py", body)
-        self.assertIn("agents/body-state.md", readme)
+        self.assertIn("capabilities/body_state/body_state.py", body)
+        self.assertIn("capabilities/body_state/body_state.md", readme)
         self.assertIn("metadata-only Body state", agents)
 
 if __name__ == "__main__": unittest.main()

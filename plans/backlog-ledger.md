@@ -28,7 +28,7 @@ work; historical plans remain evidence, not competing authority.
 | `CH:CR` vs `SH:WL` | COMPLETED | Current source distinguishes constraint risk from wrong leverage. |
 | Task-scale classification | COMPLETED | Task Prompt and Lead guidance define proportional execution. |
 | Explicit context allocation | COMPLETED | Lead, routing, and boundary contracts cover context discipline. |
-| Explicit model allocation | COMPLETED | `agents/model-routing.md` is canonical. |
+| Explicit model allocation | COMPLETED | `agents/model_routing_policy.md` is canonical. |
 | Role-based model routing | COMPLETED | Routing policy and escalation checkpoint are present. |
 | Receipt budgets | COMPLETED | Receipt and bounded escalation contracts are present. |
 | Hierarchical aggregation | PARKED | Historical branches contain designs; not current canonical architecture. |

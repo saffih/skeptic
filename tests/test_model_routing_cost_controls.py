@@ -6,10 +6,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ROOT / "AGENTS.md"
-MODEL_ROUTING = ROOT / "agents" / "model-routing.md"
-LEAD = ROOT / "agents" / "lead-agent-prompt.md"
-TASK = ROOT / "agents" / "task-prompt.md"
-BUILDER = ROOT / "agents" / "task-prompt-builder.md"
+MODEL_ROUTING = ROOT / "agents" / "model_routing_policy.md"
+LEAD = ROOT / "agents" / "lead_agent.md"
+TASK = ROOT / "workflows" / "task_prompt.md"
+BUILDER = ROOT / "workflows" / "task_prompt_builder.md"
 
 
 class ModelRoutingCostControlTests(unittest.TestCase):
@@ -26,7 +26,7 @@ class ModelRoutingCostControlTests(unittest.TestCase):
 
     def test_model_routing_owns_detailed_cost_policy(self) -> None:
         self.assertIn(
-            "`agents/model-routing.md` is authoritative for portable cost-aware model routing",
+            "`agents/model_routing_policy.md` is authoritative for portable cost-aware model routing",
             self.agents,
         )
         for marker in [
@@ -81,7 +81,7 @@ class ModelRoutingCostControlTests(unittest.TestCase):
 
     def test_policy_ownership_and_authorization_do_not_contradict(self) -> None:
         self.assertEqual(self.lead.count("MODEL_ESCALATION_CHECKPOINT"), 1)
-        self.assertIn("Follow `agents/model-routing.md`.", self.lead)
+        self.assertIn("Follow `agents/model_routing_policy.md`.", self.lead)
         for text in [self.routing, self.lead, self.task, self.builder]:
             self.assertIn("explicit owner authorization", text)
 

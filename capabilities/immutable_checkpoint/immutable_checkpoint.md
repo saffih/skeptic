@@ -1,11 +1,11 @@
 # Immutable compact checkpoint
 
-`harness/checkpoint.py` creates one canonical, create-only checkpoint from one
+`capabilities/immutable_checkpoint/immutable_checkpoint.py` creates one canonical, create-only checkpoint from one
 exact, fully validated metadata-only Body state. The request and checkpoint
 are canonical UTF-8 JSON with one final LF. The request binds a safe path,
 SHA-256, and byte size inside a task-owned external workspace; the helper
 reads the Body state once, validates all repository-relative artifacts through
-`harness/body_state.py`, and embeds the parsed state once.
+`capabilities/body_state/body_state.py`, and embeds the parsed state once.
 
 The checkpoint contains the Body origin provenance, one complete Body snapshot,
 sealed-plan identity, and a PASS receipt. It is written to a same-directory

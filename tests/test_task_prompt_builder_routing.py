@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AGENTS = ROOT / "AGENTS.md"
-BUILDER = ROOT / "agents" / "task-prompt-builder.md"
+BUILDER = ROOT / "workflows" / "task_prompt_builder.md"
 
 
 class TaskPromptBuilderRoutingTests(unittest.TestCase):
@@ -23,7 +23,7 @@ class TaskPromptBuilderRoutingTests(unittest.TestCase):
         cls.builder = BUILDER.read_text(encoding="utf-8")
 
     def test_aliases_point_to_builder(self) -> None:
-        self.assertIn("-> `agents/task-prompt-builder.md`", self.alias_entry)
+        self.assertIn("workflows/task_prompt_builder.md", self.alias_entry)
         for alias in [
             "`TP: <objective>`",
             "`Create task prompt for: <objective>`",
@@ -34,7 +34,7 @@ class TaskPromptBuilderRoutingTests(unittest.TestCase):
 
     def test_trigger_requires_reading_builder_before_processing_request(self) -> None:
         self.assertIn(
-            "first read `agents/task-prompt-builder.md` before interpreting or responding",
+            "first read `workflows/task_prompt_builder.md` before interpreting or responding",
             self.alias_entry,
         )
         self.assertIn(
@@ -46,9 +46,9 @@ class TaskPromptBuilderRoutingTests(unittest.TestCase):
         self.assertIn("`TASK_PROMPT_BUILDER_UNAVAILABLE`", self.alias_entry)
 
     def test_alias_does_not_route_directly_to_task_prompt(self) -> None:
-        self.assertNotIn("-> `agents/task-prompt.md`", self.alias_entry)
+        self.assertNotIn("-> `workflows/task_prompt.md`", self.alias_entry)
         self.assertIn(
-            "Do not route an alias directly to `agents/task-prompt.md`",
+            "Do not route an alias directly to `workflows/task_prompt.md`",
             self.alias_entry,
         )
 

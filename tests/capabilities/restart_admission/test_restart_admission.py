@@ -9,8 +9,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from harness.checkpoint import create_checkpoint
-from harness.resume import ResumeError, admit_restart, process_request, validate_restart_receipt
+from capabilities.immutable_checkpoint.immutable_checkpoint import create_checkpoint
+from capabilities.restart_admission.restart_admission import ResumeError, admit_restart, process_request, validate_restart_receipt
 
 
 def enc(value):
@@ -85,16 +85,16 @@ class ResumeTests(unittest.TestCase):
     def test_race_and_directory_fsync_modes(self):
         real_link = os.link
         def race(source, target): Path(target).write_bytes(b"keep"); return real_link(source, target)
-        with patch("harness.resume.os.link", side_effect=race):
+        with patch("capabilities.restart_admission.restart_admission.os.link", side_effect=race):
             with self.assertRaises(ResumeError) as caught: admit_restart(self.request(RESUMED_BODY_STATE_PATH="race"), repository_root=self.repo, workspace_root=self.workspace)
         self.assertEqual(caught.exception.code, "OUTPUT_EXISTS"); self.assertEqual((self.workspace / "race").read_bytes(), b"keep")
-        with patch("harness.resume.os.fsync", side_effect=[None, OSError(errno.ENOTSUP, "unsupported")]):
+        with patch("capabilities.restart_admission.restart_admission.os.fsync", side_effect=[None, OSError(errno.ENOTSUP, "unsupported")]):
             receipt = admit_restart(self.request(RESUMED_BODY_STATE_PATH="fallback"), repository_root=self.repo, workspace_root=self.workspace)
         self.assertEqual(receipt["STATUS"], "READY")
 
     def test_cli_separate_process_and_no_action_execution(self):
         request_path = self.workspace / "request.json"; request_path.write_bytes(self.request())
-        result = subprocess.run([sys.executable, "-m", "harness.resume", str(request_path), "--repository-root", str(self.repo), "--workspace-root", str(self.workspace)], cwd=Path(__file__).parents[1], capture_output=True, text=True)
+        result = subprocess.run([sys.executable, "-m", "capabilities.restart_admission.restart_admission", str(request_path), "--repository-root", str(self.repo), "--workspace-root", str(self.workspace)], cwd=Path(__file__).parents[3], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr); self.assertEqual(json.loads(result.stdout)["STATUS"], "READY")
 
     def test_receipt_validator_rejects_unknown_noncanonical_and_state_mutation(self):
@@ -106,10 +106,10 @@ class ResumeTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, "RESUMED_STATE_IDENTITY_MISMATCH")
 
     def test_prepublication_failure_cleans_temp_and_postpublication_is_truthful(self):
-        with patch("harness.resume.tempfile.mkstemp", side_effect=OSError("fail")):
+        with patch("capabilities.restart_admission.restart_admission.tempfile.mkstemp", side_effect=OSError("fail")):
             with self.assertRaises(ResumeError) as caught: admit_restart(self.request(RESUMED_BODY_STATE_PATH="pre"), repository_root=self.repo, workspace_root=self.workspace)
         self.assertEqual(caught.exception.phase, "BEFORE_PUBLICATION"); self.assertFalse((self.workspace / "pre").exists())
-        with patch("harness.resume.os.fsync", side_effect=[None, OSError("directory failure")]):
+        with patch("capabilities.restart_admission.restart_admission.os.fsync", side_effect=[None, OSError("directory failure")]):
             with self.assertRaises(ResumeError) as caught: admit_restart(self.request(RESUMED_BODY_STATE_PATH="post"), repository_root=self.repo, workspace_root=self.workspace)
         self.assertEqual(caught.exception.phase, "AFTER_PUBLICATION"); self.assertTrue(caught.exception.output_visible)
 

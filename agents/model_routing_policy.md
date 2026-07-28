@@ -67,7 +67,7 @@ Delegated agents do not inherit the Lead model or effort automatically.
 
 ## Boundary routing
 
-Use `agents/boundary-agent.md` conditionally when context processing has material
+Use `agents/boundary_agent.md` conditionally when context processing has material
 expected value. A compact direct delegation needs no Boundary Agent.
 
 Route boundary work in this order:
