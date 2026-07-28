@@ -3,6 +3,10 @@
 This file adapts the portable Target Task protocol to this repository. It does
 not replace `agents/target-task.md` or `skeptic.md`.
 
+The approved design source of truth is
+`architecture/target-task-architecture.md`; this adapter only identifies
+repository entry points and validation artifacts.
+
 * `AGENTS.md` is the repository entry map.
 * `skeptic.md` is the authoritative Skeptic review source.
 * `agents/` contains repository-specific orchestration contracts.

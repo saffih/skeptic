@@ -41,6 +41,9 @@ Repository-integrated Skeptic:
 
 Ownership:
 
+- `architecture/target-task-architecture.md` is the canonical source of truth
+  for the approved Target Task architecture. Protocol files implement or
+  summarize it and must not create a competing design.
 - `skeptic.md` is authoritative for RunSkeptic behavior, its specialized receipt, and output categories.
 - `agents/lead-agent-prompt.md` is authoritative for the lightweight Lead role, including direct execution, optional delegation, downstream acceptance, and deterministic validation.
 - `agents/task-prompt.md` is authoritative for proportional Task Prompt content and workflow guidance.

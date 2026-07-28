@@ -6,6 +6,11 @@ alias that maps to this same protocol; Optimal Task Prompt is historical
 migration terminology, and `TP:` remains the separate legacy Task Prompt
 builder.
 
+The approved architecture is persisted at
+`architecture/target-task-architecture.md`. That document is the source of
+truth for the design; this file is the executable protocol summary and must
+remain aligned with it.
+
 ## Core invariant
 
 Active context contains only the minimum sufficient, current,
@@ -60,6 +65,21 @@ accepted validated claims, deviations, unresolved blockers, artifact
 references, and validation/review status. Raw logs and prior handoffs remain
 external. The acceptance ledger records incremental accepted claims so final
 review does not reconstruct execution from raw artifacts.
+
+The complete Body field contract is `TARGET_TASK_ID`, `TASK_REFERENCE`,
+`AUTHORITY_AND_GLOBAL_CONSTRAINTS`, `SEALED_PLAN_REFERENCE`, `SEALED_PLAN_HASH`,
+`EXECUTION_MODE`, `OBSERVED_CONTEXT_STATUS`, `CURRENT_STEP`,
+`COMPLETED_STEP_IDENTITIES`, `ACCEPTED_VALIDATED_CLAIMS`, `OPEN_FINDINGS`,
+`OPEN_BLOCKERS`, `MATERIAL_DEVIATIONS`, `ARTIFACT_REFERENCES`,
+`NEXT_AUTHORIZED_ACTION`, `VALIDATION_STATUS`, and `REVIEW_STATUS`. Full
+source, broad diffs, raw logs, full reasoning, repeated task/plan text, and
+unfiltered research are prohibited from normal Body state.
+
+The independent runtime fields are `OBSERVED_CONTEXT_STATUS` (what the
+runtime exposes) and `ISOLATION_REQUIRED` (what the task requires). Their
+combination selects `ISOLATED_ORCHESTRATION`, `SHARED_CONTEXT_DEGRADED`, or
+`ISOLATION_REQUIRED_BLOCKED`; artifact discipline never proves runtime
+isolation.
 
 ## Brain and Acceptance Plan
 
@@ -150,6 +170,18 @@ Use exactly one observable status where applicable:
 `CONTEXT_ISOLATION_UNKNOWN`. Explicit boundary processing limits transmitted
 information but does not prove runtime isolation. When inherited or unknown,
 minimize parent state and dispatches and make no stronger leakage claim.
+
+## Durable checkpoint and resume
+
+Persist a checkpoint after plan acceptance and every accepted material step.
+It contains task, authority, plan reference/hash, execution/context status,
+current step, completed-step evidence, accepted claims, findings, blockers,
+deviations, artifact references, next authorized action, last validation, and
+checkpoint version. Resume verifies task identity, plan identity/hash,
+checkpoint structure/version, evidence, authorization, and integrity. A
+mismatch stops with `TARGET_TASK_INTEGRITY_FAILURE`; accepted completed steps
+are not silently repeated. The deterministic reference implementation is in
+`harness/target_task_lifecycle.py`.
 
 Protocol scratch state is permitted only when necessary, minimal, disclosed
 when materially relevant, cleaned up when required, and compliant with every

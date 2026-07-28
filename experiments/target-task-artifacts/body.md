@@ -8,7 +8,11 @@ record the complete Sufficient Handoff fields.
 
 Hash and seal the accepted plan. Execute steps in order, persist a Sufficient
 Handoff when work crosses a boundary, run deterministic validation, perform
-the sealed review mode, recheck the plan hash, and write `receipt.md`.
+the sealed review mode, and persist `checkpoint.md` after plan acceptance and
+each accepted material step. On resume, verify task identity, plan reference
+and hash, checkpoint version, completed-step evidence, and next-action
+authorization. Recheck the plan hash before final acceptance and write
+`receipt.md`.
 
 Keep raw outputs in authorized artifacts. Return only the compact handoff and
 receipt facts needed by the next role.
