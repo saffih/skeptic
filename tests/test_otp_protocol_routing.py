@@ -93,6 +93,13 @@ class OtpProtocolRoutingTests(unittest.TestCase):
         self.assertIn("Body seals it", self.protocol)
         self.assertIn("treat it as\n     immutable", self.protocol.replace("\n   ", "\n   "))
 
+    def test_sealing_bookkeeping_is_distinct_from_deliverable_scope(self) -> None:
+        self.assertIn("protocol bookkeeping, not part of the Target Task's own deliverable", self.protocol)
+        self.assertIn(
+            "which bind the deliverable, not OTP's own record-keeping.",
+            self.protocol,
+        )
+
     def test_deterministic_validation_precedes_judgment_review(self) -> None:
         self.assertIn(
             "Deterministic validation always runs before judgment review.",

@@ -61,7 +61,11 @@ OTP task; this file's inline lifecycle is sufficient on its own.
    the plan.
    - If the plan is accepted, Body seals it: record a stable content
      identity (for example a hash) for the Acceptance Plan, and treat it as
-     immutable from this point.
+     immutable from this point. Computing and recording that identity is
+     protocol bookkeeping, not part of the Target Task's own deliverable:
+     it may use ordinary session-local working state (for example a
+     scratchpad) without that counting against a Target Task's file-scope
+     constraints, which bind the deliverable, not OTP's own record-keeping.
    - If the plan has a material defect, Body rejects it and Brain replans.
      Replanning is automatic at most once. A second rejection stops
      execution and reports `OTP_BLOCKED` with the reason instead of looping.
