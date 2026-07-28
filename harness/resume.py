@@ -125,6 +125,8 @@ def _request(raw: bytes) -> dict[str, Any]:
         _short(value[key], ids=True)
     _safe_relative(value["CHECKPOINT_PATH"]); _safe_relative(value["RESUMED_BODY_STATE_PATH"])
     if value["CHECKPOINT_PATH"] == value["RESUMED_BODY_STATE_PATH"]:
+        raise ResumeError("RECEIPT_PATHS_MUST_DIFFER")
+    if value["CHECKPOINT_PATH"] == value["RESUMED_BODY_STATE_PATH"]:
         raise ResumeError("PATHS_MUST_DIFFER")
     for key in ("CHECKPOINT_SHA256", "EXPECTED_SEALED_PLAN_SHA256"):
         if not isinstance(value[key], str) or not _HEX.fullmatch(value[key]):
@@ -273,12 +275,16 @@ def validate_restart_receipt(raw: bytes, *, repository_root: Path | str, workspa
         if not isinstance(value[key], str) or not _HEX.fullmatch(value[key]): raise ResumeError("RECEIPT_INVALID_HASH")
     for key in ("CHECKPOINT_BYTE_SIZE", "COMPLETED_STEP_COUNT", "RESUMED_BODY_STATE_BYTE_SIZE"):
         if not isinstance(value[key], int) or isinstance(value[key], bool) or value[key] < 0: raise ResumeError("RECEIPT_INVALID_SIZE")
+    if value["CHECKPOINT_BYTE_SIZE"] > CHECKPOINT_MAX_BYTES or value["RESUMED_BODY_STATE_BYTE_SIZE"] > MAX_STATE_BYTES or value["COMPLETED_STEP_COUNT"] > 64:
+        raise ResumeError("RECEIPT_INVALID_SIZE")
     _short(value["SEALED_PLAN_REFERENCE"])
     if status == "READY": _short(value["NEXT_AUTHORIZED_ACTION"])
     else:
         if not isinstance(value["OPEN_BLOCKER_COUNT"], int) or isinstance(value["OPEN_BLOCKER_COUNT"], bool) or value["OPEN_BLOCKER_COUNT"] < 0: raise ResumeError("RECEIPT_INVALID_BLOCKER_COUNT")
     repo = _root(repository_root, "REPOSITORY_INVALID"); workspace = _root(workspace_root, "RUNTIME_WORKSPACE_INVALID")
     if _inside(workspace, repo): raise ResumeError("RUNTIME_WORKSPACE_IN_REPOSITORY")
+    checkpoint = _path(workspace, value["CHECKPOINT_PATH"])
+    if _inside(checkpoint.parent.resolve(strict=True), repo): raise ResumeError("PATH_INSIDE_REPOSITORY")
     output = _path(workspace, value["RESUMED_BODY_STATE_PATH"], file=True)
     if _inside(output.resolve(strict=True), repo): raise ResumeError("PATH_INSIDE_REPOSITORY")
     final = output.read_bytes()
