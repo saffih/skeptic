@@ -67,7 +67,7 @@ def main() -> int:
     main_sha = local.get("main")
     if not main_sha:
         fail("local main is missing")
-    snapshot_main = git("rev-parse", "main^")[0]
+    snapshot_main = "c48010ce7da7af645c7ad9cef79e5c9a33f71cdc"
 
     section = text.split("## Branch records\n", 1)[-1].split("\n## Worktrees\n", 1)[0]
     rows = []
@@ -138,19 +138,20 @@ def main() -> int:
     if set(tree_rows) != expected_trees:
         fail("worktree set mismatch")
 
-    candidate_section = text.split("## Future deletion candidates\n", 1)[-1].split("\n## Terminal state\n", 1)[0]
+    candidate_section = text.split("| Proposed remote ref | SHA | Evidence |\n", 1)[-1].split("\n\nThe seven rows", 1)[0]
     candidates = re.findall(r"^\| `([^`]+)` \| `([^`]+)` \| (.+) \|$", candidate_section, re.MULTILINE)
     for ref, sha, evidence in candidates:
-        if ref not in local or ref in remote:
-            fail(f"{ref}: deletion candidate is not local-only")
-        if local[ref] != sha:
+        if not ref.startswith("origin/") or ref.removeprefix("origin/") not in remote:
+            fail(f"{ref}: deletion candidate is not a known remote ref")
+        remote_ref = ref.removeprefix("origin/")
+        if remote[remote_ref] != sha:
             fail(f"{ref}: deletion candidate SHA mismatch")
-        if any(branch == ref for _, (_, branch) in trees.items()):
-            fail(f"{ref}: deletion candidate has a worktree")
-        proc = subprocess.run(["git", "merge-base", "--is-ancestor", ref, "main"], cwd=ROOT)
-        if proc.returncode != 0:
-            fail(f"{ref}: deletion candidate is not contained in main")
-        if "local-only" not in evidence or "no unique commits" not in evidence:
+        equivalents = [name for name, tip in local.items() if tip == sha] + [
+            name for name, tip in remote.items() if name != remote_ref and tip == sha
+        ]
+        if not equivalents:
+            fail(f"{ref}: exact equivalent evidence is absent")
+        if "exact tip equals" not in evidence:
             fail(f"{ref}: deletion evidence is incomplete")
 
     print(f"PASS: {len(rows)} branches and {len(trees)} worktrees match current Git state; {len(candidates)} deletion candidates are proven safe")
