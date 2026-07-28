@@ -1,0 +1,1 @@
+{"command_id":"example-echo","description":"Write bounded example output","exit_code":0,"log_byte_size":23,"log_path":"experiments/body-brain-artifacts/examples/command.log","log_sha256":"ba67b0f7835c0cf946aad4eca5a4ce64243745c5a2ebae961312a5cc4185da91","relevant_counts":{},"status":"SUCCEEDED","summary":"command completed"}
