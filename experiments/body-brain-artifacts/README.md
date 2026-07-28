@@ -23,3 +23,8 @@ Task is written to `task.md`
 Handoffs use file references. Large sources remain in referenced authoritative files; summaries may aid navigation but do not replace those files. The accepted `plan.md` is sealed by recording its SHA-256, which the Body verifies again at completion. `receipt.md` is the execution record.
 
 These are templates, not active runtime state. No Body-Brain execution experiment has yet proven this artifact set.
+
+`agents/otp-protocol.md` defines the `OTP:`/`TT:` triggers that activate this
+lifecycle. Its inline lifecycle is sufficient for a bounded single-session
+task; using these files is an optional way to carry the same lifecycle across
+files or sessions, not a requirement.
