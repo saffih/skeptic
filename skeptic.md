@@ -34,6 +34,28 @@ An explicit invocation may additionally name companion files; they add context b
 
 Each repeated run is a new invocation for source-freshness purposes: perform Rule 1 again. An earlier read does not satisfy a later run.
 
+For deterministic binding, a formal invocation records:
+
+```text
+INVOCATION_ID: <id>
+INVOCATION_KIND: SINGLE | FIND_LOOP | FIX_LOOP
+PERMISSION_MODE: read-only | patch-local | fix-if-valid
+DONE: <testable statement>
+TARGET_TASK_SHA256: <sha256>
+REVIEWED_ARTIFACT_REFERENCE: <reference>
+REVIEWED_ARTIFACT_SHA256: <sha256>
+SKEPTIC_SOURCE_PATH: skeptic.md
+SKEPTIC_SOURCE_REF: <ref>
+SKEPTIC_SOURCE_BLOB_SHA: <blob sha>
+APPLICABLE_COMPANION_SET_SHA256: <sha256>
+MATERIAL_FINDINGS_SHA256: <sha256>
+PREVIOUS_FINDINGS_REFERENCE: <reference or NONE>
+```
+
+The designated source is freshly read before analysis. These fields bind the
+receipt to that read and to the complete current artifact; they do not prove
+hidden runtime context, model cognition, or actual model/provider routing.
+
 ### RunSkeptic Receipt
 
 Every RunSkeptic report must include a compact receipt:
@@ -68,6 +90,13 @@ For each Find Loop run:
 Find Loop convergence means detection stabilized; it does not mean the artifact passed or is ready. Report every unresolved ACTION, DECOMPOSE path, CONFLICT, review-required status, and blocking unknown.
 
 `RunSkeptic Fix Loop` invokes repeated full RunSkeptic review-and-fix cycles. Unless the explicit invocation sets another count, stop successfully only after three consecutive qualifying passes on the same unchanged artifact state.
+
+External loop state binds the Target Task, complete reviewed artifact, Skeptic
+source blob, applicable companions, material finding set, invocation kind, and
+permission mode. Reset the qualifying count after any change to one of those
+bindings or to a material finding. A repair run and a delta-only review never
+qualify. Unless explicitly overridden, completion requires three unchanged
+qualifying passes.
 
 For each Fix Loop run:
 - freshly read the designated current Skeptic source and execute the complete recipe

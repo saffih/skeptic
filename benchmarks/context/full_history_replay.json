@@ -1,0 +1,16 @@
+{
+  "mode": "FULL_HISTORY_REPLAY",
+  "target_task": "Keep the root Skeptic source authoritative; implement source-bound receipts and deterministic Fix Loop counting.",
+  "plan_versions": [
+    {"id": "P-001", "status": "superseded", "text": "Initial plan with repeated task prose and exploratory alternatives."},
+    {"id": "P-002", "status": "superseded", "text": "Repair plan with duplicated findings, raw validation narration, and old steps."},
+    {"id": "P-003", "status": "current", "text": "Complete plan: add bounded Planner, receipt validator, loop state, fixtures, tests, and benchmark."}
+  ],
+  "reports": [
+    {"id": "R-001", "category": "ACTION", "narration": "Long raw review transcript and tool output retained for context."},
+    {"id": "R-002", "category": "ACTION", "narration": "Long raw repair transcript and repeated source text retained for context."},
+    {"id": "R-003", "category": "PASS", "narration": "Full report, raw logs, and duplicated evidence retained."}
+  ],
+  "raw_validation": "test output and shell transcript repeated here to represent full history replay",
+  "decision_critical": ["task hash", "current plan", "material findings", "validated facts", "open blockers", "artifact references"]
+}

@@ -1,0 +1,10 @@
+{
+  "mode": "COMPACT_CURRENT_STATE",
+  "target_task_reference": "task.md#objective sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "current_plan": "P-003 sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb; complete replacement Plan for Planner, receipt validator, loop state, fixtures, tests, benchmark.",
+  "material_findings": ["F-001 source must be freshly read and bound", "F-002 repair and changed basis reset streak"],
+  "validated_facts": ["root skeptic.md current blob sha is recorded", "focused tests and baseline suite are green"],
+  "open_blockers": [],
+  "artifact_references": ["tests/capabilities/runskeptic_receipt/test_runskeptic_receipt.py#sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"],
+  "decision_critical": ["task hash", "current plan", "material findings", "validated facts", "open blockers", "artifact references"]
+}

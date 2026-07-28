@@ -70,6 +70,11 @@ Do not repeat receipt checks on unchanged content merely to accumulate PASS resu
 
 The Lead may execute work directly.
 
+For substantive planning where focused construction materially helps, the Lead
+may use the bounded Planner in `agents/planner.md`. The Planner returns one
+complete replacement Plan and a finding-to-step map; the Lead independently
+accepts or rejects it and retains all task-level ownership.
+
 Delegate when isolation, specialization, parallel work, protected context, or independent review provides clear value.
 
 Give each delegated model agent:
