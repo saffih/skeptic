@@ -6,6 +6,8 @@ The compact Body boundary is defined in [`agents/body-state.md`](../../agents/bo
 
 For one authorized exact text range, use [`agents/focused-retrieval.md`](../../agents/focused-retrieval.md) and [`harness/focused_retrieval.py`](../../harness/focused_retrieval.py); it validates Body structure without opening unrequested artifacts and streams only the selected source.
 
+For one immutable persistence point, use [`agents/checkpoint.md`](../../agents/checkpoint.md) and [`harness/checkpoint.py`](../../harness/checkpoint.py). Checkpoints are self-contained, create-only, atomically published, and structurally valid without the original Body-state file; this slice does not resume execution.
+
 - `task.md` identifies the task, authority, evidence, constraints, and requested routing.
 - `body.md` tells a cheap Body how to dispatch planning, accept and seal a plan, execute it, and record results.
 - `brain.md` tells a temporary Brain how to create the complete plan without executing the task.

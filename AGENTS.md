@@ -20,6 +20,8 @@ Entry map. Load only the artifact needed for the current use:
   -> `agents/boundary-agent.md`
 - Define or validate metadata-only Body state
   -> `agents/body-state.md` and `harness/body_state.py`
+- Create or validate an immutable compact checkpoint
+  -> `agents/checkpoint.md` and `harness/checkpoint.py`
 - Define or validate bounded task, role, and command envelopes
   -> `agents/execution-envelope.md` and `harness/execution_envelope.py`
 - Define or validate one exact streamed text range

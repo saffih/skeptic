@@ -12,6 +12,13 @@ When the authorized action is one exact text range, validate and execute the
 request with `harness/focused_retrieval.py`; keep the Body state and source
 artifacts external and pass only its bounded result metadata onward.
 
+When a fully validated metadata-only Body state needs persistence, create one
+immutable checkpoint with `harness/checkpoint.py`. The checkpoint embeds the
+validated Body snapshot and can be structurally validated without the origin;
+full validation rechecks its referenced repository artifacts. Publication is
+create-only and stops after readback; it never resumes or executes the next
+authorized action.
+
 1. Read `task.md` and identify every authoritative file it references.
 2. When planning is required, invoke exactly one temporary planning Brain with `brain.md`, `task.md`, and the referenced input and evidence paths. Do not perform the Brain's substantive planning, copy large sources into context, or require multiple agents by default.
 3. Wait for the Brain to write `plan.md`. Check only that the plan exists, matches the task identity, has every section required by `brain.md`, ends with `BRAIN_PLAN_COMPLETE`, contains no obviously unauthorized action, and is mechanically executable. If the Brain returns without a valid plan or a material defect is directly apparent, record the rejection and stop; do not rewrite, independently redesign, or semantically improve the plan.
