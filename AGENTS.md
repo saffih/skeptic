@@ -22,6 +22,8 @@ Entry map. Load only the artifact needed for the current use:
   -> `agents/body-state.md` and `harness/body_state.py`
 - Create or validate an immutable compact checkpoint
   -> `agents/checkpoint.md` and `harness/checkpoint.py`
+- Admit a fresh process from one validated Slice 4 checkpoint without execution
+  -> `agents/resume.md` and `harness/resume.py`
 - Define or validate bounded task, role, and command envelopes
   -> `agents/execution-envelope.md` and `harness/execution_envelope.py`
 - Define or validate one exact streamed text range

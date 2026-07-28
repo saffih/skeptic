@@ -8,6 +8,8 @@ For one authorized exact text range, use [`agents/focused-retrieval.md`](../../a
 
 For one immutable persistence point, use [`agents/checkpoint.md`](../../agents/checkpoint.md) and [`harness/checkpoint.py`](../../harness/checkpoint.py). Checkpoints are self-contained, create-only, atomically published, and structurally valid without the original Body-state file; this slice does not resume execution.
 
+For fresh-process admission from one exact checkpoint, use [`agents/resume.md`](../../agents/resume.md) and [`harness/resume.py`]. Restart admission binds checkpoint identity, revalidates referenced artifacts, rejects a completed current step, materializes the exact nested Body snapshot create-only, and returns READY or BLOCKED without executing an action. BLOCKED is not execution authority, and neither status provides exactly-once side-effect guarantees.
+
 - `task.md` identifies the task, authority, evidence, constraints, and requested routing.
 - `body.md` tells a cheap Body how to dispatch planning, accept and seal a plan, execute it, and record results.
 - `brain.md` tells a temporary Brain how to create the complete plan without executing the task.
