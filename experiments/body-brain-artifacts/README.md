@@ -2,6 +2,8 @@
 
 These templates define a minimal file-based protocol for a future task-specific workspace. The Body coordinates and executes, the temporary Brain reasons and plans, and files carry durable state.
 
+The compact Body boundary is defined in [`agents/body-state.md`](../../agents/body-state.md) and validated by [`harness/body_state.py`](../../harness/body_state.py). Large evidence remains external and is referenced by verified path, SHA-256, byte size, type, description, and read condition.
+
 - `task.md` identifies the task, authority, evidence, constraints, and requested routing.
 - `body.md` tells a cheap Body how to dispatch planning, accept and seal a plan, execute it, and record results.
 - `brain.md` tells a temporary Brain how to create the complete plan without executing the task.

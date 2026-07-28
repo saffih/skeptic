@@ -18,6 +18,8 @@ Entry map. Load only the artifact needed for the current use:
   -> `agents/agent-return.md`
 - Select or operate a conditional context-processing boundary around delegation
   -> `agents/boundary-agent.md`
+- Define or validate metadata-only Body state
+  -> `agents/body-state.md` and `harness/body_state.py`
 
 Usage modes:
 
