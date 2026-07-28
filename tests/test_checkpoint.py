@@ -1,6 +1,8 @@
 import hashlib
 import json
 import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -90,6 +92,13 @@ class CheckpointTests(unittest.TestCase):
         with self.assertRaises(CheckpointError) as caught:
             validate_checkpoint_bytes(rewritten, expected_sha256=hashlib.sha256(raw).hexdigest(), expected_byte_size=len(raw))
         self.assertEqual(caught.exception.code, "CHECKPOINT_IDENTITY_MISMATCH")
+
+    def test_cli_external_identity_binding(self):
+        receipt = self.create(); path = self.workspace / receipt["CHECKPOINT_PATH"]
+        command = [sys.executable, "-m", "harness.checkpoint", "validate", str(path), "--expected-sha256", receipt["CHECKPOINT_SHA256"], "--expected-byte-size", str(receipt["CHECKPOINT_BYTE_SIZE"])]
+        result = subprocess.run(command, cwd=Path(__file__).parents[1], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('"CHECKPOINT_ID"', result.stdout)
     def test_limits_unknown_and_unsafe_paths(self):
         self.assert_error("REQUEST_FIELDS", dict(self.request_value, EXTRA="x"))
         oversized = enc(dict(self.request_value, REQUEST_ID="x" * 64)) + b"x" * REQUEST_MAX_BYTES
