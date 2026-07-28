@@ -84,7 +84,7 @@ class TargetTaskContextContractTests(unittest.TestCase):
 
     def test_pressure_experiment_preserves_correctness_and_limits_reads(self) -> None:
         result = run_context_pressure_experiment()
-        self.assertEqual(result["status"], "TARGET_TASK_ACCEPTED")
+        self.assertEqual(result["status"], "BODY_ROTATION_REQUIRED")
         self.assertEqual(result["receipt"]["planning_cycles"], 1)
         self.assertEqual(result["receipt"]["context_status"], "CONTEXT_ISOLATION_UNKNOWN")
         self.assertEqual(result["sufficiency"]["HANDOFF_SUFFICIENT"], "NO")

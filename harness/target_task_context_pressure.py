@@ -11,7 +11,7 @@ import re
 import tempfile
 from pathlib import Path
 from typing import Any
-from harness.target_task_lifecycle import HANDOFF_FIELDS
+from harness.target_task_lifecycle import HANDOFF_FIELDS, make_rotation_checkpoint, validate_rotation_checkpoint
 
 
 BODY_ROTATION_THRESHOLD_BYTES = 128
@@ -145,22 +145,22 @@ def run_context_pressure_experiment() -> dict[str, Any]:
         # Deterministic validation uses the authoritative small file, not raw output.
         validated = authority.strip().endswith("blue") and success.strip().endswith("blue")
         final_hash = hashlib.sha256(plan_bytes).hexdigest()
-        state.update({"current_step": "COMPLETE", "accepted_claims": ["blue"],
-                      "validation": "PASS", "plan_unchanged": final_hash == plan_hash})
         rotation_required = ledger.bytes_loaded >= BODY_ROTATION_THRESHOLD_BYTES
-        rotation_checkpoint = {
-            "TARGET_TASK_ID": plan["task_id"], "PLAN_HASH": plan_hash,
-            "CURRENT_STEP": "S3-VALIDATE", "ACCEPTED_VALIDATED_CLAIMS": ["blue"],
-            "NEXT_AUTHORIZED_ACTION": "RUN-S3-VALIDATE", "LAST_VALIDATION_STATE": "PASS",
-        }
-        checkpoint_bytes = json.dumps(rotation_checkpoint, sort_keys=True).encode()
-        checkpoint_hash = hashlib.sha256(checkpoint_bytes).hexdigest()
+        if rotation_required:
+            state.update({"current_step": "S3-VALIDATE", "accepted_claims": ["blue"], "validation": "PASS", "plan_unchanged": final_hash == plan_hash})
+            rotation_checkpoint = make_rotation_checkpoint(TARGET_TASK_ID=plan["task_id"], TASK_REFERENCE="task://pressure", AUTHORITY_REFERENCE="authority://pressure", PLAN_REFERENCE="sealed://pressure", PLAN_HASH=plan_hash, EXECUTION_MODE="SHARED_CONTEXT_DEGRADED", OBSERVED_CONTEXT_STATUS="CONTEXT_ISOLATION_UNKNOWN", CURRENT_STEP="S3-VALIDATE", COMPLETED_STEPS_AND_EVIDENCE={"S1-SUMMARIZE": {"status": "ACCEPTED", "artifact": "summary.md"}, "S2-RESOLVE": {"status": "ACCEPTED", "artifact": "resolution.md"}}, ACCEPTED_VALIDATED_CLAIMS=["blue"], OPEN_FINDINGS=[], OPEN_BLOCKERS=[], MATERIAL_DEVIATIONS=[], ARTIFACT_REFERENCES=["relevant.md#Authoritative contradiction"], NEXT_AUTHORIZED_ACTION="RUN-S3-VALIDATE", LAST_VALIDATION_STATE="PASS")
+            validate_rotation_checkpoint(rotation_checkpoint, task_id=plan["task_id"], plan_reference="sealed://pressure", plan_hash=plan_hash)
+        else:
+            state.update({"current_step": "COMPLETE", "accepted_claims": ["blue"], "validation": "PASS", "plan_unchanged": final_hash == plan_hash})
+            rotation_checkpoint = None
+        checkpoint_bytes = json.dumps(rotation_checkpoint, sort_keys=True).encode() if rotation_checkpoint else b""
+        checkpoint_hash = hashlib.sha256(checkpoint_bytes).hexdigest() if checkpoint_bytes else None
         if rotation_required:
             # The old Body stops here; only a fresh Body may resume.
             assert checkpoint_hash == hashlib.sha256(checkpoint_bytes).hexdigest()
         receipt = {"trigger": "TT:", "task_id": plan["task_id"], "plan_hash": plan_hash,
                    "planning_cycles": 1, "handoffs": 2, "review": "DETERMINISTIC_ONLY",
-                   "status": "TARGET_TASK_ACCEPTED" if validated and state["plan_unchanged"] else "TARGET_TASK_REJECTED",
+            "status": "BODY_ROTATION_REQUIRED" if rotation_required else ("TARGET_TASK_ACCEPTED" if validated and state["plan_unchanged"] else "TARGET_TASK_REJECTED"),
                    "context_status": state["context_status"]}
         baseline = _baseline(root)
         return {

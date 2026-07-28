@@ -84,13 +84,19 @@ class TargetTaskLifecycleTests(unittest.TestCase):
         with self.assertRaises(TargetTaskIntegrityError): accept_step_result(cp, sealed, {"STEP_ID": "S2", "VALIDATION": "PASS", "EVIDENCE": {"status": "ACCEPTED"}})
 
     def test_claim_acceptance_is_separate_from_handoff_structure(self):
-        handoff = {field: () for field in HANDOFF_FIELDS}; handoff["STATUS"] = "PASS"; handoff["NEXT_AUTHORIZED_ACTION"] = "VALIDATE"
+        handoff = {field: () for field in HANDOFF_FIELDS}; handoff.update(STATUS="PASS", WORK_PERFORMED="bounded", RETRIEVAL_GUIDANCE="none", READ_CONDITIONS="focused", NEXT_AUTHORIZED_ACTION="VALIDATE")
         handoff["VALIDATED_FACTS"] = ({"claim": "worker", "provenance": "WORKER_REPORTED"},); validate_handoff(handoff)
         evidence = {"reference": "test:1", "validator": "body"}
         accepted = accept_claims(handoff["VALIDATED_FACTS"] + ({"claim": "det", "provenance": "DETERMINISTICALLY_VALIDATED", "evidence_reference": evidence}, {"claim": "seen", "provenance": "DIRECTLY_OBSERVED", "evidence_reference": {"reference": "log:1", "validator": "body"}}), {"test:1": {"provenance": "DETERMINISTICALLY_VALIDATED", "result": "PASS", "validator": "body"}, "log:1": {"provenance": "DIRECTLY_OBSERVED", "result": "PASS", "validator": "body"}})
         self.assertEqual({x["claim"] for x in accepted}, {"det", "seen"})
         self.assertEqual(accept_claims(({"claim": "fake", "provenance": "DETERMINISTICALLY_VALIDATED", "evidence_reference": {"reference": "missing", "validator": "body"}},), {}), ())
         with self.assertRaises(ValueError): validate_handoff({**handoff, "VALIDATED_FACTS": ({"claim": "x"},)})
+
+    def test_plan_and_handoff_reject_wrong_types(self):
+        with self.assertRaises(ValueError): accept_and_seal_plan({**PLAN, "objective": 1}, PLAN["task_id"])
+        with self.assertRaises(ValueError): accept_and_seal_plan({**PLAN, "scope": ["ok", {}]}, PLAN["task_id"])
+        handoff = {field: [] for field in HANDOFF_FIELDS}; handoff.update(STATUS="PASS", NEXT_AUTHORIZED_ACTION="VALIDATE")
+        with self.assertRaises(ValueError): validate_handoff({**handoff, "WORK_PERFORMED": None})
 
     def test_receipt_separates_completion_from_runtime_and_real_exercises(self):
         with self.assertRaises(ValueError): terminal_receipt(TASK_RESULT="ACCEPTED", PLAN_INTEGRITY="PASS", DETERMINISTIC_VALIDATION="PASS", REVIEW_RESULT="NOT_RUN", EXECUTION_MODE="SHARED_CONTEXT_DEGRADED", OBSERVED_CONTEXT_STATUS="CONTEXT_ISOLATION_UNKNOWN", ACTUAL_RUNTIME_ISOLATION="UNKNOWN", ACTUAL_CONTEXT_REDUCTION="NOT_CLAIMED", REAL_INTERRUPTION_RESUME_EXERCISE="BLOCKED", BLOCKERS=())
