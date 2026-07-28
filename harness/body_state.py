@@ -46,7 +46,7 @@ def _hash_file(path: Path) -> tuple[str, int]:
         while chunk := stream.read(1024 * 1024): digest.update(chunk); size += len(chunk)
     return digest.hexdigest(), size
 
-def validate_state_bytes(raw: bytes, *, repository_root: Path | str = ".", expected_task_id: str | None = None) -> dict[str, Any]:
+def _validate_state_bytes(raw: bytes, *, repository_root: Path | str = ".", expected_task_id: str | None = None, check_artifacts: bool = True) -> dict[str, Any]:
     if len(raw) > MAX_STATE_BYTES: raise BodyStateError("STATE_TOO_LARGE")
     try: text = raw.decode("utf-8")
     except UnicodeDecodeError as exc: raise BodyStateError("UTF8") from exc
@@ -78,10 +78,11 @@ def validate_state_bytes(raw: bytes, *, repository_root: Path | str = ".", expec
         if not isinstance(ref["sha256"], str) or not SHA256_RE.fullmatch(ref["sha256"]): raise BodyStateError("SHA256", f".../{i}/sha256")
         if not isinstance(ref["byte_size"], int) or isinstance(ref["byte_size"], bool) or ref["byte_size"] < 0: raise BodyStateError("BYTE_SIZE", f".../{i}/byte_size")
         for key in ("artifact_type", "description", "read_condition"): _short(ref[key], f".../{i}/{key}")
-        target = (root / rel).resolve()
-        if os.path.commonpath((str(root), str(target))) != str(root) or not target.is_file(): raise BodyStateError("ARTIFACT_MISSING", f".../{i}/repository_relative_path")
-        digest, size = _hash_file(target)
-        if size != ref["byte_size"] or digest != ref["sha256"]: raise BodyStateError("ARTIFACT_MISMATCH", f".../{i}")
+        if check_artifacts:
+            target = (root / rel).resolve()
+            if os.path.commonpath((str(root), str(target))) != str(root) or not target.is_file(): raise BodyStateError("ARTIFACT_MISSING", f".../{i}/repository_relative_path")
+            digest, size = _hash_file(target)
+            if size != ref["byte_size"] or digest != ref["sha256"]: raise BodyStateError("ARTIFACT_MISMATCH", f".../{i}")
     if state["SEALED_PLAN_REFERENCE"] not in {ref["repository_relative_path"] for ref in refs.values()}: raise BodyStateError("PLAN_REFERENCE_MISSING", "$.SEALED_PLAN_REFERENCE")
     plan_ref = next(ref for ref in refs.values() if ref["repository_relative_path"] == state["SEALED_PLAN_REFERENCE"])
     if plan_ref["sha256"] != state["SEALED_PLAN_SHA256"]: raise BodyStateError("PLAN_HASH_MISMATCH", "$.SEALED_PLAN_SHA256")
@@ -95,6 +96,13 @@ def validate_state_bytes(raw: bytes, *, repository_root: Path | str = ".", expec
     for i, blocker in enumerate(blockers):
         blocker = _obj(blocker, BLOCKER_FIELDS, f"$.OPEN_BLOCKERS/{i}"); _short(blocker["summary"], f"$.OPEN_BLOCKERS/{i}/summary"); _ids(blocker["artifact_reference_ids"], f"$.OPEN_BLOCKERS/{i}/artifact_reference_ids", set(refs))
     return state
+
+def validate_state_bytes(raw: bytes, *, repository_root: Path | str = ".", expected_task_id: str | None = None) -> dict[str, Any]:
+    return _validate_state_bytes(raw, repository_root=repository_root, expected_task_id=expected_task_id, check_artifacts=True)
+
+def validate_state_structure_bytes(raw: bytes, *, expected_task_id: str | None = None) -> dict[str, Any]:
+    """Validate Body-state structure and cross-references without artifact I/O."""
+    return _validate_state_bytes(raw, expected_task_id=expected_task_id, check_artifacts=False)
 
 def validate_state_file(state_path, *, repository_root=".", expected_task_id=None): return validate_state_bytes(Path(state_path).read_bytes(), repository_root=repository_root, expected_task_id=expected_task_id)
 

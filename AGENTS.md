@@ -22,6 +22,8 @@ Entry map. Load only the artifact needed for the current use:
   -> `agents/body-state.md` and `harness/body_state.py`
 - Define or validate bounded task, role, and command envelopes
   -> `agents/execution-envelope.md` and `harness/execution_envelope.py`
+- Define or validate one exact streamed text range
+  -> `agents/focused-retrieval.md` and `harness/focused_retrieval.py`
 
 Usage modes:
 
