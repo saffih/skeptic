@@ -95,8 +95,16 @@ class TargetTaskLifecycleTests(unittest.TestCase):
     def test_plan_and_handoff_reject_wrong_types(self):
         with self.assertRaises(ValueError): accept_and_seal_plan({**PLAN, "objective": 1}, PLAN["task_id"])
         with self.assertRaises(ValueError): accept_and_seal_plan({**PLAN, "scope": ["ok", {}]}, PLAN["task_id"])
+        with self.assertRaises(ValueError): accept_and_seal_plan({**PLAN, "steps": [{**step("S1"), "actions": [{}]}]}, PLAN["task_id"])
+        with self.assertRaises(ValueError): accept_and_seal_plan({**PLAN, "handoff": [{"field": "not-a-typed-handoff"}]}, PLAN["task_id"])
         handoff = {field: [] for field in HANDOFF_FIELDS}; handoff.update(STATUS="PASS", NEXT_AUTHORIZED_ACTION="VALIDATE")
         with self.assertRaises(ValueError): validate_handoff({**handoff, "WORK_PERFORMED": None})
+        with self.assertRaises(ValueError): validate_handoff({**handoff, "VALIDATED_FACTS": ({"claim": "x", "provenance": "WORKER_REPORTED"},)})
+
+    def test_terminal_receipt_rejects_untyped_counts_and_noncardinal_runs(self):
+        with self.assertRaises(ValueError): terminal_receipt(TASK_RESULT="REJECTED", EXECUTION_MODE="SHARED_CONTEXT_DEGRADED", OBSERVED_CONTEXT_STATUS="CONTEXT_ISOLATION_UNKNOWN", BLOCKERS={})
+        with self.assertRaises(ValueError): terminal_receipt(TASK_RESULT="REJECTED", EXECUTION_MODE="SHARED_CONTEXT_DEGRADED", OBSERVED_CONTEXT_STATUS="CONTEXT_ISOLATION_UNKNOWN", RUNSKEPTIC_QUALIFYING_PASSES="0")
+        with self.assertRaises(ValueError): terminal_receipt(TASK_RESULT="ACCEPTED", PLAN_INTEGRITY="PASS", DETERMINISTIC_VALIDATION="PASS", REVIEW_RESULT="PASS", EXECUTION_MODE="SHARED_CONTEXT_DEGRADED", OBSERVED_CONTEXT_STATUS="CONTEXT_ISOLATION_UNKNOWN", BOUNDARY_PROCESSING_STATUS="PASS", CHECKPOINT_AND_RESUME_STATUS="PASS", DETERMINISTIC_LIFECYCLE_SIMULATION="PASS", DETERMINISTIC_BOUNDARY_SIMULATION="PASS", REAL_INTERRUPTION_RESUME_EXERCISE="PASS", REAL_AGENT_BOUNDARY_EXERCISE="PASS", BLOCKERS="NONE", RUNSKEPTIC_MODEL_PER_RUN=["GPT-5.6"], RUNSKEPTIC_REASONING_LEVEL_PER_RUN=["HIGH"], RUNSKEPTIC_CONTEXT_STATUS_PER_RUN=["UNKNOWN"], RUNSKEPTIC_INDEPENDENCE_PER_RUN=["INDEPENDENT"], RUNSKEPTIC_QUALIFYING_PASSES=3, RUNSKEPTIC_FINAL_CATEGORY="PASS")
 
     def test_receipt_separates_completion_from_runtime_and_real_exercises(self):
         with self.assertRaises(ValueError): terminal_receipt(TASK_RESULT="ACCEPTED", PLAN_INTEGRITY="PASS", DETERMINISTIC_VALIDATION="PASS", REVIEW_RESULT="NOT_RUN", EXECUTION_MODE="SHARED_CONTEXT_DEGRADED", OBSERVED_CONTEXT_STATUS="CONTEXT_ISOLATION_UNKNOWN", ACTUAL_RUNTIME_ISOLATION="UNKNOWN", ACTUAL_CONTEXT_REDUCTION="NOT_CLAIMED", REAL_INTERRUPTION_RESUME_EXERCISE="BLOCKED", BLOCKERS=())

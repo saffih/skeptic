@@ -84,12 +84,13 @@ def validate_plan(plan: Mapping[str, Any], task_id: str | None = None) -> dict[s
             raise ValueError("step rejected: missing fields " + ", ".join(missing_step))
         if not isinstance(step["STEP_ID"], str) or not step["STEP_ID"].strip() or step["STEP_ID"] != step["STEP_ID"].strip() or step["STEP_ID"] in ids:
             raise ValueError("step rejected: duplicate or invalid STEP_ID")
-        for field in ("OBJECTIVE", "AUTHORITY", "ACTIONS", "OUTPUTS", "VALIDATION", "HANDOFF_REQUIREMENTS", "STOP_CONDITIONS"):
-            if not _nonempty(step[field]) or (field == "AUTHORITY" and not isinstance(step[field], str)):
+        for field in ("OBJECTIVE", "AUTHORITY"):
+            if not _text(step[field]):
                 raise ValueError("step rejected: empty bounded field " + field)
-        for field in ("DIRECT_INPUTS", "REFERENCED_INPUTS", "DEPENDENCIES", "PROHIBITIONS", "ACTIONS", "OUTPUTS", "VALIDATION", "HANDOFF_REQUIREMENTS", "RETRIEVAL_CONDITIONS", "ESCALATION_CONDITIONS", "STOP_CONDITIONS"):
-            if not isinstance(step[field], list): raise ValueError("step rejected: field must be a list " + field)
-            if any(not _nonempty(item) for item in step[field]): raise ValueError("step rejected: blank member in " + field)
+        for field in ("DIRECT_INPUTS", "REFERENCED_INPUTS", "DEPENDENCIES", "PROHIBITIONS", "RETRIEVAL_CONDITIONS", "ESCALATION_CONDITIONS"):
+            if not _text_list(step[field], allow_empty=True): raise ValueError("step rejected: field must be a text list " + field)
+        for field in ("ACTIONS", "OUTPUTS", "VALIDATION", "HANDOFF_REQUIREMENTS", "STOP_CONDITIONS"):
+            if not _text_list(step[field]): raise ValueError("step rejected: field must be a non-empty text list " + field)
         ids.add(step["STEP_ID"]); steps.append(step)
     for step in steps:
         if any(dep not in ids for dep in step["DEPENDENCIES"]):
@@ -113,7 +114,7 @@ def validate_plan(plan: Mapping[str, Any], task_id: str | None = None) -> dict[s
         if not isinstance(p[field], list) or not p[field]: raise ValueError("plan rejected: empty field " + field)
     for field in ("SCOPE", "PROHIBITIONS", "SOURCE_OF_TRUTH_ORDER", "ASSUMPTIONS", "UNKNOWNS", "VALIDATION", "STOP_CONDITIONS", "RETRIEVAL_CONDITIONS", "ESCALATION_CONDITIONS", "SUCCESS_CRITERIA"):
         if not _text_list(p[field], allow_empty=field in {"ASSUMPTIONS", "UNKNOWNS", "RETRIEVAL_CONDITIONS", "ESCALATION_CONDITIONS"}): raise ValueError("plan rejected: field must be a text list " + field)
-    if not isinstance(p["HANDOFF"], list) or not p["HANDOFF"] or any((not _text(item) if isinstance(item, str) else not (isinstance(item, Mapping) and bool(item))) for item in p["HANDOFF"]): raise ValueError("plan rejected: invalid handoff")
+    if not _text_list(p["HANDOFF"]): raise ValueError("plan rejected: invalid handoff")
     p["STEPS"] = steps
     retry_policy = plan.get("retry_policy", plan.get("RETRY_POLICY", {}))
     if not isinstance(retry_policy, Mapping) or any(step_id not in ids or not isinstance(limit, int) or limit < 1 for step_id, limit in retry_policy.items()): raise ValueError("plan rejected: invalid retry policy")
@@ -144,14 +145,14 @@ def make_rotation_checkpoint(**values: Any) -> dict[str, Any]:
     if missing: raise TargetTaskIntegrityError("rotation checkpoint missing: " + ", ".join(missing))
     return values
 
-def validate_rotation_checkpoint(checkpoint: Mapping[str, Any], *, task_id: str, plan_reference: str, plan_hash: str, valid_steps: set[str] | None = None, evidence_ledger: Mapping[str, Any] | None = None) -> None:
+def validate_rotation_checkpoint(checkpoint: Mapping[str, Any], *, task_id: str, plan_reference: str, plan_hash: str, valid_steps: set[str], evidence_ledger: Mapping[str, Any] | None = None) -> None:
     missing = [field for field in BODY_ROTATION_FIELDS if field not in checkpoint]
     if missing: raise TargetTaskIntegrityError("rotation checkpoint missing: " + ", ".join(missing))
     if any((checkpoint[field] != expected) for field, expected in (("TARGET_TASK_ID", task_id), ("PLAN_REFERENCE", plan_reference), ("PLAN_HASH", plan_hash), ("CHECKPOINT_VERSION", CHECKPOINT_VERSION), ("PRESSURE_STATUS", "BODY_ROTATION_REQUIRED"), ("ROTATION_STATE", "STOPPED_BEFORE_RESUME"))):
         raise TargetTaskIntegrityError("rotation checkpoint identity or state mismatch")
     if checkpoint["EXECUTION_MODE"] not in EXECUTION_MODES or checkpoint["OBSERVED_CONTEXT_STATUS"] not in OBSERVED_CONTEXT_STATUSES: raise TargetTaskIntegrityError("rotation checkpoint mode mismatch")
     if not isinstance(checkpoint["COMPLETED_STEPS_AND_EVIDENCE"], Mapping) or any(not _accepted_evidence(e) for e in checkpoint["COMPLETED_STEPS_AND_EVIDENCE"].values()): raise TargetTaskIntegrityError("rotation completed evidence invalid")
-    if valid_steps is not None and (checkpoint["CURRENT_STEP"] not in valid_steps or any(step not in valid_steps for step in checkpoint["COMPLETED_STEPS_AND_EVIDENCE"])): raise TargetTaskIntegrityError("rotation step identity mismatch")
+    if not valid_steps or checkpoint["CURRENT_STEP"] not in valid_steps or any(step not in valid_steps for step in checkpoint["COMPLETED_STEPS_AND_EVIDENCE"]): raise TargetTaskIntegrityError("rotation step identity mismatch")
     if checkpoint["ACCEPTED_VALIDATED_CLAIMS"] and evidence_ledger is None: raise TargetTaskIntegrityError("rotation claims require evidence ledger")
     if checkpoint["ACCEPTED_VALIDATED_CLAIMS"] and tuple(accept_claims(checkpoint["ACCEPTED_VALIDATED_CLAIMS"], evidence_ledger)) != tuple(checkpoint["ACCEPTED_VALIDATED_CLAIMS"]): raise TargetTaskIntegrityError("rotation claim provenance invalid")
     if checkpoint["NEXT_AUTHORIZED_ACTION"] != "RUN-" + checkpoint["CURRENT_STEP"]: raise TargetTaskIntegrityError("rotation next action mismatch")
@@ -207,6 +208,12 @@ def validate_handoff(handoff: Mapping[str, Any]) -> dict[str, Any]:
         if not isinstance(handoff[field], str) or not handoff[field].strip(): raise ValueError("handoff field must be text: " + field)
     for field in ("VALIDATED_FACTS", "DECISION_RELEVANT_FINDINGS", "LIMITATIONS", "UNRESOLVED", "ARTIFACT_REFERENCES"):
         if not isinstance(handoff[field], (list, tuple)): raise ValueError("handoff field must be a sequence: " + field)
+    if any(not isinstance(claim, Mapping) or not _text(claim.get("claim")) or claim.get("provenance") not in CLAIM_PROVENANCE for claim in handoff["VALIDATED_FACTS"]):
+        raise ValueError("handoff validated facts are not typed claims")
+    if any(not (_text(item) or (isinstance(item, Mapping) and bool(item))) for item in handoff["DECISION_RELEVANT_FINDINGS"]):
+        raise ValueError("handoff findings are not typed")
+    for field in ("LIMITATIONS", "UNRESOLVED", "ARTIFACT_REFERENCES"):
+        if any(not _text(item) for item in handoff[field]): raise ValueError("handoff field contains a non-text item: " + field)
     for claim in handoff.get("VALIDATED_FACTS", ()):
         if not isinstance(claim, Mapping) or claim.get("provenance") not in CLAIM_PROVENANCE: raise ValueError("validated fact lacks known provenance")
     return dict(handoff)
@@ -254,7 +261,17 @@ def accept_step_result(checkpoint: Mapping[str, Any], sealed_plan: Mapping[str, 
 def terminal_receipt(**values: Any) -> dict[str, Any]:
     receipt = {field: values.get(field, "UNKNOWN") for field in RECEIPT_FIELDS}
     if receipt["TASK_RESULT"] not in {"ACCEPTED", "REJECTED", "BLOCKED"}: raise ValueError("invalid task result")
+    for field in ("PLAN_INTEGRITY", "DETERMINISTIC_VALIDATION", "REVIEW_RESULT", "BOUNDARY_PROCESSING_STATUS", "CHECKPOINT_AND_RESUME_STATUS", "DETERMINISTIC_LIFECYCLE_SIMULATION", "DETERMINISTIC_BOUNDARY_SIMULATION", "REAL_INTERRUPTION_RESUME_EXERCISE", "REAL_AGENT_BOUNDARY_EXERCISE", "RUNSKEPTIC_FINAL_CATEGORY"):
+        if not _text(receipt[field]): raise ValueError("receipt field must be text: " + field)
+    if receipt["EXECUTION_MODE"] not in EXECUTION_MODES or receipt["OBSERVED_CONTEXT_STATUS"] not in OBSERVED_CONTEXT_STATUSES: raise ValueError("invalid receipt execution or context status")
     if receipt["ACTUAL_RUNTIME_ISOLATION"] not in {"CONFIRMED", "NOT_REQUIRED", "UNKNOWN"}: raise ValueError("invalid runtime isolation")
     if receipt["ACTUAL_CONTEXT_REDUCTION"] not in {"CONFIRMED", "NOT_CLAIMED", "UNKNOWN"}: raise ValueError("invalid context reduction")
+    if receipt["BLOCKERS"] != "NONE" and (not isinstance(receipt["BLOCKERS"], (list, tuple)) or any(not _text(item) for item in receipt["BLOCKERS"])): raise ValueError("invalid receipt blockers")
+    if receipt["RUNSKEPTIC_REPAIR_RUNS"] != "UNKNOWN" and (not isinstance(receipt["RUNSKEPTIC_REPAIR_RUNS"], int) or isinstance(receipt["RUNSKEPTIC_REPAIR_RUNS"], bool) or receipt["RUNSKEPTIC_REPAIR_RUNS"] < 0): raise ValueError("invalid repair run count")
+    if receipt["RUNSKEPTIC_QUALIFYING_PASSES"] != "UNKNOWN" and (not isinstance(receipt["RUNSKEPTIC_QUALIFYING_PASSES"], int) or isinstance(receipt["RUNSKEPTIC_QUALIFYING_PASSES"], bool) or not 0 <= receipt["RUNSKEPTIC_QUALIFYING_PASSES"] <= 3): raise ValueError("invalid qualifying pass count")
+    for field in ("RUNSKEPTIC_MODEL_PER_RUN", "RUNSKEPTIC_REASONING_LEVEL_PER_RUN", "RUNSKEPTIC_CONTEXT_STATUS_PER_RUN", "RUNSKEPTIC_INDEPENDENCE_PER_RUN"):
+        value = receipt[field]
+        if value != "UNKNOWN" and (not isinstance(value, (list, tuple)) or any(not _text(item) for item in value)): raise ValueError("invalid per-run receipt field: " + field)
+    if receipt["TASK_RESULT"] == "ACCEPTED" and any(receipt[field] == "UNKNOWN" or len(receipt[field]) != 3 for field in ("RUNSKEPTIC_MODEL_PER_RUN", "RUNSKEPTIC_REASONING_LEVEL_PER_RUN", "RUNSKEPTIC_CONTEXT_STATUS_PER_RUN", "RUNSKEPTIC_INDEPENDENCE_PER_RUN")): raise ValueError("accepted receipt requires three typed review runs")
     if receipt["TASK_RESULT"] == "ACCEPTED" and (receipt["PLAN_INTEGRITY"] != "PASS" or receipt["DETERMINISTIC_VALIDATION"] != "PASS" or receipt["BLOCKERS"] not in ((), [], "NONE") or receipt["EXECUTION_MODE"] not in {"ISOLATED_ORCHESTRATION", "SHARED_CONTEXT_DEGRADED"} or receipt["OBSERVED_CONTEXT_STATUS"] not in OBSERVED_CONTEXT_STATUSES or receipt["BOUNDARY_PROCESSING_STATUS"] != "PASS" or receipt["CHECKPOINT_AND_RESUME_STATUS"] != "PASS" or receipt["REVIEW_RESULT"] != "PASS" or receipt["DETERMINISTIC_LIFECYCLE_SIMULATION"] != "PASS" or receipt["DETERMINISTIC_BOUNDARY_SIMULATION"] != "PASS" or receipt["REAL_INTERRUPTION_RESUME_EXERCISE"] != "PASS" or receipt["REAL_AGENT_BOUNDARY_EXERCISE"] != "PASS" or receipt["RUNSKEPTIC_QUALIFYING_PASSES"] != 3 or receipt["RUNSKEPTIC_FINAL_CATEGORY"] != "PASS" or any(receipt[field] == "UNKNOWN" for field in ("RUNSKEPTIC_MODEL_PER_RUN", "RUNSKEPTIC_REASONING_LEVEL_PER_RUN", "RUNSKEPTIC_CONTEXT_STATUS_PER_RUN", "RUNSKEPTIC_INDEPENDENCE_PER_RUN"))): raise ValueError("accepted receipt has unresolved lifecycle or promotion controls")
     return receipt

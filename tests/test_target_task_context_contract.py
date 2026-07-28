@@ -4,7 +4,7 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from harness.target_task_context_pressure import HANDOFF_FIELDS, run_context_pressure_experiment
+from harness.target_task_context_pressure import HANDOFF_FIELDS, run_context_pressure_experiment, run_s3_validate_continuation
 
 ROOT = Path(__file__).resolve().parents[1]
 CORE = (ROOT / "agents/target-task.md").read_text(encoding="utf-8")
@@ -101,6 +101,15 @@ class TargetTaskContextContractTests(unittest.TestCase):
         self.assertTrue(result["body_rotation"]["stopped_before_resume"])
         self.assertEqual(result["body_rotation"]["resume_owner"], "FRESH_LUNA_BODY")
         self.assertEqual(result["body_rotation"]["checkpoint"]["PLAN_HASH"], result["plan_hash"])
+
+    def test_authorized_s3_continuation_does_not_repeat_completed_steps(self) -> None:
+        result = run_context_pressure_experiment()
+        continuation = run_s3_validate_continuation(result["body_rotation"]["checkpoint"])
+        self.assertEqual(continuation["authorized_action"], "RUN-S3-VALIDATE")
+        self.assertEqual(continuation["executed_step"], "S3-VALIDATE")
+        self.assertEqual(continuation["completed_before"], ("S1-SUMMARIZE", "S2-RESOLVE"))
+        self.assertEqual(continuation["repeated_steps"], ())
+        self.assertEqual(continuation["actual_runtime_isolation"], "UNKNOWN")
 
 
 if __name__ == "__main__":

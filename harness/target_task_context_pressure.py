@@ -149,7 +149,7 @@ def run_context_pressure_experiment() -> dict[str, Any]:
         if rotation_required:
             state.update({"current_step": "S3-VALIDATE", "accepted_claims": ["blue"], "validation": "PASS", "plan_unchanged": final_hash == plan_hash})
             rotation_checkpoint = make_rotation_checkpoint(TARGET_TASK_ID=plan["task_id"], TASK_REFERENCE="task://pressure", AUTHORITY_REFERENCE="authority://pressure", PLAN_REFERENCE="sealed://pressure", PLAN_HASH=plan_hash, EXECUTION_MODE="SHARED_CONTEXT_DEGRADED", OBSERVED_CONTEXT_STATUS="CONTEXT_ISOLATION_UNKNOWN", CURRENT_STEP="S3-VALIDATE", COMPLETED_STEPS_AND_EVIDENCE={"S1-SUMMARIZE": {"status": "ACCEPTED", "artifact": "summary.md"}, "S2-RESOLVE": {"status": "ACCEPTED", "artifact": "resolution.md"}}, ACCEPTED_VALIDATED_CLAIMS=[{"claim": "blue", "provenance": "DETERMINISTICALLY_VALIDATED", "evidence_reference": {"reference": "authority.md", "validator": "body"}}], OPEN_FINDINGS=[], OPEN_BLOCKERS=[], MATERIAL_DEVIATIONS=[], ARTIFACT_REFERENCES=["relevant.md#Authoritative contradiction"], NEXT_AUTHORIZED_ACTION="RUN-S3-VALIDATE", LAST_VALIDATION_STATE="PASS")
-            validate_rotation_checkpoint(rotation_checkpoint, task_id=plan["task_id"], plan_reference="sealed://pressure", plan_hash=plan_hash, evidence_ledger={"authority.md": {"provenance": "DETERMINISTICALLY_VALIDATED", "result": "PASS", "validator": "body"}})
+            validate_rotation_checkpoint(rotation_checkpoint, task_id=plan["task_id"], plan_reference="sealed://pressure", plan_hash=plan_hash, valid_steps={"S1-SUMMARIZE", "S2-RESOLVE", "S3-VALIDATE"}, evidence_ledger={"authority.md": {"provenance": "DETERMINISTICALLY_VALIDATED", "result": "PASS", "validator": "body"}})
         else:
             state.update({"current_step": "COMPLETE", "accepted_claims": ["blue"], "validation": "PASS", "plan_unchanged": final_hash == plan_hash})
             rotation_checkpoint = None
@@ -182,6 +182,40 @@ def run_context_pressure_experiment() -> dict[str, Any]:
                 "resume_owner": "FRESH_LUNA_BODY" if rotation_required else "NONE",
             },
         }
+
+
+def run_s3_validate_continuation(checkpoint: dict[str, Any]) -> dict[str, Any]:
+    """Execute exactly the authorized post-rotation continuation step.
+
+    This is a deterministic continuation exercise: it validates the supplied
+    checkpoint, performs only S3, and makes no claim about runtime isolation.
+    """
+    evidence_ledger = {"authority.md": {"provenance": "DETERMINISTICALLY_VALIDATED", "result": "PASS", "validator": "body"}}
+    valid_steps = {"S1-SUMMARIZE", "S2-RESOLVE", "S3-VALIDATE"}
+    validate_rotation_checkpoint(
+        checkpoint,
+        task_id="TT-CONTEXT-PRESSURE-001",
+        plan_reference="sealed://pressure",
+        plan_hash="4bc00b4f6c26e43f74955645c07f23a3853a94475c9c38d6a292af9d54706293",
+        valid_steps=valid_steps,
+        evidence_ledger=evidence_ledger,
+    )
+    if checkpoint["CURRENT_STEP"] != "S3-VALIDATE" or checkpoint["NEXT_AUTHORIZED_ACTION"] != "RUN-S3-VALIDATE":
+        raise AssertionError("continuation is not authorized")
+    completed_before = tuple(checkpoint["COMPLETED_STEPS_AND_EVIDENCE"])
+    if completed_before != ("S1-SUMMARIZE", "S2-RESOLVE"):
+        raise AssertionError("continuation would repeat or omit a completed step")
+    completed_after = dict(checkpoint["COMPLETED_STEPS_AND_EVIDENCE"])
+    completed_after["S3-VALIDATE"] = {"status": "ACCEPTED", "artifact": "s3-validation.md"}
+    return {
+        "status": "PASS",
+        "authorized_action": "RUN-S3-VALIDATE",
+        "executed_step": "S3-VALIDATE",
+        "completed_before": completed_before,
+        "completed_after": tuple(completed_after),
+        "repeated_steps": (),
+        "actual_runtime_isolation": "UNKNOWN",
+    }
 
 
 if __name__ == "__main__":
