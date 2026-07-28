@@ -2,7 +2,9 @@
 
 The Body coordinates and executes. The Brain reasons and plans. Files carry durable state.
 
-1. Read `task.md` and identify every authoritative file it references.
+1. Read `task.md` and identify every authoritative file it references. A
+   legacy OTP caller loads `agents/target-task.md`; this directory is only an
+   optional artifact substrate.
 2. When planning is required, invoke exactly one temporary planning Brain with `brain.md`, `task.md`, and the referenced input and evidence paths. Do not perform the Brain's substantive planning, copy large sources into context, or require multiple agents by default.
 3. Wait for the Brain to write `plan.md`. Check only that the plan exists, matches the task identity, has every section required by `brain.md`, ends with `BRAIN_PLAN_COMPLETE`, contains no obviously unauthorized action, and is mechanically executable. If the Brain returns without a valid plan or a material defect is directly apparent, record the rejection and stop; do not rewrite, independently redesign, or semantically improve the plan.
 4. Calculate SHA-256 over the accepted `plan.md`, record it in `receipt.md`, and treat the plan as sealed.

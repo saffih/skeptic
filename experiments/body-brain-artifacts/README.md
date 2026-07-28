@@ -29,4 +29,4 @@ These are templates, not active runtime state. No Body-Brain execution experimen
 
 `agents/target-task.md` defines the canonical Target Task lifecycle. The
 legacy `agents/otp-protocol.md` and this directory remain readable
-compatibility surfaces for existing callers.
+compatibility surfaces for existing callers; neither is a competing protocol.
