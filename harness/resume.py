@@ -125,8 +125,6 @@ def _request(raw: bytes) -> dict[str, Any]:
         _short(value[key], ids=True)
     _safe_relative(value["CHECKPOINT_PATH"]); _safe_relative(value["RESUMED_BODY_STATE_PATH"])
     if value["CHECKPOINT_PATH"] == value["RESUMED_BODY_STATE_PATH"]:
-        raise ResumeError("RECEIPT_PATHS_MUST_DIFFER")
-    if value["CHECKPOINT_PATH"] == value["RESUMED_BODY_STATE_PATH"]:
         raise ResumeError("PATHS_MUST_DIFFER")
     for key in ("CHECKPOINT_SHA256", "EXPECTED_SEALED_PLAN_SHA256"):
         if not isinstance(value[key], str) or not _HEX.fullmatch(value[key]):

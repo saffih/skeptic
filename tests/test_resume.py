@@ -69,6 +69,8 @@ class ResumeTests(unittest.TestCase):
         self._replace_checkpoint(dict(self.state, COMPLETED_STEP_IDS=["validate", "validate"]))
         with self.assertRaises(ResumeError) as caught: admit_restart(self.request(RESUMED_BODY_STATE_PATH="duplicate"), repository_root=self.repo, workspace_root=self.workspace)
         self.assertEqual(caught.exception.code, "DUPLICATE_COMPLETED_STEP_IDS")
+        with self.assertRaises(ResumeError) as caught: admit_restart(self.request(CHECKPOINT_PATH="checkpoints/checkpoint.json", RESUMED_BODY_STATE_PATH="checkpoints/checkpoint.json"), repository_root=self.repo, workspace_root=self.workspace)
+        self.assertEqual(caught.exception.code, "PATHS_MUST_DIFFER")
         with self.assertRaises(ResumeError): admit_restart(self.request(CHECKPOINT_PATH="../repo/plan.md", RESUMED_BODY_STATE_PATH="same"), repository_root=self.repo, workspace_root=self.workspace)
         with self.assertRaises(ResumeError): admit_restart(self.request(RESUMED_BODY_STATE_PATH="../repo/out"), repository_root=self.repo, workspace_root=self.workspace)
 
