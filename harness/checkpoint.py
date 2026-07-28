@@ -8,6 +8,7 @@ import os
 import re
 import secrets
 import tempfile
+import errno
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,7 @@ CHECKPOINT_LIMIT = CHECKPOINT_MAX_BYTES
 CREATION_RECEIPT_LIMIT = RECEIPT_MAX_BYTES
 MAX_SHORT_BYTES = 256
 CHECKPOINT_VERSION = 1
+VALIDATOR_ID = "harness.body_state.validate_state_bytes"
 REQUEST_FIELDS = {"REQUEST_ID", "CHECKPOINT_ID", "TASK_ID", "BODY_STATE_PATH", "BODY_STATE_SHA256", "BODY_STATE_BYTE_SIZE", "CHECKPOINT_PATH"}
 ORIGIN_FIELDS = {"workspace_relative_path", "sha256", "byte_size"}
 RECEIPT_FIELDS = {"status", "validator_id", "validated_body_state_sha256", "artifact_reference_count"}
@@ -178,7 +180,7 @@ def _checkpoint_structure(value: Any) -> dict[str, Any]:
     receipt = value["VALIDATION_RECEIPT"]
     if not isinstance(receipt, dict) or set(receipt) != RECEIPT_FIELDS:
         raise CheckpointError("RECEIPT_FIELDS")
-    if receipt["status"] != "PASS" or not isinstance(receipt["validator_id"], str) or not receipt["validator_id"] or len(receipt["validator_id"].encode("utf-8")) > MAX_SHORT_BYTES:
+    if receipt["status"] != "PASS" or receipt["validator_id"] != VALIDATOR_ID:
         raise CheckpointError("RECEIPT_INVALID")
     if receipt["validated_body_state_sha256"] != origin["sha256"] or not isinstance(receipt["artifact_reference_count"], int) or isinstance(receipt["artifact_reference_count"], bool) or receipt["artifact_reference_count"] != len(parsed["ARTIFACT_REFERENCES"]):
         raise CheckpointError("RECEIPT_MISMATCH")
@@ -191,7 +193,21 @@ def validate_checkpoint_structure_bytes(raw: bytes) -> dict[str, Any]:
     return _checkpoint_structure(_parse_canonical(raw, maximum=CHECKPOINT_MAX_BYTES, code="CHECKPOINT_TOO_LARGE"))
 
 
-def validate_checkpoint_bytes(raw: bytes, *, repository_root: Path | str = ".") -> dict[str, Any]:
+def _check_external_identity(raw: bytes, expected_sha256: str | None, expected_byte_size: int | None) -> None:
+    if expected_sha256 is not None:
+        if not isinstance(expected_sha256, str) or not _HEX.fullmatch(expected_sha256):
+            raise CheckpointError("EXPECTED_CHECKPOINT_SHA256")
+        if hashlib.sha256(raw).hexdigest() != expected_sha256:
+            raise CheckpointError("CHECKPOINT_IDENTITY_MISMATCH")
+    if expected_byte_size is not None:
+        if not isinstance(expected_byte_size, int) or isinstance(expected_byte_size, bool) or expected_byte_size < 0:
+            raise CheckpointError("EXPECTED_CHECKPOINT_BYTE_SIZE")
+        if len(raw) != expected_byte_size:
+            raise CheckpointError("CHECKPOINT_IDENTITY_MISMATCH")
+
+
+def validate_checkpoint_bytes(raw: bytes, *, repository_root: Path | str = ".", expected_sha256: str | None = None, expected_byte_size: int | None = None) -> dict[str, Any]:
+    _check_external_identity(raw, expected_sha256, expected_byte_size)
     value = validate_checkpoint_structure_bytes(raw)
     try:
         validate_state_bytes(_canonical(value["BODY_STATE_SNAPSHOT"]), repository_root=repository_root)
@@ -240,6 +256,9 @@ def create_checkpoint(request_raw: bytes, *, repository_root: Path | str, worksp
         raise CheckpointError("CHECKPOINT_TOO_LARGE")
     _checkpoint_structure(_parse_canonical(checkpoint_raw, maximum=CHECKPOINT_MAX_BYTES, code="CHECKPOINT_TOO_LARGE"))
     temp_path = None
+    published = False
+    final_bytes_verified = False
+    durability_confirmation = "INCOMPLETE"
     try:
         fd, temp_path = tempfile.mkstemp(prefix=f".{target.name}.tmp-", suffix=".checkpoint", dir=str(target.parent))
         os.chmod(temp_path, 0o600)
@@ -252,47 +271,65 @@ def create_checkpoint(request_raw: bytes, *, repository_root: Path | str, worksp
         validate_checkpoint_structure_bytes(checkpoint_raw)
         if target.exists() or target.is_symlink():
             raise CheckpointError("TARGET_EXISTS")
-        os.replace(temp_path, target)
+        try:
+            os.link(temp_path, target)
+        except FileExistsError as exc:
+            error = CheckpointError("TARGET_EXISTS")
+            error.final_checkpoint_exists = True
+            raise error from exc
+        except OSError as exc:
+            if exc.errno in {errno.EXDEV, errno.ENOTSUP, errno.EOPNOTSUPP, errno.EINVAL, errno.ENOSYS}:
+                raise CheckpointError("ATOMIC_NO_CLOBBER_UNSUPPORTED") from exc
+            raise
+        published = True
+        os.unlink(temp_path)
         temp_path = None
-        method = "ATOMIC_REPLACE"
+        method = "ATOMIC_HARD_LINK_CREATE_ONLY"
         directory_fsync = True
         try:
             dir_fd = os.open(str(target.parent), os.O_RDONLY)
             try: os.fsync(dir_fd)
             finally: os.close(dir_fd)
-        except (AttributeError, OSError):
-            directory_fsync = False
-        mode = "ATOMIC_REPLACE_FILE_AND_DIRECTORY_FSYNC" if directory_fsync else "ATOMIC_REPLACE_FILE_FSYNC_ONLY"
+        except (AttributeError, OSError) as exc:
+            if isinstance(exc, OSError) and exc.errno in {errno.ENOTSUP, errno.EOPNOTSUPP, errno.EINVAL, errno.ENOSYS}:
+                directory_fsync = False
+            else:
+                raise
+        mode = "ATOMIC_HARD_LINK_FILE_AND_DIRECTORY_FSYNC" if directory_fsync else "ATOMIC_HARD_LINK_FILE_FSYNC_ONLY"
+        durability_confirmation = mode
         final_raw = target.read_bytes()
         if final_raw != checkpoint_raw or hashlib.sha256(final_raw).hexdigest() != hashlib.sha256(checkpoint_raw).hexdigest():
             error = CheckpointError("FINAL_READBACK_MISMATCH", "AFTER_PUBLICATION")
             error.final_checkpoint_exists = True; error.final_bytes_verified = False; error.durability_confirmation = mode
             raise error
+        final_bytes_verified = True
         validate_checkpoint_structure_bytes(final_raw)
         return _receipt(request["REQUEST_ID"], "SUCCESS", request["CHECKPOINT_PATH"], final_raw, source_sha, method, mode, "Immutable checkpoint published and verified")
-    except CheckpointError:
+    except CheckpointError as exc:
         if temp_path is not None:
             try: os.unlink(temp_path)
             except OSError: pass
+        if published:
+            exc.phase = "AFTER_PUBLICATION"
+            exc.final_checkpoint_exists = target.exists() or target.is_symlink()
+            exc.final_bytes_verified = final_bytes_verified
+            exc.durability_confirmation = durability_confirmation
         raise
     except Exception as exc:
         if temp_path is not None:
             try: os.unlink(temp_path)
             except OSError: pass
-        if isinstance(exc, CheckpointError):
-            if target.exists():
-                exc.final_checkpoint_exists = True
-                if exc.phase == "AFTER_PUBLICATION": exc.durability_confirmation = "INCOMPLETE"
-            raise
-        error = CheckpointError("PUBLICATION_IO", "AFTER_PUBLICATION" if target.exists() else "BEFORE_PUBLICATION")
-        error.final_checkpoint_exists = target.exists()
-        error.durability_confirmation = "INCOMPLETE" if error.final_checkpoint_exists else "NOT_APPLICABLE"
+        error = CheckpointError("PUBLICATION_IO", "AFTER_PUBLICATION" if published or target.exists() else "BEFORE_PUBLICATION")
+        error.final_checkpoint_exists = target.exists() or target.is_symlink()
+        error.final_bytes_verified = final_bytes_verified
+        error.durability_confirmation = durability_confirmation if error.final_checkpoint_exists else "NOT_APPLICABLE"
         raise error from exc
 
 
-def validate_checkpoint_file(path: Path | str, *, repository_root: Path | str = ".", full: bool = False) -> dict[str, Any]:
+def validate_checkpoint_file(path: Path | str, *, repository_root: Path | str = ".", full: bool = False, expected_sha256: str | None = None, expected_byte_size: int | None = None) -> dict[str, Any]:
     try: raw = Path(path).read_bytes()
     except OSError as exc: raise CheckpointError("CHECKPOINT_READ") from exc
+    _check_external_identity(raw, expected_sha256, expected_byte_size)
     return validate_checkpoint_bytes(raw, repository_root=repository_root) if full else validate_checkpoint_structure_bytes(raw)
 
 
@@ -314,11 +351,11 @@ def _main() -> int:
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command", required=True)
     create = sub.add_parser("create"); create.add_argument("request"); create.add_argument("--repository-root", required=True); create.add_argument("--workspace-root", required=True)
-    validate = sub.add_parser("validate"); validate.add_argument("checkpoint"); validate.add_argument("--repository-root", default="."); validate.add_argument("--full", action="store_true")
+    validate = sub.add_parser("validate"); validate.add_argument("checkpoint"); validate.add_argument("--repository-root", default="."); validate.add_argument("--full", action="store_true"); validate.add_argument("--expected-sha256"); validate.add_argument("--expected-byte-size", type=int)
     args = parser.parse_args()
     try:
         if args.command == "create": result = _receipt(**{}) if False else create_checkpoint(Path(args.request).read_bytes(), repository_root=args.repository_root, workspace_root=args.workspace_root)
-        else: result = validate_checkpoint_file(args.checkpoint, repository_root=args.repository_root, full=args.full)
+        else: result = validate_checkpoint_file(args.checkpoint, repository_root=args.repository_root, full=args.full, expected_sha256=args.expected_sha256, expected_byte_size=args.expected_byte_size)
     except (OSError, CheckpointError) as exc:
         print(json.dumps({"STATUS":"FAILURE","ERROR_CODE":getattr(exc, "code", "FILE_IO"),"PHASE":getattr(exc, "phase", "BEFORE_PUBLICATION"),"FINAL_CHECKPOINT_EXISTS":getattr(exc, "final_checkpoint_exists", False),"FINAL_BYTES_VERIFIED":getattr(exc, "final_bytes_verified", False),"DURABILITY_CONFIRMATION":getattr(exc, "durability_confirmation", "NOT_APPLICABLE"),"SUMMARY":"Checkpoint operation failed"}, separators=(",", ":")))
         return 2

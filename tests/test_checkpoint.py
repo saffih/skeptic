@@ -45,7 +45,7 @@ class CheckpointTests(unittest.TestCase):
         self.assertEqual(receipt["STATUS"], "SUCCESS"); self.assertEqual(receipt["CHECKPOINT_SHA256"], hashlib.sha256(raw).hexdigest()); self.assertEqual(receipt["CHECKPOINT_BYTE_SIZE"], len(raw))
         self.assertEqual(validate_checkpoint_structure_bytes(raw)["TASK_ID"], self.state["TASK_ID"])
         self.assertEqual(validate_checkpoint_bytes(raw, repository_root=self.repo)["CHECKPOINT_ID"], "checkpoint-1")
-        self.assertEqual(receipt["DURABILITY_MODE"], "ATOMIC_REPLACE_FILE_AND_DIRECTORY_FSYNC")
+        self.assertEqual(receipt["DURABILITY_MODE"], "ATOMIC_HARD_LINK_FILE_AND_DIRECTORY_FSYNC")
     def test_origin_binding_and_self_containment(self):
         self.create(); checkpoint = self.workspace / "checkpoints/checkpoint.json"; original = self.source.read_bytes(); value = json.loads(checkpoint.read_text())
         self.assertEqual(value["BODY_STATE_ORIGIN"], {"workspace_relative_path":"body.json","sha256":hashlib.sha256(original).hexdigest(),"byte_size":len(original)})
@@ -71,6 +71,25 @@ class CheckpointTests(unittest.TestCase):
         with self.assertRaises(CheckpointError): validate_checkpoint_structure_bytes(enc(tampered))
         (self.repo / "evidence.txt").write_text("mutated", encoding="utf-8")
         with self.assertRaises(CheckpointError): validate_checkpoint_file(path, repository_root=self.repo, full=True)
+
+    def test_validator_id_is_exactly_enforced(self):
+        self.create(); path = self.workspace / "checkpoints/checkpoint.json"; value = json.loads(path.read_text())
+        value["VALIDATION_RECEIPT"]["validator_id"] = "other.validator"
+        with self.assertRaises(CheckpointError) as caught: validate_checkpoint_structure_bytes(enc(value))
+        self.assertEqual(caught.exception.code, "RECEIPT_INVALID")
+
+    def test_external_identity_rejects_coherent_rewrite(self):
+        self.create(); path = self.workspace / "checkpoints/checkpoint.json"; raw = path.read_bytes(); value = json.loads(raw)
+        value["BODY_STATE_SNAPSHOT"]["CURRENT_STEP"] = "rewritten"
+        snapshot = enc(value["BODY_STATE_SNAPSHOT"])
+        value["BODY_STATE_ORIGIN"]["sha256"] = hashlib.sha256(snapshot).hexdigest()
+        value["BODY_STATE_ORIGIN"]["byte_size"] = len(snapshot)
+        value["VALIDATION_RECEIPT"]["validated_body_state_sha256"] = value["BODY_STATE_ORIGIN"]["sha256"]
+        rewritten = enc(value)
+        validate_checkpoint_structure_bytes(rewritten)
+        with self.assertRaises(CheckpointError) as caught:
+            validate_checkpoint_bytes(rewritten, expected_sha256=hashlib.sha256(raw).hexdigest(), expected_byte_size=len(raw))
+        self.assertEqual(caught.exception.code, "CHECKPOINT_IDENTITY_MISMATCH")
     def test_limits_unknown_and_unsafe_paths(self):
         self.assert_error("REQUEST_FIELDS", dict(self.request_value, EXTRA="x"))
         oversized = enc(dict(self.request_value, REQUEST_ID="x" * 64)) + b"x" * REQUEST_MAX_BYTES
@@ -91,9 +110,50 @@ class CheckpointTests(unittest.TestCase):
         with patch("harness.checkpoint.tempfile.mkstemp", side_effect=mkstemp), patch("harness.checkpoint.os.fsync", wraps=os.fsync) as fsync:
             self.create()
         self.assertTrue(seen and seen[0].parent.resolve() == (self.workspace / "checkpoints").resolve()); self.assertGreaterEqual(fsync.call_count, 2); self.assertFalse(seen[0].exists())
-        with patch("harness.checkpoint.os.replace", side_effect=RuntimeError("stop")):
-            with self.assertRaises(CheckpointError): self.create(dict(self.request_value, CHECKPOINT_PATH="checkpoints/fail.json"))
-        self.assertFalse((self.workspace / "checkpoints/fail.json").exists()); self.assertFalse(any(p.name.startswith(".fail.json.tmp-") for p in (self.workspace / "checkpoints").iterdir()))
+        existing = self.workspace / "checkpoints/race.json"; existing.write_bytes(b"keep")
+        with patch("harness.checkpoint.os.link", side_effect=FileExistsError("race")):
+            with self.assertRaises(CheckpointError) as caught: self.create(dict(self.request_value, CHECKPOINT_PATH="checkpoints/race.json"))
+        self.assertEqual(caught.exception.code, "TARGET_EXISTS"); self.assertEqual(existing.read_bytes(), b"keep")
+        self.assertFalse(any(p.name.startswith(".race.json.tmp-") for p in (self.workspace / "checkpoints").iterdir()))
+
+    def test_unexpected_directory_fsync_failure_is_post_publication(self):
+        real_fsync = os.fsync; calls = [0]
+        def fail_directory(fd):
+            calls[0] += 1
+            if calls[0] == 2: raise OSError("directory fsync failed")
+            return real_fsync(fd)
+        with patch("harness.checkpoint.os.fsync", side_effect=fail_directory):
+            with self.assertRaises(CheckpointError) as caught: self.create()
+        self.assertEqual(caught.exception.phase, "AFTER_PUBLICATION")
+        self.assertTrue(caught.exception.final_checkpoint_exists)
+        self.assertFalse(caught.exception.final_bytes_verified)
+
+    def test_directory_fsync_unsupported_falls_back_truthfully(self):
+        real_open = os.open
+        def unsupported(path, *args):
+            if str(path).endswith("checkpoints"): raise OSError(__import__("errno").ENOTSUP, "unsupported")
+            return real_open(path, *args)
+        with patch("harness.checkpoint.os.open", side_effect=unsupported):
+            receipt = self.create()
+        self.assertEqual(receipt["DURABILITY_MODE"], "ATOMIC_HARD_LINK_FILE_FSYNC_ONLY")
+
+    def test_post_publication_readback_reports_phase_and_final_state(self):
+        real_link = os.link
+        def publish_then_corrupt(source, target):
+            real_link(source, target)
+            Path(target).write_bytes(b"corrupted-after-publication")
+        with patch("harness.checkpoint.os.link", side_effect=publish_then_corrupt):
+            with self.assertRaises(CheckpointError) as caught: self.create()
+        self.assertEqual(caught.exception.phase, "AFTER_PUBLICATION")
+        self.assertTrue(caught.exception.final_checkpoint_exists)
+        self.assertFalse(caught.exception.final_bytes_verified)
+
+    def test_creation_receipt_failure_reports_post_publication_state(self):
+        with patch("harness.checkpoint._receipt", side_effect=CheckpointError("RECEIPT_GENERATION")):
+            with self.assertRaises(CheckpointError) as caught: self.create()
+        self.assertEqual(caught.exception.phase, "AFTER_PUBLICATION")
+        self.assertTrue(caught.exception.final_checkpoint_exists)
+        self.assertTrue(caught.exception.final_bytes_verified)
     def test_checkpoint_size_and_metadata_only(self):
         receipt = self.create(); raw = (self.workspace / receipt["CHECKPOINT_PATH"]).read_bytes(); self.assertLessEqual(len(raw), CHECKPOINT_MAX_BYTES)
         text = raw.decode();
