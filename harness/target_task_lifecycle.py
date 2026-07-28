@@ -113,7 +113,7 @@ def validate_plan(plan: Mapping[str, Any], task_id: str | None = None) -> dict[s
         if not isinstance(p[field], list) or not p[field]: raise ValueError("plan rejected: empty field " + field)
     for field in ("SCOPE", "PROHIBITIONS", "SOURCE_OF_TRUTH_ORDER", "ASSUMPTIONS", "UNKNOWNS", "VALIDATION", "STOP_CONDITIONS", "RETRIEVAL_CONDITIONS", "ESCALATION_CONDITIONS", "SUCCESS_CRITERIA"):
         if not _text_list(p[field], allow_empty=field in {"ASSUMPTIONS", "UNKNOWNS", "RETRIEVAL_CONDITIONS", "ESCALATION_CONDITIONS"}): raise ValueError("plan rejected: field must be a text list " + field)
-    if not isinstance(p["HANDOFF"], list) or any(not isinstance(item, str) and not isinstance(item, Mapping) for item in p["HANDOFF"]): raise ValueError("plan rejected: invalid handoff")
+    if not isinstance(p["HANDOFF"], list) or not p["HANDOFF"] or any((not _text(item) if isinstance(item, str) else not (isinstance(item, Mapping) and bool(item))) for item in p["HANDOFF"]): raise ValueError("plan rejected: invalid handoff")
     p["STEPS"] = steps
     retry_policy = plan.get("retry_policy", plan.get("RETRY_POLICY", {}))
     if not isinstance(retry_policy, Mapping) or any(step_id not in ids or not isinstance(limit, int) or limit < 1 for step_id, limit in retry_policy.items()): raise ValueError("plan rejected: invalid retry policy")
@@ -144,11 +144,16 @@ def make_rotation_checkpoint(**values: Any) -> dict[str, Any]:
     if missing: raise TargetTaskIntegrityError("rotation checkpoint missing: " + ", ".join(missing))
     return values
 
-def validate_rotation_checkpoint(checkpoint: Mapping[str, Any], *, task_id: str, plan_reference: str, plan_hash: str) -> None:
+def validate_rotation_checkpoint(checkpoint: Mapping[str, Any], *, task_id: str, plan_reference: str, plan_hash: str, valid_steps: set[str] | None = None, evidence_ledger: Mapping[str, Any] | None = None) -> None:
     missing = [field for field in BODY_ROTATION_FIELDS if field not in checkpoint]
     if missing: raise TargetTaskIntegrityError("rotation checkpoint missing: " + ", ".join(missing))
     if any((checkpoint[field] != expected) for field, expected in (("TARGET_TASK_ID", task_id), ("PLAN_REFERENCE", plan_reference), ("PLAN_HASH", plan_hash), ("CHECKPOINT_VERSION", CHECKPOINT_VERSION), ("PRESSURE_STATUS", "BODY_ROTATION_REQUIRED"), ("ROTATION_STATE", "STOPPED_BEFORE_RESUME"))):
         raise TargetTaskIntegrityError("rotation checkpoint identity or state mismatch")
+    if checkpoint["EXECUTION_MODE"] not in EXECUTION_MODES or checkpoint["OBSERVED_CONTEXT_STATUS"] not in OBSERVED_CONTEXT_STATUSES: raise TargetTaskIntegrityError("rotation checkpoint mode mismatch")
+    if not isinstance(checkpoint["COMPLETED_STEPS_AND_EVIDENCE"], Mapping) or any(not _accepted_evidence(e) for e in checkpoint["COMPLETED_STEPS_AND_EVIDENCE"].values()): raise TargetTaskIntegrityError("rotation completed evidence invalid")
+    if valid_steps is not None and (checkpoint["CURRENT_STEP"] not in valid_steps or any(step not in valid_steps for step in checkpoint["COMPLETED_STEPS_AND_EVIDENCE"])): raise TargetTaskIntegrityError("rotation step identity mismatch")
+    if checkpoint["ACCEPTED_VALIDATED_CLAIMS"] and evidence_ledger is None: raise TargetTaskIntegrityError("rotation claims require evidence ledger")
+    if checkpoint["ACCEPTED_VALIDATED_CLAIMS"] and tuple(accept_claims(checkpoint["ACCEPTED_VALIDATED_CLAIMS"], evidence_ledger)) != tuple(checkpoint["ACCEPTED_VALIDATED_CLAIMS"]): raise TargetTaskIntegrityError("rotation claim provenance invalid")
     if checkpoint["NEXT_AUTHORIZED_ACTION"] != "RUN-" + checkpoint["CURRENT_STEP"]: raise TargetTaskIntegrityError("rotation next action mismatch")
     if checkpoint["OPEN_BLOCKERS"]: raise TargetTaskIntegrityError("rotation checkpoint has blockers")
 
@@ -251,5 +256,5 @@ def terminal_receipt(**values: Any) -> dict[str, Any]:
     if receipt["TASK_RESULT"] not in {"ACCEPTED", "REJECTED", "BLOCKED"}: raise ValueError("invalid task result")
     if receipt["ACTUAL_RUNTIME_ISOLATION"] not in {"CONFIRMED", "NOT_REQUIRED", "UNKNOWN"}: raise ValueError("invalid runtime isolation")
     if receipt["ACTUAL_CONTEXT_REDUCTION"] not in {"CONFIRMED", "NOT_CLAIMED", "UNKNOWN"}: raise ValueError("invalid context reduction")
-    if receipt["TASK_RESULT"] == "ACCEPTED" and (receipt["PLAN_INTEGRITY"] != "PASS" or receipt["DETERMINISTIC_VALIDATION"] != "PASS" or receipt["BLOCKERS"] not in ((), [], "NONE") or receipt["EXECUTION_MODE"] not in {"ISOLATED_ORCHESTRATION", "SHARED_CONTEXT_DEGRADED"} or receipt["OBSERVED_CONTEXT_STATUS"] not in OBSERVED_CONTEXT_STATUSES or receipt["BOUNDARY_PROCESSING_STATUS"] != "PASS" or receipt["CHECKPOINT_AND_RESUME_STATUS"] != "PASS" or receipt["REVIEW_RESULT"] != "PASS" or receipt["DETERMINISTIC_LIFECYCLE_SIMULATION"] != "PASS" or receipt["DETERMINISTIC_BOUNDARY_SIMULATION"] != "PASS" or receipt["REAL_INTERRUPTION_RESUME_EXERCISE"] != "PASS" or receipt["REAL_AGENT_BOUNDARY_EXERCISE"] != "PASS" or receipt["RUNSKEPTIC_QUALIFYING_PASSES"] != 3 or receipt["RUNSKEPTIC_FINAL_CATEGORY"] != "PASS"): raise ValueError("accepted receipt has unresolved lifecycle or promotion controls")
+    if receipt["TASK_RESULT"] == "ACCEPTED" and (receipt["PLAN_INTEGRITY"] != "PASS" or receipt["DETERMINISTIC_VALIDATION"] != "PASS" or receipt["BLOCKERS"] not in ((), [], "NONE") or receipt["EXECUTION_MODE"] not in {"ISOLATED_ORCHESTRATION", "SHARED_CONTEXT_DEGRADED"} or receipt["OBSERVED_CONTEXT_STATUS"] not in OBSERVED_CONTEXT_STATUSES or receipt["BOUNDARY_PROCESSING_STATUS"] != "PASS" or receipt["CHECKPOINT_AND_RESUME_STATUS"] != "PASS" or receipt["REVIEW_RESULT"] != "PASS" or receipt["DETERMINISTIC_LIFECYCLE_SIMULATION"] != "PASS" or receipt["DETERMINISTIC_BOUNDARY_SIMULATION"] != "PASS" or receipt["REAL_INTERRUPTION_RESUME_EXERCISE"] != "PASS" or receipt["REAL_AGENT_BOUNDARY_EXERCISE"] != "PASS" or receipt["RUNSKEPTIC_QUALIFYING_PASSES"] != 3 or receipt["RUNSKEPTIC_FINAL_CATEGORY"] != "PASS" or any(receipt[field] == "UNKNOWN" for field in ("RUNSKEPTIC_MODEL_PER_RUN", "RUNSKEPTIC_REASONING_LEVEL_PER_RUN", "RUNSKEPTIC_CONTEXT_STATUS_PER_RUN", "RUNSKEPTIC_INDEPENDENCE_PER_RUN"))): raise ValueError("accepted receipt has unresolved lifecycle or promotion controls")
     return receipt
