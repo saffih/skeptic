@@ -274,7 +274,7 @@ Find patterns that should not become general rules.
 - `KT:UA` unfair asymmetry: similar actors, cases, users, files, or decisions are treated differently without justification
 - `KT:HB` hidden burden: works only by shifting ambiguity, cost, or cleanup to someone else
 - `KT:HHB` hidden human burden: appears successful only by shifting avoidable ambiguity, cognitive load, repeated back-and-forth, coordination effort, delay, cost, risk, or cleanup onto another person or group
-- `KT:OC` ought implies can: no permitted feasible path lets the responsible actor satisfy all applicable requirements simultaneously given the actor's authority, capabilities, resources, dependencies, and constraints; if no path exists, use ACTION only for a narrow repair that preserves protected requirements, otherwise CONFLICT; if feasibility is unestablished, record unknown; add `PO:CN` only when conflicting rules cause the impossibility
+- `KT:OC` ought implies can: no permitted feasible path lets the responsible actor satisfy all applicable requirements simultaneously under its authority, capabilities, resources, dependencies, and constraints; if feasibility is unestablished, record unknown; preserve protected requirements when restoring feasibility; add `PO:CN` only when conflicting rules cause the impossibility
 
 
 ### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
