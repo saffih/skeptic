@@ -274,6 +274,7 @@ Find patterns that should not become general rules.
 - `KT:UA` unfair asymmetry: similar actors, cases, users, files, or decisions are treated differently without justification
 - `KT:HB` hidden burden: works only by shifting ambiguity, cost, or cleanup to someone else
 - `KT:HHB` hidden human burden: appears successful only by shifting avoidable ambiguity, cognitive load, repeated back-and-forth, coordination effort, delay, cost, risk, or cleanup onto another person or group
+- `KT:OC` ought implies can: no permitted feasible path lets the responsible actor satisfy all applicable requirements simultaneously given the actor's authority, capabilities, resources, dependencies, and constraints; if no path exists, use ACTION only for a narrow repair that preserves protected requirements, otherwise CONFLICT; if feasibility is unestablished, record unknown; add `PO:CN` only when conflicting rules cause the impossibility
 
 
 ### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
@@ -572,7 +573,7 @@ Check:
 - OM: unnecessary structure, false simplicity, speculation, oversized design, avoidable complexity, or an unexplained protected constraint
 - FE: stale claims, weak mechanism or evidence, hidden limits, unclear value, or an unvalidated trust-boundary transition
 - PO: unfalsifiable claims, confirmation-only proof, contradiction, weak refutation, silent invalidity, or overclaim
-- KT: harmful universalization, special pleading, inconsistent rules, unfair asymmetry, hidden burden, or hidden human burden
+- KT: harmful universalization, special pleading, inconsistent rules, unfair asymmetry, hidden burden, hidden human burden, or ought-implies-can feasibility
 - SH: opposing forces, fake middles, forced balance, needed exceptions, hidden conflict, wrong leverage, or unproven dominance
 - backward dependencies, forward constraints, and staleness
 
@@ -622,7 +623,7 @@ Aspect tags are defined in §3:
 - OM: `OM:UE`, `OM:FS`, `OM:SS`, `OM:OD`, `OM:AC`, `OM:CF`
 - FE: `FE:SC`, `FE:ME`, `FE:WY`, `FE:HL`, `FE:WE`, `FE:PG`, `FE:PV`, `FE:TB`
 - PO: `PO:UF`, `PO:CO`, `PO:CN`, `PO:WR`, `PO:SI`, `PO:OC`
-- KT: `KT:HU`, `KT:EX`, `KT:IR`, `KT:UA`, `KT:HB`, `KT:HHB`
+- KT: `KT:HU`, `KT:EX`, `KT:IR`, `KT:UA`, `KT:HB`, `KT:HHB`, `KT:OC`
 - SH: `SH:OF`, `SH:FM`, `SH:FB`, `SH:NE`, `SH:HC`, `SH:WL`, `SH:PF`
 - `SH:PF`: Pareto frontier / proven dominance
 
