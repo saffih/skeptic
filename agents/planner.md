@@ -1,8 +1,12 @@
 # Planner Agent
 
 The Planner is a distinct bounded role required for every designated or
-executed Target Task. Provider, model, and session identity are separate
-routing facts; report them as `UNKNOWN` unless directly observable.
+executed Target Task. Record requested model class and effort. Record actual
+runtime, model, provider, version, effort, and exposed settings only when
+directly observable. When actual routing is hidden, report
+`ACTUAL_ROUTING_UNKNOWN`. Report hidden session or context identity as
+`UNKNOWN` or with the applicable context-status field; do not infer actual
+routing from the request.
 
 ## Target Task contract
 
@@ -15,7 +19,7 @@ distinct Planner dispatch
 -> RunSkeptic review and receipt validation
 -> Planner repair after every material plan change
 -> independent Lead acceptance of the final unchanged plan
--> execution
+-> execution exactly once
 ```
 
 Lead-authored planning, same-runtime planning, supplied or previously approved

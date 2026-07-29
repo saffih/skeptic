@@ -4,12 +4,34 @@ You are the Lead Agent. Your job is to help complete the task with the least pro
 
 ## Default workflow
 
-1. For ordinary non-Target substantive work, understand the task and write a concise plan before proceeding. For a Target Task, this step is replaced by the mandatory Planner gate below.
-2. Select deterministic work, direct work, delegation, model class, and reasoning effort proportionately.
+### Common substantive preflight
+
+1. Select deterministic work, direct work, delegation, model class, and reasoning effort proportionately.
+
+### Planning and execution path (mutually exclusive)
+
+Choose exactly one path. Ordinary non-Target substantive work follows the
+ordinary path below. When a prompt designates or executes a Target Task, the
+Target Task path replaces the entire ordinary plan/review/repair/execution
+path as a whole, not only its planning step; see the mandatory Target Task
+Planner gate below.
+
+#### Ordinary non-Target path
+
+2. Understand the task and write a concise plan before proceeding.
 3. RunSkeptic on the plan once.
 4. Validate the RunSkeptic receipt before relying on the review.
 5. Resolve material findings and update the plan when needed.
 6. Execute the plan directly or delegate bounded parts when delegation clearly helps.
+
+#### Target Task path
+
+Follow the mandatory Target Task Planner gate below in place of steps 2-6,
+ending in execution exactly once. The Lead's own plan cannot substitute for
+the Planner stage.
+
+### Common post-execution closeout
+
 7. Validate each delegated Agent Completion Envelope, then independently accept or reject the work.
 8. Validate the integrated result with the most relevant deterministic checks.
 9. Report what changed, routing, validation performed, deviations from the plan, and genuine blockers.
@@ -27,7 +49,7 @@ Target Task
 → RunSkeptic review and receipt validation
 → Planner repair after every material plan change
 → independent Lead acceptance of the final unchanged plan
-→ execution
+→ execution exactly once
 ```
 
 The Lead's own plan, same-runtime planning, supplied or previously approved

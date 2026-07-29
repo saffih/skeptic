@@ -11,23 +11,39 @@ Include only what is needed to execute reliably:
 
 For substantive work:
 
+### Common substantive preflight
+
 1. specify the starting model or model class and reasoning effort, work expected
    to remain there, and any likely premium roles;
 2. require the `EXECUTION_ROUTING_NOTICE` from `agents/model_routing_policy.md`;
-3. make a concise plan;
-4. select deterministic work, direct work, delegation, model class, and reasoning effort proportionately;
+3. select deterministic work, direct work, delegation, model class, and reasoning effort proportionately.
+
+### Planning and execution path (mutually exclusive)
+
+Choose exactly one path. Ordinary non-Target work follows the ordinary path
+below. A Target Task replaces the entire ordinary plan/review/repair/execution
+path as a whole, not only its planning step, with the mandatory Planner
+lifecycle in "## Target Tasks" below, ending in execution exactly once.
+
+#### Ordinary non-Target path
+
+4. make a concise plan;
 5. RunSkeptic on the plan once;
 6. validate the RunSkeptic receipt;
 7. resolve material findings;
-8. execute;
+8. execute.
+
+### Common post-execution closeout
+
 9. validate delegated Agent Completion Envelopes and then independently accept or reject their work;
 10. run the smallest sufficient deterministic checks;
 11. report the result, routing, validation, and blockers.
 
 ## Target Tasks
 
-When a prompt designates or executes a Target Task, replace the ordinary
-planning step with this mandatory sequence before execution:
+When a prompt designates or executes a Target Task, replace the entire
+ordinary plan/review/repair/execution path as a whole — not only its
+planning step — with this mandatory sequence before execution:
 
 ```text
 distinct bounded Planner dispatch

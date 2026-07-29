@@ -28,10 +28,12 @@ For a prompt that designates or executes a Target Task, conformance additionally
 requires the ordered lifecycle: distinct bounded Planner dispatch, envelope
 validation, complete Planner-produced plan, RunSkeptic review and receipt
 validation, Planner repair after every material plan change, final unchanged-plan
-Lead acceptance, and execution. supplied plans are Planner input only; Lead and
+Lead acceptance, and execution exactly once. supplied plans are Planner input only; Lead and
 same-runtime planning cannot substitute. The Planner cannot recurse or authorize
 execution. Missing the mandatory stage is `PROMPT_CONFORMANCE_ACTION_REQUIRED`
-or `PROMPT_CONFORMANCE_UNVERIFIABLE`, never ready. Ordinary non-Target work
+or `PROMPT_CONFORMANCE_UNVERIFIABLE`, never ready. A Target Task prompt whose
+lifecycle omits execution exactly once is missing the mandatory stage and must
+not receive `PROMPT_CONFORMANCE_READY`. Ordinary non-Target work
 remains proportional.
 
 For substantive prompts where model cost may be material, also check that the

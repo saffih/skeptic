@@ -84,17 +84,12 @@ class PlanningControlContractTests(unittest.TestCase):
         self.assertIn("MODEL_ESCALATION_CHECKPOINT", self.task)
         self.assertIn("PROMPT_CONFORMANCE_ACTION_REQUIRED", self.builder)
 
-    def test_ordinary_step_scoped_and_planner_owns_target_authorship(self) -> None:
-        self.assertIn(
-            "For ordinary non-Target substantive work, understand the task and "
-            "write a concise plan before proceeding.",
-            self.lead,
-        )
-        self.assertIn(
-            "For a Target Task, this step is replaced by the mandatory Planner "
-            "gate below.",
-            self.lead,
-        )
+    def test_target_task_replaces_ordinary_sequence_as_a_whole(self) -> None:
+        for value in (self.lead, self.task):
+            self.assertIn(
+                "entire ordinary plan/review/repair/execution path as a whole",
+                value,
+            )
         self.assertIn(
             "remains responsible for task-level planning governance, plan "
             "acceptance, execution, integration, validation, escalation, and "
@@ -106,6 +101,37 @@ class PlanningControlContractTests(unittest.TestCase):
             "integration, validation, escalation, and terminal completion.",
             self.planner,
         )
+
+    def test_lead_and_task_share_preflight_exclusive_path_and_closeout(self) -> None:
+        for value in (self.lead, self.task):
+            self.assertIn("Common substantive preflight", value)
+            self.assertIn("mutually exclusive", value)
+            self.assertIn("Common post-execution closeout", value)
+
+    def test_shared_cross_cutting_duties_remain_applicable(self) -> None:
+        self.assertIn("Follow `agents/model_routing_policy.md`", self.lead)
+        self.assertIn("Agent Completion Envelope validation", self.lead)
+        self.assertIn("role-specific work acceptance", self.lead)
+        self.assertIn("Prefer deterministic evidence", self.lead)
+        self.assertIn("## Reporting", self.lead)
+        self.assertIn("## State and stopping", self.lead)
+
+    def test_execution_exactly_once_present_in_all_target_surfaces(self) -> None:
+        # Static text probe only; does not prove runtime enforcement.
+        for value in (self.lead, self.planner, self.task, self.builder):
+            self.assertIn("execution exactly once", value)
+
+    def test_builder_conformance_requires_exactly_once_before_ready(self) -> None:
+        self.assertIn("omits execution exactly once", self.builder)
+        self.assertIn("must not receive `PROMPT_CONFORMANCE_READY`", self.builder)
+
+    def test_planner_uses_actual_routing_unknown(self) -> None:
+        # Static text probe only; does not prove runtime enforcement.
+        self.assertIn("ACTUAL_ROUTING_UNKNOWN", self.planner)
+
+    def test_planner_plain_unknown_limited_to_identity(self) -> None:
+        self.assertNotIn("routing facts; report them as `UNKNOWN`", self.planner)
+        self.assertIn("session or context identity as `UNKNOWN`", self.planner)
 
     def test_agents_entry_map_and_ownership_are_not_duplicated(self) -> None:
         self.assertEqual(self.agents.count("Build a Task Prompt"), 1)
