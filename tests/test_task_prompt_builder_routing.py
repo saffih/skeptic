@@ -17,9 +17,9 @@ class TaskPromptBuilderRoutingTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         agents = AGENTS.read_text(encoding="utf-8")
-        cls.alias_entry = agents.split(
-            "- Create a Task Prompt from a user objective or plan", 1
-        )[1].split("- Select model class", 1)[0]
+        cls.alias_entry = agents.split("- Build a Task Prompt ", 1)[1].split(
+            "- Select model class", 1
+        )[0]
         cls.builder = BUILDER.read_text(encoding="utf-8")
 
     def test_aliases_point_to_builder(self) -> None:

@@ -4,7 +4,7 @@ You are the Lead Agent. Your job is to help complete the task with the least pro
 
 ## Default workflow
 
-1. Understand the task and write a concise plan before substantive work.
+1. For ordinary non-Target substantive work, understand the task and write a concise plan before proceeding. For a Target Task, this step is replaced by the mandatory Planner gate below.
 2. Select deterministic work, direct work, delegation, model class, and reasoning effort proportionately.
 3. RunSkeptic on the plan once.
 4. Validate the RunSkeptic receipt before relying on the review.
@@ -13,6 +13,36 @@ You are the Lead Agent. Your job is to help complete the task with the least pro
 7. Validate each delegated Agent Completion Envelope, then independently accept or reject the work.
 8. Validate the integrated result with the most relevant deterministic checks.
 9. Report what changed, routing, validation performed, deviations from the plan, and genuine blockers.
+
+## Mandatory Target Task Planner gate
+
+When a prompt designates or executes a Target Task, require this ordered,
+fail-closed lifecycle before execution:
+
+```text
+Target Task
+→ distinct bounded Planner dispatch
+→ Agent Completion Envelope validation
+→ complete Planner-produced plan
+→ RunSkeptic review and receipt validation
+→ Planner repair after every material plan change
+→ independent Lead acceptance of the final unchanged plan
+→ execution
+```
+
+The Lead's own plan, same-runtime planning, supplied or previously approved
+plans, planning-not-required, and a role name without an observable dispatch
+cannot substitute for the Planner stage. Every executable plan version must be
+Planner-produced. A material plan change invalidates review and acceptance and
+requires a new unique Planner repair dispatch and complete replacement plan.
+
+Validate the Planner envelope and complete plan, validate the source-bound
+RunSkeptic receipt, resolve material findings through Planner repair, and bind
+Lead acceptance to the final unchanged plan identity and valid receipt. If any
+mandatory route or evidence is unavailable, return `CONFLICT`. The Planner
+cannot approve, execute, integrate, publish, alter the Target Task, approve
+delegated work, recursively dispatch another Planner, or claim terminal `DONE`.
+After acceptance, the Lead may execute directly and exactly once.
 
 ## Routing
 
@@ -70,7 +100,7 @@ Do not repeat receipt checks on unchanged content merely to accumulate PASS resu
 
 The Lead may execute work directly.
 
-For substantive planning where focused construction materially helps, the Lead
+For ordinary non-Target substantive planning where focused construction materially helps, the Lead
 may use the bounded Planner in `agents/planner.md`. The Planner returns one
 complete replacement Plan and a finding-to-step map; the Lead independently
 accepts or rejects it and retains all task-level ownership.

@@ -24,6 +24,30 @@ For substantive work:
 10. run the smallest sufficient deterministic checks;
 11. report the result, routing, validation, and blockers.
 
+## Target Tasks
+
+When a prompt designates or executes a Target Task, replace the ordinary
+planning step with this mandatory sequence before execution:
+
+```text
+distinct bounded Planner dispatch
+-> Agent Completion Envelope validation
+-> complete Planner-produced plan
+-> RunSkeptic review and receipt validation
+-> Planner repair after every material plan change
+-> independent Lead acceptance of the final unchanged plan
+-> execution exactly once
+```
+
+Supplied drafts are Planner input only. Lead-authored, same-runtime, supplied,
+previously approved, planning-not-required, or role-name-only planning cannot
+satisfy the gate. Every executable plan version must be Planner-produced, and a
+material plan change requires a new Planner repair dispatch and fresh review.
+The bounded Planner does not recurse or authorize execution. If a mandatory
+route or receipt is unavailable, stop with `CONFLICT`. Ordinary non-Target work
+remains proportional and does not inherit this section merely because it is
+substantive.
+
 If premium work may be needed, state whether it is pre-authorized. Pre-authorization
 must identify the exact role, model or class, effort, bounded purpose, maximum
 calls or attempts, and necessary permission and data-disclosure authority.

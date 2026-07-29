@@ -1,0 +1,146 @@
+"""Contract probes; these do not prove runtime lifecycle enforcement."""
+from __future__ import annotations
+
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def text(path: str) -> str:
+    return " ".join((ROOT / path).read_text(encoding="utf-8").split())
+
+
+class PlanningControlContractTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.agents = text("AGENTS.md")
+        cls.lead = text("agents/lead_agent.md")
+        cls.planner = text("agents/planner.md")
+        cls.task = text("workflows/task_prompt.md")
+        cls.builder = text("workflows/task_prompt_builder.md")
+
+    def test_target_task_gate_is_ordered_and_scoped(self) -> None:
+        sequence = (
+            "distinct bounded Planner dispatch",
+            "Agent Completion Envelope validation",
+            "complete Planner-produced plan",
+            "RunSkeptic review and receipt validation",
+            "Planner repair after every material plan change",
+            "independent Lead acceptance of the final unchanged plan",
+        )
+        for value in (self.lead, self.task):
+            positions = [value.index(item) for item in sequence]
+            self.assertEqual(positions, sorted(positions))
+        self.assertIn("does not inherit this section merely because it is substantive", self.task)
+
+    def test_target_task_has_no_substitute_path(self) -> None:
+        for value in (self.lead, self.planner, self.task, self.builder):
+            self.assertIn("supplied", value)
+            self.assertIn("same-runtime", value)
+        self.assertIn("previously approved", self.lead)
+        self.assertIn("planning-not-required", self.task)
+        self.assertIn("cannot substitute", self.builder)
+
+    def test_repair_and_authority_boundaries_are_explicit(self) -> None:
+        self.assertIn("new unique Planner repair dispatch", self.lead)
+        self.assertIn("new unique Planner repair dispatch", self.planner)
+        for phrase in (
+            "may not approve a Plan",
+            "execute steps",
+            "integrate or publish changes",
+            "alter the Target Task",
+            "claim terminal `DONE`",
+            "must not recursively dispatch another Planner",
+        ):
+            self.assertIn(phrase, self.planner)
+        self.assertIn("stop with `CONFLICT`", self.planner)
+
+    def test_lead_safeguards_are_preserved(self) -> None:
+        for phrase in (
+            "Select deterministic work",
+            "smallest model and reasoning effort",
+            "Boundary Agent",
+            "These obligations are transitive",
+            "unique Lead-issued dispatch ID",
+            "Agent Completion Envelope",
+            "role-specific work acceptance",
+            "artifact-first communication",
+            "FRESH_CONTEXT_CONFIRMED",
+            "CONTEXT_ISOLATION_UNKNOWN",
+            "Run broader checks",
+            "When material routing or delegation was used",
+            "Keep only enough state to continue safely",
+            "Stop when the task is complete",
+        ):
+            self.assertIn(phrase, self.lead)
+
+    def test_ordinary_work_and_cost_controls_remain_proportional(self) -> None:
+        self.assertIn("ordinary non-Target substantive planning", self.lead)
+        self.assertIn("Delegation is optional", self.task)
+        self.assertIn("Boundary processing is also optional", self.task)
+        self.assertIn("trivial read-only work", self.task)
+        self.assertIn("MODEL_ESCALATION_CHECKPOINT", self.task)
+        self.assertIn("PROMPT_CONFORMANCE_ACTION_REQUIRED", self.builder)
+
+    def test_ordinary_step_scoped_and_planner_owns_target_authorship(self) -> None:
+        self.assertIn(
+            "For ordinary non-Target substantive work, understand the task and "
+            "write a concise plan before proceeding.",
+            self.lead,
+        )
+        self.assertIn(
+            "For a Target Task, this step is replaced by the mandatory Planner "
+            "gate below.",
+            self.lead,
+        )
+        self.assertIn(
+            "remains responsible for task-level planning governance, plan "
+            "acceptance, execution, integration, validation, escalation, and "
+            "terminal completion.",
+            self.planner,
+        )
+        self.assertNotIn(
+            "remains responsible for task-level planning, execution, "
+            "integration, validation, escalation, and terminal completion.",
+            self.planner,
+        )
+
+    def test_agents_entry_map_and_ownership_are_not_duplicated(self) -> None:
+        self.assertEqual(self.agents.count("Build a Task Prompt"), 1)
+        self.assertIn("Boundary processing", self.agents)
+        self.assertIn("Do not read implementation source", self.agents)
+        self.assertIn("## Ownership", self.agents)
+        self.assertIn("## Portability", self.agents)
+        self.assertIn("Target Task planning", self.agents)
+        self.assertNotIn("global Planner", self.agents)
+
+    def test_builder_target_conformance_and_output_contract(self) -> None:
+        self.assertIn("Target Task", self.builder)
+        self.assertIn("supplied plans are Planner input only", self.builder)
+        self.assertIn("PROMPT_CONFORMANCE_READY", self.builder)
+        self.assertIn("PROMPT_CONFORMANCE_UNVERIFIABLE", self.builder)
+        self.assertIn("Return the Task Prompt unexecuted", self.builder)
+        self.assertIn("recommended starting model or class", self.builder)
+
+    def test_superseded_optional_planning_state_is_absent_from_contracts(self) -> None:
+        for value in (self.agents, self.lead, self.planner, self.task, self.builder):
+            for stale in (
+                "PLANNING_OUTCOME",
+                "INDEPENDENCE_REQUIREMENT",
+                "INDEPENDENCE_STATUS",
+                "PLANNING_PATH",
+                "PLANNER_IMPLEMENTATION",
+                "SUPPLIED_APPROVED_PLAN",
+                "SAME_RUNTIME_SEPARATED",
+            ):
+                self.assertNotIn(stale, value)
+
+    def test_contract_probes_are_not_runtime_proof(self) -> None:
+        module = (ROOT / "tests/test_planning_control_contract.py").read_text(encoding="utf-8")
+        self.assertIn("do not prove runtime lifecycle enforcement", module)
+
+
+if __name__ == "__main__":
+    unittest.main()

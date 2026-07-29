@@ -24,6 +24,16 @@ These forms are equivalent. The text after the alias is the objective:
 
 The conformance check asks whether deterministic work was identified where appropriate; delegation is justified and roles are bounded; requested model class and reasoning effort are proportionate; delegated roles do not inherit the Lead model implicitly; strongest-model use or escalation is justified; acceptance and deterministic validation are sufficient without duplication; every delegated model role has a dispatch ID and Agent Completion Envelope; envelope validation is followed by independent work acceptance; material Boundary Agent use is conditional and routed at the lowest reliable cost; substantial reusable context is artifact-backed when practical; context-isolation claims are evidence-based; recursive delegation carries transitive subtree obligations and compact upward reporting; every RunSkeptic invocation is followed by receipt validation; and frozen benchmark variables remain controlled.
 
+For a prompt that designates or executes a Target Task, conformance additionally
+requires the ordered lifecycle: distinct bounded Planner dispatch, envelope
+validation, complete Planner-produced plan, RunSkeptic review and receipt
+validation, Planner repair after every material plan change, final unchanged-plan
+Lead acceptance, and execution. supplied plans are Planner input only; Lead and
+same-runtime planning cannot substitute. The Planner cannot recurse or authorize
+execution. Missing the mandatory stage is `PROMPT_CONFORMANCE_ACTION_REQUIRED`
+or `PROMPT_CONFORMANCE_UNVERIFIABLE`, never ready. Ordinary non-Target work
+remains proportional.
+
 For substantive prompts where model cost may be material, also check that the
 prompt selects the least expensive reliable starting route, requires the
 `EXECUTION_ROUTING_NOTICE`, identifies likely premium roles early, and either
