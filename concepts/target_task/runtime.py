@@ -1,13 +1,10 @@
-"""Narrow adapter between a Target Task step and a bounded specialist.
+"""Narrow adapters for Target Task child-role execution.
 
-No live agent runtime is wired into this repository (see AGENTS.md — this
-repository is a portable prompt/review library, not a running orchestrator).
-This module is therefore reference-only: it defines the shape a real runtime
-adapter must have and proves the one property that actually matters —
-a specialist's raw output is captured directly into an immutable artifact
-and never returned to the caller. Only a validated, bounded `role_return`
-(from `capabilities.execution_envelope`) referencing that artifact crosses
-back. An injected `executor` callable stands in for the real dispatch.
+Claude Code is the live MVP host through `CLAUDE.md` -> `AGENTS.md` ->
+`workflows/target_task.md`. `dispatch_specialist` retains the injected executor
+used by deterministic unit tests. Production child returns cross Boundary only
+through `validate_host_role_receipt`, which validates compact references and
+rejects body-bearing, oversized, mismatched, or synthetic production returns.
 """
 
 from __future__ import annotations
@@ -103,3 +100,86 @@ def dispatch_specialist(
         return validate_role_return(role_return, repository_root=workspace_root)
     except ExecutionEnvelopeError as exc:
         raise RuntimeAdapterError(f"invalid role return: {exc.code} at {exc.path}") from exc
+
+
+# --- Production Claude Code host receipt ----------------------------------
+
+import hashlib as _hashlib
+import json as _json
+import os as _os
+
+HOST_RECEIPT_FIELDS = {
+    "schema_version",
+    "task_id",
+    "operation_id",
+    "attempt",
+    "role",
+    "status",
+    "summary",
+    "result_ref",
+    "dispatch_evidence_ref",
+    "synthetic",
+}
+HOST_ARTIFACT_REFERENCE_FIELDS = {
+    "reference_id",
+    "repository_relative_path",
+    "sha256",
+    "byte_size",
+    "artifact_type",
+    "description",
+    "read_condition",
+}
+MAX_HOST_RECEIPT_BYTES = 4096
+MAX_HOST_SUMMARY_BYTES = 512
+
+
+def _validate_host_artifact_reference(reference, workspace_root: Path, path: str) -> None:
+    if not isinstance(reference, Mapping) or set(reference) != HOST_ARTIFACT_REFERENCE_FIELDS:
+        raise RuntimeAdapterError(f"invalid artifact reference fields at {path}")
+    relative = reference["repository_relative_path"]
+    if not isinstance(relative, str) or not relative or relative.startswith("/") or ".." in Path(relative).parts:
+        raise RuntimeAdapterError(f"unsafe artifact path at {path}")
+    root = Path(workspace_root).resolve()
+    target = (root / relative).resolve()
+    if _os.path.commonpath((str(root), str(target))) != str(root) or target.is_symlink() or not target.is_file():
+        raise RuntimeAdapterError(f"unresolvable artifact at {path}")
+    data = target.read_bytes()
+    if _hashlib.sha256(data).hexdigest() != reference["sha256"] or len(data) != reference["byte_size"]:
+        raise RuntimeAdapterError(f"artifact identity mismatch at {path}")
+
+
+def validate_host_role_receipt(
+    receipt: Mapping[str, Any],
+    *,
+    workspace_root: Path,
+    allow_test_synthetic: bool = False,
+) -> dict[str, Any]:
+    """Validate one compact Claude Code child-role return.
+
+    Production callers leave `allow_test_synthetic=False`. Synthetic receipts
+    exist only for explicit deterministic test injection.
+    """
+    if not isinstance(receipt, Mapping) or set(receipt) != HOST_RECEIPT_FIELDS:
+        raise RuntimeAdapterError("host receipt fields mismatch")
+    raw = _json.dumps(receipt, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    if len(raw) > MAX_HOST_RECEIPT_BYTES:
+        raise RuntimeAdapterError("host receipt too large")
+    for field in ("schema_version", "task_id", "operation_id", "role", "status", "summary"):
+        value = receipt[field]
+        if not isinstance(value, str) or not value:
+            raise RuntimeAdapterError(f"invalid {field}")
+    if len(receipt["summary"].encode("utf-8")) > MAX_HOST_SUMMARY_BYTES:
+        raise RuntimeAdapterError("summary too large")
+    if not isinstance(receipt["attempt"], int) or isinstance(receipt["attempt"], bool) or receipt["attempt"] < 1:
+        raise RuntimeAdapterError("invalid attempt")
+    if not isinstance(receipt["synthetic"], bool):
+        raise RuntimeAdapterError("synthetic must be boolean")
+    if receipt["synthetic"] and not allow_test_synthetic:
+        raise RuntimeAdapterError("synthetic receipt rejected in production")
+    if not receipt["synthetic"] and receipt["dispatch_evidence_ref"] is None:
+        raise RuntimeAdapterError("production receipt requires dispatch evidence")
+    _validate_host_artifact_reference(receipt["result_ref"], workspace_root, "$.result_ref")
+    evidence = receipt["dispatch_evidence_ref"]
+    if evidence is not None:
+        _validate_host_artifact_reference(evidence, workspace_root, "$.dispatch_evidence_ref")
+    return dict(receipt)

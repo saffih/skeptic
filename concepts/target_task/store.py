@@ -1,26 +1,10 @@
-"""Immutable artifacts and the append-only, hash-chained ledger.
+"""Immutable artifacts and the append-only, hash-chained task ledger.
 
-Everything else a Target Task needs to persist already has an owner:
-`capabilities.body_state` owns the compact receipt shape,
-`capabilities.execution_envelope` owns dispatch/return/command envelopes, and
-`capabilities.immutable_checkpoint` owns atomic, create-only checkpoint
-publication. This module owns only what none of those provide: a plain
-create-only artifact writer for bodies that are not checkpoints (mission
-text, plan text, step results), and the append-only ledger itself, which is
-an event log, not a single-snapshot checkpoint.
-
-Task runtime state is never written inside this repository. Every path here
-is relative to a caller-supplied `workspace_root` that must be disjoint from
-the real repository root, exactly matching
-`capabilities.restart_admission`'s own enforced invariant
-(`_validate_roots` rejects a workspace nested inside the repository) and
-AGENTS.md's "Runtime state ... remain outside this repository." Artifacts
-written here (mission text, plan drafts, step results, ledger events,
-command logs) are workspace-only bookkeeping; they are distinct from a
-sealed Plan, which is a real, `repository_root`-relative file precisely
-because `capabilities.body_state` requires `SEALED_PLAN_REFERENCE` to
-resolve as a file under the same root as every other `ARTIFACT_REFERENCES`
-entry (see `concepts/target_task/target_task_contract.md`, "Two roots").
+All Target Task run state lives under one caller-supplied authoritative task
+root (`TASKS_ROOT/TASK_ID`): mission, Plan versions, sealed Plan, steps,
+requests, results, reviews, findings, receipts, command logs, checkpoints, and
+ledger. The source repository is a separate work target, not another task-state
+root. This module owns create-only artifact writes and the event ledger.
 """
 
 from __future__ import annotations

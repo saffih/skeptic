@@ -1,3 +1,5 @@
+> **HISTORICAL / NOT SEALED:** This construction Plan predates the Claude Code MVP completion. It did not receive three consecutive qualifying unchanged RunSkeptic passes after its final change and is not execution authority for any Target Task run.
+
 # Plan target-task-replacement-plan-001
 
 - plan_id: target-task-replacement-plan-001

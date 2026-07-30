@@ -39,8 +39,11 @@ def parse_trigger(message: str) -> str | None:
     stripped = message.lstrip()
     if not stripped.startswith(TRIGGER_PREFIX):
         return None
-    mission = stripped[len(TRIGGER_PREFIX):].strip()
-    if not mission:
+    # Whitespace before TT: is routing noise. The exact host-provided suffix
+    # after TT: is the mission and is returned unchanged; strip() is used only
+    # to decide whether that suffix is empty.
+    mission = stripped[len(TRIGGER_PREFIX):]
+    if not mission.strip():
         raise TriggerError("EMPTY_MISSION")
     return mission
 
@@ -123,3 +126,38 @@ def resume_task(checkpoint_request_raw: bytes, *, repository_root: Path | str, w
     interruption. See `capabilities.restart_admission.restart_admission`
     for the complete contract; this is intentionally not reimplemented."""
     return admit_restart(checkpoint_request_raw, repository_root=repository_root, workspace_root=workspace_root)
+
+
+@dataclass(frozen=True)
+class RediscoveredTask:
+    task_id: str
+    workspace_root: Path
+    phase: str
+    current_step: str | None
+    status: str
+    next_action: str | None
+    ledger_head_hash: str
+
+
+def rediscover_task(tasks_root: Path, task_id: str) -> RediscoveredTask:
+    """Reconstruct compact durable state from TASKS_ROOT + TASK_ID only."""
+    import hashlib
+    from concepts.target_task.contracts import canonical_bytes
+    from concepts.target_task.store import read_ledger, verify_chain
+
+    root = Path(tasks_root).resolve() / task_id
+    if not root.is_dir() or not (root / "mission.md").is_file():
+        raise TriggerError("TASK_NOT_FOUND")
+    events = read_ledger(root / "ledger.jsonl")
+    if not events or not verify_chain(events):
+        raise TriggerError("INVALID_LEDGER")
+    tail = events[-1]
+    return RediscoveredTask(
+        task_id=task_id,
+        workspace_root=root,
+        phase=tail["phase"],
+        current_step=tail["current_step"],
+        status=tail["status"],
+        next_action=tail["next_action"],
+        ledger_head_hash=hashlib.sha256(canonical_bytes(tail)).hexdigest(),
+    )

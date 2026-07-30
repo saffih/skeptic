@@ -6,7 +6,7 @@ This repository is a portable prompt and review library. Its capabilities valida
 
 - Review an artifact, decision, or RunSkeptic: read `skeptic.md` and only explicitly applicable companions.
 - Lead execution: read `agents/lead_agent.md`; add `agents/model_routing_policy.md` when routing is needed and `agents/agent_return_contract.md` for delegated returns.
-- Target Task ("TT: <mission>") execution: read `workflows/target_task.md` first; it owns the trigger, the mandatory Planner/RunSkeptic-Fix-Loop/seal/execute/Find-Loop/integrate lifecycle, and the Luna compact-Lead contract. `concepts/target_task/` holds the reference-only contracts.
+- Target Task (`TT: <mission>`) execution in Claude Code: `CLAUDE.md` loads this file, then this route requires a complete read of `workflows/target_task.md`. That workflow owns the trigger, Planner/Fix-Loop/seal/execute/validate/Find-Loop/integrate lifecycle and the compact Luna protocol. `concepts/target_task/` contains the deterministic MVP contracts used by that live host workflow.
 - Target Task planning: dispatch the bounded Planner in `agents/planner.md` before execution; its return is advisory and requires Lead validation and acceptance through the RunSkeptic Fix Loop and seal. Supplied drafts are Planner input only.
 - Substantive bounded plan construction or repair for ordinary work: use the bounded Planner in `agents/planner.md` when focused construction materially helps; its output is not execution authority.
 - Define or execute a substantive workflow: read `workflows/task_prompt.md`.

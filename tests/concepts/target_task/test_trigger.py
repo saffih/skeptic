@@ -10,10 +10,10 @@ from concepts.target_task.trigger import TriggerError, bootstrap_task, parse_tri
 
 class ParseTriggerTests(unittest.TestCase):
     def test_recognizes_exact_prefix(self) -> None:
-        self.assertEqual(parse_trigger("TT: fix the thing"), "fix the thing")
+        self.assertEqual(parse_trigger("TT: fix the thing"), " fix the thing")
 
     def test_tolerates_leading_whitespace(self) -> None:
-        self.assertEqual(parse_trigger("   TT: fix the thing"), "fix the thing")
+        self.assertEqual(parse_trigger("   TT: fix the thing"), " fix the thing")
 
     def test_non_trigger_message_returns_none(self) -> None:
         self.assertIsNone(parse_trigger("please fix the thing"))
@@ -29,7 +29,7 @@ class ParseTriggerTests(unittest.TestCase):
             parse_trigger("TT:    ")
 
     def test_mission_text_preserved_exactly_including_internal_whitespace(self) -> None:
-        self.assertEqual(parse_trigger("TT: fix  the   thing"), "fix  the   thing")
+        self.assertEqual(parse_trigger("TT: fix  the   thing"), " fix  the   thing")
 
 
 class BootstrapTaskTests(unittest.TestCase):
@@ -42,7 +42,7 @@ class BootstrapTaskTests(unittest.TestCase):
 
     def test_creates_workspace_with_mission_and_ledger(self) -> None:
         result = bootstrap_task("do the thing", "task-1", self.tasks_root)
-        self.assertEqual(result.workspace_root, self.tasks_root / "task-1")
+        self.assertEqual(result.workspace_root.resolve(), (self.tasks_root / "task-1").resolve())
         self.assertTrue((result.workspace_root / "mission.md").is_file())
         self.assertEqual((result.workspace_root / "mission.md").read_text(), "do the thing")
         events = read_ledger(result.workspace_root / "ledger.jsonl")

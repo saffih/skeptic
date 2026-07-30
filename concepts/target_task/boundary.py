@@ -160,3 +160,120 @@ def advance_find_loop(state: Mapping[str, Any], receipt: Mapping[str, Any]) -> d
 def find_loop_complete(state: Mapping[str, Any]) -> bool:
     result = validate_find_loop_state(state)
     return result.ok and state["CONSECUTIVE_STABLE_PASSES"] >= state.get("PASSES_REQUIRED", 3)
+
+
+# --- Explicit linear sealed-Plan cursor ------------------------------------
+
+from dataclasses import replace as _replace_cursor
+from concepts.target_task.contracts import CursorStatus, StepCursor
+
+
+def new_step_cursor(step_ids, *, max_attempts: int = 3) -> StepCursor:
+    return StepCursor(step_ids=tuple(step_ids), max_attempts=max_attempts)
+
+
+def admit_operation(cursor: StepCursor, operation_id: str) -> StepCursor:
+    if cursor.status is not CursorStatus.STEP_READY:
+        raise BoundaryError("operation admission requires STEP_READY")
+    if not operation_id or not isinstance(operation_id, str):
+        raise BoundaryError("operation_id must be a non-empty string")
+    if cursor.attempt >= cursor.max_attempts:
+        raise BoundaryError("attempt policy exhausted")
+    return _replace_cursor(
+        cursor,
+        status=CursorStatus.OPERATION_ADMITTED,
+        operation_id=operation_id,
+        attempt=cursor.attempt + 1,
+        successful_operation_id=None,
+    )
+
+
+def record_operation_outcome(cursor: StepCursor, operation_id: str, outcome: str) -> StepCursor:
+    if cursor.status is not CursorStatus.OPERATION_ADMITTED:
+        raise BoundaryError("operation outcome requires OPERATION_ADMITTED")
+    if cursor.operation_id != operation_id:
+        raise BoundaryError("operation identity mismatch")
+    if outcome == "COMPLETE":
+        return _replace_cursor(
+            cursor,
+            status=CursorStatus.STEP_AWAITING_ADVANCE,
+            successful_operation_id=operation_id,
+        )
+    if outcome == "FAILED":
+        return _replace_cursor(cursor, status=CursorStatus.OPERATION_FAILED)
+    if outcome == "UNKNOWN":
+        return _replace_cursor(cursor, status=CursorStatus.EXECUTION_OUTCOME_UNKNOWN)
+    raise BoundaryError("outcome must be COMPLETE, FAILED, or UNKNOWN")
+
+
+def record_validated_host_outcome(cursor: StepCursor, receipt, *, workspace_root) -> StepCursor:
+    """Production path: validate the compact host receipt before state moves."""
+    from concepts.target_task.runtime import validate_host_role_receipt
+
+    validated = validate_host_role_receipt(
+        receipt,
+        workspace_root=workspace_root,
+        allow_test_synthetic=False,
+    )
+    if validated["operation_id"] != cursor.operation_id:
+        raise BoundaryError("host receipt operation identity mismatch")
+    if validated["attempt"] != cursor.attempt:
+        raise BoundaryError("host receipt attempt mismatch")
+    status = validated["status"]
+    if status not in {"COMPLETE", "FAILED", "UNKNOWN"}:
+        raise BoundaryError("unsupported host receipt status")
+    return record_operation_outcome(cursor, validated["operation_id"], status)
+
+
+def retry_operation(cursor: StepCursor) -> StepCursor:
+    if cursor.status is not CursorStatus.OPERATION_FAILED:
+        raise BoundaryError("retry requires OPERATION_FAILED")
+    if cursor.attempt >= cursor.max_attempts:
+        raise BoundaryError("attempt policy exhausted")
+    return _replace_cursor(
+        cursor,
+        status=CursorStatus.STEP_READY,
+        operation_id=None,
+        successful_operation_id=None,
+    )
+
+
+def recover_operation(cursor: StepCursor, recovered_outcome: str) -> StepCursor:
+    if cursor.status is not CursorStatus.EXECUTION_OUTCOME_UNKNOWN:
+        raise BoundaryError("recovery requires EXECUTION_OUTCOME_UNKNOWN")
+    if recovered_outcome == "COMPLETE":
+        return _replace_cursor(
+            cursor,
+            status=CursorStatus.STEP_AWAITING_ADVANCE,
+            successful_operation_id=cursor.operation_id,
+        )
+    if recovered_outcome == "FAILED":
+        return _replace_cursor(cursor, status=CursorStatus.OPERATION_FAILED)
+    raise BoundaryError("recovery must prove COMPLETE or FAILED")
+
+
+def advance_step(cursor: StepCursor, operation_id: str) -> StepCursor:
+    if cursor.status is not CursorStatus.STEP_AWAITING_ADVANCE:
+        raise BoundaryError("ADVANCE requires STEP_AWAITING_ADVANCE")
+    if cursor.successful_operation_id != operation_id or cursor.operation_id != operation_id:
+        raise BoundaryError("ADVANCE operation identity mismatch")
+    next_index = cursor.current_index + 1
+    completed = cursor.step_ids[:next_index]
+    if next_index == len(cursor.step_ids):
+        return _replace_cursor(
+            cursor,
+            current_index=next_index,
+            completed_step_ids=completed,
+            status=CursorStatus.EXECUTION_COMPLETE,
+            operation_id=None,
+            successful_operation_id=None,
+        )
+    return _replace_cursor(
+        cursor,
+        current_index=next_index,
+        completed_step_ids=completed,
+        status=CursorStatus.STEP_READY,
+        operation_id=None,
+        attempt=0,
+        successful_operation_id=None,
+    )
