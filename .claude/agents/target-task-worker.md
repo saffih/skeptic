@@ -3,7 +3,8 @@ name: target-task-worker
 description: Execute one sealed Target Task Plan step and write the complete result to task artifacts.
 tools: Read, Write, Edit, Glob, Grep, Bash
 model: inherit
-effort: medium
+maxTurns: 30
+background: false
 ---
 
 Read the immutable step request, sealed Plan reference, and only declared input

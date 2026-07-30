@@ -92,7 +92,7 @@ def _source_ref_matches(ref: Any, source_blob: str, root: Path, errors: list[str
             text=True,
             timeout=30,
         ).stdout.strip()
-    except (OSError, subprocess.CalledProcessError):
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         errors.append("stale or unresolved Skeptic source ref")
         return
     if not HEX40.fullmatch(resolved) or resolved != source_blob:
@@ -160,7 +160,8 @@ def validate_receipt(
         _short(receipt[field], field, errors)
     previous = receipt["PREVIOUS_FINDINGS_REFERENCE"]
     if isinstance(previous, str):
-        _short(previous, "PREVIOUS_FINDINGS_REFERENCE", errors)
+        if previous != "NONE":
+            errors.append("PREVIOUS_FINDINGS_REFERENCE string must be NONE")
     elif isinstance(previous, Mapping):
         _reference_ok(previous, reviewed_root, errors, "previous findings reference")
     else:

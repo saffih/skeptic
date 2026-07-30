@@ -12,7 +12,10 @@ from concepts.target_task.boundary import (
     find_loop_complete,
     new_step_cursor,
 )
-from concepts.target_task.contracts import CursorStatus, LedgerEvent, LunaAction, Phase, StepCursor
+from concepts.target_task.contracts import (
+    CursorStatus, LedgerEvent, LunaAction, Phase, StepCursor,
+    canonical_candidate_manifest_bytes, canonical_remote_verification_manifest_bytes,
+)
 from concepts.target_task.store import (
     AppendOnlyLedger,
     persist_cursor_snapshot,
@@ -187,10 +190,15 @@ class PhaseGateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             boot = bootstrap_task("mission", "task-1", Path(tmp))
             root = boot.workspace_root
+            candidate = {
+                "schema_version": "1", "task_id": "task-1", "base_commit": "1" * 40,
+                "candidate_commit": "2" * 40, "candidate_tree": "3" * 40,
+                "sealed_plan_sha256": "a" * 64, "completed_cursor_sha256": "b" * 64,
+            }
             candidate_ref = write_immutable_artifact(
                 root,
                 "candidate/manifest.json",
-                b"{}\n",
+                canonical_candidate_manifest_bytes(candidate),
                 reference_id="candidate",
                 artifact_type="candidate_manifest",
                 description="frozen candidate",
@@ -221,6 +229,7 @@ class PhaseGateTests(unittest.TestCase):
                 "PERMISSION_MODE": "read-only",
                 "CONSECUTIVE_STABLE_PASSES": 3,
                 "PASSES_REQUIRED": 3,
+                "OPEN_ITEMS": [],
             }
             integration = write_gate_receipt(root, "task-1", "integration", candidate_ref)
             self.assertEqual(
@@ -237,10 +246,16 @@ class PhaseGateTests(unittest.TestCase):
                 Phase.INTEGRATED,
             )
 
+            remote = {
+                "schema_version": "1", "task_id": "task-1", "remote_name": "origin",
+                "remote_ref": "refs/heads/main", "expected_commit": "2" * 40,
+                "expected_tree": "3" * 40, "observed_commit": "2" * 40,
+                "observed_tree": "3" * 40,
+            }
             remote_ref = write_immutable_artifact(
                 root,
                 "remote/manifest.json",
-                b"{}\n",
+                canonical_remote_verification_manifest_bytes(remote),
                 reference_id="remote",
                 artifact_type="remote_verification_manifest",
                 description="verified remote state",
@@ -253,6 +268,7 @@ class PhaseGateTests(unittest.TestCase):
                     LunaAction.ADVANCE,
                     task_root=root,
                     task_id="task-1",
+                    candidate_reference=candidate_ref,
                     remote_state_reference=remote_ref,
                     remote_verification_receipt=remote_receipt,
                 ).phase,
@@ -325,7 +341,7 @@ class FindLoopReceiptTests(unittest.TestCase):
                 "INVOCATION_KIND": "FIND_LOOP",
                 "PERMISSION_MODE": "read-only",
             }
-            state = {**bindings, "CONSECUTIVE_STABLE_PASSES": 0, "PASSES_REQUIRED": 3}
+            state = {**bindings, "CONSECUTIVE_STABLE_PASSES": 0, "PASSES_REQUIRED": 3, "OPEN_ITEMS": []}
             with self.assertRaises(BoundaryError):
                 advance_find_loop(
                     state,

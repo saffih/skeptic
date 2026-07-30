@@ -45,13 +45,9 @@ route exists, stop with `CONFLICT`.
 
 ## Output
 
-Return exactly one complete replacement Plan and a short finding-to-step map.
-The Plan contains its ID, version, immutable Target Task binding, purpose
-(`CREATE`, `REVISE`, or `REPAIR`), objective, constraints, decisions with brief
-bases, ordered owned steps, unknown treatment, and stop/replan conditions.
+Return exactly one canonical Plan accepted by `concepts.target_task.contracts.parse_plan_bytes` and one separate short finding-to-step map. The Plan has only `schema_version`, `plan_id`, `task_id`, `mission_sha256`, and ordered `steps`; each step has only `step_id`, `objective`, `role`, and `success_criteria`. MVP executable step roles are `worker` or `command`. Do not add explanatory fields to the canonical Plan.
 
-Every material plan change requires a new unique Planner repair dispatch and one
-complete replacement plan; the replacement supersedes the prior version.
+Every material plan change requires a new unique Planner repair dispatch and one complete replacement Plan; the replacement supersedes the prior version.
 
 ## Boundaries
 

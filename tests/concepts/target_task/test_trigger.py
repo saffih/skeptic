@@ -7,7 +7,7 @@ from concepts.target_task.boundary import (
     admit_operation,
     advance_and_persist_step,
     new_step_cursor_from_plan,
-    persist_cursor_transition,
+    _persist_cursor_transition as persist_cursor_transition,
     record_validated_host_outcome,
 )
 from concepts.target_task.contracts import CursorStatus, Phase
@@ -118,6 +118,15 @@ class BootstrapAndRediscoveryTests(unittest.TestCase):
             description="step output",
             read_condition="validate step",
         )
+        routing_ref = write_immutable_artifact(
+            root,
+            "evidence/op-1-routing.json",
+            b"routing",
+            reference_id="routing-op-1",
+            artifact_type="routing_evidence",
+            description="routing evidence",
+            read_condition="validate step",
+        )
         manifest = {
             "schema_version": "1",
             "task_id": "task-2",
@@ -126,7 +135,7 @@ class BootstrapAndRediscoveryTests(unittest.TestCase):
             "role": "worker",
             "step_id": "s1",
             "status": "COMPLETE",
-            "output_references": [output_ref],
+            "output_references": [output_ref, routing_ref],
         }
         manifest_raw = (json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode()
         manifest_ref = write_immutable_artifact(

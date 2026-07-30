@@ -45,6 +45,15 @@ class HostReceiptBindingTests(unittest.TestCase):
             description="worker output",
             read_condition="review the completed step",
         )
+        routing_ref = write_immutable_artifact(
+            self.root,
+            "evidence/op-1-routing.json",
+            b"routing",
+            reference_id="routing-op-1",
+            artifact_type="routing_evidence",
+            description="routing evidence",
+            read_condition="validate the host receipt",
+        )
         manifest = {
             "schema_version": "1",
             "task_id": "task-1",
@@ -53,7 +62,7 @@ class HostReceiptBindingTests(unittest.TestCase):
             "role": "worker",
             "step_id": "s1",
             "status": "COMPLETE",
-            "output_references": [output_ref],
+            "output_references": [output_ref, routing_ref],
         }
         manifest_raw = (json.dumps(manifest, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode()
         self.result_ref = write_immutable_artifact(

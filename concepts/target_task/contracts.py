@@ -203,6 +203,17 @@ def _validate_event_dict(data: Mapping[str, Any]) -> None:
         value = data[key]
         if value is not None:
             _safe_id(value, f"$.{key}")
+    status = data["status"]
+    if status in {"ADMITTED", "FAILED", "UNKNOWN", "AWAITING_ADVANCE"}:
+        if data["operation_id"] is None or data["attempt"] < 1:
+            raise ContractError("OPERATION_IDENTITY", "$.operation_id")
+    if status == "READY" and any(data[key] is not None for key in ("operation_id", "request_ref", "result_ref", "receipt_ref")):
+        raise ContractError("READY_IDENTITY", "$.status")
+    if status == "ADMITTED" and (data["request_ref"] is None or data["receipt_ref"] is None or data["result_ref"] is not None):
+        raise ContractError("ADMISSION_IDENTITY", "$.status")
+    if status in {"FAILED", "UNKNOWN", "AWAITING_ADVANCE", "STEP_ACCEPTED"}:
+        if any(data[key] is None for key in ("request_ref", "result_ref", "receipt_ref")):
+            raise ContractError("OUTCOME_IDENTITY", "$.status")
     blocker = data["blocker"]
     if blocker is not None:
         _short(blocker, "$.blocker", maximum=256)
@@ -220,7 +231,7 @@ def canonical_bytes(event: Mapping[str, Any]) -> bytes:
 
 PLAN_FIELDS = {"schema_version", "plan_id", "task_id", "mission_sha256", "steps"}
 PLAN_STEP_FIELDS = {"step_id", "objective", "role", "success_criteria"}
-PLAN_ROLES = {"planner", "skeptic", "reviewer", "worker", "command", "lead"}
+PLAN_ROLES = {"worker", "command"}
 
 
 def validate_plan_dict(value: Mapping[str, Any]) -> dict[str, Any]:
@@ -381,12 +392,16 @@ class StepCursor:
         if self.status is CursorStatus.EXECUTION_COMPLETE:
             raise ContractError("EARLY_EXECUTION_COMPLETE", "$.status")
         if self.status is CursorStatus.STEP_READY:
+            if self.attempt >= self.max_attempts:
+                raise ContractError("READY_ATTEMPT_EXHAUSTED", "$.attempt")
             if self.operation_id is not None or self.successful_operation_id is not None:
                 raise ContractError("READY_OPERATION", "$.operation_id")
         elif self.status is CursorStatus.STEP_AWAITING_ADVANCE:
             if not self.operation_id or self.operation_id != self.successful_operation_id:
                 raise ContractError("SUCCESSFUL_OPERATION", "$.successful_operation_id")
         else:
+            if self.attempt < 1:
+                raise ContractError("ACTIVE_ATTEMPT", "$.attempt")
             if not self.operation_id or self.successful_operation_id is not None:
                 raise ContractError("ACTIVE_OPERATION", "$.operation_id")
 
@@ -543,3 +558,104 @@ def parse_finding_set_bytes(raw: bytes) -> dict[str, Any]:
     if canonical_finding_set_bytes(normalized) != raw:
         raise ContractError("FINDING_SET_NONCANONICAL")
     return normalized
+
+
+# --- Candidate and remote verification manifests ---------------------------
+
+GIT_OBJECT_ID_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
+CANDIDATE_MANIFEST_FIELDS = {
+    "schema_version", "task_id", "base_commit", "candidate_commit", "candidate_tree",
+    "sealed_plan_sha256", "completed_cursor_sha256",
+}
+REMOTE_VERIFICATION_MANIFEST_FIELDS = {
+    "schema_version", "task_id", "remote_name", "remote_ref", "expected_commit",
+    "expected_tree", "observed_commit", "observed_tree",
+}
+
+
+def _git_object(value: Any, path: str) -> str:
+    if not isinstance(value, str) or not GIT_OBJECT_ID_RE.fullmatch(value):
+        raise ContractError("GIT_OBJECT_ID", path)
+    return value
+
+
+def _safe_manifest_string(value: Any, path: str, maximum: int = 256) -> str:
+    value = _short(value, path, maximum=maximum)
+    if any(ord(char) < 0x20 for char in value) or "\\" in value or any(part in {"", ".", ".."} for part in value.split("/")):
+        raise ContractError("UNSAFE_STRING", path)
+    return value
+
+
+def validate_candidate_manifest_dict(value: Mapping[str, Any]) -> dict[str, Any]:
+    if not isinstance(value, Mapping) or set(value) != CANDIDATE_MANIFEST_FIELDS:
+        raise ContractError("CANDIDATE_MANIFEST_FIELDS")
+    if value["schema_version"] != "1":
+        raise ContractError("CANDIDATE_MANIFEST_SCHEMA", "$.schema_version")
+    task_id = validate_task_id(value["task_id"])
+    result = {
+        "schema_version": "1", "task_id": task_id,
+        "base_commit": _git_object(value["base_commit"], "$.base_commit"),
+        "candidate_commit": _git_object(value["candidate_commit"], "$.candidate_commit"),
+        "candidate_tree": _git_object(value["candidate_tree"], "$.candidate_tree"),
+        "sealed_plan_sha256": _short(value["sealed_plan_sha256"], "$.sealed_plan_sha256", maximum=64),
+        "completed_cursor_sha256": _short(value["completed_cursor_sha256"], "$.completed_cursor_sha256", maximum=64),
+    }
+    if not SHA256_RE.fullmatch(result["sealed_plan_sha256"]) or not SHA256_RE.fullmatch(result["completed_cursor_sha256"]):
+        raise ContractError("SHA256", "$.sealed_plan_sha256")
+    return result
+
+
+def canonical_candidate_manifest_bytes(value: Mapping[str, Any]) -> bytes:
+    normalized = validate_candidate_manifest_dict(value)
+    if not SHA256_RE.fullmatch(normalized["sealed_plan_sha256"]) or not SHA256_RE.fullmatch(normalized["completed_cursor_sha256"]):
+        raise ContractError("SHA256", "$.sealed_plan_sha256")
+    return (json.dumps(normalized, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+
+def validate_remote_verification_manifest_dict(value: Mapping[str, Any]) -> dict[str, Any]:
+    if not isinstance(value, Mapping) or set(value) != REMOTE_VERIFICATION_MANIFEST_FIELDS:
+        raise ContractError("REMOTE_MANIFEST_FIELDS")
+    if value["schema_version"] != "1":
+        raise ContractError("REMOTE_MANIFEST_SCHEMA", "$.schema_version")
+    task_id = validate_task_id(value["task_id"])
+    remote_name = _safe_manifest_string(value["remote_name"], "$.remote_name", 64)
+    remote_ref = _safe_manifest_string(value["remote_ref"], "$.remote_ref", 256)
+    result = {
+        "schema_version": "1", "task_id": task_id, "remote_name": remote_name,
+        "remote_ref": remote_ref,
+        "expected_commit": _git_object(value["expected_commit"], "$.expected_commit"),
+        "expected_tree": _git_object(value["expected_tree"], "$.expected_tree"),
+        "observed_commit": _git_object(value["observed_commit"], "$.observed_commit"),
+        "observed_tree": _git_object(value["observed_tree"], "$.observed_tree"),
+    }
+    if result["expected_commit"] != result["observed_commit"] or result["expected_tree"] != result["observed_tree"]:
+        raise ContractError("REMOTE_MISMATCH")
+    return result
+
+
+def canonical_remote_verification_manifest_bytes(value: Mapping[str, Any]) -> bytes:
+    normalized = validate_remote_verification_manifest_dict(value)
+    if normalized["expected_commit"] != normalized["observed_commit"] or normalized["expected_tree"] != normalized["observed_tree"]:
+        raise ContractError("REMOTE_MISMATCH")
+    return (json.dumps(normalized, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
+
+
+def _parse_manifest_bytes(raw: bytes, validator, canonicalizer, label: str) -> dict[str, Any]:
+    if not isinstance(raw, bytes) or not raw.endswith(b"\n") or raw.endswith(b"\n\n"):
+        raise ContractError(f"{label}_ENCODING")
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ContractError(f"{label}_JSON") from exc
+    normalized = validator(value)
+    if canonicalizer(normalized) != raw:
+        raise ContractError(f"{label}_NONCANONICAL")
+    return normalized
+
+
+def parse_candidate_manifest_bytes(raw: bytes) -> dict[str, Any]:
+    return _parse_manifest_bytes(raw, validate_candidate_manifest_dict, canonical_candidate_manifest_bytes, "CANDIDATE_MANIFEST")
+
+
+def parse_remote_verification_manifest_bytes(raw: bytes) -> dict[str, Any]:
+    return _parse_manifest_bytes(raw, validate_remote_verification_manifest_dict, canonical_remote_verification_manifest_bytes, "REMOTE_MANIFEST")

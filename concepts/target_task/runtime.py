@@ -141,7 +141,7 @@ HOST_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 MAX_HOST_RECEIPT_BYTES = 4096
 MAX_HOST_SUMMARY_BYTES = 512
 HOST_STATUSES = {"COMPLETE", "FAILED", "UNKNOWN"}
-HOST_ROLES = {"planner", "skeptic", "reviewer", "worker", "command"}
+HOST_ROLES = {"planner", "reviewer", "worker", "command"}
 REQUEST_ARTIFACT_TYPES = {"role_request", "plan_request", "review_request", "step_request"}
 RESULT_ARTIFACT_TYPES = {"role_result_manifest"}
 ROLE_RESULT_MANIFEST_FIELDS = {
@@ -150,17 +150,20 @@ ROLE_RESULT_MANIFEST_FIELDS = {
 }
 ROLE_OUTPUT_ARTIFACT_TYPES = {
     "planner": {"plan_version", "finding_map", "routing_evidence"},
-    "skeptic": {"review_body", "material_findings", "runskeptic_receipt", "routing_evidence"},
     "reviewer": {"review_body", "material_findings", "runskeptic_receipt", "routing_evidence"},
-    "worker": {"step_result", "test_evidence", "patch_evidence", "routing_evidence"},
+    "worker": {"step_result", "routing_evidence"},
     "command": {"command_receipt", "command_log", "routing_evidence"},
 }
 ROLE_OUTPUT_PREFIXES = {
     "planner": ("plans/versions/", "results/", "evidence/"),
-    "skeptic": ("reviews/", "findings/", "evidence/"),
     "reviewer": ("reviews/", "findings/", "evidence/"),
     "worker": ("results/", "evidence/"),
     "command": ("commands/", "evidence/"),
+}
+ROLE_OUTPUT_PREFIX_BY_TYPE = {
+    "plan_version": "plans/versions/", "finding_map": "findings/", "routing_evidence": "evidence/",
+    "review_body": "reviews/", "material_findings": "findings/", "runskeptic_receipt": "receipts/",
+    "step_result": "results/", "command_receipt": "commands/", "command_log": "commands/",
 }
 
 
@@ -389,16 +392,20 @@ def _validate_result_manifest(
         raise RuntimeAdapterError("role result manifest status mismatch")
     outputs = _validate_reference_list(manifest.get("output_references"), task_root, "$.output_references")
     allowed_types = ROLE_OUTPUT_ARTIFACT_TYPES[expected["role"]]
-    allowed_prefixes = ROLE_OUTPUT_PREFIXES[expected["role"]]
+    allowed_types = ROLE_OUTPUT_ARTIFACT_TYPES[expected["role"]]
+    required_types = set(allowed_types)
+    observed_types: set[str] = set()
     for index, output in enumerate(outputs):
         if output["repository_relative_path"] == result_ref["repository_relative_path"]:
             raise RuntimeAdapterError(f"role result manifest cannot reference itself at $.output_references/{index}")
-        if output["artifact_type"] not in allowed_types:
+        output_type = output["artifact_type"]
+        if output_type not in allowed_types or output_type in observed_types:
             raise RuntimeAdapterError(f"role output artifact type mismatch at $.output_references/{index}")
-        if not output["repository_relative_path"].startswith(allowed_prefixes):
+        observed_types.add(output_type)
+        if not output["repository_relative_path"].startswith(ROLE_OUTPUT_PREFIX_BY_TYPE[output_type]):
             raise RuntimeAdapterError(f"role output path mismatch at $.output_references/{index}")
-    if expected_status == "COMPLETE" and not outputs:
-        raise RuntimeAdapterError("complete role result requires output references")
+    if expected_status == "COMPLETE" and observed_types != required_types:
+        raise RuntimeAdapterError("complete role result requires the unique minimum role outputs")
     return manifest, outputs
 
 

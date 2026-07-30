@@ -27,6 +27,8 @@ from concepts.target_task.contracts import (
     StepCursor,
     plan_step_ids,
     validate_task_id,
+    validate_candidate_manifest_dict,
+    validate_remote_verification_manifest_dict,
 )
 from concepts.target_task.flow import TransitionResult, allowed_actions, next_phase
 from concepts.target_task.store import (
@@ -46,6 +48,13 @@ HEX40 = re.compile(r"^[0-9a-f]{40}$")
 
 class BoundaryError(ValueError):
     pass
+
+
+def _mission_task_id(task_root: Path) -> str:
+    events = read_ledger(Path(task_root) / "ledger.jsonl")
+    if not events:
+        raise BoundaryError("mission event missing")
+    return events[0]["task_id"]
 
 
 def _canonical_object(raw: bytes, label: str, maximum: int = 32768) -> dict[str, Any]:
@@ -95,6 +104,20 @@ def _validated_task_reference(
         raise BoundaryError(f"{label} artifact invalid") from exc
     if artifact_type is not None and validated["artifact_type"] != artifact_type:
         raise BoundaryError(f"{label} artifact type mismatch")
+    if artifact_type in {"candidate_manifest", "remote_verification_manifest"}:
+        raw = (Path(task_root) / validated["repository_relative_path"]).read_bytes()
+        value = _canonical_object(raw, label)
+        try:
+            if artifact_type == "candidate_manifest":
+                candidate = validate_candidate_manifest_dict(value)
+                if candidate["task_id"] != _mission_task_id(task_root):
+                    raise BoundaryError(f"{label} task binding mismatch")
+            else:
+                remote = validate_remote_verification_manifest_dict(value)
+                if remote["expected_commit"] != remote["observed_commit"] or remote["expected_tree"] != remote["observed_tree"]:
+                    raise BoundaryError(f"{label} remote mismatch")
+        except ContractError as exc:
+            raise BoundaryError(f"{label} manifest invalid") from exc
     return validated
 
 
@@ -403,12 +426,20 @@ def admit_transition(
         )
 
     if current_phase is Phase.INTEGRATED and action is LunaAction.ADVANCE:
+        if task_root is None or task_id is None or candidate_reference is None:
+            raise BoundaryError("remote verification requires the frozen candidate")
+        candidate = _validated_task_reference(candidate_reference, task_root, "candidate", artifact_type="candidate_manifest")
+        candidate_value = validate_candidate_manifest_dict(_canonical_object((Path(task_root) / candidate["repository_relative_path"]).read_bytes(), "candidate"))
         remote_state = _validated_task_reference(
             remote_state_reference,
             Path(task_root) if task_root is not None else Path("."),
             "remote_state",
             artifact_type="remote_verification_manifest",
         ) if task_root is not None else None
+        remote_value = validate_remote_verification_manifest_dict(_canonical_object((Path(task_root) / remote_state["repository_relative_path"]).read_bytes(), "remote_state"))
+        if (remote_value["expected_commit"] != candidate_value["candidate_commit"]
+                or remote_value["expected_tree"] != candidate_value["candidate_tree"]):
+            raise BoundaryError("remote verification is not bound to the candidate")
         _pass_receipt(
             remote_verification_receipt,
             "remote_verification",
@@ -609,6 +640,7 @@ FIND_LOOP_BINDING_FIELDS = (
     "MATERIAL_FINDINGS_SHA256",
     "INVOCATION_KIND",
     "PERMISSION_MODE",
+    "OPEN_ITEMS",
 )
 
 
@@ -633,6 +665,8 @@ def validate_find_loop_state(state: Mapping[str, Any]) -> ValidationResult:
         errors.append("loop state must be FIND_LOOP")
     if state["PERMISSION_MODE"] != "read-only":
         errors.append("Find Loop must be read-only")
+    if not isinstance(state["OPEN_ITEMS"], list) or any(not isinstance(item, str) or not item for item in state["OPEN_ITEMS"]):
+        errors.append("OPEN_ITEMS must be a list of bounded strings")
     passes = state.get("CONSECUTIVE_STABLE_PASSES")
     if not isinstance(passes, int) or isinstance(passes, bool) or passes < 0:
         errors.append("invalid consecutive-stable-pass count")
@@ -663,6 +697,8 @@ def advance_find_loop(
         or receipt.get("REPAIR_RUN")
     ):
         raise BoundaryError("Find Loop receipt must be a complete read-only review")
+    if not isinstance(receipt.get("OPEN_ITEMS"), list):
+        raise BoundaryError("Find Loop receipt must persist OPEN_ITEMS")
     for field in (
         "TARGET_TASK_SHA256", "REVIEWED_ARTIFACT_SHA256",
         "SKEPTIC_SOURCE_BLOB_SHA", "APPLICABLE_COMPANION_SET_SHA256",
@@ -767,8 +803,9 @@ def new_step_cursor_from_plan(plan: Mapping[str, Any], *, max_attempts: int = 3)
 def admit_operation(cursor: StepCursor, operation_id: str) -> StepCursor:
     if cursor.status is not CursorStatus.STEP_READY:
         raise BoundaryError("operation admission requires STEP_READY")
-    if not isinstance(operation_id, str) or not operation_id:
-        raise BoundaryError("operation_id must be non-empty")
+    from concepts.target_task.contracts import SAFE_ID_RE
+    if not isinstance(operation_id, str) or not SAFE_ID_RE.fullmatch(operation_id):
+        raise BoundaryError("operation_id must use the safe ID rules")
     if cursor.attempt >= cursor.max_attempts:
         raise BoundaryError("attempt policy exhausted")
     return replace(
@@ -835,17 +872,7 @@ def retry_operation(cursor: StepCursor) -> StepCursor:
 
 
 def recover_operation(cursor: StepCursor, recovered_outcome: str) -> StepCursor:
-    if cursor.status is not CursorStatus.EXECUTION_OUTCOME_UNKNOWN:
-        raise BoundaryError("recovery requires EXECUTION_OUTCOME_UNKNOWN")
-    if recovered_outcome == "COMPLETE":
-        return replace(
-            cursor,
-            status=CursorStatus.STEP_AWAITING_ADVANCE,
-            successful_operation_id=cursor.operation_id,
-        )
-    if recovered_outcome == "FAILED":
-        return replace(cursor, status=CursorStatus.OPERATION_FAILED)
-    raise BoundaryError("recovery must prove COMPLETE or FAILED")
+    raise BoundaryError("operation UNKNOWN is STOP-only; evidence-bound task recovery is required")
 
 
 def advance_step(cursor: StepCursor, operation_id: str) -> StepCursor:
@@ -882,7 +909,7 @@ def _cursor_actions(cursor: StepCursor, phase: Phase) -> tuple[LunaAction, ...]:
         CursorStatus.STEP_READY: (LunaAction.CONTINUE, LunaAction.STOP),
         CursorStatus.OPERATION_ADMITTED: (LunaAction.CONTINUE, LunaAction.STOP),
         CursorStatus.OPERATION_FAILED: (LunaAction.RETRY, LunaAction.STOP),
-        CursorStatus.EXECUTION_OUTCOME_UNKNOWN: (LunaAction.RECOVER, LunaAction.STOP),
+        CursorStatus.EXECUTION_OUTCOME_UNKNOWN: (LunaAction.STOP,),
         CursorStatus.STEP_AWAITING_ADVANCE: (LunaAction.ADVANCE, LunaAction.STOP),
         CursorStatus.EXECUTION_COMPLETE: (LunaAction.ADVANCE, LunaAction.STOP),
     }
@@ -892,6 +919,125 @@ def _cursor_actions(cursor: StepCursor, phase: Phase) -> tuple[LunaAction, ...]:
 def _latest_cursor_path(task_root: Path) -> str | None:
     events = read_ledger(Path(task_root) / "ledger.jsonl")
     return next((event["cursor_ref"] for event in reversed(events) if event["cursor_ref"]), None)
+
+
+def _ensure_new_event_id(task_root: Path, event_id: str) -> None:
+    from concepts.target_task.contracts import SAFE_ID_RE
+    if not isinstance(event_id, str) or not SAFE_ID_RE.fullmatch(event_id):
+        raise BoundaryError("invalid event_id")
+    if any(event["event_id"] == event_id for event in read_ledger(Path(task_root) / "ledger.jsonl")):
+        raise BoundaryError("duplicate event_id")
+
+
+def _artifact_ref_from_path(task_root: Path, relative_path: str, artifact_type: str) -> dict[str, Any]:
+    target = Path(task_root) / relative_path
+    if not target.is_file() or target.is_symlink():
+        raise BoundaryError("durable artifact missing")
+    raw = target.read_bytes()
+    return {
+        "reference_id": target.stem,
+        "repository_relative_path": relative_path,
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "byte_size": len(raw),
+        "artifact_type": artifact_type,
+        "description": "durable Target Task evidence",
+        "read_condition": "read by the deterministic Boundary",
+    }
+
+
+def _latest_operation_event(task_root: Path, task_id: str, status: str) -> Mapping[str, Any]:
+    events = read_ledger(Path(task_root) / "ledger.jsonl")
+    if not events or events[-1]["task_id"] != task_id or events[-1]["status"] != status:
+        raise BoundaryError(f"latest durable event must be {status}")
+    return events[-1]
+
+
+def admit_and_persist_operation(
+    task_root: Path,
+    task_id: str,
+    accepted_plan_reference: Mapping[str, Any],
+    request: Mapping[str, Any],
+    *,
+    source_root: Path,
+    operation_id: str,
+    event_id: str,
+) -> dict[str, Any]:
+    """Admit one operation from the latest durable cursor and persist its evidence."""
+    _ensure_new_event_id(task_root, event_id)
+    plan_ref, plan = _validated_plan(task_root, task_id, accepted_plan_reference)
+    events = read_ledger(Path(task_root) / "ledger.jsonl")
+    if not events or events[-1]["task_id"] != task_id or events[-1]["phase"] != Phase.STEP_EXECUTING.value:
+        raise BoundaryError("operation admission requires the durable execution phase")
+    if any(event.get("operation_id") == operation_id for event in events):
+        raise BoundaryError("operation_id already exists in task ledger")
+    cursor_path = _latest_cursor_path(task_root)
+    if cursor_path is None:
+        raise BoundaryError("durable cursor required")
+    from concepts.target_task.store import load_cursor_snapshot
+    cursor = load_cursor_snapshot(task_root, cursor_path)
+    if cursor.status is not CursorStatus.STEP_READY or cursor.attempt >= cursor.max_attempts:
+        raise BoundaryError("operation admission requires an unexhausted STEP_READY cursor")
+    step = next(step for step in plan["steps"] if step["step_id"] == cursor.current_step)
+    if request.get("role") != step["role"]:
+        raise BoundaryError("request role does not match sealed Plan step")
+    from concepts.target_task.runtime import prepare_host_role_dispatch
+    prepared = prepare_host_role_dispatch(
+        {**dict(request), "task_id": task_id, "operation_id": operation_id,
+         "attempt": cursor.attempt + 1, "step_id": cursor.current_step},
+        task_root=task_root, source_root=source_root,
+    )
+    admitted = admit_operation(cursor, operation_id)
+    return _persist_cursor_transition(
+        task_root, task_id, Phase.STEP_EXECUTING, admitted,
+        event_id=event_id, accepted_plan_reference=plan_ref,
+        prior_cursor=cursor, prior_cursor_reference=_artifact_ref_from_path(task_root, cursor_path, "step_cursor"),
+        request_reference=prepared["request_ref"],
+        control_evidence_reference=prepared["dispatch_evidence_ref"],
+    )
+
+
+def accept_and_persist_operation_outcome(
+    task_root: Path,
+    task_id: str,
+    accepted_plan_reference: Mapping[str, Any],
+    receipt: Mapping[str, Any],
+    *,
+    source_root: Path,
+    event_id: str,
+) -> dict[str, Any]:
+    """Accept only the latest admitted operation's durable, bound host outcome."""
+    _ensure_new_event_id(task_root, event_id)
+    plan_ref, plan = _validated_plan(task_root, task_id, accepted_plan_reference)
+    event = _latest_operation_event(task_root, task_id, "ADMITTED")
+    cursor_path = event["cursor_ref"]
+    from concepts.target_task.store import load_cursor_snapshot
+    cursor = load_cursor_snapshot(task_root, cursor_path)
+    if cursor.status is not CursorStatus.OPERATION_ADMITTED or event["operation_id"] != cursor.operation_id:
+        raise BoundaryError("durable admitted cursor mismatch")
+    request_ref = _artifact_ref_from_path(task_root, event["request_ref"], "role_request")
+    step = next(step for step in plan["steps"] if step["step_id"] == cursor.current_step)
+    from concepts.target_task.runtime import validate_host_role_receipt, persist_validated_host_receipt
+    validated = validate_host_role_receipt(
+        receipt, workspace_root=task_root, source_root=source_root,
+        expected_task_id=task_id, expected_operation_id=cursor.operation_id,
+        expected_attempt=cursor.attempt, expected_role=step["role"],
+        expected_step_id=cursor.current_step, expected_request_ref=request_ref,
+    )
+    receipt_ref = persist_validated_host_receipt(
+        receipt, workspace_root=task_root, source_root=source_root,
+        expected_task_id=task_id, expected_operation_id=cursor.operation_id,
+        expected_attempt=cursor.attempt, expected_role=step["role"],
+        expected_step_id=cursor.current_step, expected_request_ref=request_ref,
+    )
+    result_ref = validated["result_ref"]
+    outcome = record_operation_outcome(cursor, cursor.operation_id, validated["status"])
+    return _persist_cursor_transition(
+        task_root, task_id, Phase.STEP_EXECUTING, outcome,
+        event_id=event_id, accepted_plan_reference=plan_ref,
+        prior_cursor=cursor, prior_cursor_reference=_artifact_ref_from_path(task_root, cursor_path, "step_cursor"),
+        request_reference=request_ref, result_reference=result_ref,
+        control_evidence_reference=receipt_ref,
+    )
 
 
 def _validate_cursor_progression(prior: StepCursor | None, current: StepCursor) -> None:
@@ -955,7 +1101,7 @@ def _optional_reference_path(
     return _validated_task_reference(reference, task_root, label, artifact_type=artifact_type)["repository_relative_path"]
 
 
-def persist_cursor_transition(
+def _persist_cursor_transition(
     task_root: Path,
     task_id: str,
     phase: Phase,
@@ -1051,29 +1197,70 @@ def persist_cursor_transition(
     return {"cursor": cursor, "cursor_reference": cursor_ref, "event": event}
 
 
+def persist_cursor_transition(*args: Any, **kwargs: Any) -> dict[str, Any]:
+    """Internal-compatible entry point restricted to initial cursor serialization."""
+    cursor = kwargs.get("cursor")
+    if cursor is None and len(args) >= 4:
+        cursor = args[3]
+    if not isinstance(cursor, StepCursor) or cursor.status is not CursorStatus.STEP_READY or cursor.attempt != 0:
+        raise BoundaryError("generic cursor persistence cannot publish operation outcomes")
+    if kwargs.get("prior_cursor") is not None or kwargs.get("prior_cursor_reference") is not None:
+        raise BoundaryError("generic cursor persistence is restricted to initial cursor serialization")
+    return _persist_cursor_transition(*args, **kwargs)
+
+
 def advance_and_persist_step(
     task_root: Path,
     task_id: str,
-    phase: Phase,
-    cursor: StepCursor,
+    phase: Phase = Phase.STEP_EXECUTING,
+    cursor: StepCursor | None = None,
     *,
-    operation_id: str,
+    operation_id: str | None = None,
     event_id: str,
-    accepted_plan_reference: Mapping[str, Any],
-    cursor_reference: Mapping[str, Any],
-    request_reference: Mapping[str, Any],
-    result_reference: Mapping[str, Any],
-    host_receipt_reference: Mapping[str, Any],
+    accepted_plan_reference: Mapping[str, Any] | None = None,
+    cursor_reference: Mapping[str, Any] | None = None,
+    request_reference: Mapping[str, Any] | None = None,
+    result_reference: Mapping[str, Any] | None = None,
+    host_receipt_reference: Mapping[str, Any] | None = None,
+    source_root: Path | None = None,
 ) -> dict[str, Any]:
-    """Consume one validated success exactly once and persist the accepted step."""
+    """Consume exactly the latest durable AWAITING_ADVANCE operation once."""
+    _ensure_new_event_id(task_root, event_id)
     if phase is not Phase.STEP_EXECUTING:
         raise BoundaryError("step acceptance is legal only during execution")
+    latest_event = _latest_operation_event(task_root, task_id, "AWAITING_ADVANCE")
+    if accepted_plan_reference is None:
+        accepted_plan_reference = _artifact_ref_from_path(task_root, latest_event["accepted_plan_ref"], "sealed_plan")
+    if cursor is None:
+        from concepts.target_task.store import load_cursor_snapshot
+        cursor = load_cursor_snapshot(task_root, latest_event["cursor_ref"])
+    if operation_id is None:
+        operation_id = latest_event["operation_id"]
+    if cursor_reference is None:
+        cursor_reference = _artifact_ref_from_path(task_root, latest_event["cursor_ref"], "step_cursor")
+    if request_reference is None:
+        request_reference = _artifact_ref_from_path(task_root, latest_event["request_ref"], "role_request")
+    if result_reference is None:
+        result_reference = _artifact_ref_from_path(task_root, latest_event["result_ref"], "role_result_manifest")
+    if host_receipt_reference is None:
+        host_receipt_reference = _artifact_ref_from_path(task_root, latest_event["receipt_ref"], "host_receipt")
     plan_ref, plan = _validated_plan(task_root, task_id, accepted_plan_reference)
     _validated_cursor(task_root, task_id, cursor, cursor_reference, plan)
     if cursor.status is not CursorStatus.STEP_AWAITING_ADVANCE:
         raise BoundaryError("step acceptance requires STEP_AWAITING_ADVANCE")
     if cursor.operation_id != operation_id or cursor.successful_operation_id != operation_id:
         raise BoundaryError("accepted operation identity mismatch")
+    if source_root is not None:
+        receipt_raw = read_content_addressed_artifact(task_root, host_receipt_reference["repository_relative_path"])
+        receipt = _canonical_object(receipt_raw, "host receipt", maximum=4096)
+        step = next(step for step in plan["steps"] if step["step_id"] == cursor.current_step)
+        from concepts.target_task.runtime import validate_host_role_receipt
+        validate_host_role_receipt(
+            receipt, workspace_root=task_root, source_root=source_root,
+            expected_task_id=task_id, expected_operation_id=operation_id,
+            expected_attempt=cursor.attempt, expected_role=step["role"],
+            expected_step_id=cursor.current_step, expected_request_ref=request_reference,
+        )
     request_path = _optional_reference_path(
         request_reference, task_root=task_root, label="request", artifact_type="role_request"
     )
@@ -1119,6 +1306,8 @@ __all__ = [
     "new_step_cursor",
     "new_step_cursor_from_plan",
     "admit_operation",
+    "admit_and_persist_operation",
+    "accept_and_persist_operation_outcome",
     "record_operation_outcome",
     "record_validated_host_outcome",
     "retry_operation",

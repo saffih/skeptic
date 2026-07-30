@@ -361,6 +361,7 @@ def read_ledger(ledger_path: Path) -> list[dict[str, Any]]:
 def verify_chain(events: list[Mapping[str, Any]], *, expected_task_id: str | None = None) -> bool:
     previous_hash: str | None = None
     observed_task_id = expected_task_id
+    event_ids: set[str] = set()
     for index, event in enumerate(events):
         try:
             parsed = LedgerEvent.from_dict(event)
@@ -370,6 +371,9 @@ def verify_chain(events: list[Mapping[str, Any]], *, expected_task_id: str | Non
             observed_task_id = parsed.task_id
         if parsed.task_id != observed_task_id:
             return False
+        if parsed.event_id in event_ids:
+            return False
+        event_ids.add(parsed.event_id)
         if parsed.sequence != index or parsed.previous_event_hash != previous_hash:
             return False
         previous_hash = _event_hash(event)
@@ -402,6 +406,8 @@ class AppendOnlyLedger:
             raise StoreError("HEAD_MISMATCH")
         if existing and event.task_id != existing[0]["task_id"]:
             raise StoreError("TASK_ID_MISMATCH")
+        if any(item["event_id"] == event.event_id for item in existing):
+            raise StoreError("DUPLICATE_EVENT_ID")
         line = canonical_bytes(event.to_dict()) + b"\n"
         # The ledger parent is the already-created private task root.
         if self._path.parent.is_symlink():

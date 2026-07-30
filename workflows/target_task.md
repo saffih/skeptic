@@ -47,10 +47,11 @@ Use the project agents registered under `.claude/agents/`:
 - `target-task-reviewer` — one independent complete RunSkeptic review;
 - `target-task-worker` — one sealed Plan step.
 
-Every dispatch uses a fresh Agent call. Subagents receive only an immutable
-request reference and minimal routing metadata. They write full output to the
-request's declared task-root path and return only the compact host receipt.
-They may not dispatch another agent.
+Every dispatch uses a fresh Agent call. Explicit delegation payloads are
+reference-only; the custom host still loads project instructions and basic
+startup metadata. Hidden host context and physical platform isolation remain
+`UNKNOWN`. Subagents write full output to the request's declared task-root path
+and return only the compact host receipt. They may not dispatch another agent.
 
 ## Cost-aware routing
 
@@ -151,6 +152,8 @@ Validate each receipt with:
 boundary.advance_fix_loop(
     state,
     receipt,
+    task_id=TASK_ID,
+    material_findings_reference=FINDINGS_REFERENCE,
     source_root=SOURCE_REPOSITORY,
     artifact_root=TASK_ROOT,
 )
@@ -166,22 +169,26 @@ reorder, extend, reinterpret, or repair it in the same run.
 
 ### 3. Sequential execution and durable cursor
 
-Initialize with `boundary.new_step_cursor_from_plan`. Every cursor state change
-must be persisted with `boundary.persist_cursor_transition` before the durable
-Lead relies on it.
+Initialize with `boundary.new_step_cursor_from_plan`. Use only the combined
+durable Boundary APIs below; generic cursor persistence is initial serialization
+only.
 
 For each step:
 
-1. `admit_operation` creates a unique operation and increments attempt.
-2. Persist the admitted cursor and immutable request/dispatch evidence.
+1. `admit_and_persist_operation` loads the latest cursor and sealed Plan,
+   validates the role, creates a unique operation, and persists the request,
+   dispatch evidence, admitted cursor, and ledger event.
 3. Dispatch the exact role named by the sealed Plan.
-4. `record_validated_host_outcome` validates the complete binding.
-5. Persist outcome cursor and evidence.
+4. `accept_and_persist_operation_outcome` loads and validates all durable
+   request, dispatch, receipt, result, and output references, then persists the
+   outcome cursor, compact receipt, and ledger event.
 6. COMPLETE becomes `STEP_AWAITING_ADVANCE`; it never moves automatically.
-7. Luna issues `ADVANCE`; `advance_step` consumes exactly that successful
-   operation. Duplicate advance fails closed.
+7. Luna issues `ADVANCE`; `advance_and_persist_step` operates only on the latest
+   durable `AWAITING_ADVANCE` event, revalidates its host receipt, and consumes
+   exactly that successful operation once. Duplicate advance fails closed.
 8. FAILED permits bounded `RETRY` or `STOP`; retry uses new operation and files.
-9. UNKNOWN permits evidence-backed `RECOVER` or `STOP`, never blind retry.
+9. UNKNOWN is STOP-only at operation level. Evidence-bound recovery exists only
+   for a durably BLOCKED high-level task.
 
 High-level phase transition from `STEP_EXECUTING` to `STEP_VALIDATED` is legal
 only when the persisted cursor is `EXECUTION_COMPLETE` for all sealed steps.
@@ -213,16 +220,23 @@ Persist a canonical task-root `validation_receipt` artifact with exact fields `s
 ### 6. Final RunSkeptic Find Loop
 
 Dispatch a fresh `target-task-reviewer` per complete read-only pass. Validate and
-advance using `boundary.advance_find_loop(... source_root=SOURCE_REPOSITORY,
+advance using `boundary.advance_find_loop(state, receipt, task_id=TASK_ID,
+material_findings_reference=FINDINGS_REFERENCE, source_root=SOURCE_REPOSITORY,
 artifact_root=TASK_ROOT)`. Stop only after three consecutive complete reviews
 add no meaningful finding and make no material change to an existing finding.
 
-Convergence is not cleanliness. Material findings block integration. Do not
+Convergence may retain a stable nonempty finding set, but OPEN_ITEMS or any open
+canonical material finding blocks integration. Convergence is not cleanliness. Do not
 repair after freeze; repair is a new ordinary task/run.
 
 ### 7. Integration and close
 
-Boundary admits integration only when the Find Loop is complete, the material finding set is empty, and a canonical task-root `validation_receipt` whose gate is `integration` binds the reviewed subject. Use non-force fast-forward integration when mechanically possible. Fetch remote main, persist a second canonical receipt whose gate is `remote_verification`, and verify exact commit and tree. Only then close the task. Bare PASS mappings are rejected.
+Boundary admits integration only when the Find Loop is complete, `OPEN_ITEMS` is
+empty, the material finding set is empty, and a canonical task-root
+`validation_receipt` whose gate is `integration` binds the reviewed subject.
+Candidate and remote manifests are exact canonical schemas; remote expected and
+observed commit/tree must match the candidate before close. Bare PASS mappings
+are rejected.
 
 ## Real-host qualification smoke
 
@@ -232,9 +246,10 @@ Agent permission, an added external task directory, and no network/push tools.
 `scripts/validate_target_task_smoke.py` must mechanically validate the task root;
 a nonempty Claude output file is not success.
 
-Until that smoke passes on the exact candidate, report
-`MVP_STATUS: STATICALLY_VALIDATED_AWAITING_REAL_HOST_SMOKE` and use `TT:` only in
-disposable experiments.
+This workflow claims only compliant-host observable protocol validation; it does
+not claim hard platform isolation. Until that smoke passes on the exact
+candidate, report `MVP_STATUS: STATICALLY_VALIDATED_AWAITING_REAL_HOST_SMOKE`
+and use `TT:` only in disposable experiments.
 
 ## Terminal receipt
 

@@ -1,9 +1,11 @@
 ---
 name: target-task-planner
 description: Build or repair one complete canonical Target Task Plan from bounded file references.
-tools: Read, Write, Glob, Grep, Bash
+tools: Read, Write, Glob, Grep
 model: inherit
-effort: medium
+maxTurns: 20
+background: false
+isolation: worktree
 ---
 
 Read the immutable dispatch request and only its declared references. Follow

@@ -94,19 +94,12 @@ premium execution or retry. Require minimum-context escalation, no repetition
 of completed economical work, and return to LOW or the least expensive reliable
 route after the bounded premium judgment.
 
-Repeat the Plan's RunSkeptic Fix Loop only after a material plan change; a
-harmless receipt-format defect is repaired without restarting the loop. The
-final Find Loop is independent of the Fix Loop and never modifies the
-candidate.
+For Target Task, run complete Fix Loop reviews until three consecutive qualifying passes exist on the exact unchanged Plan. A material Plan change resets the count and requires a replacement Planner Plan; a harmless receipt-format repair does not substitute for or add a review pass. The final Find Loop is independent and read-only.
 
-For trivial read-only work or one specified deterministic command, skip the formal plan and RunSkeptic unless risk or ambiguity justifies them.
+For ordinary non-Target trivial read-only work or one specified deterministic command, skip the formal plan and RunSkeptic unless risk or ambiguity justifies them. This exception never applies to an explicit Target Task.
 Do not add routing notices or escalation machinery to those trivial tasks.
 
-Delegation is optional. Use it only when it clearly improves isolation, specialization, parallelism, protected context, or review.
-
-Boundary processing is also optional. Use `agents/boundary_agent.md` only when its
-expected context, exposure, integration, or error-risk reduction exceeds its own
-cost. Direct compact delegation remains valid.
+For ordinary non-Target work, delegation is optional and Boundary processing is conditional. Target Task is the explicit exception: its distinct Planner/reviewer/worker dispatches and deterministic Boundary gates are mandatory exactly where `workflows/target_task.md` requires them.
 
 When delegating to a model agent, specify a unique dispatch ID; bounded objective, scope, authority, and prohibitions; requested model class and reasoning effort; expected output and acceptance checks; escalation condition; and the Agent Completion Envelope required by `agents/agent_return_contract.md`.
 

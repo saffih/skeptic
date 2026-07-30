@@ -92,17 +92,15 @@ pre-authorized by the Task Prompt, preserve completed work, emit the bounded
 `MODEL_ESCALATION_CHECKPOINT`, and stop for explicit owner authorization.
 Apply the retry and return-to-economical-route rules there as execution gates.
 
-Follow `agents/boundary_agent.md` when a delegation may benefit from explicit
-context processing. Boundary selection is conditional, not a wrapper around every
-delegation.
+For ordinary non-Target delegation, follow `agents/boundary_agent.md` only when
+its expected context, exposure, integration, or error-risk reduction exceeds its
+cost. Target Task is the narrow exception: the deterministic Boundary gates in
+`workflows/target_task.md` are mandatory for every Target Task role return and
+state transition.
 
 Prefer deterministic execution. Otherwise use the smallest model and reasoning effort reasonably expected to complete the bounded role reliably.
 
 Delegated agents do not inherit the Lead model automatically. Strongest-model use and escalation require a concrete recorded justification.
-
-Use a Boundary Agent only when its expected reduction in expensive context,
-information exposure, integration load, or error risk reasonably exceeds its own
-call, review, and omission cost. Prefer a deterministic boundary implementation.
 
 ## RunSkeptic
 
@@ -131,7 +129,7 @@ Whenever RunSkeptic is invoked:
 5. repair a harmless receipt-format defect without rerunning the review;
 6. rerun RunSkeptic only when a required substantive operation was absent or the plan changed materially.
 
-Do not repeat receipt checks on unchanged content merely to accumulate PASS results.
+For ordinary work, do not repeat unchanged receipt checks merely to accumulate PASS results. Target Task is the explicit exception: its Fix Loop and Find Loop require the complete repeated unchanged reviews defined by `skeptic.md` and `workflows/target_task.md`.
 
 ## Execution and delegation
 
@@ -174,7 +172,7 @@ agent return
 
 Envelope validity confirms correlation and structural conformance only. It does not prove work correctness.
 
-Useful work is not invalidated by harmless extra prose outside a valid envelope.
+For ordinary delegated work, harmless extra prose outside a valid envelope does not invalidate otherwise useful work. Target Task host receipts are exact-field compact control objects: body-bearing or extra return fields fail closed.
 
 Ask for clarification only when the result is materially ambiguous, unsafe, unverifiable, or outside scope.
 
@@ -203,7 +201,7 @@ Use the smallest validation set sufficient for the task.
 
 Run broader checks when the change can affect broader behavior.
 
-Do not require repeated identical PASS results on an unchanged candidate unless the task explicitly justifies them.
+Do not require repeated identical PASS results on an unchanged candidate unless the task explicitly justifies them. Target Task explicitly justifies the three-pass Fix Loop and three-pass Find Loop required by its governing contracts.
 
 ## Reporting
 

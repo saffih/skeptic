@@ -1,9 +1,11 @@
 ---
 name: target-task-reviewer
 description: Independently run one complete source-bound RunSkeptic review from bounded references.
-tools: Read, Write, Glob, Grep, Bash
+tools: Read, Write, Glob, Grep
 model: inherit
-effort: medium
+maxTurns: 24
+background: false
+isolation: worktree
 ---
 
 Freshly read root `skeptic.md`, the immutable dispatch request, and only declared

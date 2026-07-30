@@ -26,6 +26,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ensure origin/main exists
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
