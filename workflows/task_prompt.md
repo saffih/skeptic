@@ -41,28 +41,51 @@ lifecycle in "## Target Tasks" below, ending in execution exactly once.
 
 ## Target Tasks
 
+A Target Task is triggered by the exact prefix `TT:`; the text after it is the
+immutable mission. Read `workflows/target_task.md` before designating or
+executing one — it owns the complete lifecycle, the Luna compact-Lead
+contract, the sealed-Plan invariant, and the append-only ledger discipline.
+`concepts/target_task/` holds the reference-only contracts and example
+modules (`trigger.py`, `flow.py`, `boundary.py`, `store.py`, `runtime.py`,
+`command.py`, `contracts.py`) that illustrate this design; no runtime in this
+repository executes them automatically, and an invoking runtime must
+implement equivalent behavior, not merely cite the reference.
+
 When a prompt designates or executes a Target Task, replace the entire
 ordinary plan/review/repair/execution path as a whole — not only its
 planning step — with this mandatory sequence before execution:
 
 ```text
-distinct bounded Planner dispatch
+mission persisted immutably, never inlined into durable Lead context
+-> distinct bounded Planner dispatch
 -> Agent Completion Envelope validation
 -> complete Planner-produced plan
--> RunSkeptic review and receipt validation
--> Planner repair after every material plan change
--> independent Lead acceptance of the final unchanged plan
--> execution exactly once
+-> RunSkeptic Fix Loop on the plan (three consecutive qualifying passes)
+-> Plan sealed: path, SHA-256, byte size, schema version recorded and frozen
+-> execution of the sealed plan exactly once, never replanned inside the run
+-> deterministic validation
+-> candidate frozen
+-> read-only RunSkeptic Find Loop over the frozen candidate
+-> integration only when clean and mechanically possible
+-> close with a compact receipt
 ```
 
 Supplied drafts are Planner input only. Lead-authored, same-runtime, supplied,
 previously approved, planning-not-required, or role-name-only planning cannot
 satisfy the gate. Every executable plan version must be Planner-produced, and a
-material plan change requires a new Planner repair dispatch and fresh review.
-The bounded Planner does not recurse or authorize execution. If a mandatory
+material plan change requires a new Planner repair dispatch and fresh
+RunSkeptic Fix Loop before the plan may be sealed. Once sealed, the plan is
+frozen for that run: it may not be edited, replaced, extended, reordered,
+repaired, or reinterpreted. If the sealed plan cannot be completed safely,
+stop and report the blocker rather than replanning inside the same run. The
+bounded Planner does not recurse or authorize execution. If a mandatory
 route or receipt is unavailable, stop with `CONFLICT`. Ordinary non-Target work
 remains proportional and does not inherit this section merely because it is
 substantive.
+
+Do not use the Target Task lifecycle to construct or modify the Target Task
+lifecycle itself. Changes to this section, `workflows/target_task.md`, or
+`concepts/target_task/` are ordinary Task Prompt work.
 
 If premium work may be needed, state whether it is pre-authorized. Pre-authorization
 must identify the exact role, model or class, effort, bounded purpose, maximum
@@ -73,7 +96,10 @@ premium execution or retry. Require minimum-context escalation, no repetition
 of completed economical work, and return to LOW or the least expensive reliable
 route after the bounded premium judgment.
 
-Repeat RunSkeptic only after a material plan change, unexpected serious risk, or insufficient validation. Repair a harmless receipt-format defect without rerunning the review.
+Repeat the Plan's RunSkeptic Fix Loop only after a material plan change; a
+harmless receipt-format defect is repaired without restarting the loop. The
+final Find Loop is independent of the Fix Loop and never modifies the
+candidate.
 
 For trivial read-only work or one specified deterministic command, skip the formal plan and RunSkeptic unless risk or ambiguity justifies them.
 Do not add routing notices or escalation machinery to those trivial tasks.

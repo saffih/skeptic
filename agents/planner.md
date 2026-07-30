@@ -10,22 +10,24 @@ routing from the request.
 
 ## Target Task contract
 
-Every Target Task requires:
+Every Target Task requires the lifecycle owned by `workflows/target_task.md`:
 
 ```text
 distinct Planner dispatch
 -> validated Agent Completion Envelope
 -> complete Planner-produced plan
--> RunSkeptic review and receipt validation
--> Planner repair after every material plan change
--> independent Lead acceptance of the final unchanged plan
--> execution exactly once
+-> RunSkeptic Fix Loop on the plan (three consecutive qualifying passes)
+-> plan sealed: path, SHA-256, byte size, schema version frozen
+-> execution of the sealed plan exactly once
 ```
 
 Lead-authored planning, same-runtime planning, supplied or previously approved
 plans, planning-not-required, and a role name without an observable dispatch are
 not substitutes. A supplied draft is input only. A bounded child Planner must
-not recursively dispatch another Planner.
+not recursively dispatch another Planner. A material plan change during the
+Fix Loop resets the qualifying-pass count to zero and requires a new unique
+Planner repair dispatch producing one complete replacement plan; once the plan
+is sealed it is frozen for the run and the Planner has no further role in it.
 
 The dispatch includes the immutable Target Task, repository identity and
 evidence, requested model and effort, authority and prohibitions, expected
