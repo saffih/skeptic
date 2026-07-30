@@ -114,6 +114,8 @@ def _validated_task_reference(
                     raise BoundaryError(f"{label} task binding mismatch")
             else:
                 remote = validate_remote_verification_manifest_dict(value)
+                if remote["task_id"] != _mission_task_id(task_root):
+                    raise BoundaryError(f"{label} task binding mismatch")
                 if remote["expected_commit"] != remote["observed_commit"] or remote["expected_tree"] != remote["observed_tree"]:
                     raise BoundaryError(f"{label} remote mismatch")
         except ContractError as exc:
@@ -408,6 +410,8 @@ def admit_transition(
             or find_loop_state.get("REVIEWED_ARTIFACT_SHA256") != candidate["sha256"]
         ):
             raise BoundaryError("Find Loop is not bound to the frozen candidate")
+        if find_loop_state.get("OPEN_ITEMS"):
+            raise BoundaryError("integration requires empty Find Loop OPEN_ITEMS")
         _, open_findings = _material_findings(
             material_findings_reference,
             task_root=task_root,
@@ -714,6 +718,7 @@ def advance_find_loop(
     stable = all(state[field] == receipt.get(field) for field in FIND_LOOP_BINDING_FIELDS)
     next_state = dict(state)
     next_state["CONSECUTIVE_STABLE_PASSES"] = state["CONSECUTIVE_STABLE_PASSES"] + 1 if stable else 0
+    next_state["OPEN_ITEMS"] = list(receipt["OPEN_ITEMS"])
     if not stable:
         next_state["MATERIAL_FINDINGS_SHA256"] = receipt.get("MATERIAL_FINDINGS_SHA256")
     next_state["MATERIAL_FINDINGS_REFERENCE"] = finding_ref
@@ -1229,38 +1234,66 @@ def advance_and_persist_step(
     if phase is not Phase.STEP_EXECUTING:
         raise BoundaryError("step acceptance is legal only during execution")
     latest_event = _latest_operation_event(task_root, task_id, "AWAITING_ADVANCE")
+    request_was_omitted = request_reference is None
+    result_was_omitted = result_reference is None
+    def durable_or_reject(value: Mapping[str, Any] | None, durable_path: str, label: str, artifact_type: str) -> Mapping[str, Any]:
+        durable = _artifact_ref_from_path(task_root, durable_path, artifact_type)
+        if value is not None:
+            supplied = _validated_task_reference(value, task_root, label, artifact_type=artifact_type)
+            if supplied["repository_relative_path"] != durable_path or supplied["sha256"] != durable["sha256"]:
+                raise BoundaryError(f"{label} does not match the durable operation")
+            return supplied
+        return durable
+
     if accepted_plan_reference is None:
         accepted_plan_reference = _artifact_ref_from_path(task_root, latest_event["accepted_plan_ref"], "sealed_plan")
+    else:
+        accepted_plan_reference = durable_or_reject(accepted_plan_reference, latest_event["accepted_plan_ref"], "accepted_plan", "sealed_plan")
     if cursor is None:
         from concepts.target_task.store import load_cursor_snapshot
         cursor = load_cursor_snapshot(task_root, latest_event["cursor_ref"])
     if operation_id is None:
         operation_id = latest_event["operation_id"]
+    elif operation_id != latest_event["operation_id"]:
+        raise BoundaryError("operation_id does not match the durable operation")
     if cursor_reference is None:
         cursor_reference = _artifact_ref_from_path(task_root, latest_event["cursor_ref"], "step_cursor")
+    else:
+        cursor_reference = durable_or_reject(cursor_reference, latest_event["cursor_ref"], "cursor", "step_cursor")
     if request_reference is None:
         request_reference = _artifact_ref_from_path(task_root, latest_event["request_ref"], "role_request")
+    else:
+        request_reference = durable_or_reject(request_reference, latest_event["request_ref"], "request", "role_request")
     if result_reference is None:
         result_reference = _artifact_ref_from_path(task_root, latest_event["result_ref"], "role_result_manifest")
+    else:
+        result_reference = durable_or_reject(result_reference, latest_event["result_ref"], "result", "role_result_manifest")
     if host_receipt_reference is None:
         host_receipt_reference = _artifact_ref_from_path(task_root, latest_event["receipt_ref"], "host_receipt")
+    else:
+        host_receipt_reference = durable_or_reject(host_receipt_reference, latest_event["receipt_ref"], "host_receipt", "host_receipt")
     plan_ref, plan = _validated_plan(task_root, task_id, accepted_plan_reference)
     _validated_cursor(task_root, task_id, cursor, cursor_reference, plan)
     if cursor.status is not CursorStatus.STEP_AWAITING_ADVANCE:
         raise BoundaryError("step acceptance requires STEP_AWAITING_ADVANCE")
     if cursor.operation_id != operation_id or cursor.successful_operation_id != operation_id:
         raise BoundaryError("accepted operation identity mismatch")
-    if source_root is not None:
-        receipt_raw = read_content_addressed_artifact(task_root, host_receipt_reference["repository_relative_path"])
-        receipt = _canonical_object(receipt_raw, "host receipt", maximum=4096)
-        step = next(step for step in plan["steps"] if step["step_id"] == cursor.current_step)
-        from concepts.target_task.runtime import validate_host_role_receipt
-        validate_host_role_receipt(
-            receipt, workspace_root=task_root, source_root=source_root,
-            expected_task_id=task_id, expected_operation_id=operation_id,
-            expected_attempt=cursor.attempt, expected_role=step["role"],
-            expected_step_id=cursor.current_step, expected_request_ref=request_reference,
-        )
+    receipt_raw = read_content_addressed_artifact(task_root, host_receipt_reference["repository_relative_path"])
+    receipt = _canonical_object(receipt_raw, "host receipt", maximum=4096)
+    # The receipt is the durable operation's authoritative exact reference;
+    # reconstructing a reference from a filename would lose its identity.
+    if request_was_omitted:
+        request_reference = receipt.get("request_ref")
+    if result_was_omitted:
+        result_reference = receipt.get("result_ref")
+    step = next(step for step in plan["steps"] if step["step_id"] == cursor.current_step)
+    from concepts.target_task.runtime import validate_host_role_receipt
+    validate_host_role_receipt(
+        receipt, workspace_root=task_root, source_root=source_root or task_root,
+        expected_task_id=task_id, expected_operation_id=operation_id,
+        expected_attempt=cursor.attempt, expected_role=step["role"],
+        expected_step_id=cursor.current_step, expected_request_ref=request_reference,
+    )
     request_path = _optional_reference_path(
         request_reference, task_root=task_root, label="request", artifact_type="role_request"
     )

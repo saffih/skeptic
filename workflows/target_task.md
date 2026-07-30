@@ -1,7 +1,17 @@
-# Target Task — Claude Code experimental MVP
+# Target Task — provider-neutral deterministic workflow
 
-This is the authoritative workflow when the first meaningful token is exactly
-`TT:`. Root `CLAUDE.md` imports `AGENTS.md`, which routes here.
+This is the provider-neutral authoritative workflow when a host recognizes the
+`TT:` trigger. `CLAUDE.md` and `.claude/agents/` configure only the Claude Code
+adapter; they are not the sole trigger or orchestration authority. Any host
+that can read this workflow, invoke canonical roles through an adapter, write
+task-root artifacts, and return compact receipts may implement it.
+
+Provider adapters are replaceable. The Boundary consumes canonical references
+and normalized receipts only; it never parses Claude, Codex, or another host's
+events. Provider evidence is immutable, content-addressed, and correlated to
+exactly one durable operation. Hidden host context remains `UNKNOWN` unless
+independently proved. Qualification of one adapter does not qualify another;
+no adapter is mandatory for the deterministic core.
 
 ## Honest boundary
 
@@ -39,19 +49,21 @@ or provider SDK is part of this MVP.
 fresh session calls `rediscover_task(TARGET_TASKS_ROOT, TASK_ID)` and validates
 the exact mission identity, ledger chain, sealed Plan, and complete cursor.
 
-## Registered Claude Code roles
+## Host adapter dispatch
 
-Use the project agents registered under `.claude/agents/`:
+Invoke canonical roles through `concepts.target_task.host_adapter.TargetTaskHostAdapter`:
 
-- `target-task-planner` — one complete canonical Plan;
-- `target-task-reviewer` — one independent complete RunSkeptic review;
-- `target-task-worker` — one sealed Plan step.
+- `planner` — one complete canonical Plan;
+- `reviewer` — one independent complete RunSkeptic review;
+- `worker` — one sealed Plan step;
+- `command` — one bounded command operation.
 
-Every dispatch uses a fresh Agent call. Explicit delegation payloads are
-reference-only; the custom host still loads project instructions and basic
-startup metadata. Hidden host context and physical platform isolation remain
-`UNKNOWN`. Subagents write full output to the request's declared task-root path
-and return only the compact host receipt. They may not dispatch another agent.
+An adapter maps these roles to provider identifiers, constructs the bounded
+request, executes or ingests one invocation, persists raw provider evidence,
+validates provider-specific evidence, and normalizes exactly one compact host
+receipt. Duplicate, missing, ambiguous, or body-bearing evidence fails closed.
+The generic recorded-host adapter is deterministic; Claude and Codex adapters
+are separate qualification paths.
 
 ## Cost-aware routing
 
@@ -244,7 +256,7 @@ are rejected.
 configurable model, low effort, bounded turns, wall-clock timeout, explicit
 Agent permission, an added external task directory, and no network/push tools.
 `scripts/validate_target_task_smoke.py` must mechanically validate the task root;
-a nonempty Claude output file is not success.
+a nonempty provider output file is not success.
 
 This workflow claims only compliant-host observable protocol validation; it does
 not claim hard platform isolation. Until that smoke passes on the exact

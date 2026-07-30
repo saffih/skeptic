@@ -50,7 +50,7 @@ def dispatch_specialist(
     output_reference_id: str,
     repository_root: Path | str = ".",
 ) -> dict[str, Any]:
-    """Deterministic test adapter; real Claude dispatch uses the host protocol below."""
+    """Deterministic recorded-host helper; provider adapters use the protocol below."""
     try:
         validated_task = validate_task_envelope(task_envelope, repository_root=repository_root)
     except ExecutionEnvelopeError as exc:

@@ -1,4 +1,4 @@
-"""Deterministic schemas for the Claude Code Target Task MVP.
+"""Deterministic provider-neutral schemas for the Target Task lifecycle.
 
 This module owns the closed lifecycle vocabulary, immutable ledger-event shape,
 minimal sealed-Plan schema, and the complete serializable linear-step cursor.
