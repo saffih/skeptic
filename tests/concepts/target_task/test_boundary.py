@@ -1,4 +1,5 @@
 import hashlib
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,187 +10,371 @@ from concepts.target_task.boundary import (
     advance_find_loop,
     build_luna_receipt,
     find_loop_complete,
-    retrieve_evidence,
-    validate_find_loop_state,
+    new_step_cursor,
 )
-from concepts.target_task.contracts import LunaAction, Phase
-from concepts.target_task.flow import IllegalTransitionError
+from concepts.target_task.contracts import CursorStatus, LedgerEvent, LunaAction, Phase, StepCursor
+from concepts.target_task.store import (
+    AppendOnlyLedger,
+    persist_cursor_snapshot,
+    persist_finding_set_artifact,
+    persist_plan_artifact,
+    write_immutable_artifact,
+)
+from concepts.target_task.trigger import bootstrap_task
+
+ROOT = Path(__file__).resolve().parents[3]
 
 
-class AdmitTransitionTests(unittest.TestCase):
-    def test_delegates_to_flow(self) -> None:
-        result = admit_transition(Phase.MISSION_PERSISTED, LunaAction.CONTINUE)
-        self.assertEqual(result.phase, Phase.PLAN_DRAFTED)
-
-    def test_illegal_transition_raises(self) -> None:
-        with self.assertRaises(IllegalTransitionError):
-            admit_transition(Phase.PLAN_SEALED, LunaAction.RETRY)
+def blob_digest(path: Path) -> str:
+    data = path.read_bytes()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
 
 
-def _write(path: Path, content: bytes) -> tuple[str, int]:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(content)
-    return hashlib.sha256(content).hexdigest(), len(content)
+def write_gate_receipt(root: Path, task_id: str, gate: str, subject_ref):
+    payload = {
+        "schema_version": "1",
+        "task_id": task_id,
+        "gate": gate,
+        "status": "PASS",
+        "subject_sha256": subject_ref["sha256"],
+    }
+    raw = (json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n").encode()
+    ref = write_immutable_artifact(
+        root,
+        f"receipts/{gate}.json",
+        raw,
+        reference_id=f"{gate}-receipt",
+        artifact_type="validation_receipt",
+        description=f"{gate} receipt",
+        read_condition="admit the bound gate",
+    )
+    return {"status": "PASS", "reference": ref}
 
 
-class BuildLunaReceiptTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.tmp = tempfile.TemporaryDirectory()
-        self.repository_root = Path(self.tmp.name)
-        self.plan_sha, self.plan_size = _write(self.repository_root / "plans/plan-001.md", b"# Plan\n")
+def empty_findings(root: Path, task_id: str):
+    return persist_finding_set_artifact(
+        root,
+        {"schema_version": "1", "task_id": task_id, "findings": []},
+    )
 
-    def tearDown(self) -> None:
-        self.tmp.cleanup()
 
-    def _state(self, **overrides):
-        state = {
-            "TASK_ID": "task-1",
-            "SEALED_PLAN_REFERENCE": "plans/plan-001.md",
-            "SEALED_PLAN_SHA256": self.plan_sha,
-            "CURRENT_STEP": "step-1",
-            "COMPLETED_STEP_IDS": [],
-            "VALIDATED_FACTS": [],
-            "OPEN_BLOCKERS": [],
-            "ARTIFACT_REFERENCES": [{
-                "reference_id": "plan", "repository_relative_path": "plans/plan-001.md",
-                "sha256": self.plan_sha, "byte_size": self.plan_size,
-                "artifact_type": "plan", "description": "sealed plan", "read_condition": "read at seal",
-            }],
-            "NEXT_AUTHORIZED_ACTION": "execute step-1",
-            "VALIDATION_STATUS": "VALID",
-        }
-        state.update(overrides)
-        return state
+def make_plan(root: Path, task_id: str, mission_sha: str):
+    return persist_plan_artifact(
+        root,
+        {
+            "schema_version": "1",
+            "plan_id": "p-1",
+            "task_id": task_id,
+            "mission_sha256": mission_sha,
+            "steps": [
+                {
+                    "step_id": "s1",
+                    "objective": "one bounded step",
+                    "role": "worker",
+                    "success_criteria": ["done"],
+                }
+            ],
+        },
+    )
 
-    def test_valid_receipt_serializes(self) -> None:
-        raw = build_luna_receipt(self._state(), repository_root=self.repository_root)
-        self.assertTrue(raw.endswith(b"\n"))
-        self.assertIn(b'"TASK_ID":"task-1"', raw)
 
-    def test_receipt_cannot_carry_extra_field(self) -> None:
-        state = self._state()
-        state["MISSION_BODY"] = "the entire mission text should never be here"
+class PhaseGateTests(unittest.TestCase):
+    def test_plan_cannot_seal_without_complete_bound_fix_loop(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            boot = bootstrap_task("mission", "task-1", Path(tmp))
+            root = boot.workspace_root
+            plan_ref = make_plan(root, "task-1", boot.mission_sha256)
+            findings_ref = empty_findings(root, "task-1")
+            state = {
+                "TARGET_TASK_SHA256": boot.mission_sha256,
+                "REVIEWED_ARTIFACT_SHA256": plan_ref["sha256"],
+                "SKEPTIC_SOURCE_BLOB_SHA": "c" * 40,
+                "APPLICABLE_COMPANION_SET_SHA256": "d" * 64,
+                "MATERIAL_FINDINGS_SHA256": findings_ref["sha256"],
+                "MATERIAL_FINDINGS_REFERENCE": findings_ref,
+                "INVOCATION_KIND": "FIX_LOOP",
+                "PERMISSION_MODE": "fix-if-valid",
+                "QUALIFYING_PASSES_REQUIRED": 3,
+                "CONSECUTIVE_QUALIFYING_PASSES": 3,
+                "OPEN_ITEMS": [],
+            }
+            with self.assertRaises(BoundaryError):
+                admit_transition(
+                    Phase.PLAN_REVIEW,
+                    LunaAction.ADVANCE,
+                    task_root=root,
+                    task_id="task-1",
+                    fix_loop_state={**state, "CONSECUTIVE_QUALIFYING_PASSES": 2},
+                    material_findings_reference=findings_ref,
+                    accepted_plan_reference=plan_ref,
+                )
+            receipt = write_gate_receipt(root, "task-1", "plan_qualification", plan_ref)
+            result = admit_transition(
+                Phase.PLAN_REVIEW,
+                LunaAction.ADVANCE,
+                task_root=root,
+                task_id="task-1",
+                fix_loop_state=state,
+                material_findings_reference=findings_ref,
+                accepted_plan_reference=plan_ref,
+                plan_qualification_receipt=receipt,
+            )
+            self.assertEqual(result.phase, Phase.PLAN_SEALED)
+
+    def test_execution_cannot_validate_before_persisted_complete_cursor(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            boot = bootstrap_task("mission", "task-1", Path(tmp))
+            root = boot.workspace_root
+            plan_ref = make_plan(root, "task-1", boot.mission_sha256)
+            incomplete = new_step_cursor(("s1",))
+            with self.assertRaises(BoundaryError):
+                admit_transition(
+                    Phase.STEP_EXECUTING,
+                    LunaAction.ADVANCE,
+                    task_root=root,
+                    task_id="task-1",
+                    accepted_plan_reference=plan_ref,
+                    cursor=incomplete,
+                    cursor_reference=None,
+                )
+
+            complete = StepCursor(
+                ("s1",),
+                current_index=1,
+                status=CursorStatus.EXECUTION_COMPLETE,
+                completed_step_ids=("s1",),
+            )
+            cursor_ref = persist_cursor_snapshot(root, complete)
+            ledger = AppendOnlyLedger(root / "ledger.jsonl")
+            sequence, previous_hash = ledger.head()
+            ledger.append(
+                LedgerEvent(
+                    schema_version="1",
+                    sequence=sequence,
+                    event_id="task-1:execution-complete",
+                    task_id="task-1",
+                    phase=Phase.STEP_EXECUTING.value,
+                    accepted_plan_ref=plan_ref["repository_relative_path"],
+                    current_step=None,
+                    operation_id=None,
+                    attempt=1,
+                    request_ref=None,
+                    result_ref=None,
+                    cursor_ref=cursor_ref["repository_relative_path"],
+                    status="EXECUTION_COMPLETE",
+                    validation="PASS",
+                    blocker=None,
+                    allowed_actions=(LunaAction.ADVANCE.value, LunaAction.STOP.value),
+                    next_action=LunaAction.ADVANCE.value,
+                    previous_event_hash=previous_hash,
+                    receipt_ref=None,
+                )
+            )
+            self.assertEqual(
+                admit_transition(
+                    Phase.STEP_EXECUTING,
+                    LunaAction.ADVANCE,
+                    task_root=root,
+                    task_id="task-1",
+                    accepted_plan_reference=plan_ref,
+                    cursor=complete,
+                    cursor_reference=cursor_ref,
+                ).phase,
+                Phase.STEP_VALIDATED,
+            )
+
+    def test_freeze_integration_and_close_are_subject_bound(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            boot = bootstrap_task("mission", "task-1", Path(tmp))
+            root = boot.workspace_root
+            candidate_ref = write_immutable_artifact(
+                root,
+                "candidate/manifest.json",
+                b"{}\n",
+                reference_id="candidate",
+                artifact_type="candidate_manifest",
+                description="frozen candidate",
+                read_condition="validate and review",
+            )
+            validation = write_gate_receipt(root, "task-1", "deterministic_validation", candidate_ref)
+            self.assertEqual(
+                admit_transition(
+                    Phase.STEP_VALIDATED,
+                    LunaAction.ADVANCE,
+                    task_root=root,
+                    task_id="task-1",
+                    candidate_reference=candidate_ref,
+                    deterministic_validation_receipt=validation,
+                ).phase,
+                Phase.CANDIDATE_FROZEN,
+            )
+
+            findings_ref = empty_findings(root, "task-1")
+            state = {
+                "TARGET_TASK_SHA256": boot.mission_sha256,
+                "REVIEWED_ARTIFACT_SHA256": candidate_ref["sha256"],
+                "SKEPTIC_SOURCE_BLOB_SHA": "c" * 40,
+                "APPLICABLE_COMPANION_SET_SHA256": "d" * 64,
+                "MATERIAL_FINDINGS_SHA256": findings_ref["sha256"],
+                "MATERIAL_FINDINGS_REFERENCE": findings_ref,
+                "INVOCATION_KIND": "FIND_LOOP",
+                "PERMISSION_MODE": "read-only",
+                "CONSECUTIVE_STABLE_PASSES": 3,
+                "PASSES_REQUIRED": 3,
+            }
+            integration = write_gate_receipt(root, "task-1", "integration", candidate_ref)
+            self.assertEqual(
+                admit_transition(
+                    Phase.FINAL_REVIEW,
+                    LunaAction.ADVANCE,
+                    task_root=root,
+                    task_id="task-1",
+                    candidate_reference=candidate_ref,
+                    find_loop_state=state,
+                    material_findings_reference=findings_ref,
+                    integration_receipt=integration,
+                ).phase,
+                Phase.INTEGRATED,
+            )
+
+            remote_ref = write_immutable_artifact(
+                root,
+                "remote/manifest.json",
+                b"{}\n",
+                reference_id="remote",
+                artifact_type="remote_verification_manifest",
+                description="verified remote state",
+                read_condition="close the task",
+            )
+            remote_receipt = write_gate_receipt(root, "task-1", "remote_verification", remote_ref)
+            self.assertEqual(
+                admit_transition(
+                    Phase.INTEGRATED,
+                    LunaAction.ADVANCE,
+                    task_root=root,
+                    task_id="task-1",
+                    remote_state_reference=remote_ref,
+                    remote_verification_receipt=remote_receipt,
+                ).phase,
+                Phase.CLOSED,
+            )
+
+    def test_recovery_requires_durable_proof(self):
         with self.assertRaises(BoundaryError):
-            build_luna_receipt(state, repository_root=self.repository_root)
-
-    def test_sealed_plan_hash_mismatch_is_rejected(self) -> None:
-        state = self._state(SEALED_PLAN_SHA256="a" * 64)
-        with self.assertRaises(BoundaryError):
-            build_luna_receipt(state, repository_root=self.repository_root)
-
-    def test_structural_only_skips_artifact_io(self) -> None:
-        missing_sha = "a" * 64
-        state = self._state(
-            SEALED_PLAN_REFERENCE="plans/plan-missing.md",
-            SEALED_PLAN_SHA256=missing_sha,
-            ARTIFACT_REFERENCES=[{
-                "reference_id": "plan", "repository_relative_path": "plans/plan-missing.md",
-                "sha256": missing_sha, "byte_size": 7,
-                "artifact_type": "plan", "description": "sealed plan", "read_condition": "read at seal",
-            }],
-        )
-        # Full validation must fail: the file does not exist on disk.
-        with self.assertRaises(BoundaryError):
-            build_luna_receipt(state, repository_root=self.repository_root)
-        # Structural-only validation only checks internal cross-references
-        # (which are self-consistent here), never touching the filesystem.
-        raw = build_luna_receipt(state, repository_root=self.repository_root, structural_only=True)
-        self.assertTrue(raw.endswith(b"\n"))
+            admit_transition(Phase.BLOCKED, LunaAction.RECOVER, resume_phase=Phase.STEP_EXECUTING)
 
 
-class RetrieveEvidenceTests(unittest.TestCase):
-    def setUp(self) -> None:
-        self.tmp = tempfile.TemporaryDirectory()
-        self.repository_root = Path(self.tmp.name)
-        source_sha, source_size = _write(self.repository_root / "source.md", b"line one\nline two\nline three\n")
-        state = {
-            "TASK_ID": "task-1", "SEALED_PLAN_REFERENCE": "source.md", "SEALED_PLAN_SHA256": source_sha,
-            "CURRENT_STEP": "step-1", "COMPLETED_STEP_IDS": [], "VALIDATED_FACTS": [], "OPEN_BLOCKERS": [],
-            "ARTIFACT_REFERENCES": [{
-                "reference_id": "src", "repository_relative_path": "source.md", "sha256": source_sha,
-                "byte_size": source_size, "artifact_type": "evidence", "description": "d", "read_condition": "r",
-            }],
-            "NEXT_AUTHORIZED_ACTION": "review", "VALIDATION_STATUS": "VALID",
-        }
-        self.body_sha, self.body_size = _write(self.repository_root / "body.json", build_luna_receipt(state, repository_root=self.repository_root))
+class LunaReceiptTests(unittest.TestCase):
+    def test_task_root_is_the_only_artifact_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            plan = root / "plans/p.json"
+            plan.parent.mkdir()
+            plan.write_text("{}\n")
+            digest = hashlib.sha256(plan.read_bytes()).hexdigest()
+            state = {
+                "TASK_ID": "task-1",
+                "SEALED_PLAN_REFERENCE": "plans/p.json",
+                "SEALED_PLAN_SHA256": digest,
+                "CURRENT_STEP": "s1",
+                "COMPLETED_STEP_IDS": [],
+                "VALIDATED_FACTS": [],
+                "OPEN_BLOCKERS": [],
+                "ARTIFACT_REFERENCES": [
+                    {
+                        "reference_id": "plan",
+                        "repository_relative_path": "plans/p.json",
+                        "sha256": digest,
+                        "byte_size": plan.stat().st_size,
+                        "artifact_type": "plan",
+                        "description": "sealed plan",
+                        "read_condition": "step dispatch",
+                    }
+                ],
+                "NEXT_AUTHORIZED_ACTION": "execute s1",
+                "VALIDATION_STATUS": "VALID",
+            }
+            raw = build_luna_receipt(state, task_root=root)
+            self.assertIn(b'"TASK_ID":"task-1"', raw)
+            with self.assertRaises(BoundaryError):
+                build_luna_receipt({**state, "MISSION_BODY": "leak"}, task_root=root)
 
-    def tearDown(self) -> None:
-        self.tmp.cleanup()
 
-    def test_returns_only_requested_range(self) -> None:
-        result = retrieve_evidence({
-            "REQUEST_ID": "req-1", "TASK_ID": "task-1", "STEP_ID": "step-1", "PURPOSE": "verify",
-            "BODY_STATE_PATH": "body.json", "BODY_STATE_SHA256": self.body_sha, "BODY_STATE_BYTE_SIZE": self.body_size,
-            "ARTIFACT_REFERENCE_ID": "src", "START_LINE": 2, "END_LINE": 2, "MAX_EXCERPT_BYTES": 256,
-        }, repository_root=self.repository_root)
-        self.assertEqual(result["EXCERPT"], "line two\n")
-
-    def test_unknown_reference_id_is_rejected(self) -> None:
-        with self.assertRaises(BoundaryError):
-            retrieve_evidence({
-                "REQUEST_ID": "req-1", "TASK_ID": "task-1", "STEP_ID": "step-1", "PURPOSE": "verify",
-                "BODY_STATE_PATH": "body.json", "BODY_STATE_SHA256": self.body_sha, "BODY_STATE_BYTE_SIZE": self.body_size,
-                "ARTIFACT_REFERENCE_ID": "does-not-exist", "START_LINE": 1, "END_LINE": 1, "MAX_EXCERPT_BYTES": 256,
-            }, repository_root=self.repository_root)
-
-
-class FindLoopTests(unittest.TestCase):
-    def _bindings(self, findings_hash="a" * 64):
-        return {
-            "TARGET_TASK_SHA256": "b" * 64, "REVIEWED_ARTIFACT_SHA256": "c" * 64,
-            "SKEPTIC_SOURCE_BLOB_SHA": "d" * 40, "APPLICABLE_COMPANION_SET_SHA256": "e" * 64,
-            "MATERIAL_FINDINGS_SHA256": findings_hash, "INVOCATION_KIND": "FIND_LOOP", "PERMISSION_MODE": "read-only",
-        }
-
-    def _state(self, passes=0, **overrides):
-        state = dict(self._bindings())
-        state["CONSECUTIVE_STABLE_PASSES"] = passes
-        state["PASSES_REQUIRED"] = 3
-        state.update(overrides)
-        return state
-
-    def test_valid_state_passes_validation(self) -> None:
-        self.assertTrue(validate_find_loop_state(self._state()).ok)
-
-    def test_fix_loop_kind_is_rejected(self) -> None:
-        state = self._state()
-        state["INVOCATION_KIND"] = "FIX_LOOP"
-        self.assertFalse(validate_find_loop_state(state).ok)
-
-    def test_non_read_only_permission_is_rejected(self) -> None:
-        state = self._state()
-        state["PERMISSION_MODE"] = "fix-if-valid"
-        self.assertFalse(validate_find_loop_state(state).ok)
-
-    def test_stable_receipt_increments_streak(self) -> None:
-        state = self._state(passes=1)
-        receipt = self._bindings()
-        next_state = advance_find_loop(state, receipt)
-        self.assertEqual(next_state["CONSECUTIVE_STABLE_PASSES"], 2)
-
-    def test_new_finding_resets_streak(self) -> None:
-        state = self._state(passes=2)
-        receipt = self._bindings(findings_hash="f" * 64)
-        next_state = advance_find_loop(state, receipt)
-        self.assertEqual(next_state["CONSECUTIVE_STABLE_PASSES"], 0)
-
-    def test_three_stable_passes_complete_the_loop(self) -> None:
-        state = self._state(passes=0)
-        receipt = self._bindings()
-        for _ in range(3):
-            state = advance_find_loop(state, receipt)
-        self.assertTrue(find_loop_complete(state))
-
-    def test_not_complete_before_three_passes(self) -> None:
-        state = self._state(passes=2)
-        self.assertFalse(find_loop_complete(state))
-
-    def test_modifying_receipt_is_rejected(self) -> None:
-        state = self._state(passes=1)
-        receipt = self._bindings()
-        receipt["PERMISSION_MODE"] = "fix-if-valid"
-        with self.assertRaises(BoundaryError):
-            advance_find_loop(state, receipt)
+class FindLoopReceiptTests(unittest.TestCase):
+    def test_full_validated_receipt_and_finding_manifest_are_required(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            boot = bootstrap_task("mission", "task-1", Path(tmp))
+            root = boot.workspace_root
+            candidate_ref = write_immutable_artifact(
+                root,
+                "candidate.txt",
+                b"candidate",
+                reference_id="candidate",
+                artifact_type="candidate_manifest",
+                description="candidate",
+                read_condition="review",
+            )
+            findings_ref = empty_findings(root, "task-1")
+            bindings = {
+                "TARGET_TASK_SHA256": boot.mission_sha256,
+                "REVIEWED_ARTIFACT_SHA256": candidate_ref["sha256"],
+                "SKEPTIC_SOURCE_BLOB_SHA": blob_digest(ROOT / "skeptic.md"),
+                "APPLICABLE_COMPANION_SET_SHA256": "c" * 64,
+                "MATERIAL_FINDINGS_SHA256": findings_ref["sha256"],
+                "MATERIAL_FINDINGS_REFERENCE": findings_ref,
+                "INVOCATION_KIND": "FIND_LOOP",
+                "PERMISSION_MODE": "read-only",
+            }
+            state = {**bindings, "CONSECUTIVE_STABLE_PASSES": 0, "PASSES_REQUIRED": 3}
+            with self.assertRaises(BoundaryError):
+                advance_find_loop(
+                    state,
+                    bindings,
+                    source_root=ROOT,
+                    artifact_root=root,
+                    task_id="task-1",
+                    material_findings_reference=findings_ref,
+                )
+            receipt = {
+                **{key: value for key, value in bindings.items() if key != "MATERIAL_FINDINGS_REFERENCE"},
+                "INVOCATION_ID": "r-1",
+                "DONE": "complete review",
+                "REVIEWED_ARTIFACT_REFERENCE": {
+                    "path": candidate_ref["repository_relative_path"],
+                    "sha256": candidate_ref["sha256"],
+                },
+                "SKEPTIC_SOURCE_PATH": "skeptic.md",
+                "SKEPTIC_SOURCE_REF": "WORKTREE",
+                "PREVIOUS_FINDINGS_REFERENCE": "NONE",
+                "MAJOR_STEPS_RUN": [
+                    "GATE",
+                    "FUNDAMENTAL SCAN",
+                    "MAP",
+                    "CONFIDENCE",
+                    "STABILIZE",
+                    "EVIDENCE",
+                    "DECIDE",
+                    "ACT",
+                    "VERIFY",
+                    "LEARN",
+                ],
+                "THINKERS_CONSIDERED": ["CH", "OM", "FE", "PO", "KT", "SH"],
+                "FINDING_CATEGORIES": ["PASS"],
+                "FINAL_OUTPUT_CATEGORY": "HANDLED",
+                "OPEN_ITEMS": [],
+                "REVIEW_SCOPE": "COMPLETE",
+                "REPAIR_RUN": False,
+            }
+            for _ in range(3):
+                state = advance_find_loop(
+                    state,
+                    receipt,
+                    source_root=ROOT,
+                    artifact_root=root,
+                    task_id="task-1",
+                    material_findings_reference=findings_ref,
+                )
+            self.assertTrue(find_loop_complete(state))
 
 
 if __name__ == "__main__":

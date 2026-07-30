@@ -1,33 +1,35 @@
 # Target Task Claude Code MVP contract
 
-The active MVP is a host workflow, not a daemon. Claude Code auto-loads root
-`CLAUDE.md`, which imports `AGENTS.md`; `AGENTS.md` routes an exact `TT:`
-trigger to `workflows/target_task.md`. The Python modules in this directory are
-the deterministic contracts used by that live workflow.
+The active MVP is a Claude Code host workflow:
+
+`CLAUDE.md -> AGENTS.md -> workflows/target_task.md`.
+
+The Python modules here are deterministic contracts used by that workflow; they
+are not a daemon or provider SDK.
 
 ## One authoritative task root
 
-`TASKS_ROOT/TASK_ID` is the sole authority for every run artifact: mission,
-ledger, Plan versions, sealed Plan, steps, requests, results, reviews,
-findings, receipts, command logs, routing evidence, and checkpoints. The source
-repository is the work target, not a task-state store.
+`TARGET_TASKS_ROOT/TASK_ID` is the sole authority for mission, Plan versions,
+sealed Plan, ledger, cursor snapshots, requests, results, reviews, findings,
+receipts, command logs, routing evidence, validation, and checkpoints. Every
+artifact reference is relative to that task root. The source repository is only
+the work target.
 
 ## Modules
 
-- `trigger.py`: exact trigger, bootstrap, compact rediscovery, restart adapter.
-- `flow.py`: fixed high-level lifecycle and sealed-Plan invariant.
-- `contracts.py`: ledger, phase/action vocabulary, explicit linear cursor.
-- `store.py`: create-only task artifacts and append-only hash-chained ledger.
-- `boundary.py`: transition gate, receipts, review gates, cursor operations.
-- `runtime.py`: test adapter and production Claude Code host-receipt validation.
-- `command.py`: bounded deterministic command execution and evidence capture.
+- `trigger.py`: exact trigger, atomic bootstrap, safe task IDs, complete rediscovery.
+- `flow.py`: closed structural phase transition table.
+- `contracts.py`: strict ledger, canonical Plan, and serializable cursor schemas.
+- `store.py`: private create-only/content-addressed artifacts and strict ledger.
+- `boundary.py`: mandatory evidence gates, review receipts, role receipts, cursor transitions.
+- `runtime.py`: deterministic test adapter and fully bound Claude host receipts.
+- `command.py`: clean-preflight, timeout-bounded deterministic commands with immutable logs.
 
-## Isolation statement
+## Isolation boundary
 
-The MVP proves protocol isolation at observable boundaries. It does not prove
-hidden host context isolation; report that as UNKNOWN.
+Direct Claude Code submission exposes the initial `TT:` message to the receiving
+host session. After bootstrap, the durable Lead carries only compact references
+and status. The MVP tests observable protocol isolation; hidden host context
+isolation remains `UNKNOWN`.
 
-## Non-circular construction
-
-Changes to Target Task itself are ordinary Task Prompt work. Do not use `TT:`
-to modify this contract, workflow, or implementation.
+Changes to this lifecycle are ordinary Task Prompt work, never a Target Task.

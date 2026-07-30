@@ -1,12 +1,13 @@
 # Target Task MVP deferred hardening
 
-The Claude Code MVP enforces and tests reference-only behavior at observable
-protocol boundaries. It does not prove that the host platform never internally
-exposes a child body to a parent context.
+The Claude Code MVP enforces reference-only behavior after mission bootstrap at
+observable protocol boundaries. It does not prove that the host platform never
+internally exposes child content to a parent context.
 
-- `BOUNDARY_PROTOCOL_ISOLATION`: testable PASS/FAIL.
+- `BOUNDARY_PROTOCOL_ISOLATION`: testable PASS/FAIL after bootstrap.
+- `INITIAL_MISSION_CONTEXT_ISOLATION`: UNAVAILABLE for direct `TT:` submission.
 - `HIDDEN_HOST_CONTEXT_ISOLATION`: UNKNOWN.
 
-A later hardening task may replace protocol discipline with host-enforced
-direct-to-file output capture if such a primitive becomes available. Do not
-claim that hardening complete without direct runtime evidence.
+A later hardening pass may add a trusted pre-model launcher or a host primitive
+that persists and replaces the initial prompt before model receipt. Do not claim
+hard isolation without direct runtime evidence.

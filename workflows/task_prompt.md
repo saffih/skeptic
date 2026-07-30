@@ -44,12 +44,10 @@ lifecycle in "## Target Tasks" below, ending in execution exactly once.
 A Target Task is triggered by the exact prefix `TT:`; the text after it is the
 immutable mission. Read `workflows/target_task.md` before designating or
 executing one — it owns the complete lifecycle, the Luna compact-Lead
-contract, the sealed-Plan invariant, and the append-only ledger discipline.
-`concepts/target_task/` holds the reference-only contracts and example
-modules (`trigger.py`, `flow.py`, `boundary.py`, `store.py`, `runtime.py`,
-`command.py`, `contracts.py`) that illustrate this design; no runtime in this
-repository executes them automatically, and an invoking runtime must
-implement equivalent behavior, not merely cite the reference.
+contract, the sealed-Plan invariant, the append-only ledger discipline, and
+the live Claude Code MVP route loaded through root `CLAUDE.md` and `AGENTS.md`.
+`concepts/target_task/` holds the deterministic contracts used by that live
+workflow; `.claude/agents/target-task-*.md` registers its bounded host roles.
 
 When a prompt designates or executes a Target Task, replace the entire
 ordinary plan/review/repair/execution path as a whole — not only its

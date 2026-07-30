@@ -1,189 +1,245 @@
-# Target Task — Claude Code MVP
+# Target Task — Claude Code experimental MVP
 
-This is the authoritative runtime workflow for a user message whose first
-meaningful token is exactly `TT:`. Claude Code auto-loads root `CLAUDE.md`,
-which imports `AGENTS.md`; `AGENTS.md` routes the trigger here.
+This is the authoritative workflow when the first meaningful token is exactly
+`TT:`. Root `CLAUDE.md` imports `AGENTS.md`, which routes here.
 
-The previous Target Task prototype is removed. Historical files under
-`plans/`, `docs/`, and `experiments/` are evidence only unless this workflow
-explicitly names them as current authority.
+## Honest boundary
 
-## MVP boundary
+Direct Claude Code submission necessarily places the initial user message in the
+receiving host session. Therefore:
 
-The MVP is sequential: one repository, one task ID, one sealed linear Plan,
-one current step, and one unresolved operation. It uses Claude Code's actual
-subagent/command mechanisms and the deterministic contracts under
-`concepts/target_task/`.
+- `INITIAL_MISSION_CONTEXT_ISOLATION: UNAVAILABLE_FOR_DIRECT_TT`;
+- bootstrap the exact suffix immediately;
+- after bootstrap, the durable Lead carries only bounded status and references;
+- `HIDDEN_HOST_CONTEXT_ISOLATION: UNKNOWN`.
 
-The isolation claim is protocol-level and observable:
+Do not claim that the initial mission was hidden from the host. The MVP's
+reference-only guarantee begins after bootstrap and is observable at role-return
+and durable-state boundaries.
 
-- a child role receives bounded file references and routing metadata;
-- its complete substantive output is written to a task artifact;
-- it returns only a compact validated receipt;
-- Boundary rejects body-bearing, oversized, mismatched, or synthetic
-  production receipts;
-- Luna holds compact references and status only.
+## Supported scope
 
-Do not claim hard platform isolation. Report
-`HIDDEN_HOST_CONTEXT_ISOLATION: UNKNOWN`.
+One source repository, one task ID, one canonical linear Plan, one current step,
+one unresolved operation, sequential execution, and explicit `ADVANCE`, `RETRY`,
+`RECOVER`, or `STOP`. No DAG, parallel workflow engine, daemon, database, queue,
+or provider SDK is part of this MVP.
 
-## Trigger and one authoritative task root
+## Task root and trigger
 
-1. Ignore whitespace before the exact `TT:` token.
-2. The mission is the exact host-provided Unicode suffix after `TT:`. Do not
-   trim, normalize, summarize, or rewrite it. Reject only when the suffix has
-   no non-whitespace character.
-3. Resolve one external `TASKS_ROOT`, create one `TASK_ID`, and use
-   `TASKS_ROOT/TASK_ID` as the sole authority for mission, ledger, Plan
-   versions, sealed Plan, steps, requests, results, reviews, findings,
-   receipts, command logs, routing evidence, and checkpoints.
-4. Call `concepts.target_task.trigger.bootstrap_task` before the durable Lead
-   receives control.
-5. Never commit task-run artifacts or a task-specific sealed Plan into the
-   source repository.
+1. Ignore whitespace before `TT:`. Preserve the exact Unicode suffix after it;
+   reject only a suffix containing no non-whitespace character.
+2. Resolve `TARGET_TASKS_ROOT`; default to `~/.skeptic/target-tasks`.
+3. Generate a safe unique task ID matching
+   `[A-Za-z0-9][A-Za-z0-9._-]{0,63}`.
+4. Call `concepts.target_task.trigger.bootstrap_task` before planning.
+5. Record only the returned task ID, task-root reference, mission hash/size, and
+   ledger head in durable Lead state. Do not repeat the mission body.
 
-A fresh session uses `rediscover_task(TASKS_ROOT, TASK_ID)` and does not depend
-on previous conversation state.
+`TARGET_TASKS_ROOT/TASK_ID` is the sole authority for every run artifact. A
+fresh session calls `rediscover_task(TARGET_TASKS_ROOT, TASK_ID)` and validates
+the exact mission identity, ledger chain, sealed Plan, and complete cursor.
 
-## Models and routing evidence
+## Registered Claude Code roles
 
-Persist a role-by-role routing manifest containing requested and observed model
-and effort. If the host does not expose an observed value, record `UNKNOWN`.
+Use the project agents registered under `.claude/agents/`:
 
-- Durable Lead: Claude Sonnet 5, smallest reliable effort for compact control.
-- Planner: Claude Opus 4.8 XHIGH; fallback Sonnet 5 XHIGH.
-- Plan Skeptic: Claude Opus 4.8 XHIGH; fallback Sonnet 5 XHIGH.
-- Final Skeptic: Claude Opus 4.8 XHIGH; fallback Sonnet 5 XHIGH.
-- Workers: sealed-Plan choice; default Sonnet 5 MEDIUM or HIGH.
+- `target-task-planner` — one complete canonical Plan;
+- `target-task-reviewer` — one independent complete RunSkeptic review;
+- `target-task-worker` — one sealed Plan step.
 
-Every Plan Fix Loop pass and final Find Loop pass uses a fresh reviewer
-subagent/context. Pass only validated references, prior finding-set reference,
-and compact binding metadata through Luna.
+Every dispatch uses a fresh Agent call. Subagents receive only an immutable
+request reference and minimal routing metadata. They write full output to the
+request's declared task-root path and return only the compact host receipt.
+They may not dispatch another agent.
+
+## Cost-aware routing
+
+Follow `agents/model_routing_policy.md`.
+
+- Start with the current/economical reliable model and medium or lower effort.
+- Do not hardcode or automatically escalate to Opus or XHIGH.
+- Use premium routing only after observed insufficiency and an explicit owner
+  checkpoint unless the exact premium call was pre-authorized.
+- Record requested and observed routing separately; hidden values are `UNKNOWN`.
+- Return to the economical route after any bounded premium judgment.
+
+## Immutable role protocol
+
+For each role operation create under the task root:
+
+- `requests/<operation-id>.json` — immutable bounded request;
+- `results/<operation-id>.*` — complete substantive result;
+- `dispatch/<operation-id>.json` — canonical dispatch evidence;
+- `receipts/<operation-id>.json` — compact host receipt.
+
+The canonical request itself has exact fields:
+
+```text
+schema_version, task_id, operation_id, attempt, role, step_id, objective,
+scope, authority, prohibitions, success_criteria, task_artifact_references,
+source_artifact_references, result_relative_path
+```
+
+Task-artifact references are validated against `TASK_ROOT`; source-evidence
+references are validated separately against the current source worktree. This
+explicit split permits bounded code evidence without turning the worktree into
+a second task-state authority or copying source bodies into durable Lead state.
+
+Canonical dispatch evidence fields:
+
+```text
+schema_version, task_id, operation_id, attempt, role, step_id, request_ref
+```
+
+Canonical host receipt fields:
+
+```text
+schema_version, task_id, operation_id, attempt, role, step_id, status,
+summary, request_ref, result_ref, dispatch_evidence_ref, synthetic
+```
+
+Production requires `synthetic=false`. Before any state change, call
+`validate_host_role_receipt` through `record_validated_host_outcome` with the
+expected task root, source root, task, operation, attempt, role, step, and request reference. Boundary
+must reject extra/body fields, oversized returns, wrong bindings, bad artifact
+identity, symlink paths, noncanonical dispatch evidence, and synthetic
+production receipts.
 
 ## Mandatory lifecycle
 
 ```text
-mission persisted
--> independent Planner creates complete Plan
--> RunSkeptic Fix Loop on complete Plan
+exact mission persisted
+-> independent Planner
+-> complete canonical Plan
+-> Plan RunSkeptic Fix Loop
 -> three consecutive qualifying unchanged passes
--> exact Plan accepted and sealed
--> execute sealed linear Plan
--> final open execution step runs bounded real-host smoke + negative probe
--> deterministic validation of execution and smoke evidence
+-> exact Plan sealed
+-> execute every sealed Plan step sequentially
+-> real-host smoke is the final open step when qualifying the implementation
+-> deterministic validation
 -> candidate commit/tree frozen
--> read-only RunSkeptic Find Loop over exact frozen candidate
--> integrate only when clean and mechanically possible
+-> final read-only RunSkeptic Find Loop
+-> integration only when clean and mechanically possible
+-> remote commit/tree verification
 -> compact terminal receipt
 ```
 
-## Plan gate
+### 1. Planner and canonical Plan
 
-Before implementation:
+Dispatch `target-task-planner` using mission and repository evidence references.
+The Planner writes one canonical JSON Plan accepted by
+`concepts.target_task.contracts.parse_plan_bytes`. The Plan binds:
 
-1. Dispatch an independent Planner using references to the mission, repository
-   identity/evidence, authority, and applicable contracts.
-2. Persist every complete Plan version under the task root.
-3. For every RunSkeptic Fix Loop invocation, freshly read current
-   `skeptic.md`, apply its complete recipe, consider every required Thinker,
-   persist the full review and compact receipt, and bind it to exact
-   Plan/source hashes.
-4. A material finding requires a new complete Planner-produced Plan version.
-   Reset the qualifying count after every material change. Repair runs and
-   delta reviews never count.
-5. Seal only after three qualifying passes on the same unchanged Plan with no
-   unresolved ACTION, DECOMPOSE path, CONFLICT, review-required status, or
-   blocking unknown.
+- schema version;
+- unique Plan ID;
+- task ID;
+- mission SHA-256;
+- ordered unique steps with role and testable success criteria.
 
-Once sealed, the Plan never changes in that run. If it cannot be completed
-safely, stop; do not replan.
+A material finding requires a new Planner dispatch and complete replacement
+Plan. Never patch a Plan in place.
 
-## Sequential execution
+### 2. Plan RunSkeptic Fix Loop
 
-Use `StepCursor` and Boundary's functions:
+For every pass, dispatch a fresh `target-task-reviewer` that freshly reads
+current root `skeptic.md`, runs the complete recipe and every required Thinker,
+and writes full review, finding set, and formal receipt under the task root.
 
-- `new_step_cursor`
-- `admit_operation`
-- `record_validated_host_outcome`
-- `retry_operation`
-- `recover_operation`
-- `advance_step`
+Validate each receipt with:
 
-Required semantics:
+```python
+boundary.advance_fix_loop(
+    state,
+    receipt,
+    source_root=SOURCE_REPOSITORY,
+    artifact_root=TASK_ROOT,
+)
+```
 
-- one current step and one unresolved operation;
-- admission creates a new operation ID and increments attempt;
-- COMPLETE becomes `STEP_AWAITING_ADVANCE`, not automatic advancement;
-- Luna requests `ADVANCE`, consuming exactly that successful operation;
-- duplicate `ADVANCE` fails closed;
-- FAILED permits bounded `RETRY` or `STOP`;
-- UNKNOWN permits `RECOVER` or `STOP`, never blind retry;
-- execution completes only after every sealed Plan step is accepted.
+A repair, delta review, changed Plan/source/companion/finding identity, open item,
+or invalid receipt resets the count. Seal only after
+`fix_loop_complete(state)` is true on three unchanged qualifying passes.
 
-Every operation writes an immutable request, full result, dispatch evidence,
-and compact host receipt under the task root. Production always calls
-`validate_host_role_receipt(..., allow_test_synthetic=False)` through
-`record_validated_host_outcome`.
+Seal with `store.persist_plan_artifact`. Record exact Plan path, SHA-256, byte
+size, schema version, and ordered step IDs. Once sealed, never edit, replace,
+reorder, extend, reinterpret, or repair it in the same run.
 
-Synthetic receipts are legal only through explicit unit-test injection with
-`allow_test_synthetic=True`. They must never advance a production Fix Loop,
-Find Loop, step cursor, validation gate, or integration gate.
+### 3. Sequential execution and durable cursor
 
-## Final open execution step: real-host smoke
+Initialize with `boundary.new_step_cursor_from_plan`. Every cursor state change
+must be persisted with `boundary.persist_cursor_transition` before the durable
+Lead relies on it.
 
-The sealed Plan makes the real-host smoke and body-bearing-return negative
-probe its final open execution step. A smoke defect may be repaired only
-within that already-sealed step before execution completes; the Plan itself
-never changes.
+For each step:
 
-`scripts/target_task_smoke.sh` runs only with explicit owner authorization. It
-uses a disposable local clone with remotes removed, bounded turns, explicit
-allowed/disallowed tools, no `--dangerously-skip-permissions`, and before/after
-proof that the original repository and refs did not change.
+1. `admit_operation` creates a unique operation and increments attempt.
+2. Persist the admitted cursor and immutable request/dispatch evidence.
+3. Dispatch the exact role named by the sealed Plan.
+4. `record_validated_host_outcome` validates the complete binding.
+5. Persist outcome cursor and evidence.
+6. COMPLETE becomes `STEP_AWAITING_ADVANCE`; it never moves automatically.
+7. Luna issues `ADVANCE`; `advance_step` consumes exactly that successful
+   operation. Duplicate advance fails closed.
+8. FAILED permits bounded `RETRY` or `STOP`; retry uses new operation and files.
+9. UNKNOWN permits evidence-backed `RECOVER` or `STOP`, never blind retry.
 
-The smoke proves the candidate clone auto-loads `CLAUDE.md`, routes `TT:`,
-persists the exact mission, performs at least one real Planner,
-Skeptic/Reviewer, and Worker dispatch, advances two distinct steps explicitly,
-rediscovers state from task root in a fresh context, and rejects a body-bearing
-or oversized return without durable advancement.
+High-level phase transition from `STEP_EXECUTING` to `STEP_VALIDATED` is legal
+only when the persisted cursor is `EXECUTION_COMPLETE` for all sealed steps.
 
-Test-only deterministic loop receipts may reduce repeated smoke cost, but
-production must reject them and one real dispatch of each required role class
-remains mandatory.
+### 4. Commands
 
-## Deterministic validation and freeze
+Use `concepts.target_task.command.run_task_command` for deterministic commands.
+Mutating commands require a freshly observed clean Git preflight, explicit argv,
+a timeout, and mutation authority. Logs are private, immutable, and task-root
+relative. A dirty worktree cannot produce an admissible mutation preflight.
 
-After every Plan step including smoke is accepted, verify sealed Plan identity,
-exactly-once step acceptance, no unresolved operation, artifact identities,
-protected paths, direct Lead bypass rejection, focused/full tests, original
-repository/ref preservation, and candidate commit/tree identity. Persist the
-validation receipt, then freeze the exact candidate. No code, test, Plan, or
-candidate change is legal after freeze.
+### 5. Deterministic validation and freeze
 
-## Final RunSkeptic Find Loop
+After all steps, mechanically verify:
 
-Run complete fresh read-only reviews of the exact unchanged candidate. Re-read
-current `skeptic.md` every pass, re-evaluate accumulated findings, and persist
-full reviews plus compact receipts. Stop after three consecutive complete
-reviews add no meaningful finding and make no material change to an existing
-finding.
+- task and mission identities;
+- strict canonical ledger and one task ID throughout;
+- exact sealed Plan identity and all ordered steps accepted once;
+- complete cursor and no unresolved operation;
+- request/result/dispatch/receipt artifact hashes and sizes;
+- no child modification of task-control files;
+- role-return body rejection and mismatch negative probes;
+- focused tests and full repository tests;
+- source repository/worktree preservation;
+- exact candidate commit and tree.
 
-- stable with no material findings -> `VERIFIED_CLEAN`;
-- stable with findings -> `QUALITY_FINDINGS_REPORTED`, integration blocked.
+Persist a canonical task-root `validation_receipt` artifact with exact fields `schema_version`, `task_id`, `gate`, `status`, and `subject_sha256`; `gate` is `deterministic_validation`. Pass its artifact reference and task ID to Boundary. Boundary will not freeze from a bare boolean or unbound path. Freeze the exact candidate; no candidate change is legal afterward.
 
-Convergence is not cleanliness. Do not repair after freeze; repair requires a
-new run and Plan.
+### 6. Final RunSkeptic Find Loop
 
-## Integration and public evidence
+Dispatch a fresh `target-task-reviewer` per complete read-only pass. Validate and
+advance using `boundary.advance_find_loop(... source_root=SOURCE_REPOSITORY,
+artifact_root=TASK_ROOT)`. Stop only after three consecutive complete reviews
+add no meaningful finding and make no material change to an existing finding.
 
-Integrate only when the exact reviewed candidate is verified clean and a
-non-force fast-forward preserves its tree. Push success alone is insufficient;
-fetch and verify remote commit and tree.
+Convergence is not cleanliness. Material findings block integration. Do not
+repair after freeze; repair is a new ordinary task/run.
 
-Before merge, update the PR title/body so it no longer claims a reference-only
-runtime or treats historical `plan-002` as qualified. Identify the accepted
-MVP Plan, deterministic tests, smoke evidence, final Find Loop result, and the
-protocol-isolation limitation.
+### 7. Integration and close
 
-The terminal receipt includes `ROUTING_EVIDENCE_REF`, pointing to the per-role
-requested-versus-observed routing manifest.
+Boundary admits integration only when the Find Loop is complete, the material finding set is empty, and a canonical task-root `validation_receipt` whose gate is `integration` binds the reviewed subject. Use non-force fast-forward integration when mechanically possible. Fetch remote main, persist a second canonical receipt whose gate is `remote_verification`, and verify exact commit and tree. Only then close the task. Bare PASS mappings are rejected.
+
+## Real-host qualification smoke
+
+`scripts/target_task_smoke.sh` runs a disposable, remote-free clone with a cheap
+configurable model, low effort, bounded turns, wall-clock timeout, explicit
+Agent permission, an added external task directory, and no network/push tools.
+`scripts/validate_target_task_smoke.py` must mechanically validate the task root;
+a nonempty Claude output file is not success.
+
+Until that smoke passes on the exact candidate, report
+`MVP_STATUS: STATICALLY_VALIDATED_AWAITING_REAL_HOST_SMOKE` and use `TT:` only in
+disposable experiments.
+
+## Terminal receipt
+
+Return only compact status and references, including task ID/root, mission and
+Plan identities, current/final cursor, test evidence, smoke evidence, candidate
+commit/tree, review-loop counts, routing evidence reference, integration/remote
+verification, `INITIAL_MISSION_CONTEXT_ISOLATION`,
+`BOUNDARY_PROTOCOL_ISOLATION`, and `HIDDEN_HOST_CONTEXT_ISOLATION`.

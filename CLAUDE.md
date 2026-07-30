@@ -1,10 +1,11 @@
 # Claude Code project instructions
 
-Load the repository's authoritative agent routing and contracts:
-
 @AGENTS.md
 
-When the first meaningful token of a user message is exactly `TT:`, do not
-handle it as an ordinary request. Read `workflows/target_task.md` completely
-and execute that workflow. Persist the exact mission suffix before substantive
-planning. Do not use conversational memory as durable task state.
+When the first meaningful token of a user message is exactly `TT:`, route the
+request to `workflows/target_task.md` and follow that file completely. Direct
+Claude Code submission necessarily exposes the initial user message to the
+current host session; do not claim otherwise. Immediately bootstrap the exact
+mission suffix, then keep the durable post-bootstrap Lead reference-only.
+
+Use `TARGET_TASKS_ROOT` when set; otherwise use `~/.skeptic/target-tasks`.

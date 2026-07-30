@@ -1,92 +1,56 @@
-import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+import subprocess
 
-from concepts.target_task.command import build_mutation_preflight, run_task_command
+from concepts.target_task.command import CommandError, build_mutation_preflight, run_task_command
 
 
-def _git(cwd: Path, *args: str) -> None:
+def git(cwd, *args):
     subprocess.run(["git", "-C", str(cwd), *args], check=True, capture_output=True)
 
 
-class CommandTestCase(unittest.TestCase):
-    def setUp(self) -> None:
+class CommandTests(unittest.TestCase):
+    def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         root = Path(self.tmp.name)
-        self.worktree = root / "repo"
-        self.workspace = root / "workspace"
-        self.worktree.mkdir()
-        self.workspace.mkdir()
-        _git(self.worktree, "init", "-q", "-b", "main")
-        _git(self.worktree, "config", "user.email", "test@example.com")
-        _git(self.worktree, "config", "user.name", "Test")
-        (self.worktree / "README.md").write_text("hello\n")
-        _git(self.worktree, "add", "README.md")
-        _git(self.worktree, "commit", "-q", "-m", "initial")
+        self.repo = root / "repo"
+        self.tasks = root / "task"
+        self.repo.mkdir(); self.tasks.mkdir()
+        git(self.repo, "init", "-q", "-b", "main")
+        git(self.repo, "config", "user.email", "test@example.com")
+        git(self.repo, "config", "user.name", "Test")
+        (self.repo / "README.md").write_text("hello\n")
+        git(self.repo, "add", "README.md"); git(self.repo, "commit", "-q", "-m", "initial")
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         self.tmp.cleanup()
 
+    def test_dirty_worktree_cannot_produce_mutation_preflight(self):
+        (self.repo / "dirty").write_text("x")
+        with self.assertRaises(CommandError):
+            build_mutation_preflight(self.repo, self.repo)
 
-class RunTaskCommandTests(CommandTestCase):
-    def test_non_mutating_command_succeeds_and_logs_under_workspace(self) -> None:
-        receipt = run_task_command(
-            self.workspace, "list-files", "list repo files", ["ls", "README.md"],
-            worktree=self.worktree,
-        )
-        self.assertEqual(receipt["status"], "SUCCEEDED")
-        self.assertEqual(receipt["exit_code"], 0)
-        self.assertTrue((self.workspace / receipt["log_path"]).is_file())
-
-    def test_failing_command_is_reported_failed_with_preserved_log(self) -> None:
-        receipt = run_task_command(
-            self.workspace, "fail", "deliberately fail", ["ls", "does-not-exist"],
-            worktree=self.worktree,
-        )
-        self.assertEqual(receipt["status"], "FAILED")
-        self.assertNotEqual(receipt["exit_code"], 0)
-
-    def test_mutating_command_without_preflight_is_blocked(self) -> None:
-        receipt = run_task_command(
-            self.workspace, "touch", "touch a file", ["touch", "new.txt"],
-            worktree=self.worktree, mutating=True,
-        )
+    def test_mutation_requires_fresh_clean_preflight(self):
+        receipt = run_task_command(self.tasks, "blocked", "blocked", ["touch", "x"], worktree=self.repo, mutating=True)
         self.assertEqual(receipt["status"], "BLOCKED")
-        self.assertFalse((self.worktree / "new.txt").exists())
-
-    def test_mutating_command_with_correct_preflight_succeeds(self) -> None:
-        preflight = build_mutation_preflight(self.worktree, self.worktree)
-        receipt = run_task_command(
-            self.workspace, "touch-ok", "touch a file", ["touch", "new.txt"],
-            worktree=self.worktree, mutating=True, preflight=preflight,
-        )
+        preflight = build_mutation_preflight(self.repo, self.repo)
+        receipt = run_task_command(self.tasks, "allowed", "allowed", ["touch", "x"], worktree=self.repo, mutating=True, preflight=preflight)
         self.assertEqual(receipt["status"], "SUCCEEDED")
-        self.assertTrue((self.worktree / "new.txt").exists())
 
-    def test_stale_preflight_head_blocks_command(self) -> None:
-        preflight = build_mutation_preflight(self.worktree, self.worktree)
-        (self.worktree / "second.txt").write_text("x\n")
-        _git(self.worktree, "add", "second.txt")
-        _git(self.worktree, "commit", "-q", "-m", "second")
+    def test_timeout_is_preserved_and_duplicate_log_is_rejected(self):
         receipt = run_task_command(
-            self.workspace, "touch-stale", "touch a file", ["touch", "new.txt"],
-            worktree=self.worktree, mutating=True, preflight=preflight,
+            self.tasks, "slow", "slow", [sys.executable, "-c", "import time; time.sleep(5)"],
+            worktree=self.repo, timeout_seconds=1,
         )
-        self.assertEqual(receipt["status"], "BLOCKED")
+        self.assertEqual(receipt["exit_code"], 124)
+        with self.assertRaises(CommandError):
+            run_task_command(self.tasks, "slow", "again", ["true"], worktree=self.repo)
 
-
-class BuildMutationPreflightTests(CommandTestCase):
-    def test_reflects_actual_branch_and_head(self) -> None:
-        preflight = build_mutation_preflight(self.worktree, self.worktree)
-        self.assertEqual(preflight["expected_branch"], "main")
-        self.assertTrue(preflight["required_clean"])
-        self.assertTrue(preflight["mutation_authorized"])
-
-    def test_dirty_worktree_is_reflected_as_not_clean(self) -> None:
-        (self.worktree / "untracked.txt").write_text("x\n")
-        preflight = build_mutation_preflight(self.worktree, self.worktree)
-        self.assertFalse(preflight["required_clean"])
+    def test_log_is_private(self):
+        receipt = run_task_command(self.tasks, "ok", "ok", ["printf", "ok"], worktree=self.repo)
+        self.assertEqual((self.tasks / receipt["log_path"]).stat().st_mode & 0o777, 0o600)
 
 
 if __name__ == "__main__":

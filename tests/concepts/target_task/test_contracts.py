@@ -2,10 +2,18 @@ import unittest
 
 from concepts.target_task.contracts import (
     ContractError,
+    CursorStatus,
     LedgerEvent,
     LunaAction,
     Phase,
+    StepCursor,
     canonical_bytes,
+    canonical_cursor_bytes,
+    canonical_plan_bytes,
+    parse_cursor_bytes,
+    parse_plan_bytes,
+    plan_step_ids,
+    validate_task_id,
 )
 
 
@@ -19,9 +27,10 @@ def make_event(**overrides):
         accepted_plan_ref=None,
         current_step=None,
         operation_id=None,
-        attempt=1,
+        attempt=0,
         request_ref=None,
-        result_ref="mission.md",
+        result_ref="mission/" + "a" * 64 + ".txt",
+        cursor_ref=None,
         status="COMPLETE",
         validation="PASS",
         blocker=None,
@@ -35,78 +44,95 @@ def make_event(**overrides):
 
 
 class LedgerEventTests(unittest.TestCase):
-    def test_round_trip_through_dict(self) -> None:
+    def test_round_trip_and_exact_fields(self):
         event = make_event()
-        restored = LedgerEvent.from_dict(event.to_dict())
-        self.assertEqual(event, restored)
+        self.assertEqual(LedgerEvent.from_dict(event.to_dict()), event)
 
-    def test_to_dict_has_exact_field_set(self) -> None:
-        from concepts.target_task.contracts import LEDGER_EVENT_FIELDS
-
-        self.assertEqual(set(make_event().to_dict()), LEDGER_EVENT_FIELDS)
-
-    def test_missing_field_is_rejected(self) -> None:
+    def test_missing_extra_and_unknown_values_are_rejected(self):
         data = make_event().to_dict()
         del data["status"]
         with self.assertRaises(ContractError):
             LedgerEvent.from_dict(data)
-
-    def test_extra_field_is_rejected(self) -> None:
         data = make_event().to_dict()
-        data["unexpected"] = "value"
+        data["extra"] = "x"
         with self.assertRaises(ContractError):
             LedgerEvent.from_dict(data)
-
-    def test_negative_sequence_is_rejected(self) -> None:
         with self.assertRaises(ContractError):
-            LedgerEvent.from_dict(make_event(sequence=-1).to_dict())
-
-    def test_zero_attempt_is_rejected(self) -> None:
+            LedgerEvent.from_dict(make_event(status="WHATEVER").to_dict())
         with self.assertRaises(ContractError):
-            LedgerEvent.from_dict(make_event(attempt=0).to_dict())
+            LedgerEvent.from_dict(make_event(validation="MAYBE").to_dict())
 
-    def test_unknown_phase_is_rejected(self) -> None:
+    def test_safe_task_id_is_enforced(self):
+        self.assertEqual(validate_task_id("TT-123_ok"), "TT-123_ok")
+        for bad in ("../escape", ".hidden", "a/b", "", "x" * 65):
+            with self.subTest(bad=bad), self.assertRaises(ContractError):
+                validate_task_id(bad)
+
+    def test_closed_event_has_no_actions(self):
+        event = make_event(
+            phase=Phase.CLOSED.value,
+            status="CLOSED",
+            allowed_actions=(),
+            next_action=None,
+        )
+        self.assertEqual(LedgerEvent.from_dict(event.to_dict()), event)
         with self.assertRaises(ContractError):
-            LedgerEvent.from_dict(make_event(phase="NOT_A_PHASE").to_dict())
+            LedgerEvent.from_dict(make_event(phase=Phase.CLOSED.value, status="CLOSED").to_dict())
 
-    def test_empty_allowed_actions_is_rejected(self) -> None:
-        with self.assertRaises(ContractError):
-            LedgerEvent.from_dict(make_event(allowed_actions=()).to_dict())
-
-    def test_unknown_allowed_action_is_rejected(self) -> None:
-        with self.assertRaises(ContractError):
-            LedgerEvent.from_dict(make_event(allowed_actions=("FLY_AWAY",)).to_dict())
-
-    def test_non_hex_previous_event_hash_is_rejected(self) -> None:
-        with self.assertRaises(ContractError):
-            LedgerEvent.from_dict(make_event(previous_event_hash="not-a-hash").to_dict())
-
-    def test_valid_previous_event_hash_is_accepted(self) -> None:
-        digest = "a" * 64
-        event = LedgerEvent.from_dict(make_event(sequence=1, previous_event_hash=digest).to_dict())
-        self.assertEqual(event.previous_event_hash, digest)
-
-
-class CanonicalBytesTests(unittest.TestCase):
-    def test_deterministic_for_equal_content(self) -> None:
+    def test_canonical_bytes_are_deterministic(self):
         a = make_event().to_dict()
-        b = dict(reversed(list(make_event().to_dict().items())))
+        b = dict(reversed(list(a.items())))
         self.assertEqual(canonical_bytes(a), canonical_bytes(b))
+        self.assertFalse(canonical_bytes(a).endswith(b"\n"))
 
-    def test_no_trailing_newline(self) -> None:
-        raw = canonical_bytes(make_event().to_dict())
-        self.assertFalse(raw.endswith(b"\n"))
 
-    def test_invalid_event_is_rejected(self) -> None:
-        data = make_event().to_dict()
-        del data["status"]
+class PlanContractTests(unittest.TestCase):
+    def plan(self):
+        return {
+            "schema_version": "1",
+            "plan_id": "plan-1",
+            "task_id": "task-1",
+            "mission_sha256": "a" * 64,
+            "steps": [
+                {"step_id": "s1", "objective": "create file", "role": "worker", "success_criteria": ["file exists"]},
+                {"step_id": "s2", "objective": "validate", "role": "command", "success_criteria": ["exact content"]},
+            ],
+        }
+
+    def test_plan_round_trip_and_step_ids(self):
+        raw = canonical_plan_bytes(self.plan())
+        parsed = parse_plan_bytes(raw)
+        self.assertEqual(plan_step_ids(parsed), ("s1", "s2"))
+
+    def test_duplicate_steps_and_noncanonical_bytes_are_rejected(self):
+        plan = self.plan()
+        plan["steps"][1]["step_id"] = "s1"
         with self.assertRaises(ContractError):
-            canonical_bytes(data)
-
-    def test_oversized_event_is_rejected(self) -> None:
-        data = make_event(blocker="x" * 5000).to_dict()
+            canonical_plan_bytes(plan)
+        raw = canonical_plan_bytes(self.plan()).replace(b'"plan_id":"plan-1"', b'"plan_id" : "plan-1"')
         with self.assertRaises(ContractError):
-            canonical_bytes(data)
+            parse_plan_bytes(raw)
+
+
+class CursorContractTests(unittest.TestCase):
+    def test_every_state_round_trips(self):
+        cursors = [
+            StepCursor(("s1", "s2")),
+            StepCursor(("s1", "s2"), status=CursorStatus.OPERATION_ADMITTED, operation_id="op-1", attempt=1),
+            StepCursor(("s1", "s2"), status=CursorStatus.OPERATION_FAILED, operation_id="op-1", attempt=1),
+            StepCursor(("s1", "s2"), status=CursorStatus.EXECUTION_OUTCOME_UNKNOWN, operation_id="op-1", attempt=1),
+            StepCursor(("s1", "s2"), status=CursorStatus.STEP_AWAITING_ADVANCE, operation_id="op-1", successful_operation_id="op-1", attempt=1),
+            StepCursor(("s1", "s2"), current_index=2, status=CursorStatus.EXECUTION_COMPLETE, completed_step_ids=("s1", "s2")),
+        ]
+        for cursor in cursors:
+            with self.subTest(status=cursor.status):
+                self.assertEqual(parse_cursor_bytes(canonical_cursor_bytes(cursor)), cursor)
+
+    def test_inconsistent_cursor_is_rejected(self):
+        with self.assertRaises(ContractError):
+            StepCursor(("s1",), status=CursorStatus.OPERATION_ADMITTED)
+        with self.assertRaises(ContractError):
+            StepCursor(("s1",), current_index=1, status=CursorStatus.STEP_READY, completed_step_ids=("s1",))
 
 
 if __name__ == "__main__":
