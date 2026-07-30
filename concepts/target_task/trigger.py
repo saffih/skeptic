@@ -23,7 +23,7 @@ from typing import Any
 
 from capabilities.restart_admission.restart_admission import admit_restart
 from concepts.target_task.contracts import LedgerEvent, LunaAction, Phase
-from concepts.target_task.store import AppendOnlyLedger, write_immutable_artifact
+from concepts.target_task.store import AppendOnlyLedger, _fsync_dir, write_immutable_artifact
 
 TRIGGER_PREFIX = "TT:"
 
@@ -107,6 +107,7 @@ def bootstrap_task(mission: str, task_id: str, tasks_root: Path) -> BootstrapRes
     # only an orphaned `.{task_id}.bootstrap.tmp` directory, never a
     # half-created authoritative task.
     os.rename(tmp_dir, final_dir)
+    _fsync_dir(tasks_root)
     return BootstrapResult(
         task_id=task_id,
         workspace_root=final_dir,

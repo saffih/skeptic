@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from concepts.target_task.contracts import Phase
 from concepts.target_task.store import read_ledger, verify_chain
@@ -59,6 +60,12 @@ class BootstrapTaskTests(unittest.TestCase):
             bootstrap_task("second", "task-3", self.tasks_root)
         # the first task's workspace must be untouched by the rejected second attempt
         self.assertEqual((self.tasks_root / "task-3" / "mission.md").read_text(), "first")
+
+    def test_workspace_publication_is_durably_fsynced(self) -> None:
+        with patch("concepts.target_task.trigger._fsync_dir") as fsync_dir:
+            bootstrap_task("do the thing", "task-5", self.tasks_root)
+        fsync_dir.assert_called_once()
+        self.assertEqual(fsync_dir.call_args[0][0].resolve(), self.tasks_root.resolve())
 
     def test_no_partial_task_root_survives_a_failed_bootstrap(self) -> None:
         # Pre-create the tmp staging directory to force bootstrap to fail

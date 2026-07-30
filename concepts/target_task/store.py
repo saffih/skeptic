@@ -25,6 +25,7 @@ entry (see `concepts/target_task/target_task_contract.md`, "Two roots").
 
 from __future__ import annotations
 
+import errno
 import hashlib
 import json
 import os
@@ -40,6 +41,23 @@ class StoreError(ValueError):
     def __init__(self, code: str, path: str = "$") -> None:
         self.code, self.path = code, path
         super().__init__(f"{code} at {path}")
+
+
+def _fsync_dir(directory: Path) -> None:
+    """Durably persist a directory-entry change (create, rename, replace)
+    against a crash immediately after the syscall returns, matching the
+    pattern `capabilities.immutable_checkpoint`/`capabilities.restart_admission`
+    already use for their own atomic publish steps. Some filesystems do not
+    support fsync on a directory; that is not an error here."""
+    try:
+        dir_fd = os.open(str(directory), os.O_RDONLY)
+        try:
+            os.fsync(dir_fd)
+        finally:
+            os.close(dir_fd)
+    except OSError as exc:
+        if exc.errno not in {errno.ENOTSUP, errno.EOPNOTSUPP, errno.EINVAL, errno.ENOSYS}:
+            raise
 
 
 def _safe_target(workspace_root: Path, relative_path: str) -> Path:
@@ -87,6 +105,7 @@ def write_immutable_artifact(
     except BaseException:
         target.unlink(missing_ok=True)
         raise
+    _fsync_dir(target.parent)
     digest, size = _hash_file(target)
     return {
         "reference_id": reference_id,
@@ -215,4 +234,5 @@ def recover_torn_tail(ledger_path: Path) -> RecoveryResult:
         stream.flush()
         os.fsync(stream.fileno())
     os.replace(tmp_path, ledger_path)
+    _fsync_dir(ledger_path.parent)
     return RecoveryResult(recovered=True, valid_event_count=len(prior_events))

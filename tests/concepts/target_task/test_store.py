@@ -2,6 +2,7 @@ import hashlib
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from concepts.target_task.contracts import LedgerEvent, LunaAction, Phase
 from concepts.target_task.store import (
@@ -69,6 +70,14 @@ class WriteImmutableArtifactTests(unittest.TestCase):
     def test_absolute_path_is_rejected(self) -> None:
         with self.assertRaises(StoreError):
             write_immutable_artifact(self.workspace, "/etc/passwd", b"x", reference_id="a", artifact_type="t", description="d", read_condition="r")
+
+    def test_directory_entry_is_durably_fsynced(self) -> None:
+        with patch("concepts.target_task.store._fsync_dir") as fsync_dir:
+            write_immutable_artifact(
+                self.workspace, "a.txt", b"1", reference_id="a", artifact_type="t", description="d", read_condition="r",
+            )
+        fsync_dir.assert_called_once()
+        self.assertEqual(fsync_dir.call_args[0][0].resolve(), self.workspace.resolve())
 
     def test_nested_directory_is_created(self) -> None:
         ref = write_immutable_artifact(self.workspace, "steps/step-1/result.md", b"x", reference_id="s1", artifact_type="t", description="d", read_condition="r")
@@ -159,12 +168,53 @@ class RecoverTornTailTests(unittest.TestCase):
         self.assertEqual(len(events), 1)
         self.assertTrue(verify_chain(events))
 
+    def test_recovery_publish_is_durably_fsynced(self) -> None:
+        ledger = AppendOnlyLedger(self.ledger_path)
+        first = ledger.append(make_event(0, None))
+        with open(self.ledger_path, "ab") as stream:
+            stream.write(b'{"sequence":1,"previous_event_hash":"' + first.head_hash.encode() + b'"')
+        with patch("concepts.target_task.store._fsync_dir") as fsync_dir:
+            recover_torn_tail(self.ledger_path)
+        fsync_dir.assert_called_once()
+        self.assertEqual(fsync_dir.call_args[0][0].resolve(), self.ledger_path.parent.resolve())
+
     def test_unrecoverable_when_prior_lines_are_also_invalid(self) -> None:
         with open(self.ledger_path, "wb") as stream:
             stream.write(b"not even json\n")
             stream.write(b'{"still": "torn"')
         with self.assertRaises(StoreError):
             recover_torn_tail(self.ledger_path)
+
+
+class FsyncDirTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.directory = Path(self.tmp.name)
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def test_real_directory_fsyncs_without_error(self) -> None:
+        from concepts.target_task.store import _fsync_dir
+
+        _fsync_dir(self.directory)  # must not raise on a real, supported filesystem
+
+    def test_unsupported_fsync_is_tolerated(self) -> None:
+        import errno as errno_module
+
+        from concepts.target_task.store import _fsync_dir
+
+        with patch("concepts.target_task.store.os.fsync", side_effect=OSError(errno_module.ENOTSUP, "not supported")):
+            _fsync_dir(self.directory)  # must not raise
+
+    def test_other_os_errors_propagate(self) -> None:
+        import errno as errno_module
+
+        from concepts.target_task.store import _fsync_dir
+
+        with patch("concepts.target_task.store.os.fsync", side_effect=OSError(errno_module.EIO, "io error")):
+            with self.assertRaises(OSError):
+                _fsync_dir(self.directory)
 
 
 if __name__ == "__main__":

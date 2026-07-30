@@ -126,11 +126,11 @@ existing tested capabilities instead of duplicating them.
    boundary,trigger}.py` — one mirrored test module per file above,
    including a test proving a `body_state` object with a real
    `repository_root`-relative `SEALED_PLAN_REFERENCE` validates end-to-end
-   through the pieces that touch it. **Next.**
+   through the pieces that touch it. **Done.**
 10. `workflows/target_task.md` — the authoritative lifecycle doc AGENTS.md
-    already points to. **Next.**
+    already points to. **Done.**
 11. Run `python3 -m unittest discover -s tests -t .`; all tests pass.
-    **Next.**
+    **Done.**
 
 ## Unknown treatment
 
@@ -168,6 +168,33 @@ described (not a change to the Plan's objective, constraints, decisions, or
 step scope), so they are logged here rather than issued as
 `target-task-replacement-plan-003.md`. `python3 -m unittest discover -s
 tests -t .` passes (334 tests) after the fix.
+
+A third independent review (SINGLE, read-only, a genuinely fresh pass, not a
+checklist against the above) confirmed all three repairs above and found the
+design sound overall (FINAL_OUTPUT_CATEGORY: HANDLED), with two further
+low-severity findings, both fixed:
+
+- `trigger.bootstrap_task`'s `os.rename` and `store.recover_torn_tail`'s
+  `os.replace` published a directory-entry change without the
+  parent-directory `fsync` this codebase's own comparable publish
+  operations (`capabilities.immutable_checkpoint`,
+  `capabilities.restart_admission`) treat as mandatory for crash durability.
+  Fixed with a shared `store._fsync_dir` helper (same ENOTSUP/EOPNOTSUPP/
+  EINVAL/ENOSYS fallback as those capabilities), applied at both flagged
+  call sites and, for the same reason, at `write_immutable_artifact`'s
+  create-only write too (not separately flagged, but the identical
+  directory-entry-durability gap — leaving it unfixed would reintroduce the
+  same asymmetry the finding was about). Regression tests assert the fsync
+  call occurs (mock-based; a real crash cannot be reproduced in a unit
+  test, matching the reviewer's own recommended verification approach).
+- This Plan's own "Ordered steps" section still marked steps 9-11 "Next"
+  after they were completed and logged as such earlier in this same repair
+  log — a stale, self-contradictory status marker. Fixed in place (steps
+  9-11 now read "Done"); this is a documentation-accuracy correction, not a
+  change to objective, constraints, decisions, or step scope.
+
+`python3 -m unittest discover -s tests -t .` passes (340 tests) after these
+fixes.
 
 ## Stop / replan conditions
 
