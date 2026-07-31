@@ -10,14 +10,14 @@
 
 ## Deterministic evidence
 
-Current pre-publication candidate evidence:
+Final candidate evidence:
 
 - Base head: `6c7957e7599cd800f6f4d79c55fad807e1b50fcd`.
-- Complete candidate binding: `769694b2a742d850973cc89cc12e8011be3359ee4f93a5a0f81d017bb4fa3394`.
+- Complete candidate binding: `82efbf529d5f18d987aefa710dd2644026e5ff52340e3df38d44824565e004f0`.
 - Three source-fresh, complete, unchanged RunSkeptic Fix Loop passes: PASS.
 - Full repository test suite: 327 tests, PASS.
 
-Record the exact final commit/tree and remote commit/tree in the closeout receipt after publication. Required checks:
+The closeout receipt records the exact final commit/tree and remote commit/tree after publication. Required checks:
 
 - Python compileall for modified Target Task modules, adapters, scripts, and tests.
 - Focused Target Task tests.
