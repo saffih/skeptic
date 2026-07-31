@@ -41,3 +41,21 @@ remains `UNKNOWN` unless independently proved. Qualification of one adapter
 does not qualify another, and no adapter is mandatory for the core.
 
 Changes to this lifecycle are ordinary Task Prompt work, never a Target Task.
+
+## Executable sealed-Plan companion
+
+The sealed Plan is the immutable lifecycle identity. Mechanical execution also
+requires one canonical companion at
+`plans/execution/<sealed-plan-sha256>.json`. The companion may contain only
+bounded instructions by reference, task/source artifact references, optional
+focused-retrieval recipe references, output-contract references, canonical route
+profiles, scope, authority, prohibitions, validation commands, success criteria,
+and the result-manifest directory rule. It must bind the exact task, sealed Plan
+hash, ordered step IDs, objectives, roles, and success criteria. A minimal Plan
+without this companion is valid historical/planning evidence but is not
+executable.
+
+The controller and host launcher are control-plane components. They may read and
+persist substantive artifacts behind Boundary, but their upward returns are
+compact reference-only receipts. A provider/model route becomes actual only
+after raw provider evidence is persisted and bound into routing evidence.

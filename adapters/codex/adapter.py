@@ -3,16 +3,26 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 
 from concepts.target_task.host_adapter import HostAdapterError, InvocationReport, ProviderCapabilities, TargetTaskHostAdapter
 
 
 class CodexAdapter(TargetTaskHostAdapter):
     provider_id = "codex"
+    LEAD_ROLE = "lead"
+    MODEL_ALIASES = {
+        "small": os.environ.get("TT_CODEX_SMALL_MODEL", ""),
+        "medium": os.environ.get("TT_CODEX_MEDIUM_MODEL", ""),
+        "strongest": os.environ.get("TT_CODEX_STRONGEST_MODEL", ""),
+    }
+    LAUNCH_MODE = "codex-cli"
     ROLE_MAP = {"planner": "codex-planner", "reviewer": "codex-reviewer", "worker": "codex-worker", "command": "codex-command"}
 
     def discover_capabilities(self) -> ProviderCapabilities:
-        return ProviderCapabilities(self.provider_id, True, tuple(self.ROLE_MAP), True, "codex-replay")
+        available = shutil.which("codex") is not None
+        return ProviderCapabilities(self.provider_id, available, tuple(self.ROLE_MAP), available, "codex-replay")
 
     def provider_role(self, canonical_role: str) -> str:
         try:

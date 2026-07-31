@@ -3,16 +3,26 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
 
 from concepts.target_task.host_adapter import HostAdapterError, InvocationReport, ProviderCapabilities, TargetTaskHostAdapter
 
 
 class ClaudeCodeAdapter(TargetTaskHostAdapter):
     provider_id = "claude-code"
+    LEAD_ROLE = "lead"
+    MODEL_ALIASES = {
+        "small": os.environ.get("TT_CLAUDE_SMALL_MODEL", "haiku"),
+        "medium": os.environ.get("TT_CLAUDE_MEDIUM_MODEL", "sonnet"),
+        "strongest": os.environ.get("TT_CLAUDE_STRONGEST_MODEL", "opus"),
+    }
+    LAUNCH_MODE = "claude-cli"
     ROLE_MAP = {"planner": "target-task-planner", "reviewer": "target-task-reviewer", "worker": "target-task-worker", "command": "target-task-command"}
 
     def discover_capabilities(self) -> ProviderCapabilities:
-        return ProviderCapabilities(self.provider_id, True, tuple(self.ROLE_MAP), True, "claude-stream-json")
+        available = shutil.which("claude") is not None
+        return ProviderCapabilities(self.provider_id, available, tuple(self.ROLE_MAP), available, "claude-stream-json")
 
     def provider_role(self, canonical_role: str) -> str:
         try:

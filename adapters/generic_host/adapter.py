@@ -11,6 +11,9 @@ from concepts.target_task.host_adapter import (
 
 class GenericHostAdapter(TargetTaskHostAdapter):
     provider_id = "generic-recorded-host"
+    LEAD_ROLE = "lead"
+    MODEL_ALIASES = {"small": "recorded-small", "medium": "recorded-medium", "strongest": "recorded-strongest"}
+    LAUNCH_MODE = "recorded"
 
     def discover_capabilities(self) -> ProviderCapabilities:
         return ProviderCapabilities(self.provider_id, True, ("planner", "reviewer", "worker", "command"), True, "recorded")

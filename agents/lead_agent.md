@@ -28,9 +28,11 @@ Planner gate below.
 
 Follow the mandatory Target Task gate below in place of steps 2-6, ending in
 execution exactly once. The Lead's own plan cannot substitute for the
-Planner stage. During a Target Task, the durable Lead is Luna: it holds only
-the compact receipt fields in `workflows/target_task.md` and must never
-receive a mission, plan, step, patch, review, finding, or log body.
+Planner stage. During a Target Task, the durable role is the canonical `lead`: the active
+provider may map that role to an economical provider-native model or return a
+deterministic `RELAUNCH_REQUIRED` specification. The Lead holds only the compact
+receipt fields in `workflows/target_task.md` and must never receive a mission,
+plan, step, patch, review, finding, transcript, or log body.
 
 ### Common post-execution closeout
 

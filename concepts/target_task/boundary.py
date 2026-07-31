@@ -1019,7 +1019,17 @@ def accept_and_persist_operation_outcome(
     cursor = load_cursor_snapshot(task_root, cursor_path)
     if cursor.status is not CursorStatus.OPERATION_ADMITTED or event["operation_id"] != cursor.operation_id:
         raise BoundaryError("durable admitted cursor mismatch")
-    request_ref = _artifact_ref_from_path(task_root, event["request_ref"], "role_request")
+    dispatch_path = event.get("receipt_ref")
+    if not isinstance(dispatch_path, str):
+        raise BoundaryError("durable dispatch evidence missing")
+    dispatch_raw = read_content_addressed_artifact(task_root, dispatch_path)
+    dispatch = _canonical_object(dispatch_raw, "dispatch evidence", maximum=32768)
+    request_ref = dispatch.get("request_ref")
+    if not isinstance(request_ref, Mapping):
+        raise BoundaryError("dispatch evidence request reference missing")
+    request_ref = _validated_task_reference(request_ref, task_root, "request", artifact_type="role_request")
+    if request_ref["repository_relative_path"] != event["request_ref"]:
+        raise BoundaryError("dispatch evidence request path mismatch")
     step = next(step for step in plan["steps"] if step["step_id"] == cursor.current_step)
     from concepts.target_task.runtime import validate_host_role_receipt, persist_validated_host_receipt
     validated = validate_host_role_receipt(
@@ -1349,3 +1359,27 @@ __all__ = [
     "persist_cursor_transition",
     "advance_and_persist_step",
 ]
+
+def retry_and_persist_operation(
+    task_root: Path,
+    task_id: str,
+    *,
+    event_id: str,
+) -> dict[str, Any]:
+    """Retry only the latest durable FAILED operation without retaining its bodies."""
+    _ensure_new_event_id(task_root, event_id)
+    event = _latest_operation_event(task_root, task_id, "FAILED")
+    plan_ref = _artifact_ref_from_path(task_root, event["accepted_plan_ref"], "sealed_plan")
+    _, plan = _validated_plan(task_root, task_id, plan_ref)
+    cursor_ref = _artifact_ref_from_path(task_root, event["cursor_ref"], "step_cursor")
+    from concepts.target_task.store import load_cursor_snapshot
+    cursor = load_cursor_snapshot(task_root, event["cursor_ref"])
+    _validated_cursor(task_root, task_id, cursor, cursor_ref, plan)
+    if cursor.status is not CursorStatus.OPERATION_FAILED or cursor.operation_id != event["operation_id"]:
+        raise BoundaryError("durable failed cursor mismatch")
+    after = retry_operation(cursor)
+    return _persist_cursor_transition(
+        task_root, task_id, Phase.STEP_EXECUTING, after,
+        event_id=event_id, accepted_plan_reference=plan_ref,
+        prior_cursor=cursor, prior_cursor_reference=cursor_ref,
+    )

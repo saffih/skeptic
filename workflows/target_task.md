@@ -270,3 +270,30 @@ Plan identities, current/final cursor, test evidence, smoke evidence, candidate
 commit/tree, review-loop counts, routing evidence reference, integration/remote
 verification, `INITIAL_MISSION_CONTEXT_ISOLATION`,
 `BOUNDARY_PROTOCOL_ISOLATION`, and `HIDDEN_HOST_CONTEXT_ISOLATION`.
+
+## Working controller surface
+
+The provider-neutral operational surface is `scripts/target_task.py`, backed by
+`concepts/target_task/controller.py`. Its commands are `bootstrap`, `status`,
+`prepare`, `accept`, `advance`, `retry`, `stop`, `handoff`, `resume`, and
+`validate`. Every response is bounded canonical JSON containing control fields
+and references only.
+
+A sealed Plan becomes mechanically executable only when the exact Plan SHA has
+a canonical companion at `plans/execution/<sealed-plan-sha256>.json`. The
+companion binds the exact ordered Plan steps to instruction, input, retrieval,
+output-contract, route, authority, prohibition, validation, and result-manifest
+references. The sealed Plan remains the lifecycle identity; the companion is not
+a second Plan or state machine.
+
+Provider routing uses canonical roles/model classes. Concrete provider roles and
+model aliases remain adapter-owned. Route resolution does not prove execution;
+actual routing is established only by persisted raw provider evidence. An
+unavailable economical top-level Lead route returns `RELAUNCH_REQUIRED` instead
+of claiming an in-place model change.
+
+`scripts/generic_host_smoke.py` is the credit-free execution proof. It must
+complete two separately admitted and accepted Worker/Command steps, resume from
+`TASKS_ROOT + TASK_ID`, and finish `STEP_VALIDATED`. It must report `closed:
+false` and `live_provider_not_run: true`; terminal `CLOSED` remains gated by the
+final Find Loop, integration, and remote verification.

@@ -55,6 +55,49 @@ def walk(value: Any) -> Iterable[dict[str, Any]]:
             yield from walk(child)
 
 
+def _compact_agent_payload(content: Any, role: str) -> None:
+    encoded = json.dumps(content, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    require(len(encoded) <= 4096, f"oversized Agent result for {role}")
+    parsed_payloads: list[dict[str, Any]] = []
+
+    def inspect(value: Any, path: str) -> None:
+        if isinstance(value, list):
+            for index, child in enumerate(value):
+                inspect(child, f"{path}/{index}")
+            return
+        if isinstance(value, str):
+            try:
+                parsed = json.loads(value)
+            except json.JSONDecodeError as exc:
+                raise SmokeError(f"unstructured Agent text for {role} at {path}") from exc
+            require(isinstance(parsed, dict), f"compact Agent JSON object required for {role}")
+            parsed_payloads.append(parsed)
+            inspect(parsed, path + "/json")
+            return
+        if not isinstance(value, dict):
+            return
+        if value.get("type") == "text" and set(value) <= {"type", "text"}:
+            inspect(value.get("text"), path + "/text")
+            return
+        if value.get("type") == "json" and set(value) <= {"type", "value"}:
+            require(isinstance(value.get("value"), dict), f"compact Agent JSON value required for {role}")
+            parsed_payloads.append(value["value"])
+            inspect(value["value"], path + "/value")
+            return
+        forbidden = {"body", "plan", "review", "patch", "content", "text", "excerpt", "transcript", "log", "stdout", "stderr"} & {str(key).lower() for key in value}
+        require(not forbidden, f"body-bearing Agent result for {role}: {sorted(forbidden)}")
+        for key, child in value.items():
+            if isinstance(child, str):
+                require(len(child.encode("utf-8")) <= 1024, f"oversized compact Agent field for {role}: {key}")
+            else:
+                inspect(child, f"{path}/{key}")
+
+    inspect(content, "$")
+    require(parsed_payloads, f"Agent result for {role} contains no compact JSON receipt")
+    for payload in parsed_payloads:
+        require(isinstance(payload.get("status"), str) and payload["status"], f"Agent result for {role} lacks status")
+
+
 def parse_agent_transcript(path: Path) -> dict[str, Any]:
     calls: list[dict[str, Any]] = []
     results: dict[str, dict[str, Any]] = {}
@@ -80,12 +123,7 @@ def parse_agent_transcript(path: Path) -> dict[str, Any]:
     for call in calls:
         tool_id = call["id"]
         require(tool_id is not None and str(tool_id) in results, f"Agent result missing for {call['role']}")
-        result = results[str(tool_id)]
-        encoded = json.dumps(result.get("content"), ensure_ascii=False, separators=(",", ":"))
-        require(len(encoded.encode("utf-8")) <= 4096, f"oversized Agent result for {call['role']}")
-        for item in walk(result.get("content")):
-            forbidden = {"body", "plan", "review", "patch"} & set(item)
-            require(not forbidden, f"body-bearing Agent result for {call['role']}")
+        _compact_agent_payload(results[str(tool_id)].get("content"), call["role"])
     return {"agent_calls": len(calls), "roles": sorted(allowed), "tool_results": len(results)}
 
 
@@ -179,17 +217,36 @@ def negative_probes(task_root: Path, first: dict[str, Any]) -> None:
 
 
 def loop_passes(receipts: list[dict[str, Any]], kind: str) -> int:
-    selected = [r for r in receipts if r.get("INVOCATION_KIND") == kind]
+    selected = [receipt for receipt in receipts if receipt.get("INVOCATION_KIND") == kind]
     count = 0
     previous: tuple[Any, ...] | None = None
-    fields = ("TARGET_TASK_SHA256", "REVIEWED_ARTIFACT_SHA256", "SKEPTIC_SOURCE_BLOB_SHA", "MATERIAL_FINDINGS_SHA256")
+    fields = (
+        "TARGET_TASK_SHA256", "REVIEWED_ARTIFACT_SHA256", "SKEPTIC_SOURCE_BLOB_SHA",
+        "APPLICABLE_COMPANION_SET_SHA256", "MATERIAL_FINDINGS_SHA256",
+        "INVOCATION_KIND", "PERMISSION_MODE", "OPEN_ITEMS",
+    )
     for receipt in selected:
-        binding = tuple(receipt.get(field) for field in fields)
+        binding = tuple(
+            json.dumps(receipt.get(field), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+            if isinstance(receipt.get(field), (dict, list)) else receipt.get(field)
+            for field in fields
+        )
+        qualifying = (
+            receipt.get("REVIEW_SCOPE") == "COMPLETE"
+            and not receipt.get("REPAIR_RUN")
+            and receipt.get("FINAL_OUTPUT_CATEGORY") == "HANDLED"
+            and receipt.get("FINDING_CATEGORIES") == ["PASS"]
+            and not receipt.get("OPEN_ITEMS")
+        )
         if kind == "FIX_LOOP":
-            qualifying = receipt.get("FINDING_CATEGORIES") == ["PASS"] and receipt.get("FINAL_OUTPUT_CATEGORY") == "HANDLED" and not receipt.get("OPEN_ITEMS") and not receipt.get("REPAIR_RUN") and receipt.get("REVIEW_SCOPE") != "DELTA"
+            qualifying = qualifying and receipt.get("INVOCATION_KIND") == "FIX_LOOP"
         else:
-            qualifying = receipt.get("PERMISSION_MODE") == "read-only" and receipt.get("REVIEW_SCOPE") != "DELTA" and not receipt.get("REPAIR_RUN")
-        count = count + 1 if qualifying and binding == previous else (1 if qualifying else 0)
+            qualifying = (
+                qualifying
+                and receipt.get("INVOCATION_KIND") == "FIND_LOOP"
+                and receipt.get("PERMISSION_MODE") == "read-only"
+            )
+        count = count + 1 if qualifying and (previous is None or binding == previous) else (1 if qualifying else 0)
         previous = binding
     return count
 
@@ -197,20 +254,30 @@ def loop_passes(receipts: list[dict[str, Any]], kind: str) -> int:
 def validate_git_proof(task_root: Path, task_id: str, found: Any, source_repo: Path, remote: Path) -> dict[str, str]:
     hello = source_repo / "hello.txt"
     require(hello.is_file() and not hello.is_symlink() and hello.read_bytes() == b"hello", "hello.txt bytes are not exactly hello")
-    candidate = None
-    remote_manifest = None
-    for path, value in all_task_json(task_root):
-        try:
-            candidate = parse_candidate_manifest_bytes(path.read_bytes())
-        except Exception:
-            try:
-                remote_manifest = parse_remote_verification_manifest_bytes(path.read_bytes())
-            except Exception:
-                pass
-    require(candidate is not None and candidate["task_id"] == task_id, "canonical candidate manifest missing or mismatched")
-    require(remote_manifest is not None and remote_manifest["task_id"] == task_id, "canonical remote verification manifest missing or mismatched")
+    events = read_ledger(task_root / "ledger.jsonl")
+    candidate_event = next(
+        (event for event in reversed(events) if event["phase"] == Phase.CANDIDATE_FROZEN.value and event.get("result_ref")),
+        None,
+    )
+    remote_event = next(
+        (event for event in reversed(events) if event["phase"] == Phase.CLOSED.value and event.get("result_ref")),
+        None,
+    )
+    require(candidate_event is not None, "candidate manifest is not referenced by the candidate-frozen ledger event")
+    require(remote_event is not None, "remote manifest is not referenced by the CLOSED ledger event")
+    candidate_path = task_root / candidate_event["result_ref"]
+    remote_path = task_root / remote_event["result_ref"]
+    try:
+        candidate = parse_candidate_manifest_bytes(candidate_path.read_bytes())
+        remote_manifest = parse_remote_verification_manifest_bytes(remote_path.read_bytes())
+    except Exception as exc:
+        raise SmokeError("ledger-referenced candidate or remote manifest is invalid") from exc
+    require(candidate["task_id"] == task_id, "candidate task binding mismatch")
+    require(remote_manifest["task_id"] == task_id, "remote task binding mismatch")
+    require(remote_manifest["remote_name"] == "smoke-local", "remote name is not smoke-local")
+    require(remote_manifest["remote_ref"] == "refs/heads/main", "remote ref is not refs/heads/main")
     plan_bytes = (task_root / found.accepted_plan_ref).read_bytes()
-    cursor_ref = next(event["cursor_ref"] for event in reversed(read_ledger(task_root / "ledger.jsonl")) if event.get("cursor_ref"))
+    cursor_ref = next(event["cursor_ref"] for event in reversed(events) if event.get("cursor_ref"))
     cursor_bytes = (task_root / cursor_ref).read_bytes()
     require(hashlib.sha256(plan_bytes).hexdigest() == candidate["sealed_plan_sha256"], "candidate is not bound to sealed Plan bytes")
     require(hashlib.sha256(cursor_bytes).hexdigest() == candidate["completed_cursor_sha256"], "candidate is not bound to completed cursor bytes")

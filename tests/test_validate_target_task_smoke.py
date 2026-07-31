@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from scripts.validate_target_task_smoke import SmokeError, parse_agent_transcript
+from scripts.validate_target_task_smoke import SmokeError, loop_passes, parse_agent_transcript
 
 
 def stream(*events):
@@ -63,6 +63,31 @@ class SmokeTranscriptTests(unittest.TestCase):
         ))
         with self.assertRaises(SmokeError):
             parse_agent_transcript(body)
+
+    def test_short_unstructured_prose_result_fails(self):
+        path = self.write(stream(
+            {"type": "tool_use", "id": "a", "name": "Agent", "input": {"subagent_type": "target-task-planner"}},
+            {"type": "tool_result", "tool_use_id": "a", "content": [{"type": "text", "text": "plan completed"}]},
+        ))
+        with self.assertRaises(SmokeError):
+            parse_agent_transcript(path)
+
+    def test_loop_passes_bind_companions_permission_and_open_items(self):
+        base = {
+            "INVOCATION_KIND": "FIND_LOOP", "PERMISSION_MODE": "read-only",
+            "REVIEW_SCOPE": "COMPLETE", "REPAIR_RUN": False,
+            "FINAL_OUTPUT_CATEGORY": "HANDLED", "FINDING_CATEGORIES": ["PASS"],
+            "OPEN_ITEMS": [], "TARGET_TASK_SHA256": "a" * 64,
+            "REVIEWED_ARTIFACT_SHA256": "b" * 64,
+            "SKEPTIC_SOURCE_BLOB_SHA": "c" * 40,
+            "APPLICABLE_COMPANION_SET_SHA256": "d" * 64,
+            "MATERIAL_FINDINGS_SHA256": "e" * 64,
+        }
+        self.assertEqual(loop_passes([dict(base), dict(base), dict(base)], "FIND_LOOP"), 3)
+        changed = dict(base); changed["APPLICABLE_COMPANION_SET_SHA256"] = "f" * 64
+        self.assertEqual(loop_passes([dict(base), changed, dict(base)], "FIND_LOOP"), 1)
+        open_item = dict(base); open_item["OPEN_ITEMS"] = ["material"]
+        self.assertEqual(loop_passes([dict(base), open_item, dict(base)], "FIND_LOOP"), 1)
 
 
 if __name__ == "__main__":
