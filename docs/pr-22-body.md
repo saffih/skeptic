@@ -13,7 +13,7 @@
 Final candidate evidence:
 
 - Base head: `6c7957e7599cd800f6f4d79c55fad807e1b50fcd`.
-- Complete candidate binding: `82efbf529d5f18d987aefa710dd2644026e5ff52340e3df38d44824565e004f0`.
+- Complete candidate binding: persisted in the exact closeout receipt; it is not duplicated here to avoid self-referential hash drift.
 - Three source-fresh, complete, unchanged RunSkeptic Fix Loop passes: PASS.
 - Full repository test suite: 327 tests, PASS.
 
