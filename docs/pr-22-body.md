@@ -13,7 +13,7 @@
 Current pre-publication candidate evidence:
 
 - Base head: `6c7957e7599cd800f6f4d79c55fad807e1b50fcd`.
-- Complete candidate binding: `189ee73005de3c5f234751cf23f4758722cb0f6d33f21b56fa3151afd2eedf2c`.
+- Complete candidate binding: `769694b2a742d850973cc89cc12e8011be3359ee4f93a5a0f81d017bb4fa3394`.
 - Three source-fresh, complete, unchanged RunSkeptic Fix Loop passes: PASS.
 - Full repository test suite: 327 tests, PASS.
 
