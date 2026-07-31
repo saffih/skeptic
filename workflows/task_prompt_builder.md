@@ -24,16 +24,23 @@ These forms are equivalent. The text after the alias is the objective:
 
 The conformance check asks whether deterministic work was identified where appropriate; delegation is justified and roles are bounded; requested model class and reasoning effort are proportionate; delegated roles do not inherit the Lead model implicitly; strongest-model use or escalation is justified; acceptance and deterministic validation are sufficient without duplication; every delegated model role has a dispatch ID and Agent Completion Envelope; envelope validation is followed by independent work acceptance; material Boundary Agent use is conditional and routed at the lowest reliable cost; substantial reusable context is artifact-backed when practical; context-isolation claims are evidence-based; recursive delegation carries transitive subtree obligations and compact upward reporting; every RunSkeptic invocation is followed by receipt validation; and frozen benchmark variables remain controlled.
 
-For a prompt that designates or executes a Target Task, conformance additionally
-requires the ordered lifecycle: distinct bounded Planner dispatch, envelope
-validation, complete Planner-produced plan, RunSkeptic review and receipt
-validation, Planner repair after every material plan change, final unchanged-plan
-Lead acceptance, and execution exactly once. supplied plans are Planner input only; Lead and
-same-runtime planning cannot substitute. The Planner cannot recurse or authorize
+For a prompt that designates or executes a Target Task (`TT: <mission>`),
+first read `workflows/target_task.md`. Conformance additionally requires the
+ordered lifecycle: immutable mission persistence, distinct bounded Planner
+dispatch, envelope validation, complete Planner-produced plan, a RunSkeptic
+Fix Loop on the plan reaching three consecutive qualifying passes, a sealed
+plan (path, SHA-256, byte size, schema version) that is never repaired or
+replanned within the run, execution of the sealed plan exactly once,
+deterministic validation, a frozen candidate, a read-only RunSkeptic Find
+Loop over that candidate, and integration only when clean and mechanically
+possible. Supplied plans are Planner input only; Lead and same-runtime
+planning cannot substitute. The Planner cannot recurse or authorize
 execution. Missing the mandatory stage is `PROMPT_CONFORMANCE_ACTION_REQUIRED`
 or `PROMPT_CONFORMANCE_UNVERIFIABLE`, never ready. A Target Task prompt whose
 lifecycle omits execution exactly once is missing the mandatory stage and must
-not receive `PROMPT_CONFORMANCE_READY`. Ordinary non-Target work
+not receive `PROMPT_CONFORMANCE_READY`. A Target Task prompt must not propose
+building or modifying the Target Task lifecycle through the Target Task
+lifecycle itself; that is ordinary Task Prompt work. Ordinary non-Target work
 remains proportional.
 
 For substantive prompts where model cost may be material, also check that the

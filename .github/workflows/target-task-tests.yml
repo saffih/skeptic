@@ -1,0 +1,47 @@
+name: Target Task contracts
+
+on:
+  pull_request:
+    paths:
+      - 'concepts/target_task/**'
+      - 'capabilities/**'
+      - 'adapters/**'
+      - 'tests/**'
+      - 'workflows/**'
+      - 'agents/**'
+      - '.claude/agents/**'
+      - 'CLAUDE.md'
+      - 'AGENTS.md'
+      - 'scripts/target_task_*'
+      - 'scripts/generic_host_smoke.py'
+      - '.github/workflows/target-task-tests.yml'
+  push:
+    branches:
+      - 'claude/target-task-system-replacement-et60rd'
+
+permissions:
+  contents: read
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Ensure origin/main exists
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Python
+        run: python -m compileall -q capabilities concepts scripts tests
+      - name: Focused Target Task tests
+        run: python -m unittest discover -s tests/concepts/target_task -t .
+      - name: Generic recorded-host lifecycle
+        run: python scripts/generic_host_smoke.py
+      - name: Full repository tests
+        run: python -m unittest discover -s tests -t .
+      - name: Shell syntax
+        run: bash -n scripts/target_task_smoke.sh

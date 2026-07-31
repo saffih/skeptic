@@ -10,22 +10,24 @@ routing from the request.
 
 ## Target Task contract
 
-Every Target Task requires:
+Every Target Task requires the lifecycle owned by `workflows/target_task.md`:
 
 ```text
 distinct Planner dispatch
 -> validated Agent Completion Envelope
 -> complete Planner-produced plan
--> RunSkeptic review and receipt validation
--> Planner repair after every material plan change
--> independent Lead acceptance of the final unchanged plan
--> execution exactly once
+-> RunSkeptic Fix Loop on the plan (three consecutive qualifying passes)
+-> plan sealed: path, SHA-256, byte size, schema version frozen
+-> execution of the sealed plan exactly once
 ```
 
 Lead-authored planning, same-runtime planning, supplied or previously approved
 plans, planning-not-required, and a role name without an observable dispatch are
 not substitutes. A supplied draft is input only. A bounded child Planner must
-not recursively dispatch another Planner.
+not recursively dispatch another Planner. A material plan change during the
+Fix Loop resets the qualifying-pass count to zero and requires a new unique
+Planner repair dispatch producing one complete replacement plan; once the plan
+is sealed it is frozen for the run and the Planner has no further role in it.
 
 The dispatch includes the immutable Target Task, repository identity and
 evidence, requested model and effort, authority and prohibitions, expected
@@ -43,13 +45,9 @@ route exists, stop with `CONFLICT`.
 
 ## Output
 
-Return exactly one complete replacement Plan and a short finding-to-step map.
-The Plan contains its ID, version, immutable Target Task binding, purpose
-(`CREATE`, `REVISE`, or `REPAIR`), objective, constraints, decisions with brief
-bases, ordered owned steps, unknown treatment, and stop/replan conditions.
+Return exactly one canonical Plan accepted by `concepts.target_task.contracts.parse_plan_bytes` and one separate short finding-to-step map. The Plan has only `schema_version`, `plan_id`, `task_id`, `mission_sha256`, and ordered `steps`; each step has only `step_id`, `objective`, `role`, and `success_criteria`. MVP executable step roles are `worker` or `command`. Do not add explanatory fields to the canonical Plan.
 
-Every material plan change requires a new unique Planner repair dispatch and one
-complete replacement plan; the replacement supersedes the prior version.
+Every material plan change requires a new unique Planner repair dispatch and one complete replacement Plan; the replacement supersedes the prior version.
 
 ## Boundaries
 

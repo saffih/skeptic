@@ -26,9 +26,13 @@ Planner gate below.
 
 #### Target Task path
 
-Follow the mandatory Target Task Planner gate below in place of steps 2-6,
-ending in execution exactly once. The Lead's own plan cannot substitute for
-the Planner stage.
+Follow the mandatory Target Task gate below in place of steps 2-6, ending in
+execution exactly once. The Lead's own plan cannot substitute for the
+Planner stage. During a Target Task, the durable role is the canonical `lead`: the active
+provider may map that role to an economical provider-native model or return a
+deterministic `RELAUNCH_REQUIRED` specification. The Lead holds only the compact
+receipt fields in `workflows/target_task.md` and must never receive a mission,
+plan, step, patch, review, finding, transcript, or log body.
 
 ### Common post-execution closeout
 
@@ -36,35 +40,48 @@ the Planner stage.
 8. Validate the integrated result with the most relevant deterministic checks.
 9. Report what changed, routing, validation performed, deviations from the plan, and genuine blockers.
 
-## Mandatory Target Task Planner gate
+## Mandatory Target Task gate
 
-When a prompt designates or executes a Target Task, require this ordered,
-fail-closed lifecycle before execution:
+When a prompt designates or executes a Target Task, require the ordered,
+fail-closed lifecycle owned by `workflows/target_task.md`:
 
 ```text
-Target Task
+Target Task ("TT: <mission>")
+→ mission persisted immutably; never inlined into durable Lead context
 → distinct bounded Planner dispatch
 → Agent Completion Envelope validation
 → complete Planner-produced plan
-→ RunSkeptic review and receipt validation
-→ Planner repair after every material plan change
-→ independent Lead acceptance of the final unchanged plan
-→ execution exactly once
+→ RunSkeptic Fix Loop on the plan (three consecutive qualifying passes)
+→ plan sealed: path, SHA-256, byte size, schema version frozen for the run
+→ execution of the sealed plan exactly once
+→ deterministic validation
+→ candidate frozen
+→ read-only RunSkeptic Find Loop over the frozen candidate
+→ integration only when clean and mechanically possible
+→ close with a compact receipt
 ```
 
 The Lead's own plan, same-runtime planning, supplied or previously approved
 plans, planning-not-required, and a role name without an observable dispatch
 cannot substitute for the Planner stage. Every executable plan version must be
-Planner-produced. A material plan change invalidates review and acceptance and
-requires a new unique Planner repair dispatch and complete replacement plan.
+Planner-produced. A material plan change invalidates the Fix Loop and requires
+a new unique Planner repair dispatch and complete replacement plan before the
+plan may be sealed. Once sealed, the plan may not be edited, replaced,
+extended, reordered, repaired, or reinterpreted for the remainder of the run;
+if it cannot be completed safely, stop and report the blocker instead of
+replanning inside the same run.
 
 Validate the Planner envelope and complete plan, validate the source-bound
-RunSkeptic receipt, resolve material findings through Planner repair, and bind
-Lead acceptance to the final unchanged plan identity and valid receipt. If any
-mandatory route or evidence is unavailable, return `CONFLICT`. The Planner
-cannot approve, execute, integrate, publish, alter the Target Task, approve
-delegated work, recursively dispatch another Planner, or claim terminal `DONE`.
-After acceptance, the Lead may execute directly and exactly once.
+RunSkeptic Fix Loop receipt, resolve material findings only through Planner
+repair before sealing, and bind Lead acceptance to the sealed plan identity.
+If any mandatory route or evidence is unavailable, return `CONFLICT`. The
+Planner cannot approve, execute, integrate, publish, alter the Target Task,
+approve delegated work, recursively dispatch another Planner, or claim
+terminal `DONE`. After sealing, the Lead executes the sealed plan directly and
+exactly once, then requires the read-only Find Loop before integration.
+
+Do not use this gate to construct or modify this gate, `workflows/target_task.md`,
+or `concepts/target_task/`; that is ordinary Task Prompt work.
 
 ## Routing
 
@@ -77,17 +94,15 @@ pre-authorized by the Task Prompt, preserve completed work, emit the bounded
 `MODEL_ESCALATION_CHECKPOINT`, and stop for explicit owner authorization.
 Apply the retry and return-to-economical-route rules there as execution gates.
 
-Follow `agents/boundary_agent.md` when a delegation may benefit from explicit
-context processing. Boundary selection is conditional, not a wrapper around every
-delegation.
+For ordinary non-Target delegation, follow `agents/boundary_agent.md` only when
+its expected context, exposure, integration, or error-risk reduction exceeds its
+cost. Target Task is the narrow exception: the deterministic Boundary gates in
+`workflows/target_task.md` are mandatory for every Target Task role return and
+state transition.
 
 Prefer deterministic execution. Otherwise use the smallest model and reasoning effort reasonably expected to complete the bounded role reliably.
 
 Delegated agents do not inherit the Lead model automatically. Strongest-model use and escalation require a concrete recorded justification.
-
-Use a Boundary Agent only when its expected reduction in expensive context,
-information exposure, integration load, or error risk reasonably exceeds its own
-call, review, and omission cost. Prefer a deterministic boundary implementation.
 
 ## RunSkeptic
 
@@ -116,7 +131,7 @@ Whenever RunSkeptic is invoked:
 5. repair a harmless receipt-format defect without rerunning the review;
 6. rerun RunSkeptic only when a required substantive operation was absent or the plan changed materially.
 
-Do not repeat receipt checks on unchanged content merely to accumulate PASS results.
+For ordinary work, do not repeat unchanged receipt checks merely to accumulate PASS results. Target Task is the explicit exception: its Fix Loop and Find Loop require the complete repeated unchanged reviews defined by `skeptic.md` and `workflows/target_task.md`.
 
 ## Execution and delegation
 
@@ -159,7 +174,7 @@ agent return
 
 Envelope validity confirms correlation and structural conformance only. It does not prove work correctness.
 
-Useful work is not invalidated by harmless extra prose outside a valid envelope.
+For ordinary delegated work, harmless extra prose outside a valid envelope does not invalidate otherwise useful work. Target Task host receipts are exact-field compact control objects: body-bearing or extra return fields fail closed.
 
 Ask for clarification only when the result is materially ambiguous, unsafe, unverifiable, or outside scope.
 
@@ -188,7 +203,7 @@ Use the smallest validation set sufficient for the task.
 
 Run broader checks when the change can affect broader behavior.
 
-Do not require repeated identical PASS results on an unchanged candidate unless the task explicitly justifies them.
+Do not require repeated identical PASS results on an unchanged candidate unless the task explicitly justifies them. Target Task explicitly justifies the three-pass Fix Loop and three-pass Find Loop required by its governing contracts.
 
 ## Reporting
 
