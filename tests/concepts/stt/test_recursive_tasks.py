@@ -55,11 +55,11 @@ class RecursiveTaskTests(unittest.TestCase):
             active = runner
             while active._active_task_binding():
                 candidate = Runner(Path(active._active_task_binding()["child_task_root"]))
-                if candidate.status()["status"] in {"COMPLETE", "INSPECT_COMPLETE", "FAILED", "BLOCKED_UNKNOWN", "STOPPED"}:
+                if candidate.status()["status"] in {"COMPLETE", "FAILED", "BLOCKED_UNKNOWN", "STOPPED"}:
                     break
                 active = candidate
             status = runner.status()["status"]
-            if status in {"COMPLETE", "INSPECT_COMPLETE", "FAILED", "BLOCKED_UNKNOWN"}:
+            if status in {"COMPLETE", "FAILED", "BLOCKED_UNKNOWN"}:
                 return
             pending = active._pending_operation()
             if pending is None:
@@ -96,17 +96,19 @@ class RecursiveTaskTests(unittest.TestCase):
     def inspect_step(self) -> dict:
         return {"id": "inspect", "kind": "inspect", "scope": ".", "operation": "repository_inventory"}
 
-    def task_step(self, mission: str, delivery: str, step_id: str = "child") -> dict:
-        return {"id": step_id, "kind": "task", "mission": mission, "delivery_kind": delivery}
+    def task_step(self, mission: str, delivery: str | None = None, step_id: str = "child") -> dict:
+        return {"id": step_id, "kind": "task", "mission": mission}
 
     def test_task_schema_is_exact_and_planner_cannot_control_runtime(self):
         base = {"schema_version": 2, "mission_sha256": "m" * 64, "baseline_id": "base", "objective": "x", "done": done("workspace_change"), "steps": [], "delivery_kind": "workspace_change"}
-        for extra in ({"authority": {}}, {"child_task_id": "x"}, {"required_outcome": "COMPLETE"}):
-            plan = dict(base); plan["steps"] = [{**self.task_step("inspect", "inspect"), **extra}]
+        valid = dict(base); valid["steps"] = [self.task_step("inspect repository")]
+        validate_plan(valid, mission_sha256="m" * 64, baseline_id="base", catalog_ids=set(), source_paths=[], limits=DEFAULT_LIMITS)
+        for extra in ({"delivery_kind": "inspect"}, {"authority": {}}, {"child_task_id": "x"}, {"required_outcome": "COMPLETE"}, {"child_root": "x"}, {"parent_binding": {}}):
+            plan = dict(base); plan["steps"] = [{**self.task_step("inspect"), **extra}]
             with self.assertRaises(STTError):
                 validate_plan(plan, mission_sha256="m" * 64, baseline_id="base", catalog_ids=set(), source_paths=[], limits=DEFAULT_LIMITS)
-        for bad in ("", "   ", "unknown"):
-            plan = dict(base); plan["steps"] = [self.task_step("mission", bad)]
+        for bad in ("", "   "):
+            plan = dict(base); plan["steps"] = [self.task_step(bad)]
             with self.assertRaises(STTError):
                 validate_plan(plan, mission_sha256="m" * 64, baseline_id="base", catalog_ids=set(), source_paths=[], limits=DEFAULT_LIMITS)
 
@@ -124,12 +126,16 @@ class RecursiveTaskTests(unittest.TestCase):
             self.assertEqual((root_runner._latest_checkpoint()[1] / "value.txt").read_text(), "grandchild\n", root_runner._last_event_payload("TASK_RESULT_ACCEPTED"))
             bound = root_runner._last_event_payload("TASK_BOUND")
             self.assertIsNotNone(bound)
+            self.assertNotIn("delivery_kind", bound)
+            self.assertNotIn("required_success_outcome", bound)
+            self.assertEqual(set(bound["parent_binding"]), {"parent_task_id", "parent_plan_sha256", "parent_step_id", "parent_checkpoint_sha256", "depth", "child_task_id", "mission_sha256"})
             self.assertEqual(bound["child_task_id"], str(__import__("uuid").uuid5(__import__("uuid").NAMESPACE_URL, "skeptic-task\0" + "\0".join([root_runner.task_id, bound["parent_plan_sha256"], "child", bound["parent_checkpoint_sha256"]]))))
             self.assertEqual((repo / "value.txt").read_text(), "grandchild\n")
             self.assertEqual(len([r for r in root_runner._events() if r["event"]["event_type"] == "TASK_RESULT_ACCEPTED"]), 1)
-            verify_task_terminal(root_runner.task_root, expected_parent_binding=None, expected_delivery_kind="workspace_change", expected_success_outcome="COMPLETE")
+            verified = verify_task_terminal(root_runner.task_root, expected_parent_binding=None, expected_success_outcome="COMPLETE")
+            self.assertEqual(verified["terminal_receipt"]["result"], verified["result_ref"].as_dict())
 
-    def test_inspect_child_is_closed_and_preserves_parent_checkpoint(self):
+    def test_task_whose_plan_performs_inspection_is_closed_and_preserves_checkpoint(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td); repo = self.repo(root)
             started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[], allow_unconfined=True)
@@ -141,11 +147,14 @@ class RecursiveTaskTests(unittest.TestCase):
                 self.complete(runner, {root_sha: ("workspace_change", [self.task_step(child_mission, "inspect")]), child_sha: ("inspect", [self.inspect_step()])})
             self.assertEqual(runner.status()["status"], "COMPLETE")
             self.assertEqual(runner._checkpoint_sha256(runner._latest_checkpoint()[0]), before)
-            self.assertTrue((runner.task_root / "task-results/child/inspect-report.json").is_file())
+            self.assertTrue((runner.task_root / "tasks/results").is_dir())
             child_id = runner._last_event_payload("TASK_BOUND")["child_task_id"]
             child = Runner(runner.task_root.parent / child_id, read_only=True)
-            self.assertEqual(child.status()["status"], "INSPECT_COMPLETE")
-            self.assertFalse(any(r["event"]["event_type"] == "TASK_RESULT_ACCEPTED" for r in child._events()))
+            self.assertEqual(child.status()["status"], "COMPLETE")
+            child_verified = verify_task_terminal(child.task_root, expected_parent_binding=child.task["parent_binding"], expected_success_outcome="COMPLETE")
+            self.assertEqual(child_verified["result"]["checkpoint"]["number"], 0)
+            accepted = runner._last_event_payload("TASK_RESULT_ACCEPTED")
+            self.assertEqual(accepted["imported_result"]["result_ref"], child_verified["result_ref"].as_dict())
 
     def test_root_child_grandchild_executes_depth_first(self):
         with tempfile.TemporaryDirectory() as td:

@@ -6,7 +6,7 @@ from typing import Any
 from .errors import STTError
 
 
-TERMINAL = {"COMPLETE", "INSPECT_COMPLETE", "FAILED", "BLOCKED_UNKNOWN", "STOPPED", "CONTROL_STATE_FAILED"}
+TERMINAL = {"COMPLETE", "FAILED", "BLOCKED_UNKNOWN", "STOPPED", "CONTROL_STATE_FAILED"}
 
 
 def derive(events: list[dict[str, Any]], *, pending_operation: dict[str, Any] | None = None) -> dict[str, Any]:

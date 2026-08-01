@@ -3,6 +3,6 @@ import unittest
 from .test_recursive_tasks import RecursiveTaskTests
 
 
-class InspectLifecycleTests(unittest.TestCase):
-    def test_inspect_child_lifecycle_is_sandbox_independent(self):
-        RecursiveTaskTests("test_inspect_child_is_closed_and_preserves_parent_checkpoint").test_inspect_child_is_closed_and_preserves_parent_checkpoint()
+class InspectionPlanLifecycleTests(unittest.TestCase):
+    def test_inspection_plan_is_sandbox_independent(self):
+        RecursiveTaskTests("test_task_whose_plan_performs_inspection_is_closed_and_preserves_checkpoint").test_task_whose_plan_performs_inspection_is_closed_and_preserves_checkpoint()

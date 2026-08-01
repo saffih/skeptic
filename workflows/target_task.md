@@ -77,11 +77,11 @@ STT has two explicit delivery kinds.
 ### Inspect
 
 Inspect is for repository inspection, diagnosis, inventory, review, cleanup
-groundwork, or reporting. Inspect tasks are read-only with respect to the
+groundwork, or reporting. A Task whose Plan performs inspection is read-only with respect to the
 target repository, do not require source cutover, do not require
 installed-tree equality, and do not require source-changing Worker steps.
 They finish with evidence-backed reporting and final review, then terminate
-as `INSPECT_COMPLETE`.
+as `COMPLETE`.
 
 ### Workspace change
 
@@ -157,36 +157,37 @@ append-only ledger, execution artifacts, final validation, and immutable
 terminal receipt. A Plan may contain this exact primitive step:
 
 ```json
-{"id":"inspect-before-cleanup","kind":"task","mission":"Inspect local state and return a reviewed manifest.","delivery_kind":"inspect"}
+{"id":"inspect-before-cleanup","kind":"task","mission":"Inspect local state and return a reviewed manifest."}
 ```
 
-The step has exactly `id`, `kind`, `mission`, and `delivery_kind`. Runtime
-derives the required success (`INSPECT_COMPLETE` for `inspect`, `COMPLETE` for
-`workspace_change`); Planner output cannot select authority, identity, or an
-outcome. Child Tasks use the same lifecycle and limits as the root. The
-limits are `max_task_depth: 4` and `max_total_descendant_tasks: 32`, in
-addition to the direct `max_plan_steps` bound.
+The step has exactly `id`, `kind`, and `mission`. The child Planner decides
+the sealed Plan, including whether it performs inspection or workspace change.
+Planner output cannot select authority, identity, child IDs, or an outcome.
+Every Task uses the same lifecycle and successful terminal outcome: `COMPLETE`.
+Child Tasks use the same lifecycle and limits as the root; `max_task_depth: 4`
+and `max_plan_steps` are sufficient for the MVP.
 
 A child identity is deterministic from the parent Task ID, sealed parent Plan
 SHA-256, parent step ID, and parent checkpoint SHA-256. The child records an
 immutable binding in `task.json` and the parent ledger records only these two
 Task-specific events:
 
-- `TASK_BOUND`: the parent step, child Task ID/root, sealed Plan hash,
-  checkpoint hash, delivery kind, and required success.
-- `TASK_RESULT_ACCEPTED`: the verified terminal receipt, imported result, and
-  new parent checkpoint when a workspace result advances the parent.
+- `TASK_BOUND`: the parent step, child Task ID/root, sealed Plan hash, and
+  checkpoint hash.
+- `TASK_RESULT_ACCEPTED`: the verified terminal receipt and imported generic
+  result, plus a new parent checkpoint when the reviewed child checkpoint
+  advances the parent.
 
 Execution is depth-first. Parent locks are released while the deepest child
-runs. A workspace child returns a validated candidate checkpoint and the
-parent imports it before accepting the step; an inspect child returns a
-reviewed report and leaves the parent checkpoint unchanged. Only the root
-Task may perform the final deterministic cutover. A child is consumable only
-after the reusable terminal verifier confirms its identity, binding, ledger
-chain, sealed Plan, three unchanged Plan reviews, frozen subject, three
-unchanged final reviews, terminal receipt, and referenced result artifacts.
+runs. Every child returns one reviewed immutable result with a checkpoint and
+artifact references; read-only Plans preserve the input checkpoint and
+changing Plans return the validated resulting checkpoint. Only the root Task
+may perform the final deterministic cutover. A child is consumable only after
+the reusable terminal verifier confirms its identity, binding, ledger chain,
+sealed Plan, three unchanged Plan reviews, frozen subject, three unchanged
+final reviews, terminal receipt, and the exact frozen result artifacts.
 
 Inspect execution is a closed read-only capability. It records immutable
 evidence and freezes its report before final reviews; it does not invoke the
 generic command or candidate sandbox path and terminates as
-`INSPECT_COMPLETE`.
+`COMPLETE`.

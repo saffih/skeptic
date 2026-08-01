@@ -21,7 +21,6 @@ DEFAULT_LIMITS = {
     "max_command_log_bytes": 67108864,
     "max_semantic_operation_seconds": 1800,
     "max_task_depth": 4,
-    "max_total_descendant_tasks": 32,
     "max_task_state_bytes": 8589934592,
     "min_free_space_reserve_bytes": 1073741824,
 }

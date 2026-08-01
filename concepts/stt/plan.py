@@ -120,14 +120,13 @@ def validate_plan(plan: Any, *, mission_sha256: str, baseline_id: str, catalog_i
             require(step["operation"] in {"repository_inventory", "task_artifact_inventory", "git_state"}, "PLAN_INSPECT_OPERATION", "unknown closed inspect operation")
             commands = []
         elif kind == "task":
-            _exact(step, {"id", "kind", "mission", "delivery_kind"}, "PLAN_SCHEMA")
+            _exact(step, {"id", "kind", "mission"}, "PLAN_SCHEMA")
             require(isinstance(step["mission"], str) and step["mission"].strip(), "MISSION_REQUIRED", "task mission is effectively blank")
             try:
                 mission_bytes = step["mission"].encode("utf-8")
             except UnicodeEncodeError as exc:
                 raise STTError("MISSION_NOT_UTF8", "task mission must be UTF-8") from exc
             require(len(mission_bytes) <= limits["max_request_bytes"], "MISSION_TOO_LARGE", "task mission exceeds request-size limit")
-            require(step["delivery_kind"] in PLAN_SCHEMA["delivery_kinds"], "PLAN_DELIVERY_KIND", "invalid task delivery kind")
             commands = []
         else:
             raise STTError("PLAN_SCHEMA", "unknown Plan step kind")
