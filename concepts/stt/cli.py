@@ -19,7 +19,7 @@ def parser() -> argparse.ArgumentParser:
     start.add_argument("--allow-unconfined-candidate-execution", action="store_true")
     start.add_argument("--require-final-entrypoint-smoke", action="store_true")
     start.add_argument("--mission-file", required=True)
-    for name in ("run", "status", "reconcile"):
+    for name in ("run", "status", "reconcile", "retry", "replan", "stop", "resume", "diagnose"):
         cmd = sub.add_parser(name)
         cmd.add_argument("--task-root", required=True)
     restore = sub.add_parser("restore")
@@ -29,8 +29,9 @@ def parser() -> argparse.ArgumentParser:
 
 
 def local_state_root(repo: Path) -> Path:
-    repo = repo.resolve(strict=True)
-    return repo.with_name(f"{repo.name}.stt") / "tasks"
+    repo = repo.resolve(strict=False)
+    import os
+    return Path(os.environ.get("STT_TASKS_ROOT", str(repo / ".stt" / "tasks"))).resolve(strict=False)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -39,8 +40,6 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "start":
             repo = Path(args.repo)
             state_root = Path(args.state_root) if args.state_root else local_state_root(repo)
-            if state_root.resolve(strict=False) != local_state_root(repo).resolve(strict=False):
-                raise STTError("STATE_ROOT_NONLOCAL", "--state-root must equal the checkout-local default", {"expected": str(local_state_root(repo)), "actual": str(state_root.resolve(strict=False))})
             result = Runner.bootstrap(
                 repo=repo,
                 state_root=state_root,
@@ -51,15 +50,15 @@ def main(argv: list[str] | None = None) -> int:
             )
         else:
             runner = Runner(Path(args.task_root), read_only=args.command == "status")
-            result = (
-                runner.run()
-                if args.command == "run"
-                else runner.status()
-                if args.command == "status"
-                else runner.reconcile()
-                if args.command == "reconcile"
-                else runner.restore(Path(args.destination))
-            )
+            if args.command == "run": result = runner.run()
+            elif args.command == "status": result = runner.status()
+            elif args.command == "reconcile": result = runner.reconcile()
+            elif args.command == "retry": result = runner.retry()
+            elif args.command == "replan": result = runner.replan()
+            elif args.command == "stop": result = runner.stop()
+            elif args.command == "resume": result = runner.resume()
+            elif args.command == "diagnose": result = runner.diagnose()
+            else: result = runner.restore(Path(args.destination))
         print(json.dumps(result, sort_keys=True, ensure_ascii=False, separators=(",", ":")))
         return 0
     except STTError as exc:

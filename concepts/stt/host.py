@@ -5,6 +5,17 @@ from typing import Any, Protocol
 
 from .errors import STTError
 
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class DispatchRequest:
+    task_id: str
+    operation_id: str
+    attempt: int
+    canonical_role: str
+    provider_role: str
+    request_ref: Any
+
 
 @dataclass(frozen=True, slots=True)
 class ProviderCapabilities:
@@ -16,6 +27,16 @@ class ProviderCapabilities:
     cancellation_confirmation: bool
     evidence_schema: str
 
+    @property
+    def roles(self) -> tuple[str, ...]:
+        return self.semantic_roles
+    @property
+    def supports_execution(self) -> bool:
+        return self.available
+    @property
+    def evidence_mode(self) -> str:
+        return self.evidence_schema
+
 
 @dataclass(frozen=True, slots=True)
 class InvocationReport:
@@ -25,6 +46,16 @@ class InvocationReport:
     timed_out: bool
     exit_code: int | None
     cost: str | float
+
+    @property
+    def completion_status(self) -> str:
+        return self.status
+    @property
+    def timeout(self) -> bool:
+        return self.timed_out
+    @property
+    def exit_status(self) -> int | None:
+        return self.exit_code
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -37,7 +68,13 @@ class HostAdapter(Protocol):
     def validate_provider_evidence(self, raw: bytes) -> InvocationReport: ...
 
 
-class HostAdapterError(STTError):
+try:
+    from concepts.target_task.host_adapter import HostAdapterError as _LegacyHostAdapterError
+except ImportError:  # pragma: no cover
+    _LegacyHostAdapterError = ValueError
+
+
+class HostAdapterError(_LegacyHostAdapterError, STTError):
     def __init__(self, message: str, details: dict[str, Any] | None = None) -> None:
         super().__init__("HOST_ADAPTER_ERROR", message, details)
 

@@ -88,7 +88,8 @@ def source_path_sets(repo: Path, included_ignored: Iterable[str]) -> tuple[set[s
         for candidate in ignored:
             if candidate == rel or candidate.startswith(rel.rstrip("/") + "/"):
                 included.add(candidate)
-    return tracked, untracked, included
+    private = {path for path in tracked | untracked | included if path == ".stt" or path.startswith(".stt/")}
+    return tracked - private, untracked - private, included - private
 
 
 def _git_bool(repo: Path, key: str) -> bool:
@@ -118,14 +119,14 @@ def build_snapshot(repo: Path, destination: Path, included_ignored: list[str]) -
         base_path = Path(base)
         rel_base = base_path.relative_to(repo).as_posix()
         if rel_base in {".", ""}:
-            dirs[:] = sorted(name for name in dirs if name != ".git")
+            dirs[:] = sorted(name for name in dirs if name not in {".git", ".stt"})
         else:
             dirs.sort()
         files.sort()
         for name in [*dirs, *files]:
             source = base_path / name
             rel = source.relative_to(repo).as_posix()
-            if rel == ".git" or rel.startswith(".git/"):
+            if rel == ".git" or rel.startswith(".git/") or rel == ".stt" or rel.startswith(".stt/"):
                 continue
             try:
                 rel.encode("utf-8", "strict")
@@ -180,14 +181,14 @@ def verify_source_identity(repo: Path, manifest: dict[str, Any]) -> None:
         base_path = Path(base)
         rel_base = base_path.relative_to(repo).as_posix()
         if rel_base in {".", ""}:
-            dirs[:] = sorted(name for name in dirs if name != ".git")
+            dirs[:] = sorted(name for name in dirs if name not in {".git", ".stt"})
         else:
             dirs.sort()
         files.sort()
         for name in [*dirs, *files]:
             path = base_path / name
             rel = path.relative_to(repo).as_posix()
-            if rel == ".git" or rel.startswith(".git/"):
+            if rel == ".git" or rel.startswith(".git/") or rel == ".stt" or rel.startswith(".stt/"):
                 continue
             actual[rel] = _safe_source_object(path, rel)
     require(set(actual) == set(expected), "SOURCE_DRIFT", "source path set changed before cutover")

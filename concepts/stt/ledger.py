@@ -45,6 +45,8 @@ class Ledger:
         self.recover_pending()
 
     def _event_with_hash(self, *, sequence: int, event_type: str, payload_ref: str, payload_sha256: str, previous: str) -> dict[str, Any]:
+        payload_path = self.task_root / payload_ref
+        payload_size = os.lstat(payload_path).st_size if payload_path.exists() else 0
         base = {
             "schema_version": 1,
             "task_id": self.task_id,
@@ -54,6 +56,7 @@ class Ledger:
             "timestamp_utc": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
             "payload_ref": payload_ref,
             "payload_sha256": payload_sha256,
+            "payload_size": payload_size,
             "previous_event_sha256": previous,
         }
         event_hash = sha256_bytes(canonical_json_bytes(base))
@@ -79,7 +82,7 @@ class Ledger:
             require(line.strip() != b"", "LEDGER_BLANK_LINE", "blank committed ledger line")
             value = loads_strict(line)
             require(isinstance(value, dict), "LEDGER_SCHEMA", "ledger event must be an object")
-            required = {"schema_version", "task_id", "sequence", "event_id", "event_type", "timestamp_utc", "payload_ref", "payload_sha256", "previous_event_sha256", "event_sha256"}
+            required = {"schema_version", "task_id", "sequence", "event_id", "event_type", "timestamp_utc", "payload_ref", "payload_sha256", "payload_size", "previous_event_sha256", "event_sha256"}
             require(set(value) == required, "LEDGER_SCHEMA", "ledger event fields mismatch")
             require(value["schema_version"] == 1 and value["task_id"] == self.task_id, "LEDGER_IDENTITY", "ledger task identity mismatch")
             require(value["sequence"] == index, "LEDGER_SEQUENCE", "invalid ledger sequence")
@@ -90,6 +93,13 @@ class Ledger:
             claimed = str(unhashed.pop("event_sha256"))
             computed = sha256_bytes(canonical_json_bytes(unhashed))
             require(claimed == computed, "LEDGER_EVENT_HASH", "event hash mismatch")
+            payload = self.task_root / str(value["payload_ref"])
+            if payload.exists():
+                st = os.lstat(payload)
+                require(os.path.isfile(payload) and st.st_nlink == 1, "LEDGER_PAYLOAD_UNSAFE", "ledger payload is not a unique regular file")
+                require(st.st_mode & 0o7000 == 0, "LEDGER_PAYLOAD_MODE", "ledger payload has unsafe special bits")
+                require(st.st_size == int(value["payload_size"]), "LEDGER_PAYLOAD_SIZE", "ledger payload size mismatch")
+                require(sha256_bytes(payload.read_bytes()) == value["payload_sha256"], "LEDGER_PAYLOAD_HASH", "ledger payload hash mismatch")
             canonical = canonical_json_bytes(value)
             events.append(LedgerEvent(value, canonical))
             previous = claimed

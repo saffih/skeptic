@@ -24,6 +24,11 @@ stt start --repo <path> [--include-ignored <path> ...] [--allow-unconfined-candi
 stt run --task-root <path>
 stt status --task-root <path>
 stt reconcile --task-root <path>
+stt retry --task-root <path>
+stt replan --task-root <path>
+stt stop --task-root <path>
+stt resume --task-root <path>
+stt diagnose --task-root <path>
 stt restore --task-root <path> --destination <empty-directory>
 ```
 

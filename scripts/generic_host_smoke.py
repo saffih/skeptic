@@ -100,6 +100,7 @@ def pending_request(runner: Runner) -> dict:
 
 
 def main() -> int:
+    os.environ["STT_PROVIDER"] = "generic-recorded-host"
     with tempfile.TemporaryDirectory(prefix="stt-smoke-") as td:
         root = Path(td); repo = root / "repo"; repo.mkdir()
         subprocess.run(["git", "init", "-q", str(repo)], check=True)
@@ -115,7 +116,7 @@ def main() -> int:
         subprocess.run(["git", "-C", str(repo), "commit", "-qm", "base"], check=True)
         head_before = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
         index_before = subprocess.check_output(["git", "-C", str(repo), "ls-files", "--stage", "-z"])
-        receipt = Runner.bootstrap(repo=repo, state_root=repo.with_name(f"{repo.name}.stt") / "tasks", mission=b"repair app\n", included_ignored=[], allow_unconfined=True)
+        receipt = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"repair app\n", included_ignored=[], allow_unconfined=True)
         runner = Runner(Path(receipt["task_root"])); plan_reviews = 0; final_reviews = 0
         for _ in range(32):
             status = runner.status()

@@ -83,7 +83,9 @@ class ArtifactStore:
 
     def verify(self, artifact: ArtifactRef) -> Path:
         path = self.resolve(artifact.ref)
-        require(path.is_file(), "ARTIFACT_MISSING", f"artifact missing: {artifact.ref}")
-        require(path.stat().st_size == artifact.size, "ARTIFACT_SIZE_MISMATCH", f"artifact size mismatch: {artifact.ref}")
+        st = os.lstat(path)
+        require(stat.S_ISREG(st.st_mode), "ARTIFACT_NOT_REGULAR", f"artifact is not a regular file: {artifact.ref}")
+        require(st.st_nlink == 1, "ARTIFACT_HARDLINK", f"artifact has unexpected hard links: {artifact.ref}")
+        require(st.st_size == artifact.size, "ARTIFACT_SIZE_MISMATCH", f"artifact size mismatch: {artifact.ref}")
         require(sha256_file(path) == artifact.sha256, "ARTIFACT_HASH_MISMATCH", f"artifact hash mismatch: {artifact.ref}")
         return path

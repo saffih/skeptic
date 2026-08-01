@@ -4,7 +4,7 @@ import json
 import os
 import shutil
 
-from concepts.stt.host import HostAdapterError, InvocationReport, ProviderCapabilities
+from concepts.stt.host import DispatchRequest, HostAdapterError, InvocationReport, ProviderCapabilities
 
 
 class ClaudeCodeAdapter:
@@ -15,7 +15,7 @@ class ClaudeCodeAdapter:
         "standard": os.environ.get("STT_CLAUDE_STANDARD_MODEL", "sonnet"),
         "strongest": os.environ.get("STT_CLAUDE_STRONGEST_MODEL", "opus"),
     }
-    ROLE_MAP = {"planner": "stt-planner", "reviewer": "stt-reviewer", "worker": "stt-worker"}
+    ROLE_MAP = {"planner": "stt-planner", "reviewer": "stt-reviewer", "worker": "stt-worker", "command": "stt-command"}
 
     def discover_capabilities(self) -> ProviderCapabilities:
         available = shutil.which("claude") is not None
@@ -26,6 +26,13 @@ class ClaudeCodeAdapter:
             return self.ROLE_MAP[canonical_role]
         except KeyError as exc:
             raise HostAdapterError("unknown canonical semantic role") from exc
+
+    def build_dispatch_request(self, request):
+        role = request.get("role")
+        return DispatchRequest(request["task_id"], request["operation_id"], request["attempt"], role, self.provider_role(role), request)
+
+    def report_outcome(self, report):
+        return "UNKNOWN" if report.timed_out else report.status
 
     def validate_provider_evidence(self, raw: bytes) -> InvocationReport:
         events = []

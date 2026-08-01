@@ -9,15 +9,17 @@ from .errors import STTError
 TERMINAL = {"COMPLETE", "FAILED", "CONTROL_STATE_FAILED"}
 
 
-def derive(events: list[dict[str, Any]]) -> dict[str, Any]:
-    types = [str(event["event_type"]) for event in events]
+def derive(events: list[dict[str, Any]], *, pending_operation: dict[str, Any] | None = None) -> dict[str, Any]:
+    """The only ledger-to-control-state reducer used by all control commands."""
+    types = [str(event.get("event", event)["event_type"]) for event in events]
     counts = Counter(types)
     if counts["TERMINAL_RECEIPT_RECORDED"]:
         return {"status": "TERMINAL", "next_action": None}
-    admitted = [event for event in events if event["event_type"] == "OPERATION_ADMITTED"]
-    results = [event for event in events if event["event_type"] == "OPERATION_RESULT"]
-    if len(admitted) > len(results):
-        return {"status": "BLOCKED_UNKNOWN", "next_action": "RECONCILE_OPERATION"}
+    if pending_operation is not None:
+        rejected = any(event.get("event", event)["event_type"] == "OPERATION_RESULT_REJECTED" and isinstance(event.get("payload"), dict) and event["payload"].get("operation_id") == pending_operation.get("operation_id") for event in events)
+        role = pending_operation.get("role")
+        action = {"planner": "DISPATCH_PLANNER", "reviewer": "DISPATCH_REVIEWER", "worker": "DISPATCH_WORKER"}.get(role, "CONTROL_STATE_FAILED")
+        return {"status": "RETRYABLE" if rejected else "RUNNING", "next_action": "RETRY_OPERATION" if rejected else action, "pending_operation": pending_operation.get("operation_id")}
     if "PLAN_SEALED" not in types:
         if "PLAN_CANDIDATE_RECORDED" not in types:
             return {"status": "RUNNING", "next_action": "DISPATCH_PLANNER"}

@@ -19,6 +19,9 @@ This repository is a portable prompt and review library. Its capabilities valida
 
 ## STT ownership
 
+- When the first meaningful token is exactly `STT:`, the active host performs semantic dispatch: Codex sets `STT_PROVIDER=codex`, Claude Code sets `STT_PROVIDER=claude-code`, and both invoke `python3 scripts/stt.py` from the current Git root. Neither host launches the other, and the repository is resolved from the current session rather than a fixed user path.
+- STT semantic roles use disposable filesystem capsules admitted by Boundary; linked Git worktrees are not STT capsules. Task state defaults to `<repo>/.stt/tasks`, is ignored by Git, and may be overridden with `STT_TASKS_ROOT`.
+
 - Planner, Reviewer, and Worker are the only semantic STT roles.
 - Commands are deterministic local operations and are never model roles.
 - Substantial bodies live in immutable files outside the repository; the durable Lead receives compact receipts only.

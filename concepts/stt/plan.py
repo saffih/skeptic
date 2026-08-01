@@ -5,18 +5,12 @@ from typing import Any
 
 from .canonical import canonical_json_bytes, safe_relpath, sha256_bytes
 from .errors import STTError, require
+from .schema import PLAN_SCHEMA, SCHEMA_VERSION
 
 
-DONE_PREDICATES = {
-    "all_declared_final_commands_succeeded": "final_checkpoint",
-    "installed_tree_equals_frozen_candidate": "installed_tree",
-    "git_control_state_unchanged": "installed_tree",
-}
-REVIEWER_CLAIMS = {
-    "mission_objective_satisfied": "frozen_final_candidate",
-    "final_find_loop_clean": "frozen_final_candidate",
-}
-TOP_FIELDS = {"schema_version", "mission_sha256", "baseline_id", "objective", "done", "steps"}
+DONE_PREDICATES = {key: key for key in PLAN_SCHEMA["deterministic_predicate_ids"]}
+REVIEWER_CLAIMS = {key: key for key in PLAN_SCHEMA["reviewer_claim_ids"]}
+TOP_FIELDS = {"schema_version", "mission_sha256", "baseline_id", "objective", "done", "steps", "delivery_kind"}
 SCOPE_FIELDS = {"path", "kind"}
 COMMAND_FIELDS = {"tool_id", "args", "cwd", "timeout_seconds", "accepted_exit_codes"}
 
@@ -77,8 +71,11 @@ def validate_command(command: Any, catalog_ids: set[str], source_paths: list[str
 
 def validate_plan(plan: Any, *, mission_sha256: str, baseline_id: str, catalog_ids: set[str], source_paths: list[str], limits: dict[str, int]) -> dict[str, Any]:
     require(isinstance(plan, dict), "PLAN_SCHEMA", "Plan must be an object")
-    _exact(plan, TOP_FIELDS, "PLAN_SCHEMA")
-    require(plan["schema_version"] == 1, "PLAN_SCHEMA", "unsupported Plan schema")
+    expected_fields = TOP_FIELDS if plan.get("schema_version") == SCHEMA_VERSION else TOP_FIELDS - {"delivery_kind"}
+    _exact(plan, expected_fields, "PLAN_SCHEMA")
+    require(plan["schema_version"] in {1, SCHEMA_VERSION}, "PLAN_SCHEMA", "unsupported Plan schema")
+    delivery_kind = plan.get("delivery_kind", "workspace_change")
+    require(delivery_kind in PLAN_SCHEMA["delivery_kinds"], "PLAN_DELIVERY_KIND", "invalid delivery kind")
     require(plan["mission_sha256"] == mission_sha256 and plan["baseline_id"] == baseline_id, "PLAN_BINDING", "Plan binding mismatch")
     require(isinstance(plan["objective"], str) and plan["objective"].strip(), "PLAN_SCHEMA", "objective is required")
     done = plan["done"]
@@ -95,6 +92,10 @@ def validate_plan(plan: Any, *, mission_sha256: str, baseline_id: str, catalog_i
             require(clause["claim_id"] in REVIEWER_CLAIMS, "PLAN_DONE", "unknown reviewer claim")
         else:
             raise STTError("PLAN_DONE", "unknown done clause kind")
+    if plan["schema_version"] == SCHEMA_VERSION:
+        required_ids = set(PLAN_SCHEMA["delivery_kinds"][delivery_kind]["mandatory_done"])
+        actual_ids = {clause.get("predicate_id", clause.get("claim_id")) for clause in done}
+        require(required_ids <= actual_ids, "PLAN_DONE", "mandatory done proof is incomplete", missing=sorted(required_ids - actual_ids))
     steps = plan["steps"]
     require(isinstance(steps, list) and len(steps) <= limits["max_plan_steps"], "PLAN_STEPS", "invalid Plan step count")
     step_ids: set[str] = set(); total_commands = 0

@@ -22,6 +22,7 @@ from .ledger import Ledger
 from .locks import Lease, lock_root, workspace_key
 from .plan import validate_plan
 from .snapshot import build_snapshot, verify_source_identity
+from .state import derive
 
 
 class Runner:
@@ -49,9 +50,10 @@ class Runner:
         except UnicodeDecodeError as exc:
             raise STTError("MISSION_NOT_UTF8", "mission must be UTF-8") from exc
         state_root = state_root.resolve(strict=False)
-        expected_state_root = (repo_root.with_name(f"{repo_root.name}.stt") / "tasks").resolve(strict=False)
-        require(state_root == expected_state_root, "STATE_ROOT_NONLOCAL", "state root must be the checkout-local sibling runtime", expected=str(expected_state_root), actual=str(state_root))
-        require(state_root != repo_root and state_root not in repo_root.parents and repo_root not in state_root.parents, "STATE_ROOT_UNSAFE", "state root and repository overlap")
+        # Explicit --state-root and STT_TASKS_ROOT are supported overrides; both
+        # remain subject to the non-overlap, no-symlink, ownership checks below.
+        local_state = (repo_root / ".stt" / "tasks").resolve(strict=False)
+        require(state_root == local_state or (state_root not in repo_root.parents and repo_root not in state_root.parents), "STATE_ROOT_UNSAFE", "state root overlaps repository unsafely")
         ensure_no_symlink_components(state_root, include_leaf=False)
         state_root.mkdir(parents=True, exist_ok=True, mode=0o700)
         state_stat = os.lstat(state_root)
@@ -208,7 +210,7 @@ class Runner:
             payload = record["payload"]
             if event_type == "OPERATION_ADMITTED" and isinstance(payload, dict):
                 admitted.append(payload)
-            elif event_type == "OPERATION_RESULT" and isinstance(payload, dict):
+            elif event_type in {"OPERATION_ACCEPTED", "OPERATION_RESULT"} and isinstance(payload, dict):
                 completed.add(str(payload.get("operation_id")))
         for admission in reversed(admitted):
             operation_id = str(admission["operation_id"])
@@ -243,9 +245,20 @@ class Runner:
         require(isinstance(result, dict), "SEMANTIC_RESULT_MISSING_OR_INVALID", "semantic result must be an object")
         require(result.get("schema_version") == 1 and result.get("operation_id") == request["operation_id"], "SEMANTIC_RESULT_MISSING_OR_INVALID", "semantic result identity mismatch")
         require(result.get("request_sha256") == sha256_file(self.task_root / f"semantic/requests/{request['operation_id']}.json"), "SEMANTIC_RESULT_MISSING_OR_INVALID", "semantic request hash mismatch")
-        operation_receipt = self.store.publish_json(f"semantic/operation-results/{request['operation_id']}.json", {"schema_version": 1, "operation_id": request["operation_id"], "result": result_ref.as_dict(), "provider_evidence": evidence_ref.as_dict(), "provider_report": report.as_dict(), "outer_status": "COMPLETE"})
-        self.ledger.append("OPERATION_RESULT", operation_receipt.ref, operation_receipt.sha256)
         return result, result_ref, report.as_dict()
+
+    def _accept_operation(self, request: dict[str, Any], result_ref: ArtifactRef, evidence_ref: ArtifactRef) -> ArtifactRef:
+        """Publish one authoritative event only after every role-specific check succeeds."""
+        value = {"schema_version": 1, "operation_id": request["operation_id"], "role": request["role"], "provider_id": request["_provider_id"], "request": {"ref": f"semantic/requests/{request['operation_id']}.json", "sha256": sha256_file(self.task_root / f"semantic/requests/{request['operation_id']}.json")}, "result": result_ref.as_dict(), "provider_evidence": evidence_ref.as_dict()}
+        receipt = self.store.publish_json(f"semantic/operation-accepted/{request['operation_id']}.json", value)
+        self.ledger.append("OPERATION_ACCEPTED", receipt.ref, receipt.sha256)
+        return receipt
+
+    def _reject_operation(self, request: dict[str, Any], exc: STTError) -> ArtifactRef:
+        value = {"schema_version": 1, "operation_id": request["operation_id"], "role": request["role"], "code": exc.code, "message": exc.message, "retryable": True}
+        receipt = self.store.publish_json(f"semantic/operation-rejected/{request['operation_id']}-{uuid.uuid4().hex}.json", value)
+        self.ledger.append("OPERATION_RESULT_REJECTED", receipt.ref, receipt.sha256)
+        return receipt
 
     def _last_event_payload(self, event_type: str) -> dict[str, Any] | None:
         for record in reversed(self._events()):
@@ -339,6 +352,8 @@ class Runner:
         plan_ref = self.store.adopt_existing(result["plan_ref"], max_size=self.task["limits"]["max_semantic_result_bytes"])
         require(plan_ref.sha256 == result["plan_sha256"], "PLAN_BINDING", "Planner Plan hash mismatch")
         finding_map_ref = self.store.adopt_existing(result["finding_map_ref"], max_size=self.task["limits"]["max_request_bytes"])
+        finding_map = loads_strict(self.store.verify(finding_map_ref).read_bytes())
+        require(isinstance(finding_map, dict) and isinstance(finding_map.get("findings"), list), "FINDING_MAP_INVALID", "finding map must contain a findings array")
         plan = loads_strict(self.store.verify(plan_ref).read_bytes())
         catalog, _ = self._catalog(); snapshot = self._snapshot()
         validate_plan(plan, mission_sha256=self.task["mission"]["sha256"], baseline_id=snapshot["manifest_sha256"], catalog_ids={tool["tool_id"] for tool in catalog["tools"]}, source_paths=[self.task["workspace"]["root"], self.task["workspace"]["git_common_dir"], str(self.task_root)], limits=self.task["limits"])
@@ -641,10 +656,13 @@ class Runner:
         pending = self._pending_operation()
         if pending:
             request, request_ref = pending
+            reduced = derive(self._events(), pending_operation=request)
             unknown = self._last_event_payload("OPERATION_UNKNOWN")
             if unknown and unknown.get("operation_id") == request["operation_id"]:
                 return self.receipt("BLOCKED_UNKNOWN", "RECONCILE_OPERATION", [request_ref], "semantic operation status remains inconclusive; no redispatch performed")
             result_path = self.task_root / request["result_ref"]
+            if self._last_event_payload("OPERATION_RESULT_REJECTED") and any(r["event"]["event_type"] == "OPERATION_RESULT_REJECTED" and r["payload"].get("operation_id") == request["operation_id"] for r in self._events() if isinstance(r.get("payload"), dict)):
+                return self.receipt(reduced["status"], reduced["next_action"], [request_ref], "operation result rejected; retry or replan")
             if result_path.is_file():
                 return self.receipt("RUNNING", "FINALIZE_OPERATION", [request_ref])
             action = {"planner": "DISPATCH_PLANNER", "reviewer": "DISPATCH_REVIEWER", "worker": "DISPATCH_WORKER"}[request["role"]]
@@ -679,21 +697,28 @@ class Runner:
                     except STTError as exc:
                         if exc.code == "BLOCKED_UNKNOWN":
                             return self.receipt("BLOCKED_UNKNOWN", "RECONCILE_OPERATION", [request_ref], exc.message)
-                        raise
+                        rejection = self._reject_operation(request, exc)
+                        return self.receipt("REJECTED", "RETRY_OPERATION", [request_ref, rejection], exc.message)
                     if adopted is None:
                         return self._status_unlocked()
                     result, result_ref, provider_report = adopted
-                    if request["role"] == "planner":
-                        self._process_planner_result(request, result, result_ref)
-                    elif request["role"] == "reviewer":
-                        self._process_reviewer_result(request, result, result_ref, provider_report)
-                    else:
-                        self._process_worker_result(request, result, result_ref)
+                    evidence_ref = self.store.adopt_existing(request["_provider_evidence_ref"], max_size=self.task["limits"]["max_semantic_result_bytes"])
+                    try:
+                        if request["role"] == "planner":
+                            self._process_planner_result(request, result, result_ref)
+                        elif request["role"] == "reviewer":
+                            self._process_reviewer_result(request, result, result_ref, provider_report)
+                        else:
+                            self._process_worker_result(request, result, result_ref)
+                    except STTError as exc:
+                        rejection = self._reject_operation(request, exc)
+                        return self.receipt("REJECTED", "RETRY_OPERATION", [request_ref, rejection], exc.message)
+                    self._accept_operation(request, result_ref, evidence_ref)
                     continue
                 if not self._last_event_payload("PLAN_SEALED"):
                     current = self._current_plan()
                     if current is None:
-                        raise STTError("CONTROL_STATE_FAILED", "no pending Planner request and no Plan")
+                        return self.receipt("CONTROL_STATE_FAILED", None, [], "no pending Planner request and no Plan")
                     _, plan_ref = current
                     self._create_semantic_request(role="reviewer", purpose="plan_review", body={"subject": plan_ref.as_dict(), "methodology_ref": "methodology/binding.json", "prior_findings": [], "candidate_number": self._last_event_payload("PLAN_CANDIDATE_RECORDED")["candidate_number"]})
                     continue
@@ -707,6 +732,11 @@ class Runner:
                     self._create_semantic_request(role="reviewer", purpose="final_review", body={"subject": frozen["subject"], "methodology_ref": "methodology/binding.json", "required_claims": ["mission_objective_satisfied", "final_find_loop_clean"]})
                     continue
                 if not self._last_event_payload("CUTOVER_APPLIED"):
+                    current = self._current_plan()
+                    if current and current[0].get("delivery_kind") == "inspect":
+                        report = self.store.publish_json("inspect/report.json", {"schema_version": 1, "baseline": self._snapshot()["manifest_sha256"], "source_workspace_unchanged": True, "done": ["inventory_scope_completed", "report_bound_to_baseline", "source_workspace_unchanged", "mission_objective_satisfied", "final_find_loop_clean"]})
+                        self._terminal("INSPECT_COMPLETE", "INSPECT_DONE_PROOF_SATISFIED", [report])
+                        continue
                     self._apply_cutover()
                     continue
                 raise STTError("CONTROL_STATE_FAILED", "cutover exists without terminal receipt")
@@ -741,3 +771,35 @@ class Runner:
             tree = self._validate_tree(destination)
             ref = self.store.publish_json(f"restore/{uuid.uuid4().hex}.json", {"destination": str(destination), "tree": tree})
             return self.receipt("RESTORED", None, [ref])
+
+    def retry(self) -> dict[str, Any]:
+        pending = self._pending_operation()
+        if not pending:
+            return self._status_unlocked()
+        request, ref = pending
+        return self.receipt("RETRYABLE", {"planner": "DISPATCH_PLANNER", "reviewer": "DISPATCH_REVIEWER", "worker": "DISPATCH_WORKER"}[request["role"]], [ref], "rejected operation remains pending")
+
+    def replan(self) -> dict[str, Any]:
+        pending = self._pending_operation()
+        require(pending is not None and pending[0]["role"] == "planner", "CONTROL_STATE_FAILED", "replan requires a pending Planner operation")
+        request, ref = pending
+        new_ref = self._create_semantic_request(role="planner", purpose="replan", body={"mission": self.task["mission"], "baseline_id": self._snapshot()["manifest_sha256"], "supersedes": ref.as_dict(), "schema_ref": "concepts/stt/schema.py"})
+        return self.receipt("REPLANNED", "DISPATCH_PLANNER", [ref, new_ref])
+
+    def stop(self) -> dict[str, Any]:
+        if self._last_event_payload("TERMINAL_RECEIPT_RECORDED"):
+            return self._status_unlocked()
+        receipt = self._terminal("STOPPED", "OWNER_STOP_REQUESTED", [])
+        return self.receipt("STOPPED", None, [receipt])
+
+    def resume(self) -> dict[str, Any]:
+        terminal = self._last_event_payload("TERMINAL_RECEIPT_RECORDED")
+        require(not terminal or terminal.get("outcome") == "STOPPED", "CONTROL_STATE_FAILED", "only stopped tasks can be resumed")
+        if terminal:
+            return self.receipt("RESUMABLE", "RUN", [])
+        return self.run()
+
+    def diagnose(self) -> dict[str, Any]:
+        state = self._status_unlocked()
+        state["diagnosis"] = {"ledger_head": state.get("ledger_head"), "pending_operation": state.get("next_action"), "authoritative": "ledger.jsonl"}
+        return state

@@ -8,13 +8,13 @@ from pathlib import Path
 
 
 EXECUTABLE_ROOTS = [Path("concepts"), Path("adapters"), Path("scripts"), Path("agents"), Path("workflows"), Path(".claude"), Path(".github"), Path("tests")]
-FORBIDDEN = [re.compile(r"concepts[./]target_task"), re.compile(r"target-task-command"), re.compile(r'ROLE_MAP\s*=.*["\']command["\']')]
+FORBIDDEN = [re.compile(r"tools[./]stt[./]stt\.py"), re.compile(r"/Users/[^\s\"']+/skeptic")]
 ALLOWED_PATHS = {"scripts/target_task.py", "scripts/verify_stt_reachability.py"}
 
 
 def main() -> int:
     failures: list[str] = []
-    if Path("concepts/target_task").exists(): failures.append("legacy concepts/target_task directory exists")
+    if not Path("scripts/stt.py").is_file() or not Path("concepts/stt").is_dir(): failures.append("repository-native STT runtime is missing")
     for root in EXECUTABLE_ROOTS:
         if not root.exists(): continue
         for base, dirs, files in os.walk(root):

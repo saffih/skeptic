@@ -14,7 +14,7 @@ class CliTests(unittest.TestCase):
             repo = Path(td) / "repo"
             repo.mkdir()
             subprocess.run(["git", "init", "-q", str(repo)], check=True)
-            self.assertEqual(local_state_root(repo), repo.resolve().with_name("repo.stt") / "tasks")
+        self.assertEqual(local_state_root(repo), repo.resolve() / ".stt" / "tasks")
 
 
 if __name__ == "__main__":
