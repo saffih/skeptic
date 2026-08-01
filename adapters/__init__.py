@@ -1,1 +1,1 @@
-"""Replaceable Target Task host adapters."""
+"""Replaceable STT semantic host adapters."""

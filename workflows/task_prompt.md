@@ -46,7 +46,7 @@ immutable mission. Read `workflows/target_task.md` before designating or
 executing one — it owns the complete lifecycle, the Luna compact-Lead
 contract, the sealed-Plan invariant, the append-only ledger discipline, and
 the live Claude Code MVP route loaded through root `CLAUDE.md` and `AGENTS.md`.
-`concepts/target_task/` holds the deterministic contracts used by that live
+`concepts/stt/` holds the deterministic contracts used by that live
 workflow; `.claude/agents/target-task-*.md` registers its bounded host roles.
 
 When a prompt designates or executes a Target Task, replace the entire
@@ -83,7 +83,7 @@ substantive.
 
 Do not use the Target Task lifecycle to construct or modify the Target Task
 lifecycle itself. Changes to this section, `workflows/target_task.md`, or
-`concepts/target_task/` are ordinary Task Prompt work.
+`concepts/stt/` are ordinary Task Prompt work.
 
 If premium work may be needed, state whether it is pre-authorized. Pre-authorization
 must identify the exact role, model or class, effort, bounded purpose, maximum

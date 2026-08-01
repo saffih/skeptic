@@ -4,7 +4,6 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-"""Thin compatibility alias. The only implementation lives in concepts.stt."""
 from concepts.stt.cli import main
 
 if __name__ == "__main__":

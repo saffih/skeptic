@@ -81,7 +81,7 @@ terminal `DONE`. After sealing, the Lead executes the sealed plan directly and
 exactly once, then requires the read-only Find Loop before integration.
 
 Do not use this gate to construct or modify this gate, `workflows/target_task.md`,
-or `concepts/target_task/`; that is ordinary Task Prompt work.
+or `concepts/stt/`; that is ordinary Task Prompt work.
 
 ## Routing
 

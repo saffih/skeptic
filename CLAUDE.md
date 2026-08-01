@@ -8,4 +8,6 @@ Claude Code submission necessarily exposes the initial user message to the
 current host session; do not claim otherwise. Immediately bootstrap the exact
 mission suffix, then keep the durable post-bootstrap Lead reference-only.
 
-Use `TARGET_TASKS_ROOT` when set; otherwise use `~/.skeptic/target-tasks`.
+STT state is local to the checkout. By default it lives in the private sibling
+directory `<checkout>.stt/tasks`; locks, validation material, and install
+backups remain under the same `<checkout>.stt/` local runtime root.
