@@ -127,6 +127,8 @@ class Ledger:
     def append(self, event_type: str, payload_ref: str, payload_sha256: str) -> LedgerEvent:
         self.recover_pending()
         events = self.read(recover_partial=True)
+        require(not any(event.value["event_type"] == "TERMINAL_RECEIPT_RECORDED" for event in events), "CONTROL_STATE_TERMINAL", "no ledger event may follow a terminal receipt")
+        require(event_type != "OPERATION_ACCEPTED" or not any(event.value["event_type"] == "TASK_BLOCKED_UNKNOWN" for event in events), "CONTROL_STATE_BLOCKED", "an operation may not be accepted after Task blocked unknown")
         previous = events[-1].event_sha256 if events else ZERO_HASH
         value = self._event_with_hash(sequence=len(events) + 1, event_type=event_type, payload_ref=payload_ref, payload_sha256=payload_sha256, previous=previous)
         pending_bytes = canonical_json_bytes(value)

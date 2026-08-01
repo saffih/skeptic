@@ -4,6 +4,7 @@ import os
 import shutil
 import stat
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -24,6 +25,17 @@ from .state import derive
 
 
 TASK_OUTCOME = "COMPLETE"
+
+
+@dataclass(frozen=True)
+class ProcessDisposition:
+    accept_operation: bool
+    status: str
+
+
+CONTINUE = ProcessDisposition(True, "CONTINUE")
+TERMINAL = ProcessDisposition(False, "TERMINAL")
+BLOCKED_UNKNOWN = ProcessDisposition(False, "BLOCKED_UNKNOWN")
 
 
 class Runner:
@@ -214,6 +226,10 @@ class Runner:
         return request_ref
 
     def _pending_operation(self) -> tuple[dict[str, Any], ArtifactRef] | None:
+        # A Task-level terminal/block marker closes dispatch; its bound operation
+        # is also recorded below for durable recovery if callers inspect history.
+        if self._last_event_payload("TERMINAL_RECEIPT_RECORDED") or self._last_event_payload("TASK_BLOCKED_UNKNOWN"):
+            return None
         admitted: list[dict[str, Any]] = []
         completed: set[str] = set()
         for record in self._events():
@@ -221,7 +237,7 @@ class Runner:
             payload = record["payload"]
             if event_type == "OPERATION_ADMITTED" and isinstance(payload, dict):
                 admitted.append(payload)
-            elif event_type in {"OPERATION_ACCEPTED", "OPERATION_RESULT"} and isinstance(payload, dict):
+            elif event_type in {"OPERATION_ACCEPTED", "OPERATION_RESULT", "TERMINAL_RECEIPT_RECORDED", "TASK_BLOCKED_UNKNOWN"} and isinstance(payload, dict):
                 completed.add(str(payload.get("operation_id")))
         for admission in reversed(admitted):
             operation_id = str(admission["operation_id"])
@@ -343,10 +359,10 @@ class Runner:
                     require(not (st.st_mode & 0o7000), "UNSUPPORTED_METADATA", "write-scope special mode bits", path=item["path"])
                     require(st.st_nlink == 1 or not stat.S_ISREG(st.st_mode), "UNSUPPORTED_METADATA", "write-scope hard-linked file", path=item["path"])
 
-    def _process_planner_result(self, request: dict[str, Any], result: dict[str, Any], result_ref: ArtifactRef) -> None:
+    def _process_planner_result(self, request: dict[str, Any], result: dict[str, Any], result_ref: ArtifactRef) -> ProcessDisposition:
         if result.get("kind") == "NEEDS_EVIDENCE":
             self._process_evidence_request(request, result)
-            return
+            return CONTINUE
         expected = {"schema_version", "operation_id", "request_sha256", "kind", "plan_ref", "plan_sha256", "finding_map_ref"}
         require(set(result) == expected and result["kind"] == "PLAN_CANDIDATE", "SEMANTIC_RESULT_MISSING_OR_INVALID", "Planner result schema invalid")
         plan_ref = self.store.adopt_existing(result["plan_ref"], max_size=self.task["limits"]["max_semantic_result_bytes"])
@@ -362,6 +378,7 @@ class Runner:
         require(prior_candidates < self.task["limits"]["max_plan_candidates"], "PLAN_CANDIDATE_BUDGET_EXHAUSTED", "Plan candidate budget exhausted")
         receipt = self._append_json_fact("PLAN_CANDIDATE_RECORDED", "plans/candidate-receipts", {"schema_version": 1, "candidate_number": prior_candidates + 1, "plan": plan_ref.as_dict(), "finding_map": finding_map_ref.as_dict(), "planner_result": result_ref.as_dict(), "baseline_id": snapshot["manifest_sha256"]})
         self._create_semantic_request(role="reviewer", purpose="plan_review", body={"subject": plan_ref.as_dict(), "methodology_ref": "methodology/binding.json", "prior_findings": [], "candidate_number": prior_candidates + 1})
+        return CONTINUE
 
     def _consecutive_plan_passes(self, plan_sha: str) -> list[dict[str, Any]]:
         passes: list[dict[str, Any]] = []
@@ -376,10 +393,10 @@ class Runner:
                     break
         return list(reversed(passes))
 
-    def _process_reviewer_result(self, request: dict[str, Any], result: dict[str, Any], result_ref: ArtifactRef, provider_report: dict[str, Any]) -> None:
+    def _process_reviewer_result(self, request: dict[str, Any], result: dict[str, Any], result_ref: ArtifactRef, provider_report: dict[str, Any]) -> ProcessDisposition:
         if result.get("review_disposition") == "NEEDS_EVIDENCE" or result.get("kind") == "NEEDS_EVIDENCE":
             self._process_evidence_request(request, result)
-            return
+            return CONTINUE
         expected = {"schema_version", "operation_id", "request_sha256", "protocol_outcome", "review_disposition", "runskeptic_final_outcome", "receipt_ref", "findings_ref", "subject_sha256", "session_id", "claims"}
         require(set(result) == expected and result["protocol_outcome"] == "COMPLETE", "SEMANTIC_RESULT_MISSING_OR_INVALID", "Reviewer result schema invalid")
         disposition = result["review_disposition"]
@@ -411,11 +428,12 @@ class Runner:
             _, plan_ref = current
             require(result["subject_sha256"] == plan_ref.sha256, "REVIEW_SUBJECT_MISMATCH", "Plan review subject mismatch")
             if disposition == "CONFLICT":
-                self._terminal("FAILED", "PLAN_CONFLICT", [receipt_ref, findings_ref]); return
+                self._terminal("FAILED", "PLAN_CONFLICT", [receipt_ref, findings_ref], operation_id=request["operation_id"])
+                return TERMINAL
             if disposition == "ACTION":
                 self._append_json_fact("PLAN_BASELINE_SUPERSEDED", "plans/superseded", {"schema_version": 1, "plan": plan_ref.as_dict(), "findings": findings_ref.as_dict()})
                 self._create_semantic_request(role="planner", purpose="plan_repair", body={"mission": self.task["mission"], "inventory_ref": "inventory/current-main.json", "toolchain_ref": "toolchain/catalog.json", "methodology_ref": "methodology/binding.json", "previous_plan": plan_ref.as_dict(), "findings": findings_ref.as_dict(), "baseline_id": self._snapshot()["manifest_sha256"]})
-                return
+                return CONTINUE
             passes = self._consecutive_plan_passes(plan_ref.sha256)
             if len(passes) >= 3:
                 self._seal_plan(plan_ref, passes[-3:])
@@ -425,10 +443,12 @@ class Runner:
             frozen = self._last_event_payload("FINAL_SUBJECT_FROZEN")
             require(frozen is not None and result["subject_sha256"] == frozen["subject_sha256"], "REVIEW_SUBJECT_MISMATCH", "final review subject mismatch")
             if disposition != "PASS":
-                self._terminal("FAILED", "FINAL_REVIEW_NOT_CLEAN", [receipt_ref, findings_ref]); return
+                self._terminal("FAILED", "FINAL_REVIEW_NOT_CLEAN", [receipt_ref, findings_ref], operation_id=request["operation_id"])
+                return TERMINAL
             passes = self._consecutive_final_passes(frozen["subject_sha256"])
             if len(passes) < 3:
                 self._create_semantic_request(role="reviewer", purpose="final_review", body={"subject": frozen["subject"], "methodology_ref": "methodology/binding.json", "required_claims": ["mission_objective_satisfied", "final_find_loop_clean"]})
+        return CONTINUE
 
     def _seal_plan(self, plan_ref: ArtifactRef, passes: list[dict[str, Any]]) -> ArtifactRef:
         task_hash = sha256_file(self.task_root / "task.json")
@@ -602,28 +622,56 @@ class Runner:
         ref = self.store.publish_json(f"inspect/steps/{step['id']}.json", report)
         self._append_json_fact("INSPECTION_RECORDED", "inspect/receipts", {"schema_version": 1, "step_id": step["id"], "report": ref.as_dict(), "workspace": "shared"})
 
-    def _process_worker_result(self, request: dict[str, Any], result: dict[str, Any], result_ref: ArtifactRef) -> None:
+    def _worker_failure_evidence(self, *, request: dict[str, Any], result_ref: ArtifactRef, provider_evidence_ref: ArtifactRef, delta: list[dict[str, Any]], application_state: str, validations: list[dict[str, Any]], reason: str) -> ArtifactRef:
+        """Preserve the derived delta before recording a terminal Worker outcome."""
+        return self.store.publish_json(f"worker-failures/{request['operation_id']}.json", {
+            "schema_version": 1,
+            "operation_id": request["operation_id"],
+            "step_id": request["step"]["id"],
+            "kind": "WORKER_EXECUTION_FAILED",
+            "application_state": application_state,
+            "delta": delta,
+            "worker_result": result_ref.as_dict(),
+            "provider_evidence": provider_evidence_ref.as_dict(),
+            "validations": validations,
+            "reason": reason,
+        })
+
+    def _process_worker_result(self, request: dict[str, Any], result: dict[str, Any], result_ref: ArtifactRef, provider_evidence_ref: ArtifactRef) -> ProcessDisposition:
         expected = {"schema_version", "operation_id", "request_sha256", "kind", "step_id", "summary", "declared_outputs"}
         require(set(result) == expected and result["kind"] == "WORKER_RESULT" and result["step_id"] == request["step"]["id"], "SEMANTIC_RESULT_MISSING_OR_INVALID", "Worker result invalid")
         step = request["step"]; parent = self._workspace(); capsule = Path(request["capsule_path"])
         delta = derive_delta(parent, capsule, step["write_scope"], self.task["limits"]["max_changed_paths_per_step"])
-        with self._workspace_lease():
-            apply_delta(parent, capsule, delta, step["write_scope"])
+        try:
+            with self._workspace_lease():
+                apply_delta(parent, capsule, delta, step["write_scope"])
+        except Exception as exc:
+            failure = self._worker_failure_evidence(request=request, result_ref=result_ref, provider_evidence_ref=provider_evidence_ref, delta=delta, application_state="partial_or_unknown", validations=[], reason=f"APPLY_DELTA_FAILED: {exc}")
+            self._terminal("FAILED", "APPLY_DELTA_FAILED", [failure], operation_id=request["operation_id"])
+            return TERMINAL
         validation_refs: list[dict[str, Any]] = []
         catalog, _ = self._catalog()
         for index, command in enumerate(step["validation_commands"]):
-            with self._workspace_lease():
-                result_command = run_command(candidate=parent, command=command, catalog=catalog, logs_dir=self.task_root / "logs" / step["id"], mode=self.task["authority"]["candidate_dynamic_execution"], max_log_bytes=self.task["limits"]["max_command_log_bytes"])
+            try:
+                with self._workspace_lease():
+                    result_command = run_command(candidate=parent, command=command, catalog=catalog, logs_dir=self.task_root / "logs" / step["id"], mode=self.task["authority"]["candidate_dynamic_execution"], max_log_bytes=self.task["limits"]["max_command_log_bytes"])
+            except Exception as exc:
+                failure = self._worker_failure_evidence(request=request, result_ref=result_ref, provider_evidence_ref=provider_evidence_ref, delta=delta, application_state="applied", validations=validation_refs, reason=f"VALIDATION_EXECUTION_FAILED: {exc}")
+                self._terminal("FAILED", "VALIDATION_EXECUTION_FAILED", [failure], operation_id=request["operation_id"])
+                return TERMINAL
             command_ref = self.store.publish_json(f"validation/{step['id']}/{index:03d}-{uuid.uuid4().hex}.json", result_command)
             validation_refs.append(command_ref.as_dict())
             if result_command.get("result_status") != "SUCCEEDED":
                 reason = result_command.get("reason", result_command.get("result_status", "VALIDATION_FAILED"))
+                failure = self._worker_failure_evidence(request=request, result_ref=result_ref, provider_evidence_ref=provider_evidence_ref, delta=delta, application_state="applied", validations=validation_refs, reason=reason)
                 if result_command.get("result_status") == "TERMINATION_UNKNOWN":
-                    self._record_blocked_unknown(reason, [result_ref, command_ref])
+                    self._record_blocked_unknown(reason, [failure], operation_id=request["operation_id"])
+                    return BLOCKED_UNKNOWN
                 else:
-                    self._terminal("FAILED", reason, [result_ref, command_ref])
-                return
-        self._append_json_fact("OPERATION_RESULT", "operations/results", {"schema_version": 1, "step_id": step["id"], "kind": "WORKER_DELTA_APPLIED", "delta": delta, "worker_result": result_ref.as_dict(), "validations": validation_refs, "workspace": str(parent)})
+                    self._terminal("FAILED", reason, [failure], operation_id=request["operation_id"])
+                    return TERMINAL
+        self._append_json_fact("OPERATION_RESULT", "operations/results", {"schema_version": 1, "operation_id": request["operation_id"], "step_id": step["id"], "kind": "WORKER_DELTA_APPLIED", "delta": delta, "worker_result": result_ref.as_dict(), "provider_evidence": provider_evidence_ref.as_dict(), "validations": validation_refs, "workspace": str(parent)})
+        return CONTINUE
 
     def _run_validation_step(self, step: dict[str, Any]) -> None:
         workspace = self._workspace(); catalog, _ = self._catalog(); refs: list[dict[str, Any]] = []
@@ -757,16 +805,19 @@ class Runner:
                     break
         return list(reversed(passes))
 
-    def _record_blocked_unknown(self, reason: str, refs: list[ArtifactRef]) -> ArtifactRef:
+    def _record_blocked_unknown(self, reason: str, refs: list[ArtifactRef], operation_id: str | None = None) -> ArtifactRef:
         existing = self._last_event_payload("TASK_BLOCKED_UNKNOWN")
         if existing and existing.get("reason") == reason:
             return ArtifactRef(**existing["receipt"])
         receipt = self.store.publish_json(f"blocked/{uuid.uuid4().hex}.json", {"schema_version": 1, "status": "BLOCKED_UNKNOWN", "reason": reason, "evidence": [ref.as_dict() for ref in refs], "resumable": True})
-        marker = self.store.publish_json(f"blocked/events/{uuid.uuid4().hex}.json", {"schema_version": 1, "reason": reason, "receipt": receipt.as_dict()})
+        marker_value = {"schema_version": 1, "reason": reason, "receipt": receipt.as_dict()}
+        if operation_id is not None:
+            marker_value["operation_id"] = operation_id
+        marker = self.store.publish_json(f"blocked/events/{uuid.uuid4().hex}.json", marker_value)
         self.ledger.append("TASK_BLOCKED_UNKNOWN", marker.ref, marker.sha256)
         return receipt
 
-    def _terminal(self, outcome: str, reason: str, refs: list[ArtifactRef]) -> ArtifactRef:
+    def _terminal(self, outcome: str, reason: str, refs: list[ArtifactRef], operation_id: str | None = None) -> ArtifactRef:
         existing = self._last_event_payload("TERMINAL_RECEIPT_RECORDED")
         if existing:
             return ArtifactRef(existing["receipt"]["ref"], existing["receipt"]["sha256"], existing["receipt"]["size"])
@@ -774,7 +825,10 @@ class Runner:
         result = frozen.get("result") if outcome == TASK_OUTCOME and frozen else None
         value = {"schema_version": 1, "outcome": outcome, "reason": reason, "result": result, "evidence": [ref.as_dict() for ref in refs], "workspace_model": "direct_shared_workspace", "rollback": "unsupported"}
         receipt = self.store.publish_json("terminal/receipt.json", value)
-        marker = self.store.publish_json("terminal/event.json", {"schema_version": 1, "receipt": receipt.as_dict(), "outcome": outcome})
+        marker_value = {"schema_version": 1, "receipt": receipt.as_dict(), "outcome": outcome}
+        if operation_id is not None:
+            marker_value["operation_id"] = operation_id
+        marker = self.store.publish_json("terminal/event.json", marker_value)
         self.ledger.append("TERMINAL_RECEIPT_RECORDED", marker.ref, marker.sha256)
         return receipt
 
@@ -849,19 +903,22 @@ class Runner:
                     evidence_ref = self.store.adopt_existing(request["_provider_evidence_ref"], max_size=self.task["limits"]["max_semantic_result_bytes"])
                     try:
                         if request["role"] == "planner":
-                            self._process_planner_result(request, result, result_ref)
+                            disposition = self._process_planner_result(request, result, result_ref)
                         elif request["role"] == "reviewer":
-                            self._process_reviewer_result(request, result, result_ref, provider_report)
+                            disposition = self._process_reviewer_result(request, result, result_ref, provider_report)
                         else:
-                            self._process_worker_result(request, result, result_ref)
+                            disposition = self._process_worker_result(request, result, result_ref, evidence_ref)
                     except STTError as exc:
                         if request["role"] == "worker":
-                            failure = self._terminal("FAILED", exc.code, [request_ref])
-                            return self.receipt("FAILED", None, [request_ref, failure], f"workspace mutation may be partial: {exc.message}")
+                            failure = self._terminal("FAILED", exc.code, [request_ref], operation_id=request["operation_id"])
+                            return self.receipt("FAILED", None, [request_ref, failure], f"Worker result was rejected before a derived delta was applied: {exc.message}")
                         rejection = self._reject_operation(request, exc)
                         return self.receipt("REJECTED", "RETRY_OPERATION", [request_ref, rejection], exc.message)
-                    self._accept_operation(request, result_ref, evidence_ref)
-                    continue
+                    if disposition.accept_operation:
+                        self._accept_operation(request, result_ref, evidence_ref)
+                        continue
+                    # The terminal or blocked marker is deliberately the final ledger event.
+                    return self._status_unlocked()
                 if not self._last_event_payload("PLAN_SEALED"):
                     current = self._current_plan()
                     if current is None:
