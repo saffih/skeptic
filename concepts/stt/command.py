@@ -58,6 +58,7 @@ def _write_macos_profile(*, candidate: Path, scratch: Path, tool_path: Path) -> 
         Path("/Library/Apple"),
         Path("/private/var/db/dyld"),
         tool_path.resolve().parent,
+        Path(__file__).with_name("sandbox_child.py").resolve(),
     ]
     literals = [Path("/dev/null"), Path("/dev/urandom"), Path("/dev/random")]
     read_rules = "\n".join(
@@ -116,6 +117,8 @@ def run_command(
 
     if mode == "sandbox_required":
         backend = sandbox_backend(catalog)
+        readiness_read, readiness_write = os.pipe()
+        os.set_blocking(readiness_read, False)
         if backend == "linux-unshare":
             unshare = _tool(catalog, "unshare")["path"]
             mount = _tool(catalog, "mount")["path"]
@@ -131,6 +134,8 @@ def run_command(
                 "--fork",
                 python,
                 str(Path(__file__).with_name("sandbox_child.py")),
+                "--readiness-fd",
+                str(readiness_write),
                 "--root",
                 str(sandbox_root),
                 "--candidate",
@@ -150,8 +155,19 @@ def run_command(
         elif backend == "macos-seatbelt":
             sandbox_exec = _tool(catalog, "sandbox-exec")["path"]
             profile = _write_macos_profile(candidate=candidate, scratch=scratch, tool_path=Path(entry["path"]))
-            argv = [sandbox_exec, "-f", str(profile), entry["path"], *command["args"]]
+            python = _tool(catalog, "python")["path"]
+            argv = [
+                sandbox_exec, "-f", str(profile), python,
+                str(Path(__file__).with_name("sandbox_child.py")),
+                "--direct", "--readiness-fd", str(readiness_write),
+                "--candidate", str(candidate), "--scratch", str(scratch),
+                "--root", str(scratch / "root"), "--mount", "/bin/false",
+                "--tool", entry["path"], "--cwd", command["cwd"], "--",
+                *command["args"],
+            ]
         else:
+            os.close(readiness_read)
+            os.close(readiness_write)
             raise STTError(
                 "HOST_CAPABILITY_UNAVAILABLE",
                 "sandbox_required but no supported sandbox backend is available",
@@ -162,24 +178,40 @@ def run_command(
     else:
         raise STTError("DYNAMIC_VALIDATION_AUTHORIZATION_REQUIRED", "unknown dynamic execution mode")
 
-    process = subprocess.Popen(
-        argv,
-        cwd=cwd,
-        env=env,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        start_new_session=True,
-    )
+    if mode != "sandbox_required":
+        readiness_read = readiness_write = None
+    try:
+        process = subprocess.Popen(
+            argv, cwd=cwd, env=env, stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            start_new_session=True,
+            pass_fds=() if readiness_write is None else (readiness_write,),
+        )
+    except OSError as exc:
+        if readiness_read is not None:
+            os.close(readiness_read)
+            os.close(readiness_write)
+        return {
+            "outer_status": "COMPLETE", "result_status": "SANDBOX_SETUP_FAILED",
+            "sandbox_backend": backend if mode == "sandbox_required" else "owner-risk-accepted",
+            "reason": "SANDBOX_LAUNCH_FAILED", "reason_detail": type(exc).__name__,
+            "operation_id": op,
+        }
+    if readiness_write is not None:
+        os.close(readiness_write)
     assert process.stdout and process.stderr
     selector = selectors.DefaultSelector()
     selector.register(process.stdout, selectors.EVENT_READ, "stdout")
     selector.register(process.stderr, selectors.EVENT_READ, "stderr")
+    if readiness_read is not None:
+        selector.register(readiness_read, selectors.EVENT_READ, "readiness")
     outputs = {"stdout": stdout_path.open("xb"), "stderr": stderr_path.open("xb")}
     accepted = 0
     limit_hit = False
     deadline = time.monotonic() + command["timeout_seconds"]
     timed_out = False
+    sandbox_ready = mode != "sandbox_required"
+    readiness = b""
     try:
         while selector.get_map():
             remaining = deadline - time.monotonic()
@@ -188,9 +220,16 @@ def run_command(
                 os.killpg(process.pid, signal.SIGTERM)
                 break
             for key, _ in selector.select(min(0.2, remaining)):
-                chunk = key.fileobj.read1(65536)
+                chunk = os.read(key.fileobj, 65536) if key.data == "readiness" else key.fileobj.read1(65536)
                 if not chunk:
                     selector.unregister(key.fileobj)
+                    if key.data == "readiness":
+                        os.close(key.fileobj)
+                    continue
+                if key.data == "readiness":
+                    readiness += chunk
+                    if b"STT_SANDBOX_READY\n" in readiness:
+                        sandbox_ready = True
                     continue
                 accepted += len(chunk)
                 if accepted > max_log_bytes:
@@ -210,7 +249,7 @@ def run_command(
                 try:
                     process.wait(timeout=5)
                 except subprocess.TimeoutExpired:
-                    return {"outer_status": "COMPLETE", "result_status": "TERMINATION_UNKNOWN", "operation_id": op}
+                    return {"outer_status": "COMPLETE", "result_status": "TERMINATION_UNKNOWN", "sandbox_backend": backend if mode == "sandbox_required" else "owner-risk-accepted", "operation_id": op}
         else:
             process.wait()
     finally:
@@ -223,7 +262,8 @@ def run_command(
     if limit_hit:
         return {
             "outer_status": "COMPLETE",
-            "result_status": "EXIT_FAILED",
+            "result_status": "COMMAND_FAILED" if sandbox_ready else "SANDBOX_SETUP_FAILED",
+            "sandbox_backend": backend if mode == "sandbox_required" else "owner-risk-accepted",
             "reason": "COMMAND_LOG_LIMIT_EXCEEDED",
             "operation_id": op,
             "accepted_log_bytes": accepted,
@@ -231,17 +271,29 @@ def run_command(
     if timed_out:
         return {
             "outer_status": "COMPLETE",
-            "result_status": "TIMED_OUT",
+            "result_status": "TIMED_OUT" if sandbox_ready else "SANDBOX_SETUP_FAILED",
             "reason": "COMMAND_TIMED_OUT",
+            "sandbox_backend": backend if mode == "sandbox_required" else "owner-risk-accepted",
             "operation_id": op,
         }
-    status = "SUCCEEDED" if process.returncode in command["accepted_exit_codes"] else "EXIT_FAILED"
-    return {
+    if mode == "sandbox_required" and not sandbox_ready:
+        status = "SANDBOX_SETUP_FAILED"
+        reason = "SANDBOX_READINESS_NOT_REACHED"
+    elif process.returncode in command["accepted_exit_codes"]:
+        status = "SUCCEEDED"
+        reason = None
+    else:
+        status = "COMMAND_FAILED"
+        reason = "COMMAND_EXIT_NOT_ACCEPTED"
+    result = {
         "outer_status": "COMPLETE",
         "result_status": status,
         "operation_id": op,
-        "sandbox_backend": sandbox_backend(catalog) if mode == "sandbox_required" else "owner-risk-accepted",
+        "sandbox_backend": backend if mode == "sandbox_required" else "owner-risk-accepted",
         "exit_code": process.returncode,
         "stdout": {"path": str(stdout_path), "sha256": sha256_file(stdout_path), "size": stdout_path.stat().st_size},
         "stderr": {"path": str(stderr_path), "sha256": sha256_file(stderr_path), "size": stderr_path.stat().st_size},
     }
+    if reason:
+        result["reason"] = reason
+    return result

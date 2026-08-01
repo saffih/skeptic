@@ -47,7 +47,7 @@ def main() -> int:
             status = "PASS_CONTAINED"
         else:
             stderr = Path(result["stderr"]["path"]).read_text("utf-8", errors="replace")
-            if "host path visible" in stderr or "network available" in stderr or backend != "macos-seatbelt":
+            if result.get("result_status") not in {"SANDBOX_UNAVAILABLE", "SANDBOX_SETUP_FAILED"}:
                 print(json.dumps({"status": "FAIL_CONTAINMENT", "sandbox_backend": backend, "result": result}, sort_keys=True))
                 return 1
             status = "PASS_FAIL_CLOSED_BACKEND_BLOCKED"
