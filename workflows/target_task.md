@@ -51,7 +51,7 @@ stt replan --task-root <path>
 stt stop --task-root <path>
 stt resume --task-root <path>
 stt diagnose --task-root <path>
-stt restore --task-root <path> --destination <empty-directory>
+stt restore --task-root <path> --destination <empty-directory>  # unsupported; no rollback
 ```
 
 ## Atomic acceptance
@@ -85,11 +85,11 @@ as `COMPLETE`.
 
 ### Workspace change
 
-Workspace-change tasks perform bounded source modifications. They operate in
-disposable filesystem capsules while the authoritative source remains
-read-only during semantic execution. They validate a frozen candidate, run
-final unchanged reviews, perform one deterministic reviewed cutover, and
-terminate as `COMPLETE`. Freeze and review the final candidate before one deterministic cutover.
+Workspace-change Tasks edit the current shared workspace directly. A Worker
+uses a sparse capsule to restrict context and writes, derives a bounded delta,
+validates it against the declared write scope, and applies it under a short
+workspace mutation lock. Validation inspects that same workspace. There is no
+checkpoint, preservation copy, cutover, restoration, or rollback promise.
 
 Linked Git worktrees are not STT capsules. No commit, stage, checkout, reset,
 merge, rebase, push, PR, or publication is part of STT authority.
@@ -152,7 +152,7 @@ directly evidenced.
 ## Recursive Tasks
 
 The executed unit is one `Task`, whether it is the root invocation or a
-descendant. A Task owns its mission, input checkpoint, authority, sealed Plan,
+descendant. A Task owns its mission, authority, sealed Plan,
 append-only ledger, execution artifacts, final validation, and immutable
 terminal receipt. A Plan may contain this exact primitive step:
 
@@ -168,24 +168,29 @@ Child Tasks use the same lifecycle and limits as the root; `max_task_depth: 4`
 and `max_plan_steps` are sufficient for the MVP.
 
 A child identity is deterministic from the parent Task ID, sealed parent Plan
-SHA-256, parent step ID, and parent checkpoint SHA-256. The child records an
+SHA-256, parent step ID, and a bounded parent workspace observation. The child records an
 immutable binding in `task.json` and the parent ledger records only these two
 Task-specific events:
 
 - `TASK_BOUND`: the parent step, child Task ID/root, sealed Plan hash, and
-  checkpoint hash.
-- `TASK_RESULT_ACCEPTED`: the verified terminal receipt and imported generic
-  result, plus a new parent checkpoint when the reviewed child checkpoint
-  advances the parent.
+  workspace observation binding.
+- `TASK_RESULT_ACCEPTED`: the verified terminal receipt and generic result.
 
 Execution is depth-first. Parent locks are released while the deepest child
-runs. Every child returns one reviewed immutable result with a checkpoint and
-artifact references; read-only Plans preserve the input checkpoint and
-changing Plans return the validated resulting checkpoint. Only the root Task
-may perform the final deterministic cutover. A child is consumable only after
+runs. Every child returns one reviewed immutable result with artifact
+references. A child is consumable only after
 the reusable terminal verifier confirms its identity, binding, ledger chain,
-sealed Plan, three unchanged Plan reviews, frozen subject, three unchanged
-final reviews, terminal receipt, and the exact frozen result artifacts.
+sealed Plan, three unchanged Plan reviews, frozen evidence, three unchanged
+final reviews, terminal receipt, and the exact frozen result artifacts. The
+parent continues from the same workspace and never imports filesystem state.
+
+The MVP is sequential and uses one shared workspace for root and nested Tasks.
+Concurrent STT Tasks against one workspace are unsupported. Durable artifacts
+support review and debugging, but STT does not provide checkpoints, snapshots,
+preservation copies, rollback, restoration, transactional cutover, or complete
+workspace immutability. A failed, stopped, blocked, rejected, or interrupted
+Task may leave partial modifications; ledger facts support diagnosis and
+manual recovery.
 
 Inspect execution is a closed read-only capability. It records immutable
 evidence and freezes its report before final reviews; it does not invoke the

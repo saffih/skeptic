@@ -29,6 +29,4 @@ def derive(events: list[dict[str, Any]], *, pending_operation: dict[str, Any] | 
         return {"status": "RUNNING", "next_action": "EXECUTE_OR_VALIDATE_NEXT_STEP"}
     if counts["FINAL_REVIEW_RECORDED"] < 3:
         return {"status": "RUNNING", "next_action": "DISPATCH_FINAL_REVIEW"}
-    if "CUTOVER_APPLIED" not in types:
-        return {"status": "RUNNING", "next_action": "APPLY_CUTOVER"}
     return {"status": "RUNNING", "next_action": "WRITE_TERMINAL_RECEIPT"}

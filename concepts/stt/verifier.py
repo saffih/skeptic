@@ -47,7 +47,10 @@ def verify_task_terminal(
     require(len(runner._consecutive_final_passes(frozen["subject_sha256"])) >= 3, "TASK_FINAL_REVIEWS_INVALID", "terminal Task lacks three unchanged final reviews")
     subject_ref = ArtifactRef(**frozen["subject"])
     subject = loads_strict(runner.store.verify(subject_ref).read_bytes())
-    require(isinstance(subject, dict) and isinstance(subject.get("tree"), dict), "TASK_FINAL_INVALID", "frozen final subject malformed")
+    require(isinstance(subject, dict) and isinstance(subject.get("evidence"), dict), "TASK_FINAL_INVALID", "frozen final subject malformed")
+    evidence_ref = ArtifactRef(**subject["evidence"])
+    evidence = loads_strict(runner.store.verify(evidence_ref).read_bytes())
+    require(isinstance(evidence, dict) and evidence.get("schema_version") == 1 and isinstance(evidence.get("declared_changed_paths"), list), "TASK_FINAL_INVALID", "frozen evidence malformed")
     result_ref = None
     result = None
     if value.get("outcome") == "COMPLETE":
@@ -55,13 +58,12 @@ def verify_task_terminal(
         require(isinstance(frozen_result, dict) and set(frozen_result) == {"ref", "sha256", "size"}, "TASK_RESULT_INVALID", "frozen result reference missing")
         result_ref = ArtifactRef(**frozen_result)
         result = loads_strict(runner.store.verify(result_ref).read_bytes())
-        require(isinstance(result, dict) and set(result) == {"schema_version", "checkpoint", "artifacts"} and result["schema_version"] == 1, "TASK_RESULT_INVALID", "generic Task result malformed")
-        require(isinstance(result["checkpoint"], dict) and set(result["checkpoint"]) == {"number", "tree_sha256"}, "TASK_RESULT_INVALID", "Task checkpoint malformed")
-        require(result["checkpoint"]["number"] == frozen["checkpoint_number"] and result["checkpoint"]["tree_sha256"] == subject["tree"]["sha256"], "TASK_RESULT_INVALID", "Task result checkpoint is not the frozen checkpoint")
+        require(isinstance(result, dict) and set(result) == {"schema_version", "artifacts"} and result["schema_version"] == 1, "TASK_RESULT_INVALID", "generic Task result malformed")
         require(isinstance(result["artifacts"], list), "TASK_RESULT_INVALID", "Task result artifacts malformed")
         for artifact in result["artifacts"]:
             require(isinstance(artifact, dict) and set(artifact) == {"ref", "sha256", "size"}, "TASK_RESULT_INVALID", "Task result artifact reference malformed")
             runner.store.verify(ArtifactRef(**artifact))
+        require(any(artifact == evidence_ref.as_dict() for artifact in result["artifacts"]), "TASK_RESULT_INVALID", "generic result does not reference frozen evidence")
         require(value.get("result") == result_ref.as_dict(), "TASK_RESULT_INVALID", "terminal result differs from frozen result")
     for evidence in value.get("evidence", []):
         require(isinstance(evidence, dict) and set(evidence) == {"ref", "sha256", "size"}, "TASK_RESULT_INVALID", "terminal evidence reference malformed")

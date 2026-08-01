@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-from .boundary import copy_tree, scope_contains, validate_tree
+from .boundary import scope_contains, validate_tree
 from .canonical import safe_relpath, sha256_file
 from .errors import require
 
@@ -15,6 +15,8 @@ def materialize_capsule(checkpoint: Path, capsule: Path, read_scope: list[dict[s
     capsule.mkdir(parents=True, mode=0o700)
     selected: set[str] = set()
     for base, dirs, files in os.walk(checkpoint, followlinks=False):
+        if Path(base) == checkpoint:
+            dirs[:] = [name for name in dirs if name not in {".git", ".stt"}]
         for name in dirs + files:
             source = Path(base) / name
             rel = source.relative_to(checkpoint).as_posix()
@@ -34,10 +36,58 @@ def materialize_capsule(checkpoint: Path, capsule: Path, read_scope: list[dict[s
     return {"selected_paths": sorted(selected)}
 
 
+def apply_delta(workspace: Path, capsule: Path, delta: list[dict[str, Any]], write_scope: list[dict[str, str]]) -> None:
+    """Apply a validated sparse delta directly to the shared workspace.
+
+    All paths and source objects are checked before the first mutation. There
+    is deliberately no rollback: a process failure can leave a partial delta.
+    """
+    for item in delta:
+        rel = safe_relpath(item["path"])
+        require(scope_contains(write_scope, rel), "WRITE_SCOPE_VIOLATION", "delta path outside write scope", path=rel)
+        source = capsule / rel
+        target = workspace / rel
+        if item["op"] == "delete":
+            continue
+        require(source.exists() or source.is_symlink(), "DELTA_SOURCE_MISSING", "delta source missing", path=rel)
+        if item["op"] == "file":
+            require(source.is_file() and not source.is_symlink(), "UNSUPPORTED_OBJECT_TYPE", "delta file is not regular", path=rel)
+        elif item["op"] == "directory":
+            require(source.is_dir() and not source.is_symlink(), "UNSUPPORTED_OBJECT_TYPE", "delta directory invalid", path=rel)
+        elif item["op"] == "symlink":
+            require(source.is_symlink() and not os.path.isabs(os.readlink(source)), "SYMLINK_ESCAPE", "delta symlink invalid", path=rel)
+        else:
+            raise STTError("UNSUPPORTED_OBJECT_TYPE", "unsupported delta operation", {"op": item["op"]})
+    for item in sorted(delta, key=lambda x: x["path"].count("/"), reverse=True):
+        target = workspace / safe_relpath(item["path"])
+        if item["op"] != "delete":
+            continue
+        if target.is_dir() and not target.is_symlink():
+            shutil.rmtree(target)
+        elif target.exists() or target.is_symlink():
+            target.unlink()
+    for item in sorted(delta, key=lambda x: x["path"].count("/")):
+        if item["op"] == "delete":
+            continue
+        rel = safe_relpath(item["path"]); source = capsule / rel; target = workspace / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if target.exists() or target.is_symlink():
+            if target.is_dir() and not target.is_symlink(): shutil.rmtree(target)
+            else: target.unlink()
+        if item["op"] == "directory":
+            target.mkdir(); os.chmod(target, item["mode"])
+        elif item["op"] == "symlink":
+            os.symlink(os.readlink(source), target)
+        else:
+            shutil.copy2(source, target, follow_symlinks=False); os.chmod(target, item["mode"])
+
+
 def derive_delta(parent: Path, capsule: Path, write_scope: list[dict[str, str]], max_changed: int) -> list[dict[str, Any]]:
     paths: set[str] = set()
     for root in (parent, capsule):
         for base, dirs, files in os.walk(root, followlinks=False):
+            if Path(base) == root:
+                dirs[:] = [name for name in dirs if name not in {".git", ".stt"}]
             for name in dirs + files:
                 paths.add((Path(base) / name).relative_to(root).as_posix())
     delta: list[dict[str, Any]] = []

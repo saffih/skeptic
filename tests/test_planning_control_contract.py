@@ -18,7 +18,8 @@ class PlanningControlContractTests(unittest.TestCase):
         self.assertIn('change', text)
         self.assertIn('validation', text)
 
-    def test_workflow_requires_pre_cutover_review(self) -> None:
+    def test_workflow_requires_frozen_evidence_review(self) -> None:
         text = Path('workflows/target_task.md').read_text('utf-8')
-        self.assertIn('Freeze and review the final candidate before one deterministic cutover', text)
+        self.assertIn('frozen evidence', text)
+        self.assertIn('does not provide checkpoints', text)
         self.assertIn('ledger.jsonl', Path('AGENTS.md').read_text('utf-8'))

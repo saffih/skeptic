@@ -21,17 +21,18 @@ class RunnerTests(unittest.TestCase):
         subprocess.run(["git", "-C", str(repo), "commit", "-qm", "base"], check=True)
         return repo
 
-    def test_bootstrap_status_restore(self):
+    def test_bootstrap_status_has_no_checkpoint_or_restore_state(self):
         with tempfile.TemporaryDirectory() as td:
-            base = Path(td); repo = self._repo(base); state = repo.with_name(f"{repo.name}.stt") / "tasks"; restore = base / "restore"
+            base = Path(td); repo = self._repo(base); state = repo.with_name(f"{repo.name}.stt") / "tasks"
             (repo / "file.txt").write_text("dirty")
             result = Runner.bootstrap(repo=repo, state_root=state, mission=b"repair\n", included_ignored=[])
-            self.assertEqual(result["next_action"], "DISPATCH_PLANNER")
             runner = Runner(Path(result["task_root"]))
             self.assertEqual(runner.status()["next_action"], "DISPATCH_PLANNER")
-            restored = runner.restore(restore)
-            self.assertEqual(restored["status"], "RESTORED")
-            self.assertEqual((restore / "file.txt").read_text(), "dirty")
+            self.assertFalse((runner.task_root / "preservation").exists())
+            self.assertFalse((runner.task_root / "checkpoints").exists())
+            with self.assertRaises(STTError) as caught:
+                runner.restore(base / "restore")
+            self.assertEqual(caught.exception.code, "UNSUPPORTED")
 
     def test_status_read_only_does_not_repair_partial_ledger(self):
         with tempfile.TemporaryDirectory() as td:
@@ -61,11 +62,8 @@ class RunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             base = Path(td); repo = self._repo(base); state = repo.with_name(f"{repo.name}.stt") / "tasks"
             result = Runner.bootstrap(repo=repo, state_root=state, mission=b"repair\n", included_ignored=[])
-            Runner(Path(result["task_root"])).status()
             locks = state.resolve() / ".locks"
-            self.assertTrue(locks.is_dir())
-            self.assertEqual(locks.stat().st_mode & 0o777, 0o700)
-            self.assertTrue(any(locks.iterdir()))
+            self.assertFalse(locks.exists(), "status/bootstrap must not acquire a workspace lock")
 
     def test_nested_repository_is_preserved_but_execution_excluded(self):
         with tempfile.TemporaryDirectory() as td:
@@ -75,8 +73,6 @@ class RunnerTests(unittest.TestCase):
             (nested / "private.txt").write_text("private")
             result = Runner.bootstrap(repo=repo, state_root=state, mission=b"repair\n", included_ignored=[])
             task_root = Path(result["task_root"])
-            snapshot = json.loads((task_root / "preservation/initial-receipt.json").read_text())
-            self.assertEqual(snapshot["nested_repository_roots"], ["vendor"])
-            self.assertFalse((task_root / "checkpoints/000/workspace/vendor").exists())
-            Runner(task_root).restore(restore)
-            self.assertEqual((restore / "vendor/private.txt").read_text(), "private")
+            self.assertEqual(Runner(task_root).task["workspace"]["execution_model"], "shared_workspace_sequential")
+            self.assertFalse((task_root / "preservation").exists())
+            self.assertFalse((task_root / "checkpoints").exists())

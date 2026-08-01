@@ -26,8 +26,8 @@ def done(delivery: str) -> list[dict]:
         {"id": "clean", "kind": "reviewer_claim", "claim_id": "final_find_loop_clean", "subject_ref": "frozen_final_candidate"},
     ]
     if delivery == "inspect":
-        return [{"id": "inventory", "kind": "deterministic_predicate", "predicate_id": "inventory_scope_completed", "subject_ref": "inspect_report"}, {"id": "bound", "kind": "reviewer_claim", "claim_id": "report_bound_to_baseline", "subject_ref": "inspect_report"}, {"id": "unchanged", "kind": "reviewer_claim", "claim_id": "source_workspace_unchanged", "subject_ref": "inspect_report"}, *common]
-    return [{"id": "commands", "kind": "deterministic_predicate", "predicate_id": "all_declared_final_commands_succeeded", "subject_ref": "final_checkpoint"}, {"id": "tree", "kind": "deterministic_predicate", "predicate_id": "installed_tree_equals_frozen_candidate", "subject_ref": "installed_tree"}, {"id": "git", "kind": "deterministic_predicate", "predicate_id": "git_control_state_unchanged", "subject_ref": "installed_tree"}, *common]
+        return [{"id": "inventory", "kind": "deterministic_predicate", "predicate_id": "inventory_scope_completed", "subject_ref": "inspect_report"}, {"id": "bound", "kind": "reviewer_claim", "claim_id": "report_bound_to_baseline", "subject_ref": "inspect_report"}, *common]
+    return [{"id": "commands", "kind": "deterministic_predicate", "predicate_id": "all_declared_final_commands_succeeded", "subject_ref": "final_evidence"}, {"id": "paths", "kind": "deterministic_predicate", "predicate_id": "changed_paths_bound_to_workspace", "subject_ref": "final_evidence"}, *common]
 
 
 class RecursiveTaskTests(unittest.TestCase):
@@ -122,39 +122,37 @@ class RecursiveTaskTests(unittest.TestCase):
             self.complete(root_runner, {root_sha: ("workspace_change", [self.task_step(child_mission, "workspace_change")]), child_sha: ("workspace_change", [self.change_step()])}, {"change": "grandchild\n", "child": "ignored\n"})
             self.assertEqual(root_runner.status()["status"], "COMPLETE")
             child_root = root_runner.task_root.parent / root_runner._last_event_payload("TASK_BOUND")["child_task_id"]
-            self.assertEqual((Runner(child_root)._latest_checkpoint()[1] / "value.txt").read_text(), "grandchild\n")
-            self.assertEqual((root_runner._latest_checkpoint()[1] / "value.txt").read_text(), "grandchild\n", root_runner._last_event_payload("TASK_RESULT_ACCEPTED"))
+            self.assertFalse((root_runner.task_root / "checkpoints").exists())
             bound = root_runner._last_event_payload("TASK_BOUND")
             self.assertIsNotNone(bound)
             self.assertNotIn("delivery_kind", bound)
             self.assertNotIn("required_success_outcome", bound)
-            self.assertEqual(set(bound["parent_binding"]), {"parent_task_id", "parent_plan_sha256", "parent_step_id", "parent_checkpoint_sha256", "depth", "child_task_id", "mission_sha256"})
-            self.assertEqual(bound["child_task_id"], str(__import__("uuid").uuid5(__import__("uuid").NAMESPACE_URL, "skeptic-task\0" + "\0".join([root_runner.task_id, bound["parent_plan_sha256"], "child", bound["parent_checkpoint_sha256"]]))))
+            self.assertEqual(set(bound["parent_binding"]), {"parent_task_id", "parent_plan_sha256", "parent_step_id", "parent_workspace_sha256", "depth", "child_task_id", "mission_sha256"})
+            self.assertEqual(bound["child_task_id"], str(__import__("uuid").uuid5(__import__("uuid").NAMESPACE_URL, "skeptic-task\0" + "\0".join([root_runner.task_id, bound["parent_plan_sha256"], "child", bound["parent_workspace_sha256"]]))))
             self.assertEqual((repo / "value.txt").read_text(), "grandchild\n")
             self.assertEqual(len([r for r in root_runner._events() if r["event"]["event_type"] == "TASK_RESULT_ACCEPTED"]), 1)
             verified = verify_task_terminal(root_runner.task_root, expected_parent_binding=None, expected_success_outcome="COMPLETE")
             self.assertEqual(verified["terminal_receipt"]["result"], verified["result_ref"].as_dict())
 
-    def test_task_whose_plan_performs_inspection_is_closed_and_preserves_checkpoint(self):
+    def test_task_whose_plan_performs_inspection_is_closed_without_checkpoint(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td); repo = self.repo(root)
             started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[], allow_unconfined=True)
             runner = Runner(Path(started["task_root"]))
             child_mission = "inspect child\n"; child_sha = __import__("hashlib").sha256(child_mission.encode()).hexdigest()
             root_sha = runner.task["mission"]["sha256"]
-            before = runner._checkpoint_sha256(0)
             with patch("concepts.stt.runner.run_command", side_effect=AssertionError("inspect called generic command")):
                 self.complete(runner, {root_sha: ("workspace_change", [self.task_step(child_mission, "inspect")]), child_sha: ("inspect", [self.inspect_step()])})
             self.assertEqual(runner.status()["status"], "COMPLETE")
-            self.assertEqual(runner._checkpoint_sha256(runner._latest_checkpoint()[0]), before)
+            self.assertFalse((runner.task_root / "checkpoints").exists())
             self.assertTrue((runner.task_root / "tasks/results").is_dir())
             child_id = runner._last_event_payload("TASK_BOUND")["child_task_id"]
             child = Runner(runner.task_root.parent / child_id, read_only=True)
             self.assertEqual(child.status()["status"], "COMPLETE")
             child_verified = verify_task_terminal(child.task_root, expected_parent_binding=child.task["parent_binding"], expected_success_outcome="COMPLETE")
-            self.assertEqual(child_verified["result"]["checkpoint"]["number"], 0)
+            self.assertNotIn("checkpoint", child_verified["result"])
             accepted = runner._last_event_payload("TASK_RESULT_ACCEPTED")
-            self.assertEqual(accepted["imported_result"]["result_ref"], child_verified["result_ref"].as_dict())
+            self.assertEqual(accepted["result_ref"], child_verified["result_ref"].as_dict())
 
     def test_root_child_grandchild_executes_depth_first(self):
         with tempfile.TemporaryDirectory() as td:

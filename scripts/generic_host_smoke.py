@@ -31,14 +31,14 @@ def complete_planner(request: dict) -> None:
     task_root = Path(request["_task_root"]); result_dir = task_root / request["result_ref"].rsplit('/', 1)[0]
     plan_path = result_dir / "plan.json"; map_path = result_dir / "finding-map.json"
     plan = {
-        "schema_version": 1,
+        "schema_version": 2,
         "mission_sha256": request["mission"]["sha256"],
         "baseline_id": request["baseline_id"],
         "objective": "replace app.txt with the required repaired value",
+        "delivery_kind": "workspace_change",
         "done": [
-            {"id": "tests", "kind": "deterministic_predicate", "predicate_id": "all_declared_final_commands_succeeded", "subject_ref": "final_checkpoint"},
-            {"id": "installed", "kind": "deterministic_predicate", "predicate_id": "installed_tree_equals_frozen_candidate", "subject_ref": "installed_tree"},
-            {"id": "git", "kind": "deterministic_predicate", "predicate_id": "git_control_state_unchanged", "subject_ref": "installed_tree"},
+            {"id": "tests", "kind": "deterministic_predicate", "predicate_id": "all_declared_final_commands_succeeded", "subject_ref": "final_evidence"},
+            {"id": "bound", "kind": "deterministic_predicate", "predicate_id": "changed_paths_bound_to_workspace", "subject_ref": "frozen_evidence"},
             {"id": "objective", "kind": "reviewer_claim", "claim_id": "mission_objective_satisfied", "subject_ref": "frozen_final_candidate"},
             {"id": "clean", "kind": "reviewer_claim", "claim_id": "final_find_loop_clean", "subject_ref": "frozen_final_candidate"},
         ],

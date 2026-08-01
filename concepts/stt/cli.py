@@ -22,7 +22,7 @@ def parser() -> argparse.ArgumentParser:
     for name in ("run", "status", "reconcile", "retry", "replan", "stop", "resume", "diagnose"):
         cmd = sub.add_parser(name)
         cmd.add_argument("--task-root", required=True)
-    restore = sub.add_parser("restore")
+    restore = sub.add_parser("restore", help="unsupported: STT has no rollback or restoration")
     restore.add_argument("--task-root", required=True)
     restore.add_argument("--destination", required=True)
     return p

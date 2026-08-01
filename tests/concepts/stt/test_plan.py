@@ -15,7 +15,7 @@ class PlanTests(unittest.TestCase):
             "baseline_id": "base",
             "objective": "repair",
             "done": [
-                {"id": "tests", "kind": "deterministic_predicate", "predicate_id": "all_declared_final_commands_succeeded", "subject_ref": "final_checkpoint"},
+                {"id": "tests", "kind": "deterministic_predicate", "predicate_id": "all_declared_final_commands_succeeded", "subject_ref": "final_evidence"},
                 {"id": "objective", "kind": "reviewer_claim", "claim_id": "mission_objective_satisfied", "subject_ref": "frozen_final_candidate"},
                 {"id": "clean", "kind": "reviewer_claim", "claim_id": "final_find_loop_clean", "subject_ref": "frozen_final_candidate"},
             ],
