@@ -28,11 +28,22 @@ class RunnerTests(unittest.TestCase):
             result = Runner.bootstrap(repo=repo, state_root=state, mission=b"repair\n", included_ignored=[])
             runner = Runner(Path(result["task_root"]))
             self.assertEqual(runner.status()["next_action"], "DISPATCH_PLANNER")
+            self.assertEqual(runner.task["authority"]["candidate_dynamic_execution"], "sandbox_required")
             self.assertFalse((runner.task_root / "preservation").exists())
             self.assertFalse((runner.task_root / "checkpoints").exists())
             with self.assertRaises(STTError) as caught:
                 runner.restore(base / "restore")
             self.assertEqual(caught.exception.code, "UNSUPPORTED")
+
+    def test_unconfined_bootstrap_is_rejected_before_task_state(self):
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td); repo = self._repo(base); state = repo.with_name(f"{repo.name}.stt") / "tasks"
+            with self.assertRaises(STTError) as caught:
+                Runner.bootstrap(repo=repo, state_root=state, mission=b"repair\n", included_ignored=[], allow_unconfined=True)
+            self.assertEqual(caught.exception.code, "UNCONFINED_SHARED_WORKSPACE_EXECUTION_UNSUPPORTED")
+            self.assertIn("shared workspace", caught.exception.message)
+            self.assertIn("successfully initialized sandbox", caught.exception.message)
+            self.assertFalse(state.exists())
 
     def test_status_read_only_does_not_repair_partial_ledger(self):
         with tempfile.TemporaryDirectory() as td:

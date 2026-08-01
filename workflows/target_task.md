@@ -42,7 +42,7 @@ from that ledger by one authoritative reducer.
 The supported command surface is:
 
 ```text
-stt start --repo <path> [--include-ignored <path> ...] [--allow-unconfined-candidate-execution] --mission-file <path>
+stt start --repo <path> [--include-ignored <path> ...] [--allow-unconfined-candidate-execution] --mission-file <path>  # compatibility flag is unsupported
 stt run --task-root <path>
 stt status --task-root <path>
 stt reconcile --task-root <path>
@@ -115,7 +115,22 @@ Boundary verifies their protocol and evidence bindings.
 ## Sandbox contract
 
 Sandbox behavior is authoritative; backend names are diagnostic metadata only.
-When `sandbox_required` is requested, the result is exactly one of:
+Dynamic commands require successful sandbox containment.
+Unconfined command execution is unsupported because commands run against the
+shared workspace rather than a disposable candidate. The compatibility CLI flag
+`--allow-unconfined-candidate-execution` fails with
+`UNCONFINED_SHARED_WORKSPACE_EXECUTION_UNSUPPORTED`; it is never silently
+ignored. The historical authority field name `candidate_dynamic_execution`
+remains for schema compatibility, but its active runtime value is always
+`sandbox_required`.
+
+The sandbox exposes the shared workspace read-only, denies network access, and
+permits writes only to sandbox scratch storage. Commands are limited to tests,
+compilation, inspection, validation, and read-only Git queries. Command output
+is not imported into the workspace. Worker deltas remain the only STT mechanism
+that intentionally changes workspace files.
+
+For `sandbox_required`, the result is exactly one of:
 
 ```text
 SUCCEEDED
@@ -134,17 +149,13 @@ failure never silently falls back to unconfined execution. Unsupported hosts
 fail with `HOST_CAPABILITY_UNAVAILABLE` before launching the admitted
 command.
 
-`owner_risk_accepted` is explicitly unconfined. It must never be described as
-sandboxed, contained, network-denied, or external-side-effect safe, and it
-proves no isolation.
-
 ## Qualification truthfulness
 
 Successful containment requires evidence that the command ran inside the
 selected sandbox, the authoritative host path was unavailable, network access
-was denied, the candidate and scratch storage were readable and writable,
-the selected backend matched capability selection, the contained-success
-marker was printed, and the exit code was accepted. A blocked backend is a
+was denied, the shared workspace was readable but not writable, scratch
+storage was writable, and the selected backend matched capability selection, the
+contained-success marker was printed, and the exit code was accepted. A blocked backend is a
 fail-closed result, not proof of successful containment. Provider identity,
 hidden host context, and live semantic execution remain `UNKNOWN` unless
 directly evidenced.

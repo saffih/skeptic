@@ -16,7 +16,11 @@ def parser() -> argparse.ArgumentParser:
     start.add_argument("--repo", required=True)
     start.add_argument("--state-root")
     start.add_argument("--include-ignored", action="append", default=[])
-    start.add_argument("--allow-unconfined-candidate-execution", action="store_true")
+    start.add_argument(
+        "--allow-unconfined-candidate-execution",
+        action="store_true",
+        help="unsupported in the direct-workspace MVP; supplying this flag fails closed",
+    )
     start.add_argument("--require-final-entrypoint-smoke", action="store_true")
     start.add_argument("--mission-file", required=True)
     for name in ("run", "status", "reconcile", "retry", "replan", "stop", "resume", "diagnose"):
@@ -38,6 +42,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
         if args.command == "start":
+            if args.allow_unconfined_candidate_execution:
+                raise STTError(
+                    "UNCONFINED_SHARED_WORKSPACE_EXECUTION_UNSUPPORTED",
+                    "Unconfined command execution is unsupported because STT operates directly on the shared workspace. Dynamic commands require a successfully initialized sandbox.",
+                )
             repo = Path(args.repo)
             state_root = Path(args.state_root) if args.state_root else local_state_root(repo)
             result = Runner.bootstrap(

@@ -45,6 +45,11 @@ class Runner:
 
     @staticmethod
     def bootstrap(*, repo: Path, state_root: Path, mission: bytes, included_ignored: list[str], allow_unconfined: bool = False, require_final_entrypoint_smoke: bool = False, task_id: str | None = None, parent_binding: dict[str, Any] | None = None) -> dict[str, Any]:
+        if allow_unconfined:
+            raise STTError(
+                "UNCONFINED_SHARED_WORKSPACE_EXECUTION_UNSUPPORTED",
+                "Unconfined command execution is unsupported because STT operates directly on the shared workspace. Dynamic commands require a successfully initialized sandbox.",
+            )
         repo_root, git_common = resolve_repo(repo)
         try:
             require(mission.decode("utf-8").strip() != "", "MISSION_REQUIRED", "mission is effectively blank")
@@ -103,7 +108,9 @@ class Runner:
                 "task_runtime_external_side_effects": False,
                 "git_control_mutation": False,
                 "commit_or_publication": False,
-                "candidate_dynamic_execution": "owner_risk_accepted" if allow_unconfined else "sandbox_required",
+                # The historical field name is retained for task-schema compatibility;
+                # commands now target the shared workspace read-only under a sandbox.
+                "candidate_dynamic_execution": "sandbox_required",
             },
             "routing": {
                 "resolver_ref": routing_ref.ref,
@@ -512,7 +519,6 @@ class Runner:
             started = Runner.bootstrap(
                 repo=Path(self.task["workspace"]["root"]), state_root=state_root, mission=step["mission"].encode("utf-8"),
                 included_ignored=self.task["workspace"].get("included_ignored_paths", []),
-                allow_unconfined=self.task["authority"]["candidate_dynamic_execution"] == "owner_risk_accepted",
                 parent_binding=binding, task_id=binding["child_task_id"],
             )
             require(started["task_id"] == binding["child_task_id"], "CONTROL_STATE_FAILED", "child identity mismatch during creation")

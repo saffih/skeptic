@@ -21,8 +21,11 @@ def main() -> int:
         secret = root / "secret"
         secret.write_text("host-only")
         (candidate / "probe.py").write_text(
-            "from pathlib import Path\nimport socket\n"
+            "from pathlib import Path\nimport os\nimport socket\n"
             f"assert not Path({str(secret)!r}).exists(), 'host path visible'\n"
+            "try:\n Path('workspace-write').write_text('forbidden'); raise AssertionError('workspace writable')\n"
+            "except OSError:\n pass\n"
+            "Path(os.environ['TMPDIR'], 'scratch-write').write_text('ok')\n"
             "s=socket.socket(); s.settimeout(0.2)\n"
             "try:\n s.connect(('1.1.1.1',53)); raise AssertionError('network available')\n"
             "except OSError:\n pass\nprint('contained')\n"
@@ -44,6 +47,9 @@ def main() -> int:
             print(json.dumps({"status": "PASS_FAIL_CLOSED", "sandbox_backend": None, "error_code": exc.code}, sort_keys=True))
             return 0
         if result.get("result_status") == "SUCCEEDED":
+            if (candidate / "workspace-write").exists() or not any(path.name == "scratch-write" for path in root.rglob("scratch-write")):
+                print(json.dumps({"status": "FAIL_CONTAINMENT", "sandbox_backend": backend, "result": result}, sort_keys=True))
+                return 1
             status = "PASS_CONTAINED"
         else:
             stderr = Path(result["stderr"]["path"]).read_text("utf-8", errors="replace")

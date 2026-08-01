@@ -150,7 +150,7 @@ class RecursiveTaskTests(unittest.TestCase):
     def test_root_child_workspace_and_deterministic_binding(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td); repo = self.repo(root)
-            root_started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[], allow_unconfined=True)
+            root_started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[])
             root_runner = Runner(Path(root_started["task_root"]))
             child_mission = "child\n"; child_sha = __import__("hashlib").sha256(child_mission.encode()).hexdigest()
             root_sha = root_runner.task["mission"]["sha256"]
@@ -177,7 +177,7 @@ class RecursiveTaskTests(unittest.TestCase):
     def test_task_whose_plan_performs_inspection_is_closed_without_checkpoint(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td); repo = self.repo(root)
-            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[], allow_unconfined=True)
+            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[])
             runner = Runner(Path(started["task_root"]))
             child_mission = "inspect child\n"; child_sha = __import__("hashlib").sha256(child_mission.encode()).hexdigest()
             root_sha = runner.task["mission"]["sha256"]
@@ -197,7 +197,7 @@ class RecursiveTaskTests(unittest.TestCase):
     def test_root_child_grandchild_executes_depth_first(self):
         with tempfile.TemporaryDirectory() as td:
             repo = self.repo(Path(td))
-            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[], allow_unconfined=True)
+            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[])
             runner = Runner(Path(started["task_root"]))
             child_mission = "child\n"; grandchild_mission = "grandchild\n"
             root_sha = runner.task["mission"]["sha256"]
@@ -224,7 +224,7 @@ class RecursiveTaskTests(unittest.TestCase):
             (repo / ".gitignore").write_text("generated/\n")
             subprocess.run(["git", "-C", str(repo), "add", ".gitignore"], check=True)
             subprocess.run(["git", "-C", str(repo), "commit", "-qm", "ignore generated"], check=True)
-            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root tree change\n", included_ignored=[], allow_unconfined=True)
+            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root tree change\n", included_ignored=[])
             runner = Runner(Path(started["task_root"]))
             root_sha = runner.task["mission"]["sha256"]
             self.complete(
@@ -251,7 +251,7 @@ class RecursiveTaskTests(unittest.TestCase):
     def test_descendant_tamper_after_final_reviews_fails_root(self):
         with tempfile.TemporaryDirectory() as td:
             repo = self.repo(Path(td))
-            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[], allow_unconfined=True)
+            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[])
             runner = Runner(Path(started["task_root"]))
             child_mission = "child\n"
             root_sha = runner.task["mission"]["sha256"]

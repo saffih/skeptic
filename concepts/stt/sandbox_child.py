@@ -18,6 +18,7 @@ def run(args: argparse.Namespace) -> int:
         env = {"PATH": "/usr/bin:/bin", "HOME": str(scratch / "home"), "TMPDIR": str(scratch / "tmp"), "LANG": "C.UTF-8", "LC_ALL": "C.UTF-8", "PYTHONNOUSERSITE": "1"}
     else:
         subprocess.run([args.mount, "--bind", str(candidate), str(root / "workspace")], check=True)
+        subprocess.run([args.mount, "-o", "remount,ro,bind", str(root / "workspace")], check=True)
         for host in ("/usr", "/bin", "/lib", "/lib64"):
             if Path(host).exists():
                 subprocess.run([args.mount, "--rbind", host, str(root / host.lstrip("/"))], check=True)

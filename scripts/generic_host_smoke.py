@@ -48,9 +48,9 @@ def complete_planner(request: dict) -> None:
                 "kind": "change",
                 "route_profile": "standard",
                 "objective": "write repaired content",
-                "read_scope": [{"path": "app.txt", "kind": "file"}, {"path": "check.py", "kind": "file"}],
+                "read_scope": [{"path": "app.txt", "kind": "file"}],
                 "write_scope": [{"path": "app.txt", "kind": "file"}],
-                "validation_commands": [{"tool_id": "python", "args": ["check.py"], "cwd": ".", "timeout_seconds": 30, "accepted_exit_codes": [0]}],
+                "validation_commands": [],
             }
         ],
     }
@@ -110,13 +110,12 @@ def main() -> int:
         (repo / "skeptic-questions.md").write_text("# Questions\n", encoding="utf-8")
         (repo / ".gitignore").write_text("ignored.secret\n", encoding="utf-8")
         (repo / "app.txt").write_text("broken\n", encoding="utf-8")
-        (repo / "check.py").write_text("from pathlib import Path\nassert Path('app.txt').read_text() == 'repaired\\n'\n", encoding="utf-8")
         (repo / "ignored.secret").write_text("preserve me\n", encoding="utf-8")
-        subprocess.run(["git", "-C", str(repo), "add", "skeptic.md", "skeptic-questions.md", ".gitignore", "app.txt", "check.py"], check=True)
+        subprocess.run(["git", "-C", str(repo), "add", "skeptic.md", "skeptic-questions.md", ".gitignore", "app.txt"], check=True)
         subprocess.run(["git", "-C", str(repo), "commit", "-qm", "base"], check=True)
         head_before = subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip()
         index_before = subprocess.check_output(["git", "-C", str(repo), "ls-files", "--stage", "-z"])
-        receipt = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"repair app\n", included_ignored=[], allow_unconfined=True)
+        receipt = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"repair app\n", included_ignored=[])
         runner = Runner(Path(receipt["task_root"])); plan_reviews = 0; final_reviews = 0
         for _ in range(32):
             status = runner.status()
@@ -143,7 +142,7 @@ def main() -> int:
         assert (repo / "ignored.secret").read_text() == "preserve me\n"
         assert subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip() == head_before
         assert subprocess.check_output(["git", "-C", str(repo), "ls-files", "--stage", "-z"]) == index_before
-        print(json.dumps({"status": "PASS", "plan_reviews": plan_reviews, "final_reviews": final_reviews, "outcome": final["status"], "dynamic_execution": "owner_risk_accepted_for_synthetic_smoke_only"}, sort_keys=True))
+        print(json.dumps({"status": "PASS", "plan_reviews": plan_reviews, "final_reviews": final_reviews, "outcome": final["status"], "dynamic_execution": "sandbox_required", "dynamic_commands": 0}, sort_keys=True))
     return 0
 
 

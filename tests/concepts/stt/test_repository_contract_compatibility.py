@@ -34,6 +34,13 @@ class RepositoryContractCompatibilityTests(unittest.TestCase):
         ):
             self.assertIn(marker, planner)
 
+    def test_dynamic_command_contract_rejects_unconfined_execution(self) -> None:
+        workflow = (ROOT / "workflows" / "target_task.md").read_text(encoding="utf-8")
+        self.assertIn("unconfined command execution is unsupported", workflow.lower())
+        self.assertIn("candidate_dynamic_execution", workflow)
+        self.assertIn("`sandbox_required`", workflow)
+        self.assertNotIn("`owner_risk_accepted` is explicitly unconfined", workflow)
+
 
 if __name__ == "__main__":
     unittest.main()
