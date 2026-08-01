@@ -5,9 +5,11 @@ import subprocess
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Callable
 from unittest.mock import patch
 
-from concepts.stt.canonical import canonical_json_bytes, sha256_file
+from concepts.stt.artifacts import ArtifactRef
+from concepts.stt.canonical import canonical_json_bytes, loads_strict, sha256_file
 from concepts.stt.errors import STTError
 from concepts.stt.plan import validate_plan
 from concepts.stt.runner import Runner
@@ -49,8 +51,15 @@ class RecursiveTaskTests(unittest.TestCase):
         write_json(plan_path, plan); write_json(map_path, {"findings": []})
         return plan_path, map_path, plan
 
-    def complete(self, runner: Runner, planner_steps: dict[str, tuple[str, list[dict]]], worker_writes: dict[str, str] | None = None) -> None:
-        plan_reviews = 0; final_reviews = 0
+    def complete(
+        self,
+        runner: Runner,
+        planner_steps: dict[str, tuple[str, list[dict]]],
+        worker_writes: dict[str, str | dict[str, str | None]] | None = None,
+        tamper_root_after_final_reviews: Callable[[Runner], None] | None = None,
+    ) -> None:
+        plan_reviews = 0
+        final_reviews: dict[str, int] = {}
         for _ in range(160):
             active = runner
             while active._active_task_binding():
@@ -66,6 +75,7 @@ class RecursiveTaskTests(unittest.TestCase):
                 active.run(); continue
             request, request_ref = pending
             root = active.task_root; out = root / request["result_ref"].rsplit("/", 1)[0]
+            is_final_review = False
             if request["role"] == "planner":
                 delivery, steps = planner_steps[request["mission"]["sha256"]]
                 plan_path, map_path, _ = self.plan({**request, "_task_root": str(root)}, delivery, steps)
@@ -73,7 +83,8 @@ class RecursiveTaskTests(unittest.TestCase):
                 write_json(root / request["result_ref"], {"schema_version": 1, "operation_id": request["operation_id"], "request_sha256": request_ref.sha256, "kind": "PLAN_CANDIDATE", "plan_ref": plan_path.relative_to(root).as_posix(), "plan_sha256": sha256_file(plan_path), "finding_map_ref": map_path.relative_to(root).as_posix()})
             elif request["role"] == "reviewer":
                 final = request["purpose"] == "final_review"
-                if final: final_reviews += 1
+                is_final_review = final
+                if final: final_reviews[active.task_id] = final_reviews.get(active.task_id, 0) + 1
                 else: plan_reviews += 1
                 receipt = out / "review.json"; findings = out / "findings.json"
                 write_json(receipt, {"verdict": "PASS"}); write_json(findings, {"findings": []})
@@ -82,9 +93,25 @@ class RecursiveTaskTests(unittest.TestCase):
                 write_json(root / request["result_ref"], {"schema_version": 1, "operation_id": request["operation_id"], "request_sha256": request_ref.sha256, "protocol_outcome": "COMPLETE", "review_disposition": "PASS", "runskeptic_final_outcome": "PASS", "receipt_ref": receipt.relative_to(root).as_posix(), "findings_ref": findings.relative_to(root).as_posix(), "subject_sha256": request["subject"]["sha256"], "session_id": invocation, "claims": ["mission_objective_satisfied", "final_find_loop_clean"] if final else []})
             elif request["role"] == "worker":
                 write = (worker_writes or {}).get(request["step"]["id"], "child\n")
-                Path(request["capsule_path"], "value.txt").write_text(write)
+                if isinstance(write, dict):
+                    for rel, body in write.items():
+                        target = Path(request["capsule_path"], rel)
+                        if body is None:
+                            if target.is_dir(): target.rmdir()
+                            elif target.exists() or target.is_symlink(): target.unlink()
+                        else:
+                            target.parent.mkdir(parents=True, exist_ok=True)
+                            target.write_text(body)
+                else:
+                    Path(request["capsule_path"], "value.txt").write_text(write)
                 write_json(root / request["_provider_evidence_ref"], {"provider_id": "generic-recorded-host", "invocation_id": f"worker-{request['operation_id']}", "status": "COMPLETE", "timed_out": False, "exit_code": 0})
                 write_json(root / request["result_ref"], {"schema_version": 1, "operation_id": request["operation_id"], "request_sha256": request_ref.sha256, "kind": "WORKER_RESULT", "step_id": request["step"]["id"], "summary": "updated", "declared_outputs": []})
+            if is_final_review and active.task_id == runner.task_id and final_reviews[active.task_id] == 3 and tamper_root_after_final_reviews is not None:
+                result, result_ref, provider_report = active._adopt_result(request)
+                evidence_ref = active.store.adopt_existing(request["_provider_evidence_ref"], max_size=active.task["limits"]["max_semantic_result_bytes"])
+                active._process_reviewer_result(request, result, result_ref, provider_report)
+                active._accept_operation(request, result_ref, evidence_ref)
+                tamper_root_after_final_reviews(active)
             active.run()
         active = runner._active_task_binding()
         child_state = Runner(Path(active["child_task_root"])).status() if active else None
@@ -92,6 +119,14 @@ class RecursiveTaskTests(unittest.TestCase):
 
     def change_step(self, step_id: str = "change") -> dict:
         return {"id": step_id, "kind": "change", "route_profile": "standard", "objective": "update value", "read_scope": [{"path": "value.txt", "kind": "file"}], "write_scope": [{"path": "value.txt", "kind": "file"}], "validation_commands": []}
+
+    def tree_change_step(self, step_id: str = "change", path: str = "generated") -> dict:
+        return {"id": step_id, "kind": "change", "route_profile": "standard", "objective": "update tree", "read_scope": [{"path": path, "kind": "tree"}], "write_scope": [{"path": path, "kind": "tree"}], "validation_commands": []}
+
+    def frozen_evidence(self, runner: Runner) -> dict:
+        frozen = runner._last_event_payload("FINAL_SUBJECT_FROZEN")
+        self.assertIsNotNone(frozen)
+        return loads_strict(runner.store.verify(ArtifactRef(**frozen["evidence"])).read_bytes())
 
     def inspect_step(self) -> dict:
         return {"id": "inspect", "kind": "inspect", "scope": ".", "operation": "repository_inventory"}
@@ -133,6 +168,11 @@ class RecursiveTaskTests(unittest.TestCase):
             self.assertEqual(len([r for r in root_runner._events() if r["event"]["event_type"] == "TASK_RESULT_ACCEPTED"]), 1)
             verified = verify_task_terminal(root_runner.task_root, expected_parent_binding=None, expected_success_outcome="COMPLETE")
             self.assertEqual(verified["terminal_receipt"]["result"], verified["result_ref"].as_dict())
+            evidence = self.frozen_evidence(root_runner)
+            self.assertEqual([entry["path"] for entry in evidence["declared_changed_paths"]], ["value.txt"])
+            self.assertEqual(evidence["declared_changed_paths"][0]["state"], "file")
+            accepted = root_runner._last_event_payload("TASK_RESULT_ACCEPTED")
+            self.assertEqual(accepted["frozen_evidence"], verify_task_terminal(child_root, expected_parent_binding=bound["parent_binding"], expected_success_outcome="COMPLETE")["evidence_ref"].as_dict())
 
     def test_task_whose_plan_performs_inspection_is_closed_without_checkpoint(self):
         with tempfile.TemporaryDirectory() as td:
@@ -175,6 +215,61 @@ class RecursiveTaskTests(unittest.TestCase):
             child = Runner(runner.task_root.parent / child_id, read_only=True)
             self.assertEqual(len([r for r in child._events() if r["event"]["event_type"] == "TASK_BOUND"]), 1)
             self.assertEqual(len([r for r in child._events() if r["event"]["event_type"] == "TASK_RESULT_ACCEPTED"]), 1)
+            self.assertEqual([entry["path"] for entry in self.frozen_evidence(child)["declared_changed_paths"]], ["value.txt"])
+            self.assertEqual([entry["path"] for entry in self.frozen_evidence(runner)["declared_changed_paths"]], ["value.txt"])
+
+    def test_ignored_tree_delta_records_each_changed_path_without_git_status(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = self.repo(Path(td))
+            (repo / ".gitignore").write_text("generated/\n")
+            subprocess.run(["git", "-C", str(repo), "add", ".gitignore"], check=True)
+            subprocess.run(["git", "-C", str(repo), "commit", "-qm", "ignore generated"], check=True)
+            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root tree change\n", included_ignored=[], allow_unconfined=True)
+            runner = Runner(Path(started["task_root"]))
+            root_sha = runner.task["mission"]["sha256"]
+            self.complete(
+                runner,
+                {root_sha: ("workspace_change", [self.tree_change_step()])},
+                {"change": {"generated/one.txt": "one\n", "generated/nested/two.txt": "two\n"}},
+            )
+
+            self.assertEqual(runner.status()["status"], "COMPLETE")
+            evidence = self.frozen_evidence(runner)
+            entries = {entry["path"]: entry for entry in evidence["declared_changed_paths"]}
+            self.assertEqual(
+                set(entries),
+                {"generated", "generated/nested", "generated/nested/two.txt", "generated/one.txt"},
+            )
+            self.assertEqual(entries["generated"]["state"], "directory")
+            self.assertEqual(entries["generated/one.txt"]["state"], "file")
+            self.assertEqual(entries["generated/nested/two.txt"]["state"], "file")
+            self.assertNotIn("generated", subprocess.run(["git", "-C", str(repo), "status", "--short"], check=True, capture_output=True, text=True).stdout)
+            runner._verify_frozen_workspace(evidence)
+            with patch("concepts.stt.runner.run_git", side_effect=AssertionError("git status must not discover changed paths")):
+                self.assertEqual(runner._workspace_evidence()["declared_changed_paths"], evidence["declared_changed_paths"])
+
+    def test_descendant_tamper_after_final_reviews_fails_root(self):
+        with tempfile.TemporaryDirectory() as td:
+            repo = self.repo(Path(td))
+            started = Runner.bootstrap(repo=repo, state_root=repo / ".stt" / "tasks", mission=b"root\n", included_ignored=[], allow_unconfined=True)
+            runner = Runner(Path(started["task_root"]))
+            child_mission = "child\n"
+            root_sha = runner.task["mission"]["sha256"]
+            child_sha = __import__("hashlib").sha256(child_mission.encode()).hexdigest()
+            self.complete(
+                runner,
+                {
+                    root_sha: ("workspace_change", [self.task_step(child_mission, "workspace_change")]),
+                    child_sha: ("workspace_change", [self.change_step()]),
+                },
+                {"change": "descendant\n"},
+                tamper_root_after_final_reviews=lambda _: (repo / "value.txt").write_text("tampered\n"),
+            )
+
+            self.assertEqual(runner.status()["status"], "FAILED")
+            verified = verify_task_terminal(runner.task_root, expected_parent_binding=None)
+            self.assertEqual(verified["terminal_receipt"]["reason"], "FINAL_WORKSPACE_CHANGED")
+            self.assertEqual((repo / "value.txt").read_text(), "tampered\n")
 
     def test_terminal_verifier_rejects_wrong_parent_and_task_has_no_stack(self):
         with tempfile.TemporaryDirectory() as td:

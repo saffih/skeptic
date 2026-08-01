@@ -40,9 +40,11 @@ bounded receipts.
   derives state from it.
 - STT state defaults to `<repo>/.stt/tasks` and may be overridden by
   `STT_TASKS_ROOT`. Linked Git worktrees are not STT capsules.
-- Semantic execution uses disposable capsules; authoritative source remains
-  read-only until one reviewed deterministic cutover. Sandbox failure never
-  falls back silently to unconfined execution.
+- STT executes sequentially in the current shared workspace. Workers use sparse
+  capsules and scoped direct deltas, but accepted changes are applied before
+  final review. STT does not currently provide checkpoints, rollback,
+  restoration, or transactional cutover. Sandbox failure never falls back
+  silently to unconfined execution.
 
 The complete STT product, lifecycle, delivery, Boundary, recovery, and
 sandbox contract is `workflows/target_task.md`; this file intentionally does
@@ -56,8 +58,8 @@ not duplicate it.
 - Each deterministic capability owns one directory under `capabilities/`, with
   a same-stem `.md` contract and `.py` executable plus optional `examples/`.
 - Tests mirror ownership under `tests/capabilities/<capability>/`.
-- Runtime state, plans, checkpoints, logs, receipts, and validation evidence
-  remain outside this repository.
+- Runtime state, plans, capsules, logs, receipts, and validation evidence remain
+  outside this repository.
 
 ## Selective loading
 

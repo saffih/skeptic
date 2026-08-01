@@ -65,7 +65,18 @@ def verify_task_terminal(
             runner.store.verify(ArtifactRef(**artifact))
         require(any(artifact == evidence_ref.as_dict() for artifact in result["artifacts"]), "TASK_RESULT_INVALID", "generic result does not reference frozen evidence")
         require(value.get("result") == result_ref.as_dict(), "TASK_RESULT_INVALID", "terminal result differs from frozen result")
-    for evidence in value.get("evidence", []):
-        require(isinstance(evidence, dict) and set(evidence) == {"ref", "sha256", "size"}, "TASK_RESULT_INVALID", "terminal evidence reference malformed")
-        runner.store.verify(ArtifactRef(**evidence))
-    return {"task": task, "outcome": value["outcome"], "terminal_receipt": value, "terminal_ref": ref, "result_ref": result_ref, "result": result, "plan": plan, "frozen": frozen}
+    for terminal_evidence in value.get("evidence", []):
+        require(isinstance(terminal_evidence, dict) and set(terminal_evidence) == {"ref", "sha256", "size"}, "TASK_RESULT_INVALID", "terminal evidence reference malformed")
+        runner.store.verify(ArtifactRef(**terminal_evidence))
+    return {
+        "task": task,
+        "outcome": value["outcome"],
+        "terminal_receipt": value,
+        "terminal_ref": ref,
+        "result_ref": result_ref,
+        "result": result,
+        "plan": plan,
+        "frozen": frozen,
+        "evidence_ref": evidence_ref,
+        "evidence": evidence,
+    }

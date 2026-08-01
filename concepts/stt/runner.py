@@ -9,8 +9,8 @@ from typing import Any
 
 from .artifacts import ArtifactRef, ArtifactStore
 from .boundary import compact_receipt, scope_contains, validate_tree
-from .canonical import canonical_json_bytes, ensure_no_symlink_components, loads_strict, sha256_bytes, sha256_file
-from .capsule import apply_delta, derive_delta, materialize_capsule
+from .canonical import canonical_json_bytes, ensure_no_symlink_components, loads_strict, safe_relpath, sha256_bytes, sha256_file
+from .capsule import apply_delta, derive_delta, materialize_capsule, validate_workspace_target
 from .command import run_command
 from .contracts import DEFAULT_LIMITS
 from .errors import STTError, require
@@ -536,7 +536,16 @@ class Runner:
     def _accept_task_result(self, binding: dict[str, Any], verified: dict[str, Any]) -> None:
         child = Runner(Path(binding["child_task_root"]), read_only=True)
         result = verified["result"]
-        accepted = {"schema_version": 1, "parent_step_id": binding["parent_step_id"], "child_task_id": child.task_id, "verified_terminal_receipt": verified["terminal_ref"].as_dict(), "result": result, "result_ref": verified["result_ref"].as_dict(), "workspace": "shared"}
+        accepted = {
+            "schema_version": 1,
+            "parent_step_id": binding["parent_step_id"],
+            "child_task_id": child.task_id,
+            "verified_terminal_receipt": verified["terminal_ref"].as_dict(),
+            "result": result,
+            "result_ref": verified["result_ref"].as_dict(),
+            "frozen_evidence": verified["evidence_ref"].as_dict(),
+            "workspace": "shared",
+        }
         self._append_json_fact("TASK_RESULT_ACCEPTED", "tasks/results", accepted)
 
     def _completed_steps(self) -> set[str]:
@@ -661,41 +670,80 @@ class Runner:
         self.ledger.append("FINAL_SUBJECT_FROZEN", freeze_ref.ref, freeze_ref.sha256)
         self._create_semantic_request(role="reviewer", purpose="final_review", body={"subject": subject_ref.as_dict(), "methodology_ref": "methodology/binding.json", "required_claims": ["mission_objective_satisfied", "final_find_loop_clean"]})
 
+    def _verified_accepted_child(self, accepted: dict[str, Any]) -> dict[str, Any]:
+        from .verifier import verify_task_terminal
+
+        bindings = [
+            record["payload"]
+            for record in self._events()
+            if record["event"]["event_type"] == "TASK_BOUND"
+            and isinstance(record.get("payload"), dict)
+            and record["payload"].get("child_task_id") == accepted.get("child_task_id")
+            and record["payload"].get("parent_step_id") == accepted.get("parent_step_id")
+        ]
+        require(len(bindings) == 1, "TASK_RESULT_INVALID", "accepted child has no unique Task binding")
+        binding = bindings[0]
+        verified = verify_task_terminal(
+            Path(binding["child_task_root"]),
+            expected_parent_binding=binding["parent_binding"],
+            expected_success_outcome=TASK_OUTCOME,
+        )
+        require(accepted.get("verified_terminal_receipt") == verified["terminal_ref"].as_dict(), "TASK_RESULT_INVALID", "accepted child terminal receipt changed")
+        require(accepted.get("result_ref") == verified["result_ref"].as_dict(), "TASK_RESULT_INVALID", "accepted child result reference changed")
+        require(accepted.get("result") == verified["result"], "TASK_RESULT_INVALID", "accepted child result changed")
+        require(accepted.get("frozen_evidence") == verified["evidence_ref"].as_dict(), "TASK_RESULT_INVALID", "accepted child frozen evidence changed")
+        return verified
+
+    def _workspace_path_identity(self, rel: str) -> dict[str, Any]:
+        path = validate_workspace_target(self._workspace(), rel, allow_leaf_symlink_delete=True)
+        try:
+            path_stat = os.lstat(path)
+        except FileNotFoundError:
+            return {"path": rel, "state": "missing"}
+        mode = stat.S_IMODE(path_stat.st_mode)
+        if stat.S_ISREG(path_stat.st_mode):
+            return {"path": rel, "state": "file", "sha256": sha256_file(path), "size": path_stat.st_size, "mode": mode}
+        if stat.S_ISDIR(path_stat.st_mode):
+            return {"path": rel, "state": "directory", "mode": mode}
+        if stat.S_ISLNK(path_stat.st_mode):
+            target = os.readlink(path)
+            target_bytes = target.encode("utf-8", "surrogateescape")
+            return {"path": rel, "state": "symlink", "target": target, "target_sha256": sha256_bytes(target_bytes), "size": path_stat.st_size, "mode": mode}
+        raise STTError("UNSUPPORTED_OBJECT_TYPE", "changed workspace path has an unsupported type", {"path": rel})
+
     def _workspace_evidence(self) -> dict[str, Any]:
-        plan, _ = self._current_plan(); require(plan is not None, "CONTROL_STATE_FAILED", "Plan unavailable")
         paths: set[str] = set()
-        for step in plan["steps"]:
-            if step["kind"] != "change": continue
-            for item in step["write_scope"]:
-                if item["kind"] == "file": paths.add(item["path"])
-        repo = self._workspace()
-        changed = run_git(repo, ["status", "--short"]).stdout.decode(errors="replace")
-        for line in changed.splitlines():
-            raw = line[3:] if len(line) >= 3 else ""
-            if " -> " in raw: raw = raw.split(" -> ", 1)[-1]
-            if raw == ".stt" or raw.startswith(".stt/"): continue
-            if raw and any(scope_contains(step["write_scope"], raw) for step in plan["steps"] if step["kind"] == "change"):
-                paths.add(raw)
-        entries: list[dict[str, Any]] = []
-        for rel in sorted(paths):
-            path = repo / rel
-            if not path.exists() and not path.is_symlink():
-                entries.append({"path": rel, "state": "missing"}); continue
-            if path.is_symlink(): entries.append({"path": rel, "state": "symlink", "target": os.readlink(path)}); continue
-            if path.is_dir(): entries.append({"path": rel, "state": "tree"}); continue
-            entries.append({"path": rel, "state": "file", "sha256": sha256_file(path), "size": path.stat().st_size})
+        operations = []
+        for record in self._events():
+            if record["event"]["event_type"] != "OPERATION_RESULT" or not isinstance(record.get("payload"), dict):
+                continue
+            payload = record["payload"]
+            if payload.get("kind") != "WORKER_DELTA_APPLIED":
+                continue
+            delta = payload.get("delta")
+            require(isinstance(delta, list), "CONTROL_STATE_FAILED", "accepted Worker delta is malformed")
+            for item in delta:
+                require(isinstance(item, dict) and isinstance(item.get("path"), str), "CONTROL_STATE_FAILED", "accepted Worker delta path is malformed")
+                paths.add(safe_relpath(item["path"]))
+            operations.append(record["event"]["payload_ref"])
+        accepted = [record["payload"] for record in self._events() if record["event"]["event_type"] == "TASK_RESULT_ACCEPTED" and isinstance(record.get("payload"), dict)]
+        for child_result in accepted:
+            verified = self._verified_accepted_child(child_result)
+            for entry in verified["evidence"]["declared_changed_paths"]:
+                require(isinstance(entry, dict) and isinstance(entry.get("path"), str), "TASK_FINAL_INVALID", "child changed-path evidence is malformed")
+                paths.add(safe_relpath(entry["path"]))
+        entries = [self._workspace_path_identity(rel) for rel in sorted(paths)]
         validations = [record["payload"] for record in self._events() if record["event"]["event_type"] == "VALIDATION_RECORDED" and isinstance(record["payload"], dict)]
-        accepted = [record["payload"] for record in self._events() if record["event"]["event_type"] == "TASK_RESULT_ACCEPTED" and isinstance(record["payload"], dict)]
-        return {"schema_version": 1, "declared_changed_paths": entries, "operation_refs": [record["event"]["payload_ref"] for record in self._events() if record["event"]["event_type"] == "OPERATION_RESULT"], "validation_refs": validations, "accepted_task_results": accepted}
+        return {"schema_version": 1, "declared_changed_paths": entries, "operation_refs": operations, "validation_refs": validations, "accepted_task_results": accepted}
 
     def _verify_frozen_workspace(self, evidence: dict[str, Any]) -> None:
-        repo = self._workspace()
         for entry in evidence.get("declared_changed_paths", []):
-            path = repo / entry["path"]
-            if entry["state"] == "missing": require(not path.exists() and not path.is_symlink(), "FINAL_WORKSPACE_CHANGED", "frozen path now exists", path=entry["path"])
-            elif entry["state"] == "file": require(path.is_file() and not path.is_symlink() and sha256_file(path) == entry["sha256"] and path.stat().st_size == entry["size"], "FINAL_WORKSPACE_CHANGED", "frozen file changed", path=entry["path"])
-            elif entry["state"] == "symlink": require(path.is_symlink() and os.readlink(path) == entry["target"], "FINAL_WORKSPACE_CHANGED", "frozen symlink changed", path=entry["path"])
-            else: require(path.is_dir() and not path.is_symlink(), "FINAL_WORKSPACE_CHANGED", "frozen directory changed", path=entry["path"])
+            require(isinstance(entry, dict) and isinstance(entry.get("path"), str), "TASK_FINAL_INVALID", "frozen changed-path entry malformed")
+            try:
+                actual = self._workspace_path_identity(safe_relpath(entry["path"]))
+            except (OSError, STTError) as exc:
+                raise STTError("FINAL_WORKSPACE_CHANGED", "frozen workspace path is no longer safely readable", {"path": entry["path"]}) from exc
+            require(actual == entry, "FINAL_WORKSPACE_CHANGED", "frozen workspace path identity changed", path=entry["path"])
 
     def _consecutive_final_passes(self, subject_sha: str) -> list[dict[str, Any]]:
         passes: list[dict[str, Any]] = []
@@ -841,11 +889,15 @@ class Runner:
                     if len(self._consecutive_final_passes(frozen["subject_sha256"])) < 3:
                         self._create_semantic_request(role="reviewer", purpose="final_review", body={"subject": frozen["subject"], "methodology_ref": "methodology/binding.json", "required_claims": ["mission_objective_satisfied", "final_find_loop_clean"]})
                         continue
-                    if self.task.get("parent_task_id") is not None:
-                        self._terminal(TASK_OUTCOME, "TASK_FINAL_REVIEWS_COMPLETE", [])
+                    evidence_ref = ArtifactRef(**frozen["evidence"])
+                    frozen_evidence = loads_strict(self.store.verify(evidence_ref).read_bytes())
+                    try:
+                        self._verify_frozen_workspace(frozen_evidence)
+                    except STTError as exc:
+                        if exc.code != "FINAL_WORKSPACE_CHANGED":
+                            raise
+                        self._terminal("FAILED", exc.code, [evidence_ref])
                         continue
-                    frozen_evidence = loads_strict(self.store.verify(ArtifactRef(**frozen["evidence"])).read_bytes())
-                    self._verify_frozen_workspace(frozen_evidence)
                     self._terminal(TASK_OUTCOME, "TASK_FINAL_REVIEWS_COMPLETE", [])
                     continue
             if child_binding is not None:
