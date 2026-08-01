@@ -1,4 +1,4 @@
-"""Safe Target Task v24 runtime."""
+"""Safe Target Task runtime."""
 
 from .runner import Runner
 

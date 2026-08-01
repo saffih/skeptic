@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .artifacts import ArtifactRef, ArtifactStore
-from .boundary import compact_receipt, scope_contains, validate_tree
+from .boundary import compact_receipt, scope_contains
 from .canonical import canonical_json_bytes, ensure_no_symlink_components, loads_strict, safe_relpath, sha256_bytes, sha256_file
 from .capsule import apply_delta, derive_delta, materialize_capsule, validate_workspace_target
 from .command import run_command
@@ -294,14 +294,6 @@ class Runner:
 
     def _snapshot(self) -> dict[str, Any]:
         return self.task["workspace"]["baseline"]
-
-    def _validate_tree(self, root: Path) -> dict[str, Any]:
-        tree = validate_tree(root)
-        files = [entry for entry in tree["entries"] if entry["kind"] == "file"]
-        require(len(tree["entries"]) <= self.task["limits"]["max_workspace_files"], "WORKSPACE_LIMIT_EXCEEDED", "candidate object-count limit exceeded")
-        require(sum(entry["size"] for entry in files) <= self.task["limits"]["max_workspace_bytes"], "WORKSPACE_LIMIT_EXCEEDED", "candidate byte limit exceeded")
-        require(max((entry["size"] for entry in files), default=0) <= self.task["limits"]["max_single_file_bytes"], "WORKSPACE_LIMIT_EXCEEDED", "candidate single-file limit exceeded")
-        return tree
 
     def _process_evidence_request(self, request: dict[str, Any], result: dict[str, Any]) -> ArtifactRef:
         selectors = result.get("selectors")

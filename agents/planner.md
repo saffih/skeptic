@@ -19,7 +19,7 @@ A supplied draft is input only. Lead-authored or same-runtime planning is not a 
 ## Inputs
 
 - immutable mission reference and hash;
-- exact baseline/checkpoint identity;
+- exact baseline identity;
 - bounded inventory and permitted toolchain catalog;
 - frozen pre-change Skeptic methodology and companions;
 - current complete Plan and immutable findings when repairing;
