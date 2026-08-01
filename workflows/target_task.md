@@ -148,3 +148,45 @@ marker was printed, and the exit code was accepted. A blocked backend is a
 fail-closed result, not proof of successful containment. Provider identity,
 hidden host context, and live semantic execution remain `UNKNOWN` unless
 directly evidenced.
+
+## Recursive Tasks
+
+The executed unit is one `Task`, whether it is the root invocation or a
+descendant. A Task owns its mission, input checkpoint, authority, sealed Plan,
+append-only ledger, execution artifacts, final validation, and immutable
+terminal receipt. A Plan may contain this exact primitive step:
+
+```json
+{"id":"inspect-before-cleanup","kind":"task","mission":"Inspect local state and return a reviewed manifest.","delivery_kind":"inspect"}
+```
+
+The step has exactly `id`, `kind`, `mission`, and `delivery_kind`. Runtime
+derives the required success (`INSPECT_COMPLETE` for `inspect`, `COMPLETE` for
+`workspace_change`); Planner output cannot select authority, identity, or an
+outcome. Child Tasks use the same lifecycle and limits as the root. The
+limits are `max_task_depth: 4` and `max_total_descendant_tasks: 32`, in
+addition to the direct `max_plan_steps` bound.
+
+A child identity is deterministic from the parent Task ID, sealed parent Plan
+SHA-256, parent step ID, and parent checkpoint SHA-256. The child records an
+immutable binding in `task.json` and the parent ledger records only these two
+Task-specific events:
+
+- `TASK_BOUND`: the parent step, child Task ID/root, sealed Plan hash,
+  checkpoint hash, delivery kind, and required success.
+- `TASK_RESULT_ACCEPTED`: the verified terminal receipt, imported result, and
+  new parent checkpoint when a workspace result advances the parent.
+
+Execution is depth-first. Parent locks are released while the deepest child
+runs. A workspace child returns a validated candidate checkpoint and the
+parent imports it before accepting the step; an inspect child returns a
+reviewed report and leaves the parent checkpoint unchanged. Only the root
+Task may perform the final deterministic cutover. A child is consumable only
+after the reusable terminal verifier confirms its identity, binding, ledger
+chain, sealed Plan, three unchanged Plan reviews, frozen subject, three
+unchanged final reviews, terminal receipt, and referenced result artifacts.
+
+Inspect execution is a closed read-only capability. It records immutable
+evidence and freezes its report before final reviews; it does not invoke the
+generic command or candidate sandbox path and terminates as
+`INSPECT_COMPLETE`.

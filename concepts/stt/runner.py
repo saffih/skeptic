@@ -25,6 +25,9 @@ from .snapshot import build_snapshot, verify_source_identity
 from .state import derive
 
 
+TASK_OUTCOMES = {"inspect": "INSPECT_COMPLETE", "workspace_change": "COMPLETE"}
+
+
 class Runner:
     def __init__(self, task_root: Path, *, read_only: bool = False) -> None:
         self.task_root = task_root.resolve(strict=False)
@@ -43,7 +46,7 @@ class Runner:
             self.ledger.initialize()
 
     @staticmethod
-    def bootstrap(*, repo: Path, state_root: Path, mission: bytes, included_ignored: list[str], allow_unconfined: bool = False, require_final_entrypoint_smoke: bool = False) -> dict[str, Any]:
+    def bootstrap(*, repo: Path, state_root: Path, mission: bytes, included_ignored: list[str], allow_unconfined: bool = False, require_final_entrypoint_smoke: bool = False, task_id: str | None = None, parent_binding: dict[str, Any] | None = None, input_checkpoint: Path | None = None) -> dict[str, Any]:
         repo_root, git_common = resolve_repo(repo)
         try:
             require(mission.decode("utf-8").strip() != "", "MISSION_REQUIRED", "mission is effectively blank")
@@ -60,7 +63,8 @@ class Runner:
         require(stat.S_ISDIR(state_stat.st_mode) and state_stat.st_uid == os.geteuid(), "STATE_ROOT_UNSAFE", "state root owner/type mismatch")
         require(stat.S_IMODE(state_stat.st_mode) == 0o700, "STATE_ROOT_UNSAFE", "state root must be mode 0700")
         ensure_no_symlink_components(state_root)
-        task_id = str(uuid.uuid4()); task_root = state_root / task_id
+        task_id = task_id or str(uuid.uuid4()); task_root = state_root / task_id
+        require(not task_root.exists(), "TASK_ID_COLLISION", "deterministic Task identity already exists")
         limits = dict(DEFAULT_LIMITS)
         store = ArtifactStore(task_root, max_bytes=limits["max_task_state_bytes"], min_free_reserve=limits["min_free_space_reserve_bytes"])
         store.initialize()
@@ -85,7 +89,7 @@ class Runner:
             "schema_version": 1,
             "task_id": task_id,
             "mission": mission_ref.as_dict(),
-            "workspace": {"root": str(repo_root), "git_common_dir": str(git_common), "included_ignored_paths": sorted(included_ignored)},
+            "workspace": {"root": str(repo_root), "git_common_dir": str(git_common), "included_ignored_paths": sorted(included_ignored), "input_checkpoint": str(input_checkpoint.resolve()) if input_checkpoint else None},
             "authority": {
                 "working_tree_repair": True,
                 "semantic_provider_dispatch": True,
@@ -106,6 +110,13 @@ class Runner:
             },
             "limits": limits,
             "qualification": {"final_entrypoint_smoke_required": require_final_entrypoint_smoke},
+            "delivery_kind": parent_binding.get("delivery_kind") if parent_binding else None,
+            "parent_binding": parent_binding,
+            "parent_task_id": parent_binding.get("parent_task_id") if parent_binding else None,
+            "parent_plan_sha256": parent_binding.get("parent_plan_sha256") if parent_binding else None,
+            "parent_step_id": parent_binding.get("parent_step_id") if parent_binding else None,
+            "parent_checkpoint_sha256": parent_binding.get("parent_checkpoint_sha256") if parent_binding else None,
+            "depth": int(parent_binding.get("depth", 0)) if parent_binding else 0,
         }
         task_ref = store.publish_json("task.json", task)
         ledger = Ledger(task_root, task_id); ledger.initialize(); ledger.append("TASK_CREATED", task_ref.ref, task_ref.sha256)
@@ -115,6 +126,14 @@ class Runner:
     def _leases(self) -> tuple[Lease, Lease]:
         root = lock_root(self.task_root); workspace = Path(self.task["workspace"]["git_common_dir"])
         return Lease(self.task_root / ".task.lock", "TASK_BUSY"), Lease(root / f"workspace-{workspace_key(workspace)}.lock", "WORKSPACE_BUSY")
+
+    def _task_lease(self) -> Lease:
+        return Lease(self.task_root / ".task.lock", "TASK_BUSY")
+
+    def _workspace_lease(self) -> Lease:
+        root = lock_root(self.task_root)
+        key = workspace_key(Path(self.task["workspace"]["git_common_dir"]))
+        return Lease(root / f"workspace-{key}.lock", "WORKSPACE_BUSY")
 
     def _events(self) -> list[dict[str, Any]]:
         records: list[dict[str, Any]] = []
@@ -151,8 +170,10 @@ class Runner:
             self.ledger.append("INITIAL_SNAPSHOT_READY", snapshot_ref.ref, snapshot_ref.sha256)
             checkpoint_root = self.task_root / "checkpoints" / "000"
             checkpoint_root.mkdir(parents=True, mode=0o700)
-            self.store.admit(tree_storage_upper_bound(snapshot_dir / "execution_workspace"))
-            shutil.copytree(snapshot_dir / "execution_workspace", checkpoint_root / "workspace", symlinks=True, dirs_exist_ok=False)
+            input_checkpoint = self.task["workspace"].get("input_checkpoint")
+            input_root = Path(input_checkpoint) if input_checkpoint else snapshot_dir / "execution_workspace"
+            self.store.admit(tree_storage_upper_bound(input_root))
+            shutil.copytree(input_root, checkpoint_root / "workspace", symlinks=True, dirs_exist_ok=False)
             tree = self._validate_tree(checkpoint_root / "workspace")
             checkpoint_ref = self.store.publish_json("checkpoints/000/receipt.json", {"schema_version": 1, "checkpoint_number": 0, "step_id": None, "tree": tree})
             self.ledger.append("CHECKPOINT_ACCEPTED", checkpoint_ref.ref, checkpoint_ref.sha256)
@@ -357,6 +378,8 @@ class Runner:
         plan = loads_strict(self.store.verify(plan_ref).read_bytes())
         catalog, _ = self._catalog(); snapshot = self._snapshot()
         validate_plan(plan, mission_sha256=self.task["mission"]["sha256"], baseline_id=snapshot["manifest_sha256"], catalog_ids={tool["tool_id"] for tool in catalog["tools"]}, source_paths=[self.task["workspace"]["root"], self.task["workspace"]["git_common_dir"], str(self.task_root)], limits=self.task["limits"])
+        if self.task.get("delivery_kind") is not None:
+            require(plan.get("delivery_kind") == self.task["delivery_kind"], "TASK_DELIVERY_MISMATCH", "child Plan delivery kind differs from its immutable binding")
         self._validate_plan_write_scopes(plan, snapshot)
         prior_candidates = sum(1 for record in self._events() if record["event"]["event_type"] == "PLAN_CANDIDATE_RECORDED")
         require(prior_candidates < self.task["limits"]["max_plan_candidates"], "PLAN_CANDIDATE_BUDGET_EXHAUSTED", "Plan candidate budget exhausted")
@@ -454,13 +477,143 @@ class Runner:
         number = max(int(payload["checkpoint_number"]) for payload in payloads)
         return number, self.task_root / "checkpoints" / f"{number:03d}" / "workspace"
 
+    def _checkpoint_sha256(self, number: int) -> str:
+        for record in reversed(self._events()):
+            if record["event"]["event_type"] == "CHECKPOINT_ACCEPTED" and isinstance(record["payload"], dict) and int(record["payload"].get("checkpoint_number", -1)) == number:
+                tree = record["payload"].get("tree")
+                require(isinstance(tree, dict) and isinstance(tree.get("sha256"), str), "CONTROL_STATE_FAILED", "checkpoint hash unavailable")
+                return tree["sha256"]
+        raise STTError("CONTROL_STATE_FAILED", "checkpoint hash unavailable")
+
+    def _task_delivery_kind(self, plan: dict[str, Any]) -> str:
+        delivery = self.task.get("delivery_kind") or plan.get("delivery_kind", "workspace_change")
+        require(delivery in TASK_OUTCOMES, "TASK_DELIVERY_MISMATCH", "unsupported Task delivery kind")
+        return delivery
+
+    def _descendant_count(self) -> int:
+        return sum(1 for record in self._events() if record["event"]["event_type"] == "TASK_BOUND")
+
+    def _active_task_binding(self) -> dict[str, Any] | None:
+        bound: dict[str, Any] | None = None
+        accepted: set[str] = set()
+        for record in self._events():
+            event = record["event"]["event_type"]
+            payload = record.get("payload")
+            if not isinstance(payload, dict):
+                continue
+            if event == "TASK_BOUND":
+                bound = payload
+            elif event == "TASK_RESULT_ACCEPTED":
+                accepted.add(str(payload.get("child_task_id")))
+        if bound and str(bound.get("child_task_id")) not in accepted:
+            return bound
+        return None
+
+    def _task_binding_for(self, step: dict[str, Any], plan_ref: ArtifactRef) -> dict[str, Any]:
+        number, _ = self._latest_checkpoint()
+        checkpoint_sha = self._checkpoint_sha256(number)
+        depth = int(self.task.get("depth", 0))
+        require(depth < self.task["limits"]["max_task_depth"], "TASK_DEPTH_EXCEEDED", "Task depth limit exceeded")
+        require(self._descendant_count() < self.task["limits"]["max_total_descendant_tasks"], "TASK_DESCENDANT_LIMIT", "Task descendant limit exceeded")
+        delivery = step["delivery_kind"]
+        child_id = str(uuid.uuid5(uuid.NAMESPACE_URL, "skeptic-task\0" + "\0".join([self.task_id, plan_ref.sha256, step["id"], checkpoint_sha])))
+        return {
+            "parent_task_id": self.task_id,
+            "parent_plan_sha256": plan_ref.sha256,
+            "parent_step_id": step["id"],
+            "parent_checkpoint_sha256": checkpoint_sha,
+            "depth": depth + 1,
+            "child_task_id": child_id,
+            "delivery_kind": delivery,
+            "required_success_outcome": TASK_OUTCOMES[delivery],
+            "mission_sha256": sha256_bytes(step["mission"].encode("utf-8")),
+        }
+
+    def _bind_task(self, step: dict[str, Any], plan_ref: ArtifactRef) -> dict[str, Any]:
+        existing = self._active_task_binding()
+        if existing is not None:
+            require(existing["parent_step_id"] == step["id"], "CONTROL_STATE_FAILED", "multiple active child Tasks")
+            return existing
+        binding = self._task_binding_for(step, plan_ref)
+        input_number, input_workspace = self._latest_checkpoint()
+        state_root = self.task_root.parent
+        child_root = state_root / binding["child_task_id"]
+        if child_root.exists():
+            child = Runner(child_root, read_only=True)
+            require(child.task_id == binding["child_task_id"], "CONTROL_STATE_FAILED", "existing deterministic child has the wrong Task ID")
+            child_binding = child.task.get("parent_binding")
+            require(child_binding == binding, "CONTROL_STATE_FAILED", "deterministic child identity has a mismatching binding")
+        else:
+            started = Runner.bootstrap(
+                repo=Path(self.task["workspace"]["root"]), state_root=state_root, mission=step["mission"].encode("utf-8"),
+                included_ignored=self.task["workspace"].get("included_ignored_paths", []),
+                allow_unconfined=self.task["authority"]["candidate_dynamic_execution"] == "owner_risk_accepted",
+                parent_binding=binding, task_id=binding["child_task_id"], input_checkpoint=input_workspace,
+            )
+            require(started["task_id"] == binding["child_task_id"], "CONTROL_STATE_FAILED", "child identity mismatch during creation")
+        payload = {
+            "schema_version": 1,
+            "parent_step_id": step["id"],
+            "child_task_id": binding["child_task_id"],
+            "child_task_root": str(child_root),
+            "parent_plan_sha256": binding["parent_plan_sha256"],
+            "parent_checkpoint_sha256": binding["parent_checkpoint_sha256"],
+            "delivery_kind": binding["delivery_kind"],
+            "required_success_outcome": binding["required_success_outcome"],
+            "parent_binding": binding,
+            "input_checkpoint_number": input_number,
+        }
+        self._append_json_fact("TASK_BOUND", "tasks/bindings", payload)
+        return payload
+
+    def _child_result(self, child: "Runner", binding: dict[str, Any]) -> dict[str, Any]:
+        from .verifier import verify_task_terminal
+
+        return verify_task_terminal(Path(binding["child_task_root"]), expected_parent_binding=binding["parent_binding"], expected_delivery_kind=binding["delivery_kind"], expected_success_outcome=binding["required_success_outcome"])
+
+    def _accept_task_result(self, binding: dict[str, Any], verified: dict[str, Any]) -> None:
+        child = Runner(Path(binding["child_task_root"]), read_only=True)
+        current_number, _ = self._latest_checkpoint()
+        require(self._checkpoint_sha256(current_number) == binding["parent_checkpoint_sha256"], "TASK_CHECKPOINT_MISMATCH", "parent checkpoint changed before child acceptance")
+        delivery = binding["delivery_kind"]
+        imported: dict[str, Any]
+        new_checkpoint: dict[str, Any] | None = None
+        if delivery == "workspace_change":
+            child_number, child_workspace = child._latest_checkpoint()
+            self._validate_tree(child_workspace)
+            next_number = self._latest_checkpoint()[0] + 1
+            candidate_root = self.task_root / "checkpoints" / f".{next_number:03d}.import-{uuid.uuid4().hex}"
+            candidate = candidate_root / "workspace"
+            self.store.admit(tree_storage_upper_bound(child_workspace))
+            shutil.copytree(child_workspace, candidate, symlinks=True, dirs_exist_ok=False)
+            tree = self._validate_tree(candidate)
+            final_root = self.task_root / "checkpoints" / f"{next_number:03d}"
+            require(not final_root.exists(), "CONTROL_STATE_FAILED", "import checkpoint destination already exists: " + ",".join(sorted(p.name for p in final_root.parent.iterdir())))
+            os.rename(candidate_root, final_root)
+            receipt = self.store.publish_json(f"checkpoints/{next_number:03d}/receipt.json", {"schema_version": 1, "checkpoint_number": next_number, "step_id": None, "tree": tree, "child_task_id": child.task_id, "child_checkpoint_number": child_number})
+            self.ledger.append("CHECKPOINT_ACCEPTED", receipt.ref, receipt.sha256)
+            new_checkpoint = {"checkpoint_number": next_number, "tree": tree, "receipt": receipt.as_dict()}
+            imported = {"kind": "workspace_change", "child_checkpoint_number": child_number, "checkpoint": new_checkpoint}
+        else:
+            report = child.task_root / "inspect" / "report.json"
+            require(report.is_file() and not report.is_symlink(), "TASK_RESULT_INVALID", "inspect result report is missing")
+            report_ref = child.store.adopt_existing("inspect/report.json", max_size=self.task["limits"]["max_semantic_result_bytes"])
+            destination = self.task_root / "task-results" / binding["parent_step_id"] / "inspect-report.json"
+            destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+            shutil.copy2(report, destination)
+            imported = {"kind": "inspect", "report": {"ref": destination.relative_to(self.task_root).as_posix(), "sha256": sha256_file(destination), "size": destination.stat().st_size}, "child_report": report_ref.as_dict()}
+        accepted = {"schema_version": 1, "parent_step_id": binding["parent_step_id"], "child_task_id": child.task_id, "verified_terminal_receipt": verified["terminal_ref"].as_dict(), "imported_result": imported, "new_parent_checkpoint": new_checkpoint}
+        self._append_json_fact("TASK_RESULT_ACCEPTED", "tasks/results", accepted)
+
     def _completed_steps(self) -> set[str]:
         completed: set[str] = set()
         for record in self._events():
-            if record["event"]["event_type"] in {"CHECKPOINT_ACCEPTED", "VALIDATION_RECORDED"} and isinstance(record["payload"], dict):
+            if record["event"]["event_type"] in {"CHECKPOINT_ACCEPTED", "VALIDATION_RECORDED", "INSPECTION_RECORDED"} and isinstance(record["payload"], dict):
                 step_id = record["payload"].get("step_id")
                 if step_id:
                     completed.add(step_id)
+            if record["event"]["event_type"] == "TASK_RESULT_ACCEPTED" and isinstance(record["payload"], dict):
+                completed.add(str(record["payload"].get("parent_step_id")))
         return completed
 
     def _execute_next_step(self) -> bool:
@@ -469,6 +622,11 @@ class Runner:
         next_step = next((step for step in plan["steps"] if step["id"] not in completed), None)
         if next_step is None:
             return False
+        if next_step["kind"] == "task":
+            raise STTError("CONTROL_STATE_FAILED", "task steps require the depth-first Runner path")
+        if next_step["kind"] == "inspect":
+            self._run_inspect_step(next_step)
+            return True
         if next_step["kind"] == "change":
             number, checkpoint = self._latest_checkpoint(); capsule_root = self.task_root / "capsules" / next_step["id"] / uuid.uuid4().hex
             capsule_workspace = capsule_root / "workspace"
@@ -479,6 +637,31 @@ class Runner:
             return True
         self._run_validation_step(next_step)
         return True
+
+    def _run_inspect_step(self, step: dict[str, Any]) -> None:
+        """Execute only the closed, deterministic read-only inspection capability."""
+        source = Path(self.task["workspace"]["root"])
+        inspected = Path(self.task["workspace"].get("input_checkpoint") or self._latest_checkpoint()[1])
+        report: dict[str, Any] = {
+            "schema_version": 1,
+            "step_id": step["id"],
+            "scope": step["scope"],
+            "operation": step["operation"],
+            "baseline": self._snapshot()["manifest_sha256"],
+            "inspected_checkpoint": str(inspected),
+            "source_workspace_unchanged": True,
+        }
+        if step["operation"] in {"repository_inventory", "git_state"}:
+            report["git"] = {
+                "head": run_git(source, ["rev-parse", "HEAD"]).stdout.decode().strip(),
+                "branch": run_git(source, ["branch", "--show-current"]).stdout.decode().strip(),
+                "status": run_git(source, ["status", "--short", "--branch"]).stdout.decode(errors="replace"),
+            }
+        if step["operation"] in {"repository_inventory", "task_artifact_inventory"}:
+            report["entries"] = sorted(path.relative_to(inspected).as_posix() for path in inspected.rglob("*") if not path.is_symlink())
+            report["task_roots"] = sorted(str(path) for path in self.task_root.parent.iterdir() if path.is_dir())
+        ref = self.store.publish_json(f"inspect/steps/{step['id']}.json", report)
+        self._append_json_fact("INSPECTION_RECORDED", "inspect/receipts", {"schema_version": 1, "step_id": step["id"], "report": ref.as_dict(), "source_workspace_unchanged": True})
 
     def _process_worker_result(self, request: dict[str, Any], result: dict[str, Any], result_ref: ArtifactRef) -> None:
         expected = {"schema_version", "operation_id", "request_sha256", "kind", "step_id", "summary", "declared_outputs"}
@@ -544,9 +727,14 @@ class Runner:
             smoke_ref = self.store.publish_json("final/smoke.json", smoke)
             if smoke.get("result_status") != "SUCCEEDED":
                 self._terminal("FAILED", "FINAL_ENTRYPOINT_SMOKE_FAILED", [smoke_ref]); return
-        tree = self._validate_tree(checkpoint); subject = {"schema_version": 1, "checkpoint_number": number, "tree": tree}
+        task_results = [record["payload"] for record in self._events() if record["event"]["event_type"] == "TASK_RESULT_ACCEPTED" and isinstance(record["payload"], dict)]
+        inspect_results = [record["payload"] for record in self._events() if record["event"]["event_type"] == "INSPECTION_RECORDED" and isinstance(record["payload"], dict)]
+        report_ref: ArtifactRef | None = None
+        if self._task_delivery_kind(self._current_plan()[0]) == "inspect":
+            report_ref = self.store.publish_json("inspect/report.json", {"schema_version": 1, "baseline": self._snapshot()["manifest_sha256"], "source_workspace_unchanged": True, "inspections": inspect_results, "accepted_task_results": task_results, "done": ["inventory_scope_completed", "report_bound_to_baseline", "source_workspace_unchanged", "mission_objective_satisfied", "final_find_loop_clean"]})
+        tree = self._validate_tree(checkpoint); subject = {"schema_version": 1, "checkpoint_number": number, "tree": tree, "accepted_task_results": task_results, "inspection_results": inspect_results, "done_proof": ["plan_sealed", "final_subject_frozen", "three_final_reviews"]}
         subject_bytes = canonical_json_bytes(subject); subject_ref = self.store.publish_bytes("final/frozen-subject.json", subject_bytes)
-        freeze_ref = self.store.publish_json("final/freeze-receipt.json", {"schema_version": 1, "subject": subject_ref.as_dict(), "subject_sha256": subject_ref.sha256, "checkpoint_number": number, "smoke": smoke_ref.as_dict() if smoke_ref else None})
+        freeze_ref = self.store.publish_json("final/freeze-receipt.json", {"schema_version": 1, "subject": subject_ref.as_dict(), "subject_sha256": subject_ref.sha256, "checkpoint_number": number, "smoke": smoke_ref.as_dict() if smoke_ref else None, "inspect_report": report_ref.as_dict() if report_ref else None})
         self.ledger.append("FINAL_SUBJECT_FROZEN", freeze_ref.ref, freeze_ref.sha256)
         self._create_semantic_request(role="reviewer", purpose="final_review", body={"subject": subject_ref.as_dict(), "methodology_ref": "methodology/binding.json", "required_claims": ["mission_objective_satisfied", "final_find_loop_clean"]})
 
@@ -603,6 +791,7 @@ class Runner:
         return installed_subject, candidate
 
     def _apply_cutover(self) -> None:
+        require(self.task.get("parent_task_id") is None, "TASK_CUTOVER_FORBIDDEN", "only the root Task may cut over the authoritative repository")
         frozen = self._last_event_payload("FINAL_SUBJECT_FROZEN"); require(frozen is not None, "CONTROL_STATE_FAILED", "final subject not frozen")
         passes = self._consecutive_final_passes(frozen["subject_sha256"]); require(len(passes) >= 3, "FINAL_REVIEW_NOT_CLEAN", "three final qualifying passes missing")
         final_number = frozen["checkpoint_number"]; final_checkpoint = self.task_root / "checkpoints" / f"{final_number:03d}" / "workspace"; baseline = self.task_root / "checkpoints/000/workspace"
@@ -671,6 +860,15 @@ class Runner:
             current = self._current_plan()
             return self.receipt("RUNNING", "DISPATCH_PLAN_REVIEW" if current else "DISPATCH_PLANNER", [])
         if not self._last_event_payload("FINAL_SUBJECT_FROZEN"):
+            active = self._active_task_binding()
+            if active is not None:
+                child = Runner(Path(active["child_task_root"]), read_only=True)
+                child_status = child.status()
+                if child_status["status"] == active["required_success_outcome"]:
+                    return self.receipt("RUNNING", "ACCEPT_TASK_RESULT", [], "terminal child result awaits parent verification")
+                if child_status["status"] in {"FAILED", "BLOCKED_UNKNOWN", "STOPPED"}:
+                    return self.receipt(child_status["status"], "RESUME_CHILD_TASK" if child_status["status"] == "STOPPED" else "RUN_PARENT", [], "child Task is terminal and parent has not accepted it")
+                return self.receipt("RUNNING", "RUN_CHILD_TASK", [], "active Task chain descends into child")
             return self.receipt("RUNNING", "EXECUTE_OR_VALIDATE_NEXT_STEP", [])
         frozen = self._last_event_payload("FINAL_SUBJECT_FROZEN")
         if len(self._consecutive_final_passes(frozen["subject_sha256"])) < 3:
@@ -683,9 +881,9 @@ class Runner:
         return self._status_unlocked()
 
     def run(self) -> dict[str, Any]:
-        task_lease, workspace_lease = self._leases()
-        with task_lease, workspace_lease:
-            for _ in range(64):
+        for _ in range(64):
+            child_binding: dict[str, Any] | None = None
+            with self._task_lease():
                 terminal = self._last_event_payload("TERMINAL_RECEIPT_RECORDED")
                 if terminal or self._last_event_payload("TASK_BLOCKED_UNKNOWN"):
                     return self._status_unlocked()
@@ -722,25 +920,52 @@ class Runner:
                     _, plan_ref = current
                     self._create_semantic_request(role="reviewer", purpose="plan_review", body={"subject": plan_ref.as_dict(), "methodology_ref": "methodology/binding.json", "prior_findings": [], "candidate_number": self._last_event_payload("PLAN_CANDIDATE_RECORDED")["candidate_number"]})
                     continue
+                current = self._current_plan()
+                require(current is not None, "CONTROL_STATE_FAILED", "sealed Plan unavailable")
+                plan, plan_ref = current
                 if not self._last_event_payload("FINAL_SUBJECT_FROZEN"):
-                    if self._execute_next_step():
+                    completed = self._completed_steps()
+                    next_step = next((step for step in plan["steps"] if step["id"] not in completed), None)
+                    if next_step is not None and next_step["kind"] == "task":
+                        child_binding = self._bind_task(next_step, plan_ref)
+                    elif self._execute_next_step():
                         continue
-                    self._freeze_final()
-                    continue
-                frozen = self._last_event_payload("FINAL_SUBJECT_FROZEN")
-                if len(self._consecutive_final_passes(frozen["subject_sha256"])) < 3:
-                    self._create_semantic_request(role="reviewer", purpose="final_review", body={"subject": frozen["subject"], "methodology_ref": "methodology/binding.json", "required_claims": ["mission_objective_satisfied", "final_find_loop_clean"]})
-                    continue
-                if not self._last_event_payload("CUTOVER_APPLIED"):
-                    current = self._current_plan()
-                    if current and current[0].get("delivery_kind") == "inspect":
-                        report = self.store.publish_json("inspect/report.json", {"schema_version": 1, "baseline": self._snapshot()["manifest_sha256"], "source_workspace_unchanged": True, "done": ["inventory_scope_completed", "report_bound_to_baseline", "source_workspace_unchanged", "mission_objective_satisfied", "final_find_loop_clean"]})
-                        self._terminal("INSPECT_COMPLETE", "INSPECT_DONE_PROOF_SATISFIED", [report])
+                    else:
+                        self._freeze_final()
                         continue
-                    self._apply_cutover()
+                else:
+                    frozen = self._last_event_payload("FINAL_SUBJECT_FROZEN")
+                    if len(self._consecutive_final_passes(frozen["subject_sha256"])) < 3:
+                        self._create_semantic_request(role="reviewer", purpose="final_review", body={"subject": frozen["subject"], "methodology_ref": "methodology/binding.json", "required_claims": ["mission_objective_satisfied", "final_find_loop_clean"]})
+                        continue
+                    delivery = self._task_delivery_kind(plan)
+                    if self.task.get("parent_task_id") is not None:
+                        self._terminal(TASK_OUTCOMES[delivery], "TASK_FINAL_REVIEWS_COMPLETE", [])
+                        continue
+                    if delivery == "inspect":
+                        self._terminal("INSPECT_COMPLETE", "INSPECT_DONE_PROOF_SATISFIED", [])
+                        continue
+                    with self._workspace_lease():
+                        self._apply_cutover()
                     continue
-                raise STTError("CONTROL_STATE_FAILED", "cutover exists without terminal receipt")
-            return self.receipt("RUNNING", "FOREGROUND_CYCLE_BOUND_REACHED", [])
+            if child_binding is not None:
+                child = Runner(Path(child_binding["child_task_root"]))
+                child_status = child.status()
+                if child_status["status"] not in {"COMPLETE", "INSPECT_COMPLETE", "FAILED", "BLOCKED_UNKNOWN", "STOPPED"}:
+                    child.run()
+                child_status = child.status()
+                with self._task_lease():
+                    if child_status["status"] in {"RUNNING", "REJECTED", "RETRYABLE"}:
+                        return self.receipt("RUNNING", "RUN_CHILD_TASK", [], "deepest child Task is not terminal")
+                    if child_status["status"] == "STOPPED":
+                        return self.receipt("STOPPED", "RESUME_CHILD_TASK", [], "child Task stopped; parent remains resumable")
+                    if child_status["status"] != child_binding["required_success_outcome"]:
+                        self._terminal("BLOCKED_UNKNOWN" if child_status["status"] == "BLOCKED_UNKNOWN" else "FAILED", "CHILD_TASK_" + child_status["status"], [])
+                        return self._status_unlocked()
+                    verified = self._child_result(child, child_binding)
+                    self._accept_task_result(child_binding, verified)
+                continue
+        return self.receipt("RUNNING", "FOREGROUND_CYCLE_BOUND_REACHED", [])
 
     def reconcile(self) -> dict[str, Any]:
         task_lease, workspace_lease = self._leases()
