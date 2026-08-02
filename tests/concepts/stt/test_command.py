@@ -12,20 +12,24 @@ from concepts.stt.sandbox_child import _protected_workspace_directories
 
 
 class CommandTests(unittest.TestCase):
-    def test_nested_stt_control_directories_are_bounded_for_hiding(self):
+    def test_git_and_stt_control_directories_are_bounded_for_hiding(self):
         with tempfile.TemporaryDirectory() as td:
             candidate = Path(td) / "candidate"; candidate.mkdir()
-            (candidate / ".stt").mkdir(); (candidate / "src" / ".stt").mkdir(parents=True)
+            (candidate / ".git").mkdir(); (candidate / ".stt").mkdir(); (candidate / "src" / ".stt").mkdir(parents=True)
             nested = candidate / "vendor"; nested.mkdir(); (nested / ".git").mkdir()
             submodule = candidate / "submodule"; submodule.mkdir(); (submodule / ".git").write_text("gitdir: ../.git/modules/submodule\n")
             self.assertEqual(
                 _protected_workspace_directories(candidate),
-                [Path(".stt"), Path("src/.stt"), Path("submodule"), Path("vendor")],
+                [Path(".git"), Path(".stt"), Path("src/.stt"), Path("submodule"), Path("vendor")],
             )
             with self.assertRaises(OSError):
                 _protected_workspace_directories(candidate, maximum=1)
         with tempfile.TemporaryDirectory() as td:
             candidate = Path(td) / "candidate"; candidate.mkdir(); (candidate / ".stt").write_text("unsafe")
+            with self.assertRaises(OSError):
+                _protected_workspace_directories(candidate)
+        with tempfile.TemporaryDirectory() as td:
+            candidate = Path(td) / "candidate"; candidate.mkdir(); (candidate / ".git").write_text("gitdir: elsewhere\n")
             with self.assertRaises(OSError):
                 _protected_workspace_directories(candidate)
 

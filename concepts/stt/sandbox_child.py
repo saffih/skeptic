@@ -136,6 +136,8 @@ def _protected_workspace_directories(candidate: Path, *, maximum: int = 10000) -
     protected: list[Path] = []
     for base, dirs, files in os.walk(candidate, topdown=True, followlinks=False):
         current = Path(base)
+        if current == candidate and ".git" in files:
+            raise OSError(errno.EPERM, f"root Git file marker cannot be hidden safely: {current / '.git'}")
         if current != candidate and ".git" in {*dirs, *files}:
             marker = current / ".git"
             marker_value = os.lstat(marker)
@@ -152,6 +154,13 @@ def _protected_workspace_directories(candidate: Path, *, maximum: int = 10000) -
         for name in dirs:
             path = current / name
             value = os.lstat(path)
+            if current == candidate and name == ".git":
+                if not stat.S_ISDIR(value.st_mode):
+                    raise OSError(errno.EPERM, f"unsafe root Git marker: {path}")
+                protected.append(path.relative_to(candidate))
+                if len(protected) > maximum:
+                    raise OSError(errno.E2BIG, "too many protected workspace directories")
+                continue
             if name == ".stt":
                 if not os.path.isdir(path) or os.path.islink(path):
                     raise OSError(errno.EPERM, f"unsafe .stt control path: {path}")

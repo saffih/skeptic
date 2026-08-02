@@ -275,7 +275,7 @@ There is no unconfined fallback.
 Linux is the only eligible MVP backend. Before `STT_SANDBOX_READY`, it creates
 private user, mount, network, and PID namespaces; makes mount propagation
 private; uses ordinary read-only bind mounts; mounts the workspace read-only;
-hides workspace `.stt` and nested repositories; exposes only writable tmpfs
+hides workspace `.git`, `.stt`, and nested repositories; exposes only writable tmpfs
 scratch; makes the chroot root read-only; chroots; clears
 ambient, bounding, permitted, effective, and inheritable capabilities; sets
 `no_new_privs`; and installs a seccomp filter denying mount, remount,
@@ -285,7 +285,7 @@ size, CPU time, wall time, and captured logs are bounded before readiness.
 The child environment sets `GIT_OPTIONAL_LOCKS=0` and
 `PYTHONDONTWRITEBYTECODE=1`. Contained-success qualification additionally
 probes remount, capability, nested-namespace, alternate-path, network,
-workspace-write, `.stt`, nested-repository, and host-path denial.
+workspace-write, `.git`, `.stt`, nested-repository, and host-path denial.
 
 macOS containment is disabled for this MVP because equivalent seatbelt
 readiness and adversarial qualification have not been demonstrated. macOS

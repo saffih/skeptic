@@ -21,6 +21,8 @@ def main() -> int:
         candidate.mkdir()
         secret = root / "secret"
         secret.write_text("host-only")
+        (candidate / ".git").mkdir()
+        (candidate / ".git" / "config").write_text("git-secret")
         (candidate / ".stt").mkdir()
         (candidate / ".stt" / "task-secret").write_text("hidden")
         (candidate / "nested" / ".stt").mkdir(parents=True)
@@ -30,6 +32,7 @@ def main() -> int:
         (candidate / "probe.py").write_text(
             "from pathlib import Path\nimport ctypes\nimport errno\nimport os\nimport socket\n"
             f"assert not Path({str(secret)!r}).exists(), 'host path visible'\n"
+            "assert not Path('/workspace/.git/config').exists(), '.git visible'\n"
             "assert not Path('/workspace/.stt/task-secret').exists(), '.stt visible'\n"
             "assert not Path('/workspace/nested/.stt/nested-secret').exists(), 'nested .stt visible'\n"
             "assert not Path('/workspace/vendor/nested-repository-secret').exists(), 'nested repository visible'\n"
