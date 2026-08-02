@@ -85,6 +85,7 @@ For each Find Loop run:
 - make no modifications
 - stabilize duplicates and distinguish new findings from restatements
 - record new, changed, resolved, and still-open findings
+- return material findings as scoped suspicions rather than task-level conclusions; preserve direct observations and evidence as such, and state the review scope, assumptions, and unknowns; the receiving Core (the task-level owner) retains responsibility to reevaluate each finding against wider authoritative context before task-level action or artifact promotion
 - reset the consecutive-run count after any new or materially changed finding
 
 Find Loop convergence means detection stabilized; it does not mean the artifact passed or is ready. Report every unresolved ACTION, DECOMPOSE path, CONFLICT, review-required status, and blocking unknown.
