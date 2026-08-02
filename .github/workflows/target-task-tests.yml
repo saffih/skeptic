@@ -1,0 +1,48 @@
+name: STT contracts
+
+on:
+  pull_request:
+    paths:
+      - 'concepts/stt/**'
+      - 'adapters/**'
+      - 'tests/concepts/stt/**'
+      - 'scripts/stt.py'
+      - 'scripts/target_task.py'
+      - 'scripts/generic_host_smoke.py'
+      - 'scripts/target_task_smoke.sh'
+      - 'workflows/target_task.md'
+      - '.claude/agents/stt-*.md'
+      - 'CLAUDE.md'
+      - 'AGENTS.md'
+      - '.github/workflows/target-task-tests.yml'
+  push:
+    branches: ['**']
+
+permissions:
+  contents: read
+
+jobs:
+  unittest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile
+        run: python -m compileall -q concepts/stt adapters scripts tests/concepts/stt
+      - name: Focused STT tests
+        run: python -m unittest discover -s tests/concepts/stt -t .
+      - name: Recorded-host smoke
+        run: python scripts/generic_host_smoke.py
+      - name: Full repository tests
+        run: python -m unittest discover -s tests -t .
+      - name: Shell syntax
+        run: bash -n scripts/target_task_smoke.sh
+      - name: Sandbox containment probe
+        run: python scripts/probe_stt_sandbox.py
+      - name: Legacy reachability proof
+        run: python scripts/verify_stt_reachability.py

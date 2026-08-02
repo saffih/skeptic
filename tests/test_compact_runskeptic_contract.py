@@ -42,7 +42,7 @@ class CompactContractTests(unittest.TestCase):
         root_source = (ROOT / "skeptic.md").read_text(encoding="utf-8")
         self.assertIn("RunSkeptic", root_source)
         for path in ROOT.rglob("*.md"):
-            if path == ROOT / "skeptic.md" or ".git" in path.parts or "experiments" in path.parts:
+            if path == ROOT / "skeptic.md" or ".git" in path.parts or ".stt" in path.parts or "experiments" in path.parts:
                 continue
             text = path.read_text(encoding="utf-8", errors="ignore")
             self.assertNotIn("# Skeptic - Detect, Reason, Fix, Verify", text, str(path))
