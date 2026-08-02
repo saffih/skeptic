@@ -75,7 +75,7 @@ def complete_reviewer(request: dict, ordinal: int, final: bool) -> None:
         "protocol_outcome": "COMPLETE", "review_disposition": "PASS", "runskeptic_final_outcome": "PASS",
         "receipt_ref": receipt_path.relative_to(task_root).as_posix(), "findings_ref": findings_path.relative_to(task_root).as_posix(),
         "subject_sha256": request["subject"]["sha256"], "session_id": invocation,
-        "claims": ["mission_objective_satisfied", "final_find_loop_clean"] if final else [],
+        "claims": request["required_claims"] if final else [],
     })
 
 

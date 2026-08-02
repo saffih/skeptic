@@ -90,7 +90,7 @@ class RecursiveTaskTests(unittest.TestCase):
                 write_json(receipt, {"verdict": "PASS"}); write_json(findings, {"findings": []})
                 invocation = f"review-{request['operation_id']}"
                 write_json(root / request["_provider_evidence_ref"], {"provider_id": "generic-recorded-host", "invocation_id": invocation, "status": "COMPLETE", "timed_out": False, "exit_code": 0})
-                write_json(root / request["result_ref"], {"schema_version": 1, "operation_id": request["operation_id"], "request_sha256": request_ref.sha256, "protocol_outcome": "COMPLETE", "review_disposition": "PASS", "runskeptic_final_outcome": "PASS", "receipt_ref": receipt.relative_to(root).as_posix(), "findings_ref": findings.relative_to(root).as_posix(), "subject_sha256": request["subject"]["sha256"], "session_id": invocation, "claims": ["mission_objective_satisfied", "final_find_loop_clean"] if final else []})
+                write_json(root / request["result_ref"], {"schema_version": 1, "operation_id": request["operation_id"], "request_sha256": request_ref.sha256, "protocol_outcome": "COMPLETE", "review_disposition": "PASS", "runskeptic_final_outcome": "PASS", "receipt_ref": receipt.relative_to(root).as_posix(), "findings_ref": findings.relative_to(root).as_posix(), "subject_sha256": request["subject"]["sha256"], "session_id": invocation, "claims": request["required_claims"] if final else []})
             elif request["role"] == "worker":
                 write = (worker_writes or {}).get(request["step"]["id"], "child\n")
                 if isinstance(write, dict):
@@ -107,10 +107,11 @@ class RecursiveTaskTests(unittest.TestCase):
                 write_json(root / request["_provider_evidence_ref"], {"provider_id": "generic-recorded-host", "invocation_id": f"worker-{request['operation_id']}", "status": "COMPLETE", "timed_out": False, "exit_code": 0})
                 write_json(root / request["result_ref"], {"schema_version": 1, "operation_id": request["operation_id"], "request_sha256": request_ref.sha256, "kind": "WORKER_RESULT", "step_id": request["step"]["id"], "summary": "updated", "declared_outputs": []})
             if is_final_review and active.task_id == runner.task_id and final_reviews[active.task_id] == 3 and tamper_root_after_final_reviews is not None:
-                result, result_ref, provider_report = active._adopt_result(request)
-                evidence_ref = active.store.adopt_existing(request["_provider_evidence_ref"], max_size=active.task["limits"]["max_semantic_result_bytes"])
-                active._process_reviewer_result(request, result, result_ref, provider_report)
-                active._accept_operation(request, result_ref, evidence_ref)
+                result, result_ref, provider_report, evidence_ref = active._adopt_result(request)
+                active._process_reviewer_result(request, result, result_ref, provider_report, evidence_ref)
+                effect = active._effect_records(request["operation_id"])
+                self.assertEqual(len(effect), 1)
+                active._accept_effect(request, request_ref, effect[0])
                 tamper_root_after_final_reviews(active)
             active.run()
         active = runner._active_task_binding()
@@ -162,7 +163,7 @@ class RecursiveTaskTests(unittest.TestCase):
             self.assertIsNotNone(bound)
             self.assertNotIn("delivery_kind", bound)
             self.assertNotIn("required_success_outcome", bound)
-            self.assertEqual(set(bound["parent_binding"]), {"parent_task_id", "parent_plan_sha256", "parent_step_id", "parent_workspace_sha256", "depth", "child_task_id", "mission_sha256"})
+            self.assertEqual(set(bound["parent_binding"]), {"parent_task_id", "parent_plan_sha256", "parent_step_id", "parent_workspace_sha256", "depth", "child_task_id", "mission_sha256", "read_only_authority"})
             self.assertEqual(bound["child_task_id"], str(__import__("uuid").uuid5(__import__("uuid").NAMESPACE_URL, "skeptic-task\0" + "\0".join([root_runner.task_id, bound["parent_plan_sha256"], "child", bound["parent_workspace_sha256"]]))))
             self.assertEqual((repo / "value.txt").read_text(), "grandchild\n")
             self.assertEqual(len([r for r in root_runner._events() if r["event"]["event_type"] == "TASK_RESULT_ACCEPTED"]), 1)

@@ -41,10 +41,13 @@ bounded receipts.
 - STT state defaults to `<repo>/.stt/tasks` and may be overridden by
   `STT_TASKS_ROOT`. Linked Git worktrees are not STT capsules.
 - STT executes sequentially in the current shared workspace. Workers use sparse
-  capsules and scoped direct deltas, but accepted changes are applied before
-  final review. STT does not currently provide checkpoints, rollback,
-  restoration, or transactional cutover. Sandbox failure never falls back
-  silently to unconfined execution.
+  capsules, frozen admission identities, durable mutation intents, and scoped
+  direct deltas. Provider-authored staging is frozen before acceptance. STT
+  does not provide checkpoints, snapshots, preservation copies, cutover,
+  rollback, restoration, operation replay, or whole-Task transactions. Linux
+  is the only eligible contained Command backend; macOS fails closed as
+  unavailable. Sandbox failure never falls back silently to unconfined
+  execution.
 
 The complete STT product, lifecycle, delivery, Boundary, recovery, and
 sandbox contract is `workflows/target_task.md`; this file intentionally does

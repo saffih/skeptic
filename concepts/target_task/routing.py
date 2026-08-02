@@ -13,6 +13,7 @@ from typing import Any, Mapping
 from adapters.claude_code import ClaudeCodeAdapter
 from adapters.codex import CodexAdapter
 from adapters.generic_host import GenericHostAdapter
+from concepts.stt.errors import STTError as ActiveSTTError
 from concepts.target_task.host_adapter import CANONICAL_ROLES, HostAdapterError, TargetTaskHostAdapter
 
 
@@ -50,8 +51,20 @@ ADAPTER_TYPES = {
     "codex": CodexAdapter,
 }
 
+LEGACY_MODEL_ALIASES = {
+    "generic-recorded-host": {"small": "recorded-small", "medium": "recorded-medium", "strongest": "recorded-strongest"},
+    "claude-code": {"small": "haiku", "medium": "sonnet", "strongest": "opus"},
+    "codex": {"small": None, "medium": None, "strongest": None},
+}
 
-def adapter_for(provider_id: str) -> TargetTaskHostAdapter:
+LEGACY_COMMAND_ROLES = {
+    "generic-recorded-host": "command",
+    "claude-code": "stt-command",
+    "codex": "stt-command",
+}
+
+
+def adapter_for(provider_id: str) -> Any:
     try:
         return ADAPTER_TYPES[provider_id]()
     except KeyError as exc:
@@ -92,17 +105,19 @@ def _provider_id(preference: str, current_provider: str | None) -> str:
     return current_provider
 
 
-def _provider_role(adapter: TargetTaskHostAdapter, role: str) -> str:
+def _provider_role(adapter: Any, role: str) -> str:
     if role == "lead":
-        value = getattr(adapter, "LEAD_ROLE", None)
-        if not isinstance(value, str) or not value:
-            raise RoutingError("provider has no economical Lead role")
+        return "lead"
+    if role == "command":
+        value = LEGACY_COMMAND_ROLES.get(adapter.provider_id)
+        if value is None:
+            raise RoutingError("provider has no Command role")
         return value
     if role not in CANONICAL_ROLES:
         raise RoutingError("unknown canonical role")
     try:
         return adapter.provider_role(role)
-    except HostAdapterError as exc:
+    except (HostAdapterError, ActiveSTTError) as exc:
         raise RoutingError(str(exc)) from exc
 
 
@@ -117,6 +132,8 @@ def resolve_route(
     provider_id = _provider_id(normalized["provider"], current_provider)
     adapter = adapter_for(provider_id)
     capabilities = adapter.discover_capabilities()
+    evidence_mode = getattr(capabilities, "evidence_schema", getattr(capabilities, "evidence_mode", None))
+    supports_execution = getattr(capabilities, "durable_invocation_id", getattr(capabilities, "supports_execution", False))
     try:
         provider_role = _provider_role(adapter, canonical_role)
     except RoutingError as exc:
@@ -127,20 +144,20 @@ def resolve_route(
                 requested_model_class=normalized["model_class"], resolved_model=None,
                 effort=normalized["effort"], timeout_seconds=normalized["timeout_seconds"],
                 budget=normalized["budget"], launch_mode=None,
-                evidence_mode=capabilities.evidence_mode, blocker=str(exc),
+                evidence_mode=evidence_mode, blocker=str(exc),
             )
         raise
-    aliases = getattr(adapter, "MODEL_ALIASES", {})
+    aliases = LEGACY_MODEL_ALIASES.get(provider_id, getattr(adapter, "MODEL_ALIASES", {}))
     model = aliases.get(normalized["model_class"]) if isinstance(aliases, Mapping) else None
-    launch_mode = getattr(adapter, "LAUNCH_MODE", capabilities.evidence_mode)
-    if not capabilities.available or not capabilities.supports_execution:
+    launch_mode = getattr(adapter, "LAUNCH_MODE", evidence_mode)
+    if not capabilities.available or not supports_execution:
         status = "RELAUNCH_REQUIRED" if canonical_role == "lead" and allow_relaunch else "PROVIDER_UNAVAILABLE"
         route = ResolvedRoute(
             status=status, provider_id=provider_id, canonical_role=canonical_role,
             provider_role=provider_role, requested_model_class=normalized["model_class"],
             resolved_model=model, effort=normalized["effort"],
             timeout_seconds=normalized["timeout_seconds"], budget=normalized["budget"],
-            launch_mode=launch_mode, evidence_mode=capabilities.evidence_mode,
+            launch_mode=launch_mode, evidence_mode=evidence_mode,
             blocker="provider execution is unavailable in the current host",
         )
         if status == "PROVIDER_UNAVAILABLE":
@@ -153,7 +170,7 @@ def resolve_route(
             provider_role=provider_role, requested_model_class=normalized["model_class"],
             resolved_model=None, effort=normalized["effort"],
             timeout_seconds=normalized["timeout_seconds"], budget=normalized["budget"],
-            launch_mode=launch_mode, evidence_mode=capabilities.evidence_mode,
+            launch_mode=launch_mode, evidence_mode=evidence_mode,
             blocker="provider model alias is not configured",
         )
         if status == "MODEL_UNRESOLVED":
@@ -164,7 +181,7 @@ def resolve_route(
         provider_role=provider_role, requested_model_class=normalized["model_class"],
         resolved_model=model, effort=normalized["effort"],
         timeout_seconds=normalized["timeout_seconds"], budget=normalized["budget"],
-        launch_mode=launch_mode, evidence_mode=capabilities.evidence_mode,
+        launch_mode=launch_mode, evidence_mode=evidence_mode,
     )
 
 

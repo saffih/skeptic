@@ -6,6 +6,7 @@ from pathlib import Path
 from adapters.claude_code import ClaudeCodeAdapter
 from adapters.codex import CodexAdapter
 from adapters.generic_host import GenericHostAdapter
+from concepts.stt.errors import STTError
 from concepts.target_task.host_adapter import (
     CANONICAL_ROLES,
     HostAdapterError,
@@ -20,11 +21,14 @@ class HostAdapterContractTests(unittest.TestCase):
         claude = ClaudeCodeAdapter()
         codex = CodexAdapter()
         generic = GenericHostAdapter()
-        self.assertEqual(claude.discover_capabilities().roles, tuple(claude.ROLE_MAP))
-        for role in CANONICAL_ROLES:
-            self.assertEqual(claude.build_dispatch_request({"task_id": "t", "operation_id": "o", "attempt": 1, "role": role, "request_ref": {}}).canonical_role, role)
-            self.assertEqual(codex.build_dispatch_request({"task_id": "t", "operation_id": "o", "attempt": 1, "role": role, "request_ref": {}}).canonical_role, role)
+        self.assertEqual(claude.discover_capabilities().semantic_roles, tuple(claude.ROLE_MAP))
+        for role in {"planner", "reviewer", "worker"}:
+            self.assertTrue(claude.provider_role(role))
+            self.assertTrue(codex.provider_role(role))
             self.assertEqual(generic.provider_role(role), role)
+        for adapter in (claude, codex, generic):
+            with self.assertRaises(STTError):
+                adapter.provider_role("command")
 
     def test_raw_evidence_is_immutable_and_provider_specific(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -33,7 +37,7 @@ class HostAdapterContractTests(unittest.TestCase):
             ref = persist_raw_provider_evidence(root, "claude-code", claude_raw)
             self.assertEqual((root / ref["repository_relative_path"]).read_bytes(), claude_raw)
             self.assertEqual(ClaudeCodeAdapter().validate_provider_evidence(claude_raw).invocation_id, "c-1")
-            with self.assertRaises(HostAdapterError):
+            with self.assertRaises(STTError):
                 CodexAdapter().validate_provider_evidence(claude_raw)
 
     def test_malformed_missing_duplicate_and_body_returns_fail(self):
@@ -45,8 +49,8 @@ class HostAdapterContractTests(unittest.TestCase):
 
     def test_timeout_reports_unknown(self):
         adapter = GenericHostAdapter()
-        report = adapter.validate_provider_evidence(json.dumps({"provider_id": adapter.provider_id, "invocation_id": "i", "completion_status": "UNKNOWN", "timeout": True, "exit_status": None}).encode())
-        self.assertEqual(adapter.report_outcome(report), "UNKNOWN")
+        report = adapter.validate_provider_evidence(json.dumps({"provider_id": adapter.provider_id, "invocation_id": "i", "status": "UNKNOWN", "timed_out": True, "exit_code": None}).encode())
+        self.assertEqual((report.status, report.timed_out), ("UNKNOWN", True))
 
 
 if __name__ == "__main__":

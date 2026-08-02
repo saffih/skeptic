@@ -13,9 +13,9 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Protocol, Union
 
 from adapters.generic_host import GenericHostAdapter
-from concepts.target_task.host_adapter import InvocationReport
+from concepts.target_task.host_adapter import persist_raw_provider_evidence
 from concepts.target_task.routing import ResolvedRoute
-from concepts.target_task.runtime import validate_host_role_request, validate_task_artifact_reference
+from concepts.target_task.runtime import RuntimeAdapterError, validate_host_role_receipt, validate_host_role_request, validate_task_artifact_reference
 from concepts.target_task.store import write_immutable_artifact
 
 
@@ -204,12 +204,13 @@ class GenericRecordedLauncher:
         raw_evidence = _json_bytes({
             "provider_id": self._adapter.provider_id,
             "invocation_id": f"generic-{request['operation_id']}",
-            "completion_status": status,
-            "timeout": timed_out,
-            "exit_status": exit_status,
+            "status": status,
+            "timed_out": timed_out,
+            "exit_code": exit_status,
         })
-        raw_ref, report = self._adapter.ingest_invocation_evidence(raw_evidence, task_root=task_root)
-        if not isinstance(report, InvocationReport) or self._adapter.report_outcome(report) != status:
+        raw_ref = persist_raw_provider_evidence(task_root, self._adapter.provider_id, raw_evidence)
+        report = self._adapter.validate_provider_evidence(raw_evidence)
+        if report.status != status or report.timed_out != timed_out or report.exit_code != exit_status:
             raise LauncherError("provider evidence normalization mismatch")
         output_refs, routing_ref = self._output_artifacts(
             request=request,
@@ -252,19 +253,20 @@ class GenericRecordedLauncher:
             "dispatch_evidence_ref": dict(dispatch_evidence_ref),
             "synthetic": False,
         }
-        normalized = self._adapter.normalize_receipt(
-            receipt,
-            workspace_root=task_root,
-            source_root=source_root,
-            expected={
-                "task_id": request["task_id"],
-                "operation_id": request["operation_id"],
-                "attempt": request["attempt"],
-                "role": request["role"],
-                "step_id": request["step_id"],
-            },
-            expected_request_ref=request_ref,
-        )
+        try:
+            normalized = validate_host_role_receipt(
+                receipt,
+                workspace_root=task_root,
+                source_root=source_root,
+                expected_task_id=request["task_id"],
+                expected_operation_id=request["operation_id"],
+                expected_attempt=request["attempt"],
+                expected_role=request["role"],
+                expected_step_id=request["step_id"],
+                expected_request_ref=request_ref,
+            )
+        except RuntimeAdapterError as exc:
+            raise LauncherError(str(exc)) from exc
         compact_receipt = {key: normalized[key] for key in receipt}
         return LaunchResult(compact_receipt, raw_ref, routing_ref, status)
 

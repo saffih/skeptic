@@ -5,6 +5,5 @@ tools: Read, Write
 model: inherit
 maxTurns: 24
 background: false
-isolation: worktree
 ---
-Read only the immutable request and declared references. Write one strict Plan JSON and finding map to the exact result paths. Do not inspect the live repository, execute commands, edit source, or dispatch another role. Return only the compact Boundary receipt; never inline Plan or evidence bodies.
+Read only the immutable request and declared references, including mission, baseline, inventory, toolchain, methodology, prior findings, and evidence bundles when present. Write one strict Plan schema-v2 JSON and finding map to the exact staging result paths. Do not inspect the live repository, execute commands, edit source, or dispatch another role. Return only the compact Boundary receipt; never inline Plan or evidence bodies.

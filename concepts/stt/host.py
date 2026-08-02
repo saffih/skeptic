@@ -5,18 +5,6 @@ from typing import Any, Protocol
 
 from .errors import STTError
 
-from dataclasses import dataclass
-
-@dataclass(frozen=True)
-class DispatchRequest:
-    task_id: str
-    operation_id: str
-    attempt: int
-    canonical_role: str
-    provider_role: str
-    request_ref: Any
-
-
 @dataclass(frozen=True, slots=True)
 class ProviderCapabilities:
     provider_id: str
@@ -24,19 +12,7 @@ class ProviderCapabilities:
     semantic_roles: tuple[str, ...]
     durable_invocation_id: bool
     status_inspection: bool
-    cancellation_confirmation: bool
     evidence_schema: str
-
-    @property
-    def roles(self) -> tuple[str, ...]:
-        return self.semantic_roles
-    @property
-    def supports_execution(self) -> bool:
-        return self.available
-    @property
-    def evidence_mode(self) -> str:
-        return self.evidence_schema
-
 
 @dataclass(frozen=True, slots=True)
 class InvocationReport:
@@ -46,16 +22,6 @@ class InvocationReport:
     timed_out: bool
     exit_code: int | None
     cost: str | float
-
-    @property
-    def completion_status(self) -> str:
-        return self.status
-    @property
-    def timeout(self) -> bool:
-        return self.timed_out
-    @property
-    def exit_status(self) -> int | None:
-        return self.exit_code
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -68,15 +34,39 @@ class HostAdapter(Protocol):
     def validate_provider_evidence(self, raw: bytes) -> InvocationReport: ...
 
 
-try:
-    from concepts.target_task.host_adapter import HostAdapterError as _LegacyHostAdapterError
-except ImportError:  # pragma: no cover
-    _LegacyHostAdapterError = ValueError
-
-
-class HostAdapterError(_LegacyHostAdapterError, STTError):
+class HostAdapterError(STTError):
     def __init__(self, message: str, details: dict[str, Any] | None = None) -> None:
-        super().__init__("HOST_ADAPTER_ERROR", message, details)
+        STTError.__init__(self, "HOST_ADAPTER_ERROR", message, details)
+
+
+def validated_invocation_report(
+    *,
+    provider_id: Any,
+    invocation_id: Any,
+    status: Any,
+    timed_out: Any,
+    exit_code: Any,
+    cost: Any = "UNAVAILABLE",
+) -> InvocationReport:
+    if not isinstance(provider_id, str) or not provider_id:
+        raise HostAdapterError("provider identity missing")
+    if not isinstance(invocation_id, str) or not invocation_id.strip() or "\x00" in invocation_id:
+        raise HostAdapterError("invocation identity invalid")
+    try:
+        invocation_bytes = invocation_id.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise HostAdapterError("invocation identity invalid") from exc
+    if len(invocation_bytes) > 512:
+        raise HostAdapterError("invocation identity invalid")
+    if not isinstance(status, str) or status not in {"COMPLETE", "FAILED", "UNKNOWN"}:
+        raise HostAdapterError("provider evidence status invalid")
+    if type(timed_out) is not bool:
+        raise HostAdapterError("provider timeout flag must be a boolean")
+    if exit_code is not None and (type(exit_code) is not int or not -(2**31) <= exit_code < 2**31):
+        raise HostAdapterError("provider exit code must be an integer or null")
+    if status == "COMPLETE" and timed_out:
+        raise HostAdapterError("complete provider evidence cannot be timed out")
+    return InvocationReport(provider_id, invocation_id, status, timed_out, exit_code, cost)
 
 
 def load_adapter(provider_id: str) -> HostAdapter:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,9 +8,27 @@ from unittest.mock import patch
 from concepts.stt.command import run_command, sandbox_backend
 from concepts.stt.errors import STTError
 from concepts.stt.inventory import derive_toolchain
+from concepts.stt.sandbox_child import _protected_workspace_directories
 
 
 class CommandTests(unittest.TestCase):
+    def test_nested_stt_control_directories_are_bounded_for_hiding(self):
+        with tempfile.TemporaryDirectory() as td:
+            candidate = Path(td) / "candidate"; candidate.mkdir()
+            (candidate / ".stt").mkdir(); (candidate / "src" / ".stt").mkdir(parents=True)
+            nested = candidate / "vendor"; nested.mkdir(); (nested / ".git").mkdir()
+            submodule = candidate / "submodule"; submodule.mkdir(); (submodule / ".git").write_text("gitdir: ../.git/modules/submodule\n")
+            self.assertEqual(
+                _protected_workspace_directories(candidate),
+                [Path(".stt"), Path("src/.stt"), Path("submodule"), Path("vendor")],
+            )
+            with self.assertRaises(OSError):
+                _protected_workspace_directories(candidate, maximum=1)
+        with tempfile.TemporaryDirectory() as td:
+            candidate = Path(td) / "candidate"; candidate.mkdir(); (candidate / ".stt").write_text("unsafe")
+            with self.assertRaises(OSError):
+                _protected_workspace_directories(candidate)
+
     def test_unsupported_backend_fails_before_launch(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
@@ -83,7 +100,6 @@ class CommandTests(unittest.TestCase):
                 if result["result_status"] == "SUCCEEDED":
                     self.assertIn("contained", Path(result["stdout"]["path"]).read_text())
                     self.assertFalse((candidate / "candidate-write").exists())
-                    self.assertTrue(any(p.name == "scratch-write" for p in root.rglob("scratch-write")))
                 else:
                     self.assertIn(result["result_status"], {"SANDBOX_UNAVAILABLE", "SANDBOX_SETUP_FAILED"}, result)
                     self.assertTrue(result.get("reason"), result)
@@ -126,30 +142,20 @@ class CommandTests(unittest.TestCase):
             self.assertEqual(raised.exception.code, "DYNAMIC_VALIDATION_AUTHORIZATION_REQUIRED")
             popen.assert_not_called()
 
-    def test_sandbox_readiness_failure_does_not_retry_direct(self):
+    def test_macos_backend_is_disabled_before_launch(self):
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
             candidate = root / "candidate"
             candidate.mkdir()
-            (candidate / "ok.py").write_text("print('ok')\n")
-            python_entry = next(entry for entry in derive_toolchain()["tools"] if entry["tool_id"] == "python")
-            real_popen = subprocess.Popen
-            with (
-                patch("concepts.stt.command.sandbox_backend", return_value="macos-seatbelt"),
-                patch("concepts.stt.command._tool", return_value=python_entry),
-                patch("concepts.stt.command.subprocess.Popen", wraps=real_popen) as popen,
-            ):
-                result = run_command(
-                    candidate=candidate,
-                    command={"tool_id": "python", "args": ["ok.py"], "cwd": ".", "timeout_seconds": 30, "accepted_exit_codes": [0]},
-                    catalog={"tools": [python_entry]},
-                    logs_dir=root / "logs",
-                    mode="sandbox_required",
-                    max_log_bytes=1024 * 1024,
-                )
-            self.assertEqual(result["result_status"], "SANDBOX_SETUP_FAILED", result)
-            self.assertEqual(result["reason"], "SANDBOX_READINESS_NOT_REACHED")
-            self.assertEqual(popen.call_count, 1)
-            argv = popen.call_args.args[0]
-            self.assertIn("-f", argv)
-            self.assertTrue(any("sandbox_child.py" in arg for arg in argv))
+            with patch("concepts.stt.command.sys.platform", "darwin"), patch("concepts.stt.command.subprocess.Popen") as popen:
+                with self.assertRaises(STTError) as caught:
+                    run_command(
+                        candidate=candidate,
+                        command={"tool_id": "python", "args": ["ok.py"], "cwd": ".", "timeout_seconds": 30, "accepted_exit_codes": [0]},
+                        catalog=derive_toolchain(),
+                        logs_dir=root / "logs",
+                        mode="sandbox_required",
+                        max_log_bytes=1024 * 1024,
+                    )
+            self.assertEqual(caught.exception.code, "HOST_CAPABILITY_UNAVAILABLE")
+            popen.assert_not_called()

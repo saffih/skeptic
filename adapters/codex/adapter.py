@@ -1,25 +1,19 @@
 from __future__ import annotations
 
-import json
-import os
 import shutil
 
-from concepts.stt.host import DispatchRequest, HostAdapterError, InvocationReport, ProviderCapabilities
+from concepts.stt.canonical import loads_strict
+from concepts.stt.errors import STTError
+from concepts.stt.host import HostAdapterError, InvocationReport, ProviderCapabilities, validated_invocation_report
 
 
 class CodexAdapter:
     provider_id = "codex"
-    LEAD_ROLE = "lead"
-    MODEL_ALIASES = {
-        "economical": os.environ.get("STT_CODEX_ECONOMICAL_MODEL", ""),
-        "standard": os.environ.get("STT_CODEX_STANDARD_MODEL", ""),
-        "strongest": os.environ.get("STT_CODEX_STRONGEST_MODEL", ""),
-    }
-    ROLE_MAP = {"planner": "stt-planner", "reviewer": "stt-reviewer", "worker": "stt-worker", "command": "stt-command"}
+    ROLE_MAP = {"planner": "stt-planner", "reviewer": "stt-reviewer", "worker": "stt-worker"}
 
     def discover_capabilities(self) -> ProviderCapabilities:
         available = shutil.which("codex") is not None
-        return ProviderCapabilities(self.provider_id, available, tuple(self.ROLE_MAP), True, True, True, "codex-replay-v1")
+        return ProviderCapabilities(self.provider_id, available, tuple(self.ROLE_MAP), True, True, "codex-invocation-v1")
 
     def provider_role(self, canonical_role: str) -> str:
         try:
@@ -27,19 +21,14 @@ class CodexAdapter:
         except KeyError as exc:
             raise HostAdapterError("unknown canonical semantic role") from exc
 
-    def build_dispatch_request(self, request):
-        role = request.get("role")
-        return DispatchRequest(request["task_id"], request["operation_id"], request["attempt"], role, self.provider_role(role), request)
-
-    def report_outcome(self, report):
-        return "UNKNOWN" if report.timed_out else report.status
-
     def validate_provider_evidence(self, raw: bytes) -> InvocationReport:
+        if not isinstance(raw, bytes):
+            raise HostAdapterError("Codex invocation evidence must be bytes")
         try:
-            value = json.loads(raw.decode("utf-8"))
-        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-            raise HostAdapterError("Codex replay evidence JSON invalid") from exc
+            value = loads_strict(raw)
+        except (STTError, TypeError, AttributeError) as exc:
+            raise HostAdapterError("Codex invocation evidence JSON invalid") from exc
         expected = {"kind", "invocation_id", "status", "timed_out", "exit_code"}
-        if not isinstance(value, dict) or set(value) != expected or value["kind"] != "codex.replay.v1":
-            raise HostAdapterError("Codex replay evidence schema invalid")
-        return InvocationReport(self.provider_id, str(value["invocation_id"]), value["status"], bool(value["timed_out"]), value["exit_code"], "UNAVAILABLE")
+        if not isinstance(value, dict) or set(value) != expected or value["kind"] != "codex.invocation.v1":
+            raise HostAdapterError("Codex invocation evidence schema invalid")
+        return validated_invocation_report(provider_id=self.provider_id, invocation_id=value["invocation_id"], status=value["status"], timed_out=value["timed_out"], exit_code=value["exit_code"])

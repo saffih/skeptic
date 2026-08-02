@@ -9,6 +9,8 @@ on:
       - 'scripts/stt.py'
       - 'scripts/target_task.py'
       - 'scripts/generic_host_smoke.py'
+      - 'scripts/probe_stt_sandbox.py'
+      - 'scripts/verify_stt_reachability.py'
       - 'scripts/target_task_smoke.sh'
       - 'workflows/target_task.md'
       - '.claude/agents/stt-*.md'
@@ -16,7 +18,7 @@ on:
       - 'AGENTS.md'
       - '.github/workflows/target-task-tests.yml'
   push:
-    branches: ['**']
+    branches: ['main']
 
 permissions:
   contents: read
@@ -24,7 +26,7 @@ permissions:
 jobs:
   unittest:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,6 +38,10 @@ jobs:
         run: python -m compileall -q concepts/stt adapters scripts tests/concepts/stt
       - name: Focused STT tests
         run: python -m unittest discover -s tests/concepts/stt -t .
+      - name: Interruption matrix
+        run: python -m unittest tests.concepts.stt.test_interruption_matrix
+      - name: Adversarial boundary suite
+        run: python -m unittest tests.concepts.stt.test_adversarial_boundaries
       - name: Recorded-host smoke
         run: python scripts/generic_host_smoke.py
       - name: Full repository tests
@@ -44,5 +50,5 @@ jobs:
         run: bash -n scripts/target_task_smoke.sh
       - name: Sandbox containment probe
         run: python scripts/probe_stt_sandbox.py
-      - name: Legacy reachability proof
+      - name: Active reachability guard
         run: python scripts/verify_stt_reachability.py

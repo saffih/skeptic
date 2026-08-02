@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 import stat
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,13 @@ class ArtifactRef:
 
     def as_dict(self) -> dict[str, Any]:
         return {"ref": self.ref, "sha256": self.sha256, "size": self.size}
+
+    @classmethod
+    def from_dict(cls, value: Any) -> "ArtifactRef":
+        require(isinstance(value, dict) and set(value) == {"ref", "sha256", "size"}, "ARTIFACT_REF_INVALID", "artifact reference schema invalid")
+        require(isinstance(value["ref"], str) and isinstance(value["sha256"], str) and len(value["sha256"]) == 64, "ARTIFACT_REF_INVALID", "artifact reference identity invalid")
+        require(type(value["size"]) is int and value["size"] >= 0, "ARTIFACT_REF_INVALID", "artifact reference size invalid")
+        return cls(value["ref"], value["sha256"], value["size"])
 
 
 class ArtifactStore:
@@ -43,7 +51,39 @@ class ArtifactStore:
         path = self.root / ref
         resolved_parent = path.parent.resolve(strict=False)
         require(resolved_parent == self.root or self.root in resolved_parent.parents, "ARTIFACT_ESCAPE", "artifact escapes task root")
+        ensure_no_symlink_components(path, include_leaf=False)
         return path
+
+    def _read_owned_regular(self, ref: str, *, max_size: int | None = None) -> tuple[Path, bytes, os.stat_result]:
+        path = self.resolve(ref)
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+        try:
+            fd = os.open(path, flags)
+        except (FileNotFoundError, NotADirectoryError) as exc:
+            raise STTError("ARTIFACT_MISSING", f"artifact missing: {ref}") from exc
+        except OSError as exc:
+            raise STTError("ARTIFACT_NOT_REGULAR", f"artifact is unsafe: {ref}") from exc
+        try:
+            before = os.fstat(fd)
+            require(stat.S_ISREG(before.st_mode), "ARTIFACT_NOT_REGULAR", f"artifact is not a regular file: {ref}")
+            require(before.st_uid == os.geteuid(), "ARTIFACT_OWNER_MISMATCH", f"artifact owner mismatch: {ref}")
+            require(before.st_nlink == 1, "ARTIFACT_HARDLINK", f"artifact has unexpected hard links: {ref}")
+            require(before.st_mode & 0o7000 == 0 and before.st_mode & 0o022 == 0, "ARTIFACT_MODE_UNSAFE", f"artifact mode is not owner-controlled: {ref}")
+            if max_size is not None:
+                require(before.st_size <= max_size, "ARTIFACT_TOO_LARGE", f"artifact exceeds trusted limit: {ref}")
+            chunks: list[bytes] = []
+            remaining = before.st_size
+            while remaining:
+                chunk = os.read(fd, min(1024 * 1024, remaining))
+                require(bool(chunk), "ARTIFACT_CHANGED_DURING_READ", f"artifact truncated while read: {ref}")
+                chunks.append(chunk)
+                remaining -= len(chunk)
+            require(os.read(fd, 1) == b"", "ARTIFACT_CHANGED_DURING_READ", f"artifact grew while read: {ref}")
+            after = os.fstat(fd)
+            require((before.st_dev, before.st_ino, before.st_size) == (after.st_dev, after.st_ino, after.st_size), "ARTIFACT_CHANGED_DURING_READ", f"artifact identity changed while read: {ref}")
+            return path, b"".join(chunks), after
+        finally:
+            os.close(fd)
 
     def _usage(self) -> int:
         total = 0
@@ -72,20 +112,15 @@ class ArtifactStore:
     def publish_json(self, ref: str, value: Any) -> ArtifactRef:
         return self.publish_bytes(ref, canonical_json_bytes(value))
 
-
-    def adopt_existing(self, ref: str, *, max_size: int) -> ArtifactRef:
-        path = self.resolve(ref)
-        require(path.is_file() and not path.is_symlink(), "ARTIFACT_MISSING", f"artifact missing or unsafe: {ref}")
-        st = os.lstat(path)
-        require(st.st_uid == os.geteuid(), "ARTIFACT_OWNER_MISMATCH", f"artifact owner mismatch: {ref}")
-        require(st.st_size <= max_size, "ARTIFACT_TOO_LARGE", f"artifact exceeds trusted limit: {ref}")
-        return ArtifactRef(ref, sha256_file(path), st.st_size)
+    def freeze_existing(self, ref: str, *, accepted_prefix: str, label: str, max_size: int) -> ArtifactRef:
+        """Copy bounded staging bytes into a unique immutable trusted artifact."""
+        safe_relpath(accepted_prefix)
+        require(label and "/" not in label and "\\" not in label, "ARTIFACT_REF_INVALID", "accepted artifact label invalid")
+        _, data, _ = self._read_owned_regular(ref, max_size=max_size)
+        return self.publish_bytes(f"{accepted_prefix}/{uuid.uuid4().hex}-{label}", data)
 
     def verify(self, artifact: ArtifactRef) -> Path:
-        path = self.resolve(artifact.ref)
-        st = os.lstat(path)
-        require(stat.S_ISREG(st.st_mode), "ARTIFACT_NOT_REGULAR", f"artifact is not a regular file: {artifact.ref}")
-        require(st.st_nlink == 1, "ARTIFACT_HARDLINK", f"artifact has unexpected hard links: {artifact.ref}")
+        path, data, st = self._read_owned_regular(artifact.ref, max_size=artifact.size)
         require(st.st_size == artifact.size, "ARTIFACT_SIZE_MISMATCH", f"artifact size mismatch: {artifact.ref}")
-        require(sha256_file(path) == artifact.sha256, "ARTIFACT_HASH_MISMATCH", f"artifact hash mismatch: {artifact.ref}")
+        require(sha256_bytes(data) == artifact.sha256, "ARTIFACT_HASH_MISMATCH", f"artifact hash mismatch: {artifact.ref}")
         return path

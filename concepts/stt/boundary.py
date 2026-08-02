@@ -11,6 +11,7 @@ from .errors import STTError, require
 
 
 ALLOWED_ROLES = {"planner", "reviewer", "worker"}
+CONTROL_COMPONENTS = {".git", ".stt"}
 
 
 def compact_receipt(*, task_id: str, task_root: Path, status: str, next_action: str | None, ledger_head: str, refs: list[dict[str, Any]], reason: str | None = None) -> dict[str, Any]:
@@ -52,12 +53,54 @@ def validate_path_collisions(paths: Iterable[str], *, ignore_case: bool = False)
         seen[key] = rel
 
 
+def discover_nested_repositories(workspace: Path) -> list[str]:
+    """Find descendant Git directory or gitfile markers without entering them."""
+    root = workspace.resolve(strict=True)
+    found: list[str] = []
+    for base, dirs, files in os.walk(root, topdown=True, followlinks=False):
+        current = Path(base)
+        if current != root and ".git" in {*dirs, *files}:
+            marker = current / ".git"
+            marker_stat = os.lstat(marker)
+            require(stat.S_ISDIR(marker_stat.st_mode) or stat.S_ISREG(marker_stat.st_mode), "NESTED_REPOSITORY_MARKER_INVALID", "nested Git marker has unsupported type", path=marker.relative_to(root).as_posix())
+            found.append(current.relative_to(root).as_posix())
+            dirs[:] = []
+            continue
+        kept: list[str] = []
+        for name in dirs:
+            if name in CONTROL_COMPONENTS:
+                continue
+            path = current / name
+            if stat.S_ISLNK(os.lstat(path).st_mode):
+                continue
+            kept.append(name)
+        dirs[:] = kept
+    validate_path_collisions(found, ignore_case=True)
+    return sorted(found)
+
+
+def scope_overlaps_nested(scope_path: str, nested_roots: Iterable[str]) -> str | None:
+    declared = PurePosixPath(safe_relpath(scope_path))
+    for raw_root in nested_roots:
+        root = PurePosixPath(safe_relpath(raw_root))
+        if declared == root or declared in root.parents or root in declared.parents:
+            return root.as_posix()
+    return None
+
+
+def validate_scope_against_nested(scope: Iterable[dict[str, str]], nested_roots: Iterable[str]) -> None:
+    roots = tuple(nested_roots)
+    for item in scope:
+        overlap = scope_overlaps_nested(item["path"], roots)
+        require(overlap is None, "NESTED_REPOSITORY_SCOPE_FORBIDDEN", "scope overlaps nested repository or submodule", scope=item["path"], nested_root=overlap)
+
+
 def validate_tree(root: Path, *, changed_paths: Iterable[str] | None = None, ignore_case: bool = False) -> dict[str, Any]:
     allowed_changed = set(changed_paths or [])
     entries: list[dict[str, Any]] = []
     for base, dirs, files in os.walk(root, followlinks=False):
-        if Path(base) == root:
-            dirs[:] = [name for name in dirs if name != ".git"]
+        controls = CONTROL_COMPONENTS.intersection({*dirs, *files})
+        require(not controls, "CONTROL_PATH_FORBIDDEN", "candidate contains Git or STT control state", paths=sorted(controls))
         dirs.sort(); files.sort()
         for name in dirs + files:
             path = Path(base) / name

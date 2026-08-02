@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import selectors
 import signal
+import stat
 import subprocess
 import sys
 import time
@@ -10,7 +11,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
-from .canonical import sha256_file
+from .boundary import discover_nested_repositories, scope_overlaps_nested
+from .canonical import ensure_no_symlink_components, safe_relpath, sha256_file
 from .errors import STTError, require
 
 
@@ -34,57 +36,7 @@ def sandbox_backend(catalog: dict[str, Any]) -> str | None:
     tool_ids = {entry["tool_id"] for entry in catalog.get("tools", [])}
     if sys.platform.startswith("linux") and {"unshare", "mount", "python"} <= tool_ids:
         return "linux-unshare"
-    if sys.platform == "darwin" and {"sandbox-exec", "python"} <= tool_ids:
-        return "macos-seatbelt"
     return None
-
-
-def _seatbelt_quote(value: str) -> str:
-    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
-
-
-def _write_macos_profile(*, candidate: Path, scratch: Path, tool_path: Path) -> Path:
-    # Seatbelt is deprecated by Apple but remains the only deterministic local
-    # filesystem/network sandbox shipped with supported macOS releases. The
-    # profile is deny-by-default, permits only the candidate, scratch, and
-    # immutable operating-system runtime paths, and grants no network class.
-    read_roots = [
-        candidate.resolve(),
-        scratch.resolve(),
-        Path("/System"),
-        Path("/usr"),
-        Path("/bin"),
-        Path("/sbin"),
-        Path("/Library/Apple"),
-        Path("/private/var/db/dyld"),
-        tool_path.resolve().parent,
-        Path(__file__).with_name("sandbox_child.py").resolve(),
-    ]
-    literals = [Path("/dev/null"), Path("/dev/urandom"), Path("/dev/random")]
-    read_rules = "\n".join(
-        f"    (subpath {_seatbelt_quote(str(path))})" for path in dict.fromkeys(read_roots) if path.exists()
-    )
-    literal_rules = "\n".join(
-        f"    (literal {_seatbelt_quote(str(path))})" for path in literals if path.exists()
-    )
-    profile = f"""(version 1)
-(deny default)
-(allow process*)
-(allow signal (target self))
-(allow sysctl-read)
-(allow mach-lookup)
-(allow ipc-posix-shm)
-(allow file-read*
-{read_rules}
-{literal_rules})
-(allow file-write*
-    (subpath {_seatbelt_quote(str(scratch.resolve()))})
-    (literal \"/dev/null\"))
-"""
-    profile_path = scratch / "seatbelt.sb"
-    profile_path.write_text(profile, encoding="utf-8")
-    os.chmod(profile_path, 0o600)
-    return profile_path
 
 
 def run_command(
@@ -95,6 +47,9 @@ def run_command(
     logs_dir: Path,
     mode: str,
     max_log_bytes: int,
+    max_scratch_bytes: int = 268435456,
+    max_processes: int = 256,
+    max_address_space_bytes: int = 4294967296,
 ) -> dict[str, Any]:
     # Dynamic commands may reach the shared workspace only through a ready
     # sandbox. Reject compatibility and unknown modes before any launch setup.
@@ -106,6 +61,20 @@ def run_command(
     if mode != "sandbox_required":
         raise STTError("DYNAMIC_VALIDATION_AUTHORIZATION_REQUIRED", "unknown dynamic execution mode")
 
+    candidate = candidate.resolve(strict=True)
+    ensure_no_symlink_components(candidate)
+    candidate_state = candidate / ".stt"
+    if candidate_state.exists() or candidate_state.is_symlink():
+        state_value = os.lstat(candidate_state)
+        require(stat.S_ISDIR(state_value.st_mode) and not stat.S_ISLNK(state_value.st_mode), "STT_CONTROL_PATH_UNSAFE", "workspace .stt must be a real directory before sandboxing")
+    cwd_rel = safe_relpath(command["cwd"], allow_dot=True)
+    nested_roots = tuple(discover_nested_repositories(candidate))
+    if cwd_rel != ".":
+        overlap = scope_overlaps_nested(cwd_rel, nested_roots)
+        require(overlap is None, "NESTED_REPOSITORY_SCOPE_FORBIDDEN", "command working directory overlaps nested repository", cwd=cwd_rel, nested_root=overlap)
+    cwd_target = candidate if cwd_rel == "." else candidate / cwd_rel
+    ensure_no_symlink_components(cwd_target)
+    require(cwd_target.is_dir() and not cwd_target.is_symlink(), "COMMAND_CWD_INVALID", "command working directory must be a real directory")
     entry = _tool(catalog, command["tool_id"])
     logs_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     op = uuid.uuid4().hex
@@ -120,10 +89,11 @@ def run_command(
         "LC_ALL": "C",
         "PYTHONNOUSERSITE": "1",
         "PYTHONDONTWRITEBYTECODE": "1",
+        "GIT_OPTIONAL_LOCKS": "0",
     }
     Path(env["HOME"]).mkdir()
     Path(env["TMPDIR"]).mkdir()
-    cwd = candidate / ("" if command["cwd"] == "." else command["cwd"])
+    cwd = cwd_target
 
     backend = sandbox_backend(catalog)
     readiness_read, readiness_write = os.pipe()
@@ -157,30 +127,25 @@ def run_command(
             entry["path"],
             "--cwd",
             command["cwd"],
+            "--timeout-seconds",
+            str(command["timeout_seconds"]),
+            "--scratch-bytes",
+            str(max_scratch_bytes),
+            "--max-processes",
+            str(max_processes),
+            "--address-space-bytes",
+            str(max_address_space_bytes),
             "--",
             *command["args"],
         ]
         cwd = candidate
-    elif backend == "macos-seatbelt":
-        sandbox_exec = _tool(catalog, "sandbox-exec")["path"]
-        profile = _write_macos_profile(candidate=candidate, scratch=scratch, tool_path=Path(entry["path"]))
-        python = _tool(catalog, "python")["path"]
-        argv = [
-            sandbox_exec, "-f", str(profile), python,
-            str(Path(__file__).with_name("sandbox_child.py")),
-            "--direct", "--readiness-fd", str(readiness_write),
-            "--candidate", str(candidate), "--scratch", str(scratch),
-            "--root", str(scratch / "root"), "--mount", "/bin/false",
-            "--tool", entry["path"], "--cwd", command["cwd"], "--",
-            *command["args"],
-        ]
     else:
         os.close(readiness_read)
         os.close(readiness_write)
         raise STTError(
             "HOST_CAPABILITY_UNAVAILABLE",
             "sandbox_required but no supported sandbox backend is available",
-            {"supported_backends": ["linux-unshare", "macos-seatbelt"]},
+            {"supported_backends": ["linux-unshare"], "macos": "disabled_unqualified"},
         )
     try:
         process = subprocess.Popen(
@@ -255,6 +220,13 @@ def run_command(
         else:
             process.wait()
     finally:
+        try:
+            selector.close()
+        finally:
+            try:
+                os.close(readiness_read)
+            except OSError:
+                pass
         for handle in outputs.values():
             handle.flush()
             os.fsync(handle.fileno())

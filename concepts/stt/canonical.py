@@ -20,6 +20,10 @@ def _pairs_no_duplicates(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return result
 
 
+def _reject_nonfinite(value: str) -> None:
+    raise STTError("NONFINITE_JSON_NUMBER", f"non-finite JSON number: {value}")
+
+
 def loads_strict(data: bytes | str) -> Any:
     if isinstance(data, bytes):
         try:
@@ -27,19 +31,19 @@ def loads_strict(data: bytes | str) -> Any:
         except UnicodeDecodeError as exc:
             raise STTError("NON_UTF8_JSON", "control JSON must be UTF-8") from exc
     try:
-        return json.loads(data, object_pairs_hook=_pairs_no_duplicates)
+        return json.loads(data, object_pairs_hook=_pairs_no_duplicates, parse_constant=_reject_nonfinite)
     except STTError:
         raise
-    except json.JSONDecodeError as exc:
+    except (json.JSONDecodeError, RecursionError, TypeError, ValueError) as exc:
         raise STTError("MALFORMED_JSON", str(exc)) from exc
 
 
 def canonical_json_bytes(value: Any) -> bytes:
     try:
         text = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
-    except (TypeError, ValueError) as exc:
+        return text.encode("utf-8") + b"\n"
+    except (TypeError, ValueError, RecursionError, UnicodeEncodeError) as exc:
         raise STTError("NON_CANONICAL_JSON", str(exc)) from exc
-    return text.encode("utf-8") + b"\n"
 
 
 def sha256_bytes(data: bytes) -> str:
@@ -94,6 +98,10 @@ def atomic_write(path: Path, data: bytes, mode: int = 0o600, *, create_only: boo
 
 def safe_relpath(raw: str, *, allow_dot: bool = False) -> str:
     require(isinstance(raw, str), "INVALID_PATH", "path must be a string")
+    try:
+        raw.encode("utf-8")
+    except UnicodeEncodeError as exc:
+        raise STTError("INVALID_PATH", "path must be valid UTF-8") from exc
     require("\x00" not in raw, "INVALID_PATH", "NUL is forbidden")
     require(raw != "", "INVALID_PATH", "empty path is forbidden")
     path = PurePosixPath(raw)
@@ -104,7 +112,8 @@ def safe_relpath(raw: str, *, allow_dot: bool = False) -> str:
     if allow_dot and raw == ".":
         return raw
     require(normalized == raw, "INVALID_PATH", "path must be canonical", path=raw)
-    require(raw != ".git" and not raw.startswith(".git/"), "GIT_CONTROL_PATH_FORBIDDEN", "Git control path is forbidden")
+    require(".git" not in parts, "GIT_CONTROL_PATH_FORBIDDEN", "Git control path is forbidden")
+    require(".stt" not in parts, "STT_CONTROL_PATH_FORBIDDEN", "STT control path is forbidden")
     return raw
 
 

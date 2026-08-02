@@ -17,7 +17,6 @@ def derive_toolchain() -> dict[str, Any]:
         "bash": shutil.which("bash"),
         "unshare": shutil.which("unshare"),
         "mount": shutil.which("mount"),
-        "sandbox-exec": shutil.which("sandbox-exec"),
     }
     tools: list[dict[str, Any]] = []
     for tool_id, raw in candidates.items():
