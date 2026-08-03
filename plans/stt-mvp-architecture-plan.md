@@ -53,7 +53,7 @@ Planner or step failure / uncertainty
 → terminal Task result
 ```
 
-Every child Task performs the same lifecycle. A parent gives a child only a mission, narrowed authority, declared inputs, required outputs, and frozen role bindings. The child Planner creates the child Plan.
+Every child Task performs the same lifecycle. A parent gives a child only an explicit mission reference or bounded mission text, authority no broader than the parent, exact declared inputs, required outputs, and frozen role bindings. The child Planner creates the child Plan.
 
 A Task may not:
 
@@ -149,7 +149,7 @@ Boundary performs integrity validation. It does not decide whether evidence is c
 
 ### Planner
 
-A strong semantic role that creates one complete ordered Plan or returns a planning failure. It decides whether the mission requires inspection or semantic revalidation and expresses that work as ordinary Plan steps or child Tasks.
+A strong semantic role that creates one complete ordered Plan or returns a planning failure. It decides whether current evidence is sufficient for execution composition or whether evidence refinement is the rational next step, and expresses that decision as ordinary Plan steps or child Tasks.
 
 ### Worker
 
@@ -299,9 +299,17 @@ Every step has:
 - exact named inputs;
 - exact named outputs and artifact types;
 - exact read or write authority needed by the step;
-- only backward references to accepted earlier outputs.
+- only backward references to accepted earlier outputs or fixed system evidence from earlier Task steps.
 
-A Command step selects one frozen allowed Command route and supplies only schema-valid named parameter values. Boundary renders the explicit argument vector from the route's fixed argv template; shell command strings and model-authored free-form argv are forbidden. Path parameters resolve only inside the disposable command workspace, and scalar parameters are bounded by the route schema. A Task step carries either bounded child-mission text inside the accepted Plan or an exact backward reference to an earlier accepted mission artifact. Child role and Command bindings may only narrow the parent bindings.
+A Command step selects one frozen allowed Command route and supplies only schema-valid named parameter values. Boundary renders the explicit argument vector from the route's fixed argv template; shell command strings and model-authored free-form argv are forbidden. Path parameters resolve only inside the disposable command workspace, and scalar parameters are bounded by the route schema.
+
+A Task step carries one of:
+
+- bounded child-mission text inside the accepted Plan;
+- an exact backward reference to an earlier accepted mission artifact; or
+- an exact reference to the current Task mission.
+
+Its required-output contract is either explicitly declared for a narrower child mission or exactly references the current Task required-output contract for a same-mission child. Child authority and role or Command bindings may be equal to or narrower than the parent, never broader.
 
 A Plan may not contain conditions, loops, arbitrary plugins, future references, implicit authority expansion, retries, or model-chosen live output paths.
 
@@ -310,9 +318,35 @@ Planner may use:
 - a Worker step for bounded reasoning or artifact generation;
 - a Command step for deterministic inspection or verification in a disposable copy;
 - a Mutation step for an exact accepted replacement manifest;
-- a Task step when a sub-mission warrants its own Planner and Validator.
+- one or more Task steps when stable sub-missions warrant their own Planners and Validators;
+- a same-mission Task step when materially expanded evidence should be reconsidered by a fresh Planner.
 
-If no acceptable Plan is produced, `PLANNING_FAILED` selects the exact planning-failure evidence and the Task proceeds to Validator.
+### 8.1 Planning forms
+
+There are two semantic uses of the same `task` step.
+
+**Execution composition** applies when current evidence is sufficient to identify stable sub-missions and how their validated outputs contribute to the parent mission. The parent Plan may contain several narrower child Tasks and may continue after each child returns. Each child has its own meaningful mission, required outputs, authority no broader than the parent, Planner, and Validator.
+
+**Evidence refinement** applies when current evidence is insufficient to determine the correct work, but the Planner can identify useful authorized evidence-gathering steps. The Plan gathers that evidence and may then create a child Task that references the exact same mission and normally the same required-output contract, adds the accepted evidence, and invokes a fresh Planner. The earlier Planner does not predict the findings or preselect unsupported future work.
+
+A Plan may combine both forms: it may execute known narrow child Tasks, gather additional evidence, and then use a same-mission child for the unresolved whole. A same-mission child is naturally the final substantive step because it owns the whole mission; when meaningful parent execution remains afterward, the child should normally have a narrower mission instead. This is Planner guidance, not a Boundary rule.
+
+Creating a child is an ordinary next Plan step; it does not invoke the parent Validator. The child Validator runs when the child reaches its own end, and the parent Validator runs only after the parent Plan finishes or stops.
+
+The Planner owns whether another child Task is rational. STT imposes no semantic progress threshold, child-count limit, Task-depth budget, or automatic termination policy. Each individual Task still has one sealed finite Plan, one Planner call, sequential execution, and one Validator call. A same-mission child is not a retry, loop inside the current Plan, or mutation of that Plan; it is a new immutable Task with its own fresh lifecycle.
+
+If no acceptable Plan is produced, `PLANNING_FAILED` selects the exact planning-failure evidence and the Task proceeds to Validator:
+
+```text
+FAILED
+→ a material contradiction, prohibition, impossibility, or authority mismatch
+  is established from available evidence
+
+BLOCKED_UNKNOWN
+→ a material fact, decision, capability, evidence item, or authority is missing,
+  cannot be resolved through authorized work in this Task, and prevents a
+  trustworthy Plan
+```
 
 ---
 
@@ -403,9 +437,13 @@ The MVP makes no multi-file atomicity claim.
 
 ### 10.4 Task
 
-A Task step declares a child mission, narrowed authority, exact inputs, required outputs, and frozen role bindings.
+A Task step declares a child mission reference or bounded mission text, authority no broader than the parent, exact inputs, required outputs, and frozen role bindings.
 
-After the parent `STEP_STARTED`, Boundary may create or resume the one canonical child path. Resuming an already-created child is continuation of persisted deterministic state, not a second call. Lead executes the child depth-first until terminal, then Boundary verifies the child result and output provenance before finishing the parent step.
+A narrower child owns a stable sub-mission. A same-mission child references the exact parent mission and normally the exact parent required-output contract while adding accepted evidence inputs. In both cases the child receives a fresh Planner; it does not inherit the parent Planner's conversation, provisional reasoning, or uncommitted state.
+
+After the parent `STEP_STARTED`, Boundary may create or resume the one canonical child path. Resuming an already-created child is continuation of persisted deterministic state, not a second call. Lead executes the child depth-first until terminal, then Boundary verifies the child result, terminal-output identities, provenance, and either the accepted child validation-report reference or exact `VALIDATOR_UNAVAILABLE` evidence before finishing the parent step.
+
+Every Task-step result has fixed system evidence fields for the child terminal result and, when available, the accepted child validation report; otherwise it records the exact validator-unavailable evidence. These fields are distinct from the child's declared mission outputs. Later parent steps may consume fixed evidence from an earlier `COMPLETE` Task step only through explicit backward references, and the parent Validator always receives the available child evidence.
 
 A non-`COMPLETE` child result establishes the same parent step floor, skips later parent steps, and still reaches the parent Validator.
 
@@ -511,7 +549,7 @@ Validator receives a bounded final index referring to:
 - mission, authority, and required-output contract;
 - accepted Plan or planning-failure evidence;
 - every finished and skipped step result;
-- verified child results;
+- verified child results and child validation reports;
 - selected command, mutation, and final workspace evidence;
 - accepted substantive artifacts.
 
@@ -639,19 +677,23 @@ Promotion requires focused deterministic proof of these behaviors:
 
 1. root success performs one Planner call and one Validator call;
 2. child and grandchild Tasks execute depth-first and each performs its own Planner and Validator calls;
-3. planning failure reaches Validator without an invented Plan;
-4. Worker failure or uncertainty skips later steps and reaches Validator;
-5. child failure reaches every ancestor Validator;
-6. Planner, Worker, Command, and Validator are never dispatched twice by STT for the same Task or step, including after restart, and interrupted owned process handling never relaunches them;
-7. Validator unavailable becomes terminal `BLOCKED_UNKNOWN / VALIDATOR_UNAVAILABLE`;
-8. a later Run may receive a previous terminal result and Validator report as explicit evidence without a continuation protocol;
-9. changed, unauthorized, or identity-mismatched inputs are rejected when materialized or consumed;
-10. Command selects only an allowed route; Boundary renders argv from a fixed typed template without a shell, and the process receives only disposable materialized paths;
-11. Mutation intent is durable and uncertain mutation is never replayed;
-12. atomic Task publication never exposes an authoritative Task without `TASK_CREATED`;
-13. ledger torn-tail handling is narrow and interior corruption becomes `INVALID_RUN`;
-14. frozen runtime remains authoritative after target-workspace STT source changes;
-15. active STT has no runtime reachability to the old lifecycle.
+3. one parent Plan may compose several narrower child Tasks and continue from their verified results;
+4. evidence-gathering steps may feed a same-mission child that receives the exact parent mission, normally the exact parent required-output contract, accepted added evidence, and a fresh Planner without recalling the parent Planner;
+5. a hybrid Plan may combine narrower child Tasks and a final same-mission evidence-refinement child;
+6. child terminal results and accepted validation reports, or exact validator-unavailable evidence, are identity-bound fixed Task-step evidence available to explicitly referencing later parent steps and to every ancestor Validator;
+7. planning failure distinguishes established `FAILED` from unresolved `BLOCKED_UNKNOWN` and reaches Validator without an invented Plan;
+8. Worker failure or uncertainty skips later steps and reaches Validator;
+9. child failure reaches every ancestor Validator;
+10. Planner, Worker, Command, and Validator are never dispatched twice by STT for the same Task or step, including after restart, and interrupted owned process handling never relaunches them;
+11. Validator unavailable becomes terminal `BLOCKED_UNKNOWN / VALIDATOR_UNAVAILABLE`;
+12. a later Run may receive a previous terminal result and Validator report as explicit evidence without a continuation protocol;
+13. changed, unauthorized, or identity-mismatched inputs are rejected when materialized or consumed;
+14. Planner receives the frozen allowed Command route catalog, and Command selects only an allowed route; Boundary renders argv from a fixed typed template without a shell, and the process receives only disposable materialized paths;
+15. Mutation intent is durable and uncertain mutation is never replayed;
+16. atomic Task publication never exposes an authoritative Task without `TASK_CREATED`;
+17. ledger torn-tail handling is narrow and interior corruption becomes `INVALID_RUN`;
+18. frozen runtime remains authoritative after target-workspace STT source changes;
+19. active STT has no runtime reachability to the old lifecycle.
 
 The focused STT suite, frozen-runtime test, and full repository suite must pass. Fake-only execution proves mechanics but is not a releasable STT: Claude Code and Codex adapters must satisfy their frozen adapter contracts, and at least one configured live route must pass an authorized end-to-end smoke test on a supported host. Unsupported routes fail closed before `TASK_CREATED`.
 
@@ -670,6 +712,12 @@ Every Task calls Planner at most once. An accepted Plan executes sequentially.
 The first non-COMPLETE outcome is persisted, later steps are recorded SKIPPED,
 and Validator is called at most once. Planning failure follows the same path.
 No semantic or command operation is retried inside the Run.
+
+Planner may compose several stable narrower child Tasks when the work is
+sufficiently known, or gather evidence and create a same-mission child with a
+fresh Planner when the correct work is not yet knowable. Both use the same Task
+step and may be combined in one sealed Plan. Rationality is owned by Planner,
+not by counters, retry policy, or Boundary.
 
 Every substantive operation crosses deterministic Boundary. Workers operate only on materialized inputs outside the live target workspace.
 Commands receive only allowed routes, Boundary-rendered argv templates, and

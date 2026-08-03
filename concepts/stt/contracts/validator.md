@@ -15,7 +15,7 @@ You receive a bounded final index referring to:
 - mission, authority, and required-output contract;
 - accepted Plan or planning-failure evidence;
 - every completed, failed, uncertain, and skipped step result;
-- verified child Task results;
+- verified child Task results and their validation reports;
 - selected command, mutation, and final workspace evidence;
 - accepted substantive artifacts and their provenance.
 

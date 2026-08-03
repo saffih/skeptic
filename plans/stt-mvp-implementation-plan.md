@@ -95,6 +95,7 @@ Do not:
 - create a generalized workflow or provider plugin framework;
 - add mutable cursor or derived state files;
 - add automatic rollback, repair, or continuation Runs;
+- add arbitrary child-count, Task-depth, or semantic-progress limits; whether another child Task is rational belongs to Planner;
 - let provider adapters define lifecycle semantics;
 - claim prevention where the host only observes or hopes;
 - implement against unresolved role-contract ambiguity;
@@ -141,7 +142,7 @@ Implement closed schemas for:
 - Task identity and parent binding;
 - workspace index;
 - Plan and the four step kinds;
-- Planner, Worker, Command, Mutation, Task, and Validator requests/results;
+- Planner, Worker, Command, Mutation, Task, and Validator requests/results, including fixed child-result and child-validation evidence fields on Task-step results;
 - call dispositions;
 - terminal Task result;
 - ledger events.
@@ -347,11 +348,13 @@ Only after this slice passes, add failure shortening and recursion.
 1. verify no planning outcome and no prior `PLANNER_STARTED`;
 2. build and persist the bounded Planner request from immutable references;
 3. append `PLANNER_STARTED`;
-4. materialize exact mission, evidence, authority, required outputs, workspace index, and schema;
+4. materialize exact mission, evidence, authority, required outputs, workspace index, Plan schema, and the frozen allowed Command route catalog with typed parameter and output contracts;
 5. invoke Planner once only when preparation succeeds;
 6. persist raw evidence and disposition;
 7. on accepted output, validate and seal the Plan and append `PLAN_ACCEPTED`;
-8. otherwise append `PLANNING_FAILED` with `FAILED` or `BLOCKED_UNKNOWN`;
+8. otherwise validate one planning-failure result and append `PLANNING_FAILED`:
+   - `FAILED` for an established material contradiction, prohibition, impossibility, or authority mismatch;
+   - `BLOCKED_UNKNOWN` for a material missing fact, decision, capability, evidence item, or authority that cannot be resolved through authorized work in this Task;
 9. proceed to Validator.
 
 On resume after `PLANNER_STARTED` without a planning outcome, do not call Planner again. Append `PLANNING_FAILED / BLOCKED_UNKNOWN` from available evidence and continue to Validator.
@@ -406,18 +409,28 @@ Before intent, deterministic preparation may resume. After intent without finish
 
 A Task step request binds:
 
-- exact child mission bytes;
-- narrowed read and write authority;
+- bounded child mission bytes, an exact earlier accepted mission-artifact reference, or an exact reference to the current parent mission;
+- read and write authority equal to or narrower than the parent, never broader;
 - exact input references;
-- required output names and types;
-- child Planner, Validator, and allowed Worker bindings;
+- either an explicit narrower required-output contract or an exact reference to the parent required-output contract for a same-mission child;
+- child Planner, Validator, allowed Worker, and allowed Command bindings equal to or narrower than the parent;
 - canonical child path.
 
-Append parent `STEP_STARTED` before child publication.
+Support both Planner-owned forms without adding another step kind:
+
+- **execution composition:** one Plan may contain several narrower child Tasks with stable sub-missions and may continue after their validated results;
+- **evidence refinement:** after authorized evidence-producing steps, a Task step may create a child with the exact same mission, normally the same required-output contract, the original selected evidence, and newly accepted evidence for a fresh Planner;
+- **hybrid:** one Plan may combine narrower child Tasks and a later same-mission evidence-refinement child.
+
+The runtime does not classify the semantic form, impose a progress score, or enforce an arbitrary child-count or Task-depth budget. It validates only the declared identities, authority, references, schemas, and one-call lifecycle. Implement same-mission refinement through ordinary child creation, never by replaying Planner, mutating the accepted parent Plan, or adding loop state.
+
+Append parent `STEP_STARTED` before child publication. Creating the child does not invoke the parent Validator. The child Validator runs at child completion; the parent Validator runs only after the parent Plan finishes or stops.
 
 Create the complete child atomically when absent. When the exact child already exists, resume it depth-first. Reject conflicting child identity.
 
-After child terminal state, verify child result, output identities, types, provenance, and parent binding before appending parent `STEP_FINISHED`.
+After child terminal state, verify the child result, terminal-output identities, types, provenance, parent binding, and either the accepted child validation-report reference or exact `VALIDATOR_UNAVAILABLE` evidence before appending parent `STEP_FINISHED`.
+
+Every Task-step result records fixed system evidence fields for the child terminal result and, when available, the accepted child validation report; otherwise it records the exact validator-unavailable evidence. These fields are separate from declared child mission outputs. Later parent steps may consume fixed evidence from an earlier `COMPLETE` Task step only through explicit backward references.
 
 Every non-`COMPLETE` child result reaches the parent Validator, and the same rule applies at every ancestor.
 
@@ -425,7 +438,7 @@ Every non-`COMPLETE` child result reaches the parent Validator, and the same rul
 
 ## 17. Validator path and future-Run evidence
 
-Before Validator, capture exact final identities for every Mutation destination, every required workspace output, and every additional live workspace path explicitly requested by the Plan for final validation. Build one bounded final index containing the mission, required outputs, Plan or planning failure, every step result, skipped-step causes, verified child results, selected command and mutation evidence, accepted artifacts, and those final workspace identities.
+Before Validator, capture exact final identities for every Mutation destination, every required workspace output, and every additional live workspace path explicitly requested by the Plan for final validation. Build one bounded final index containing the mission, required outputs, Plan or planning failure, every step result, skipped-step causes, verified child results and child validation reports, selected command and mutation evidence, accepted artifacts, and those final workspace identities.
 
 Persist the request and append `VALIDATOR_STARTED` before the one Validator call. Invoke Validator once only when preparation succeeds.
 
@@ -473,19 +486,23 @@ Maintain one small test mapped to each architecture obligation. At minimum prove
 
 1. root success calls Planner and Validator exactly once;
 2. child and grandchild depth-first success;
-3. planning failure reaches Validator with no invented Plan;
-4. Worker failure and uncertainty skip later steps and reach Validator;
-5. child failure reaches every ancestor Validator;
-6. restart after each start event never repeats an STT dispatch to Planner, Worker, Command, or Validator; exact-owned process cleanup never relaunches work and does not signal a mismatched or reused process identity;
-7. Validator unavailable produces mechanical `BLOCKED_UNKNOWN`;
-8. a new Run can consume a prior result and Validator report as ordinary evidence;
-9. one-time bootstrap evidence remains exact after original source changes;
-10. path, identity, authority, and provenance violations fail closed;
-11. Command selects only an allowed route, uses Boundary-rendered typed argv without a shell, and receives only disposable materialized paths;
-12. pre-intent Mutation resumes while post-intent Mutation never replays;
-13. Task publication, ledger torn-tail handling, and interior-corruption rejection;
-14. frozen runtime survives target-workspace STT source modification;
-15. active reachability excludes the old lifecycle.
+3. one sealed parent Plan executes several narrower child Tasks and continues using their verified results;
+4. evidence-producing steps feed a same-mission child with the exact parent mission, normally the exact parent output contract, accumulated accepted evidence, and a fresh Planner;
+5. a hybrid Plan combines narrower child Tasks and a later same-mission child without recalling or redispatching any earlier Planner;
+6. child terminal results and accepted validation reports, or exact validator-unavailable evidence, are identity-bound fixed Task-step evidence, available through explicit backward references from later parent steps after a `COMPLETE` child, and present in every ancestor Validator index;
+7. planning failure distinguishes `FAILED` from `BLOCKED_UNKNOWN` and reaches Validator with no invented Plan;
+8. Worker failure and uncertainty skip later steps and reach Validator;
+9. child failure reaches every ancestor Validator;
+10. restart after each start event never repeats an STT dispatch to Planner, Worker, Command, or Validator; exact-owned process cleanup never relaunches work and does not signal a mismatched or reused process identity;
+11. Validator unavailable produces mechanical `BLOCKED_UNKNOWN`;
+12. a new Run can consume a prior result and Validator report as ordinary evidence;
+13. one-time bootstrap evidence remains exact after original source changes;
+14. path, identity, authority, and provenance violations fail closed;
+15. Planner request contains the frozen allowed Command route catalog, and Command selects only an allowed route, uses Boundary-rendered typed argv without a shell, and receives only disposable materialized paths;
+16. pre-intent Mutation resumes while post-intent Mutation never replays;
+17. Task publication, ledger torn-tail handling, and interior-corruption rejection;
+18. frozen runtime survives target-workspace STT source modification;
+19. active reachability excludes the old lifecycle.
 
 Also run:
 
@@ -513,7 +530,7 @@ Planning failure, Worker failure/uncertainty, skipped steps, Validator unavailab
 
 ### Slice 3 — recursive Tasks, disposable Commands, and Mutation
 
-Child/grandchild depth-first execution, ancestor validation, command materialization, mutation intent and post-intent uncertainty.
+Multiple narrower children, same-mission evidence refinement, hybrid depth-first execution, child-report propagation, ancestor validation, command materialization, mutation intent and post-intent uncertainty.
 
 ### Slice 4 — frozen runtime, CLI, old-lifecycle cutover, and live adapters
 
