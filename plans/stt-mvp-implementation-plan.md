@@ -1,38 +1,31 @@
-# STT MVP Complete Implementation Plan
+# STT MVP Implementation Plan
 
-**Status:** Complete implementation plan; ready for execution after owner acceptance  
-**Architecture source of truth:** `plans/stt-mvp-architecture-plan.md`  
-**Repository:** `saffih/skeptic`  
-**Planning base:** `ec9e8771e4bf9a4ecd03d3d9cd5ff0b1486d9887` plus the documentation-only commit that installs the corrected architecture plan  
-**Historical parent:** `31451c8f45d5e9f2fe63434b37a2b7b02626a403`  
-**Archived overbuilt history:** `archive/target-task-overbuilt-20260802`  
+**Status:** Complete implementation plan for the corrected live-execution architecture
+**Architecture source of truth:** `plans/stt-mvp-architecture-plan.md`
+**Repository:** `saffih/skeptic`
+**Documentation base:** `c3be467ec71924f63ea5bafa8f97908b594e8d15`
 **Implementation authority:** STT MVP only
 
 ---
 
 ## 1. Objective
 
-Implement the smallest complete STT MVP described by:
+Implement the smallest complete STT described by the architecture plan.
 
-```text
-plans/stt-mvp-architecture-plan.md
-```
-
-The implementation must prove:
+The implementation must prove this lifecycle for the root Task and every child Task whose orchestration state remains valid:
 
 ```text
 Mission
-→ Planner
-→ ordered Plan steps
+→ planning phase
+→ immutable planning outcome
+→ sequential ordered steps, when any
 → Validator
 → terminal result
 ```
 
-for the root Task and every child Task.
+Stop when the architecture qualification scenarios and the full repository suite pass.
 
-The implementation stops when all MVP qualification scenarios pass.
-
-It must not restore, adapt, or maintain compatibility with the later archived Target Task system.
+Do not restore, adapt, or depend on the archived Target Task lifecycle.
 
 ---
 
@@ -40,60 +33,52 @@ It must not restore, adapt, or maintain compatibility with the later archived Ta
 
 Before implementation:
 
-1. verify current branch descends from the final documentation commit containing:
-   - corrected `plans/stt-mvp-architecture-plan.md`;
-   - this `plans/stt-mvp-implementation-plan.md`;
-2. verify the architecture file hash and record it in the first implementation commit message or implementation evidence;
-3. verify the working tree is understood;
+1. verify the branch contains the final documentation commit installing both corrected plans;
+2. record the architecture-plan SHA-256 in implementation evidence;
+3. inspect the repository test conventions and only the direct files needed for integration;
 4. preserve unrelated work;
-5. do not modify the archive;
-6. do not merge or copy the old Target Task implementation wholesale.
-
-The original accepted architecture commit `ec9e877…` is historical context. The corrected architecture file in the final documentation commit is the implementation source of truth.
+5. leave `archive/` unchanged;
+6. do not copy the old Target Task implementation wholesale;
+7. implement from the current architecture, not historical summaries.
 
 ---
 
-## 3. Execution strategy
+## 3. Build strategy
 
-Build in small vertical slices.
+Build small vertical behavior slices.
 
 Each slice must:
 
-- add one coherent capability;
-- include focused tests;
-- preserve all previously passing STT tests;
+- implement one coherent runtime capability;
+- add focused deterministic tests;
+- preserve previously passing STT tests;
 - avoid speculative abstractions;
-- end in a reviewable commit;
-- provide a deterministic proof of the slice invariant.
+- end with a reviewable commit;
+- prove its declared invariant;
+- remove unnecessary mechanism discovered during implementation.
 
-Do not create the full directory skeleton before behavior requires it.
-
-Do not implement later phases early.
+Do not pre-create a large directory skeleton before behavior needs it.
 
 ---
 
-## 4. Planned commits
+## 4. Planned commit sequence
 
-Recommended commit sequence:
+Recommended commits:
 
-1. `stt: add canonical data and ledger core`
-2. `stt: add task and plan contracts`
-3. `stt: add provider boundary`
-4. `stt: add mechanical lead and recursive tasks`
-5. `stt: add safe workspace mutation`
-6. `stt: add frozen runtime`
-7. `stt: add cli and diagnostics`
-8. `stt: qualify mvp invariants`
+1. `stt: add canonical state and ledger core`
+2. `stt: add task and planning contracts`
+3. `stt: add copied run runtime`
+4. `stt: add provider boundary`
+5. `stt: add mechanical lead and recursive tasks`
+6. `stt: add live workers commands and give-up handling`
+7. `stt: add validation and prior-run evidence`
+8. `stt: add cli and qualify mvp`
 
 A commit may be split when review clarity improves. Do not combine unrelated slices.
 
-No implementation commit should include archived Target Task compatibility.
-
 ---
 
-## 5. Target file map
-
-### 5.1 New production package
+## 5. Target production shape
 
 ```text
 concepts/stt/
@@ -109,7 +94,6 @@ concepts/stt/
 ├── launcher.py
 ├── workspace.py
 ├── command.py
-├── mutation.py
 ├── receipt.py
 ├── cli.py
 ├── contracts/
@@ -123,88 +107,25 @@ concepts/stt/
     └── codex.py
 ```
 
-The recorded launcher is provider-neutral and performs exact executable
-resolution, explicit argv invocation without shell interpolation, timeout and
-termination classification, dispatch identity, request/raw-return persistence,
-exit status, executable identity, truthful routing metadata, bounded returns,
-and no semantic interpretation. Claude Code and Codex are thin mandatory
-adapters translating the common request/return contract to each host CLI.
-Without `--allow-live-provider`, both fail closed before launch. Actual
-provider/model/effort values are recorded only when observable; otherwise they
-are `UNKNOWN`. Deterministic controlled-executable tests qualify both adapters
-without a paid live call.
-
-### 5.2 CLI entry
+CLI entry:
 
 ```text
 scripts/stt.py
 ```
 
-### 5.3 Tests
+Tests:
 
 ```text
 tests/concepts/stt/
-├── __init__.py
-├── helpers.py
-├── test_ledger.py
-├── test_run_lock.py
-├── test_task.py
-├── test_plan.py
-├── test_boundary.py
-├── test_lead.py
-├── test_recursive_tasks.py
-├── test_workspace.py
-├── test_command.py
-├── test_mutation_interruptions.py
-├── test_runtime.py
-├── test_context_bounds.py
-├── test_launcher.py
-├── test_provider_claude_code.py
-├── test_provider_codex.py
-├── test_cli.py
-└── test_qualification.py
 ```
 
-Use the repository’s existing test runner and naming conventions where they differ.
+The exact module count may be reduced when consolidation is simpler. Do not create a generic plugin framework, workflow engine, scheduler, or recovery subsystem.
 
-### 5.4 Optional small routing documentation change
-
-Only if required for discoverability:
-
-```text
-AGENTS.md
-```
-
-may receive one compact pointer:
-
-```text
-STT runtime and architecture -> plans/stt-mvp-architecture-plan.md and concepts/stt/
-```
-
-Do not rewrite the current general Lead, Planner, Boundary, or Task Prompt contracts to behave like STT.
-
-### 5.5 Files explicitly not used as runtime architecture
-
-Do not import or depend on:
-
-```text
-archive/target-task-overbuilt-20260802/
-```
-
-Do not make active STT depend on the old Target Task lifecycle in:
-
-```text
-agents/lead_agent.md
-agents/planner.md
-agents/boundary_agent.md
-workflows/task_prompt.md
-```
-
-Small deterministic code may be reimplemented from first principles after inspection. Prefer reimplementation when reuse would carry old contracts or state.
+Active STT must not import archived Target Task modules.
 
 ---
 
-## 6. Cross-cutting implementation rules
+## 6. Cross-cutting rules
 
 ### 6.1 Standard library first
 
@@ -221,87 +142,85 @@ Prefer:
 - `stat`;
 - `time`;
 - `uuid`;
-- `fcntl` on supported POSIX hosts for the Run writer lock.
+- supported OS filesystem locking.
 
-Add no dependency unless it materially simplifies correctness and is already compatible with the repository.
+Add no dependency unless it materially simplifies correctness and fits repository policy.
 
-### 6.2 Canonical JSON
+### 6.2 Canonical control data
 
-All control-bearing JSON files use:
+Control-bearing JSON uses:
 
 - UTF-8;
 - sorted keys;
-- compact stable separators;
+- stable compact separators;
 - exactly one final LF;
 - no NaN or Infinity;
-- explicit schemas;
+- explicit schema identifiers;
 - bounded sizes.
 
-Provide one canonical serializer and parser. Do not duplicate JSON canonicalization.
+Provide one canonical serializer and parser.
 
-### 6.3 Hash identities
+### 6.3 Identity references
 
-Use lowercase SHA-256.
+Persisted artifact references include, where applicable:
 
-Every persisted reference includes:
+```text
+relative or target-bound path
+SHA-256
+byte size
+artifact type
+producer identity
+```
 
-- relative path;
-- SHA-256;
-- byte size;
-- artifact type.
+### 6.4 Publication
 
-### 6.4 Create-only or atomic publication
+Immutable control files are create-only or atomically published through a same-directory temporary sibling, flushed, reread, and verified where supported.
 
-Control-bearing immutable files are written:
-
-1. to a same-directory temporary file;
-2. flushed;
-3. file-fsynced where supported;
-4. atomically renamed only when final publication semantics are safe;
-5. directory-fsynced where supported;
-6. reread and verified.
-
-Append-only ledgers use one bounded canonical write, flush, and fsync per event while the Run writer lock is held. `MUTATION_INTENT` must be durable before live mutation begins.
+Task creation publishes a complete same-parent temporary Task directory containing `TASK_CREATED` before the final rename.
 
 Do not claim universal power-loss durability.
 
 ### 6.5 Errors
 
-Use a small typed error hierarchy, for example:
+Use a small typed hierarchy, such as:
 
 ```text
 STTError
 InvalidRun
+InvalidRuntime
+InvalidTarget
 InvalidTask
+InvalidPlanningResult
 InvalidPlan
 InvalidLedger
-AuthorityViolation
 ArtifactMismatch
 ProviderFailure
-WorkspaceSafetyError
-MutationUnknown
+OperationGaveUp
+UnsettledOperation
 ```
-
-CLI maps errors to bounded machine-readable and human-readable output.
 
 Avoid a generalized error-state machine.
 
+### 6.6 No hidden safety claim
+
+Scope, path checks, and output verification do not imply process containment. Tests and documentation must use the architecture’s precise safety statement.
+
 ---
 
-# Slice 1 — Canonical files and ledger
+# Slice 1 — Canonical state, ledger, and writer lock
 
 ## 7. Goal
 
-Implement the smallest trustworthy persistent primitives:
+Implement:
 
 - canonical JSON;
 - artifact references;
-- hash-chained JSONL ledger;
-- create-only publication;
+- hash-chained Task ledger;
+- create-only and atomic publication helpers;
 - ledger validation;
-- next sequence derivation;
-- one OS-backed exclusive Run writer lock;
-- narrow torn-tail diagnosis; incomplete artifacts are non-authoritative.
+- narrow torn-tail handling;
+- one exclusive writer lock per Run;
+- compact receipts.
 
 ## 8. Production files
 
@@ -313,103 +232,102 @@ concepts/stt/run_lock.py
 concepts/stt/receipt.py
 ```
 
-A small shared utility module may be added only if both modules genuinely need it.
+A small shared utility may be added only when it removes real duplication.
 
-## 9. Ledger event schema
+## 9. Ledger schema
 
-Every ledger line contains:
+Allowed events:
+
+```text
+TASK_CREATED
+PLANNING_FINISHED
+STEP_STARTED
+STEP_FINISHED
+TASK_FINISHED
+```
+
+Every line includes:
 
 ```json
 {
   "schema": "stt.ledger-event.v1",
   "sequence": 1,
   "event": "TASK_CREATED",
-  "timestamp": "informational",
   "payload": {},
   "previous_hash": null,
   "event_hash": "..."
 }
 ```
 
-Hash input excludes `event_hash` and uses canonical bytes.
-
-Allowed events:
-
-```text
-TASK_CREATED
-PLAN_ACCEPTED
-STEP_STARTED
-MUTATION_INTENT
-STEP_FINISHED
-TASK_FINISHED
-```
+The event hash covers canonical event bytes without `event_hash`.
 
 Reject:
 
-- missing sequence;
-- non-contiguous sequence;
+- missing or non-contiguous sequence;
 - duplicate sequence;
 - unknown event;
 - invalid previous hash;
 - invalid event hash;
-- malformed interior JSON;
 - oversized line;
-- event illegal for current lifecycle facts.
+- malformed interior JSON;
+- lifecycle-illegal event order.
 
-A single incomplete trailing fragment is diagnosed as an uncommitted torn append. Under the exclusive Run writer lock, preserve the fragment as diagnosis evidence, validate the complete prefix, and truncate only that tail. Any other corruption fails closed.
+One incomplete trailing fragment may be preserved as diagnosis evidence and removed only under the exclusive writer lock after validating the complete prefix. Any other corruption fails visibly.
 
-Implement `RunWriterLock` as one OS-backed exclusive file lock held by every mutating `start` or `run` invocation. A competing writer fails before reading or appending lifecycle state. On hosts without the supported lock primitive, mutating execution fails closed; do not implement leases or stale-lock recovery.
+## 10. Writer lock
 
-Do not yet implement full lifecycle transition policy in the ledger module. Keep event structural validation and provide hooks for Task-level semantic validation.
+All lifecycle-changing `start` and `run` behavior holds one OS-backed exclusive lock on `<run-root>/run.lock`.
 
-## 10. Tests
+A competing writer fails before reading or changing lifecycle state.
+
+Read-only status and diagnosis use a shared nonblocking lock where supported and return `RUN_BUSY` without reading changing state while a writer exists.
+
+Do not implement leases, stale-lock recovery, distributed locking, or concurrent Task execution.
+
+## 11. Tests
 
 Prove:
 
 - canonical round trip;
-- identical objects produce identical bytes;
-- one-byte change alters hash;
-- valid chain passes;
-- modified historical line fails;
-- reordered lines fail;
-- duplicate line fails;
-- one torn trailing fragment is preserved, removed under lock, and the valid prefix survives;
-- malformed interior or hash-corrupt line fails;
+- equal objects produce equal bytes;
+- one-byte changes alter identity;
+- valid hash chain passes;
+- historical modification fails;
+- sequence gaps and duplicates fail;
+- one torn tail is preserved and narrowly removed under lock;
+- interior corruption fails;
 - unsupported event fails;
-- first writer acquires the lock and a second writer is rejected;
-- append returns new head;
-- full bodies are rejected from ledger payloads by size or schema.
+- first writer acquires and second writer is rejected;
+- compact receipt contains references rather than substantive bodies.
 
-## 11. Commit acceptance
+## 12. Commit acceptance
 
-Focused tests pass.
-
-No Task orchestration exists yet.
+Focused Slice 1 tests pass.
 
 Commit:
 
 ```text
-stt: add canonical data and ledger core
+stt: add canonical state and ledger core
 ```
 
 ---
 
-# Slice 2 — Task and Plan contracts
+# Slice 2 — Task and planning contracts
 
-## 12. Goal
+## 13. Goal
 
 Implement:
 
-- Task paths;
-- immutable `task.json`;
-- immutable `mission.md`;
-- Plan schema;
-- four exact step kinds;
-- input and output references;
-- authority validation;
-- cursor derivation from Plan and ledger.
+- immutable Task identity;
+- immutable mission;
+- initial evidence and required-output binding;
+- deterministic bounded workspace index;
+- planning-result schema;
+- `PLAN`, `DECLINE`, and `GAVE_UP` dispositions;
+- exactly three step schemas;
+- pure cursor derivation.
 
-## 13. Production files
+## 14. Production files
 
 Create:
 
@@ -418,21 +336,17 @@ concepts/stt/task.py
 concepts/stt/plan.py
 concepts/stt/workspace.py
 concepts/stt/contracts/planner.md
-concepts/stt/contracts/worker.md
-concepts/stt/contracts/validator.md
 ```
 
-Before Task creation, implement the common path-admission primitive and bounded `workspace-index.json` generation in `workspace.py`. The index covers the Task read authority, obeys the common path-admission exclusions for `.git`, `.stt`, symlinks, special files, and containment escape, uses deterministic entries, and emits explicit directory-summary overflow markers when its configured limit is reached. It never silently truncates and never grants authority.
+## 15. Task creation
 
-## 14. Task creation
-
-Implement:
+Implement one root-and-child creation path, conceptually:
 
 ```python
 create_task(
     task_root,
     run_identity,
-    task_id,
+    task_identity,
     mission_bytes,
     authority,
     role_bindings,
@@ -442,29 +356,70 @@ create_task(
 )
 ```
 
-It must validate all paths and authority before construction, then construct
-the complete initial Task under a same-parent temporary directory. The
-temporary directory contains `task.json`, `mission.md`, initial-input
-bindings, the required-output contract, `workspace-index.json`, required
-initial directories, and a valid first `TASK_CREATED` ledger event. Flush and
-file-fsync where supported; reread and verify bytes, schemas, hashes, and the
-ledger; fsync the temporary directory where supported; verify the final
-deterministic path does not exist; atomically rename the complete temporary
-directory; fsync its parent where supported; reread and verify the published
-Task; only then return the compact reference. Root and child Tasks use this
-same protocol. If same-parent atomic directory rename is unavailable or unsafe,
-fail before publishing. A visible final Task always has `TASK_CREATED`.
-Temporary residue is non-authoritative, may be diagnosed, and is never adopted
-through recovery logic. A pre-existing final path fails closed.
+It must:
 
-## 15. Plan step schemas
+1. validate every input before publication;
+2. build the complete initial Task under a same-parent temporary directory;
+3. include `task.json`, `mission.md`, input bindings, required-output contract, workspace index, required directories, and the first valid ledger event;
+4. flush, reread, and verify;
+5. atomically publish only when the final deterministic path is absent;
+6. reread and verify the published Task;
+7. return a compact reference.
 
-Implement explicit dataclasses or typed dictionaries for:
+Temporary residue is non-authoritative and never adopted automatically.
+
+## 16. Planning-result schema
+
+Use one immutable `planning-result.json`.
+
+### PLAN
+
+Contains:
+
+```text
+disposition = PLAN
+ordered steps
+Planner reason or summary
+```
+
+A zero-step Plan is valid.
+
+### DECLINE
+
+Contains:
+
+```text
+disposition = DECLINE
+reason
+blocking facts
+missing requirements
+why further investigation or delegation is not useful
+steps = []
+```
+
+### GAVE_UP
+
+Boundary constructs this operational outcome from persisted attempt evidence:
+
+```text
+disposition = GAVE_UP
+launch state
+completion state
+give-up reason
+settlement state
+log and raw-return references
+steps = []
+```
+
+A malformed Planner return cannot become `PLAN` or `DECLINE`.
+
+## 17. Step schemas
+
+Implement explicit schemas for:
 
 ```text
 WorkerStep
 CommandStep
-MutationStep
 TaskStep
 ```
 
@@ -479,146 +434,215 @@ outputs
 success
 ```
 
-Worker-only:
+Worker fields:
 
 ```text
 worker_binding
 instructions
-write_scope
+responsibility_scope
 ```
 
-Command-only:
+Command fields:
 
 ```text
 argv
 cwd
 environment
-timeout_seconds
-expected_exit_codes
-workspace_mutation=false
-replay_safe
+give_up_policy
+expected_result
 ```
 
-Mutation-only:
-
-```text
-replacement_input
-```
-
-Task-only:
+Task fields:
 
 ```text
 mission
 authority
 inputs
-required output names and artifact types through common outputs
+required child outputs
+allowed child bindings
 ```
 
-## 16. Plan validation
+Do not add effect classification or automatic replay declarations.
+
+## 18. Plan validation
 
 Validate:
 
-- schema;
-- Task and mission binding;
+- schema and Task binding;
+- disposition-specific fields;
+- no steps for Decline or Gave Up;
 - unique stable step IDs;
-- nonempty ordered steps where mission requires work;
-- exact allowed fields;
-- step-kind-specific required fields;
-- no unknown step kinds;
-- no future references;
-- named-output references resolve;
-- child authority subset;
-- Worker binding exists in allowed frozen bindings;
-- command mutation flag is false and `replay_safe` is explicit;
-- mutation replacement input points to the same prior named output declared in common `inputs`;
-- Task inputs resolve backward and its output contract is bound into the child Task;
-- paths pass the common read/write admission primitive and are canonical and authorized.
+- only three step kinds;
+- backward references only;
+- named-output reference resolution;
+- same or narrower child authority;
+- valid allowed Worker binding;
+- explicit command argv and cwd;
+- canonical target references;
+- immutable first accepted planning result.
 
-Plan acceptance:
+Plan validation does not judge semantic wisdom or detect recursive non-progress.
 
-1. persist raw provider return separately;
-2. parse exact Plan object;
-3. canonicalize;
-4. publish `plan.json`;
-5. append `PLAN_ACCEPTED`;
-6. on resume, use only a complete `PLAN_ACCEPTED` event and its verified canonical `plan.json`;
-7. never replace accepted Plan; incomplete or conflicting publication content fails closed.
+## 19. Cursor derivation
 
-## 17. Cursor derivation
-
-Implement a pure function:
-
-```python
-derive_task_state(task_root) -> TaskState
-```
-
-It reads:
-
-- immutable Task identity;
-- Plan when accepted;
-- ledger;
-- referenced results only as required.
-
-It returns:
+Implement a pure function returning:
 
 ```text
-NEEDS_PLAN
+NEEDS_PLANNING
 NEEDS_STEP
 NEEDS_VALIDATION
 TERMINAL
 INVALID
 ```
 
-and exact next step when applicable.
+Rules:
 
-No mutable cursor file.
+- no planning result → `NEEDS_PLANNING`;
+- Plan with first unfinished step → `NEEDS_STEP`;
+- zero-step Plan, Decline, Gave Up, all steps complete, or any non-complete step → `NEEDS_VALIDATION`;
+- committed terminal result → `TERMINAL`;
+- conflicting identity or publication → `INVALID`.
 
-## 18. Tests
+There is no mutable cursor file.
+
+## 20. Tests
 
 Prove:
 
-- Task creation;
-- root initial-input and bounded workspace-index binding, including overflow markers;
-- child identity, initial-input, and required-output binding;
-- authority narrowing;
-- authority expansion rejection;
-- valid Plan per step kind;
-- unknown step kind rejection;
-- duplicate ID rejection;
-- future reference rejection;
-- unauthorized path rejection;
-- mutation input validation;
-- accepted Plan cannot be replaced;
-- incomplete and conflicting publication state fails closed;
-- state derivation before and after each event.
+- root and child creation;
+- bounded deterministic workspace index with explicit overflow markers;
+- immutable mission and identity;
+- child parent binding;
+- byte-identical child mission accepted;
+- equal or narrower child authority accepted;
+- authority expansion rejected;
+- valid Plan, Decline, and Gave Up;
+- zero-step Plan accepted;
+- steps rejected for Decline and Gave Up;
+- unknown step kind rejected;
+- future reference rejected;
+- accepted planning result cannot be replaced;
+- state derivation for every planning disposition and step state.
 
-## 19. Commit acceptance
+## 21. Commit acceptance
 
-All Slice 1 and Slice 2 tests pass.
+Slices 1 and 2 pass.
 
 Commit:
 
 ```text
-stt: add task and plan contracts
+stt: add task and planning contracts
 ```
 
 ---
 
-# Slice 3 — Provider invocation and Boundary
+# Slice 3 — Copied Run runtime
 
-## 20. Goal
+## 22. Goal
 
-Implement one mandatory Boundary façade around:
+Implement:
 
-- Planner calls;
-- Worker calls;
-- Validator calls;
-- deterministic operations;
-- child creation and child return;
-- persistence;
-- compact receipts.
+- unique temporary Run directory;
+- owner-only permissions where supported;
+- copied runnable Skeptic/STT checkout;
+- copy manifest and verification;
+- source-change-during-copy detection;
+- re-execution from copied runtime;
+- target/runtime disjointness;
+- self-modification proof.
 
-## 21. Production files
+## 23. Production files
+
+Create:
+
+```text
+concepts/stt/runtime.py
+concepts/stt/bootstrap.py
+```
+
+## 24. Runtime copy
+
+Implement conceptually:
+
+```python
+prepare_run_runtime(source_root, target_root, temp_root=None) -> RunRuntime
+```
+
+It must:
+
+1. canonicalize source and target;
+2. create `${TMPDIR}/stt/<run-id>/`;
+3. reject a Run root inside the target;
+4. copy the runnable repository into `runtime/`;
+5. exclude `.git`, caches, previous Run state, and generated temporary files;
+6. record source identities used for the copy;
+7. record copied identities;
+8. verify copied bytes;
+9. re-observe source identities and reject mixed-generation copies;
+10. write `runtime-manifest.json`;
+11. re-execute from the copied entry point.
+
+Copying the repository does not authorize importing archived runtime code. Active-import tests enforce that separately.
+
+## 25. Bootstrap
+
+`start` Bootstrap must:
+
+- freeze submission bytes;
+- bind source and target identities;
+- validate optional prior Run;
+- freeze provider and role bindings;
+- prepare and re-execute the copied runtime;
+- acquire the writer lock in the copied process;
+- create immutable `run.json`;
+- create the root Task;
+- start the Lead;
+- print the exact Run path and resume command.
+
+No authoritative state is written under the target.
+
+## 26. Resume
+
+`run`, `status`, and `diagnose` execute from `<run-root>/runtime/`.
+
+They never reconstruct executable code from the current source or target.
+
+A missing Run directory is reported as non-resumable. Do not invent reconstruction from the modified source.
+
+## 27. Tests
+
+Prove:
+
+- unique Run directories do not collide;
+- Run root is outside target;
+- expected exclusions are absent;
+- copied manifest matches bytes;
+- source change during copy fails visibly;
+- imports resolve under copied runtime;
+- target Skeptic source can be changed and deleted while generation A continues;
+- a later generation B copies the changed source;
+- missing Run directory is non-resumable;
+- no authoritative target `.stt` state is created.
+
+## 28. Commit acceptance
+
+Runtime tests pass.
+
+Commit:
+
+```text
+stt: add copied run runtime
+```
+
+---
+
+# Slice 4 — Launcher, providers, and Boundary
+
+## 29. Goal
+
+Implement one mandatory Boundary façade around outer operations and one recorded launcher for providers and explicit commands.
+
+## 30. Production files
 
 Create:
 
@@ -631,214 +655,144 @@ concepts/stt/providers/claude_code.py
 concepts/stt/providers/codex.py
 ```
 
-## 22. Provider protocol
+## 31. Common outer-operation observations
 
-Define the smallest interface:
+Every launcher outcome records:
+
+```text
+dispatch identity
+operation role
+request identity
+launch_state: NOT_LAUNCHED | LAUNCHED | UNKNOWN
+completion_state: RETURNED | GAVE_UP
+settlement_state: SETTLED | UNSETTLED | UNKNOWN
+start and end timing
+exit or provider status when available
+stdout/stderr or raw-return references
+adapter-specific observations
+```
+
+Adapter-internal bounded attempts may occur before returning the final outer outcome.
+
+Do not expose a generic orchestration retry machine.
+
+## 32. Provider protocol
+
+Use the smallest interface:
 
 ```python
 class Provider:
-    def invoke(self, request: ProviderRequest) -> ProviderReturn:
+    def invoke(self, request: ProviderRequest) -> ProviderOutcome:
         ...
 ```
 
-Request fields:
+Requests contain:
 
 ```text
-dispatch_id
+dispatch identity
 role
-provider
-requested_model
-requested_effort
-maximum_attempts
-attempt_number
-live_provider_authorized
-instruction_paths
-input_references
-output_schema
-timeout_seconds
+requested provider/model/effort
+fixed instruction references
+bounded input references
+output schema
+give-up policy
 ```
 
-Return fields:
+Persist every raw return and launcher log.
 
-```text
-dispatch_id
-status
-raw_bytes
-provider_metadata
-error
-```
+Only schema-valid accepted semantic returns become Planner, Worker, or Validator results.
 
-Provider unavailability never creates a fake semantic result:
+## 33. Fake provider
 
-- no accepted Planner output leaves `NEEDS_PLAN`;
-- no accepted Worker output leaves the step unfinished;
-- no accepted Validator output leaves `NEEDS_VALIDATION`.
+Support deterministic fixtures for:
 
-The current run invocation returns an operational blocker and resume reuses persisted requests. Every attempt also persists `attempt-disposition.json` with `dispatch_id`, `role`, `attempt_number`, `request_identity`, `completion_kind`, `termination_state`, `retry_permitted`, `blocker_code`, and `raw_return_reference`. Boundary reads the latest disposition before every Planner, Worker, or Validator invocation and applies the closed vocabulary `ACCEPTED`, `COMPLETED_NONRETRIABLE`, `TIMED_OUT_CONFIRMED_TERMINATED`, `TERMINATION_UNKNOWN`. Only the third permits another attempt within finite `maximum_attempts`; all other blockers are returned without reinvocation, including after restart. No ledger event or retry state machine is added.
-
-Do not require the current general Agent Completion Envelope when the provider already supplies equivalent structured identity and status.
-
-Persist every raw return.
-
-Only accepted structured outputs enter Task state.
-
-## 23. Fake provider
-
-The fake provider reads deterministic fixture responses keyed by dispatch ID or role.
-
-It must support:
-
-- valid Planner return;
-- valid Worker return;
-- valid Validator return;
-- timeout;
-- malformed return;
-- mismatched dispatch;
-- failure;
+- Planner Plan;
+- Planner Decline;
+- Planner malformed return leading to planning Gave Up;
+- Worker complete report;
+- Worker failed report;
+- Worker give-up settled;
+- Worker give-up unsettled;
+- Validator Complete;
+- Validator Failed;
+- Validator Blocked Unknown;
+- Validator give-up;
+- dispatch mismatch;
 - oversized return.
 
-It is the primary qualification provider.
+The fake provider is the primary qualification provider.
 
-Claude Code and Codex are thin translators over the common recorded-launcher
-contract. Each maps the immutable request to host-specific argv and maps the
-bounded return back; neither performs semantic interpretation or creates a
-general plugin framework. Slice 3 owns both adapters and their deterministic
-tests, and its acceptance gate requires all three launcher/provider tests to
-pass.
+## 34. Live adapters
 
-## 24. Boundary API
+Claude Code and Codex adapters are thin translators over the common request and outcome contract.
 
-Expose narrow methods:
+They must:
 
-```python
-plan_task(task_ref)
+- construct exact argv without shell interpretation;
+- persist request and raw return;
+- record truthful requested and observable actual routing;
+- record `UNKNOWN` when actual routing is unobservable;
+- enforce explicit live-provider authorization;
+- enforce bounded output;
+- classify launch, return, give-up, and settlement observations;
+- perform no semantic interpretation beyond host-protocol translation.
+
+Qualify them with controlled fake executables. No paid call is required.
+
+## 35. Boundary API
+
+Expose narrow methods, conceptually:
+
+```text
+finish_planning(task_ref)
 execute_worker_step(task_ref, step_ref)
 execute_command_step(task_ref, step_ref)
-execute_mutation_step(task_ref, step_ref)
 create_child_task(task_ref, step_ref)
 finish_task_step_from_child(task_ref, step_ref, child_ref)
 validate_and_finish_task(task_ref)
 ```
 
-The Lead calls no provider or workspace function directly.
+The Lead calls no provider, launcher, workspace, or persistence helper directly.
 
-## 25. Bounded request construction
+## 36. Boundary responsibilities
 
-Boundary resolves each declared input through one of two explicit paths: workspace references use the common path-admission primitive and reject absolute paths, traversal, symlinks, special files, `.git`, `.stt`, and containment escape; accepted Task-artifact references under `.stt` are allowed only when declared and are validated by path, hash, size, type, producer, and authority. Deterministic Git observation, when used, is isolated from semantic role context.
+Boundary must:
 
-It writes:
+- validate Run, runtime, target, Task, planning, and step identity;
+- resolve declared input references;
+- persist exact outer requests before launch;
+- invoke adapters;
+- preserve complete raw returns and logs;
+- validate accepted semantic schemas;
+- build planning Gave Up when required;
+- verify named target outputs;
+- create child Tasks;
+- bind child returns;
+- publish immutable accepted results;
+- append lifecycle events;
+- return compact receipts.
 
-```text
-<attempt-or-step>/request.json
-```
+Boundary does not classify target changes as forbidden merely because they occurred.
 
-before invocation.
-
-A request contains references, not large bodies.
-
-The provider adapter may load the referenced files for the actual model call, but the exact request remains reconstructible.
-
-Enforce configurable conservative limits for:
-
-- request bytes;
-- raw provider return;
-- Plan bytes;
-- Worker result index;
-- Validator result index;
-- count of references;
-- individual referenced artifact size where needed.
-
-Large artifact bodies remain file-backed.
-
-## 26. Planner Boundary path
-
-1. validate Task state is `NEEDS_PLAN`;
-2. load only the Task's persisted initial inputs, required-output contract, and deterministic workspace index;
-3. construct and persist request;
-4. invoke strong Planner binding;
-5. persist raw return;
-6. validate dispatch and provider status;
-7. validate Plan;
-8. accept first valid Plan;
-9. append `PLAN_ACCEPTED`;
-10. return compact receipt.
-
-Retry policy: persist a finite explicit `maximum_attempts`. Do not retry any
-completed provider return, including malformed, schema-invalid,
-identity-mismatched, rejected, explicit failure, or semantically unsuccessful
-returns. Retry only `transport timeout` with
-`TIMED_OUT_CONFIRMED_TERMINATED` and `attempt_count < maximum_attempts`.
-Persist `TERMINATION_UNKNOWN` and fail closed when termination is not positively
-established. Each attempt has a monotonically numbered create-only directory;
-no semantic corrective planning or replanning exists.
-
-## 27. Worker Boundary path
-
-1. validate current step;
-2. resolve exact inputs;
-3. persist request;
-4. append `STEP_STARTED`;
-5. invoke allowed Worker binding;
-6. persist raw return;
-7. validate replacement outputs and scope;
-8. persist accepted result;
-9. append `STEP_FINISHED`;
-10. return compact receipt.
-
-If Worker returns an accepted semantic failure, finish the step `FAILED`.
-Completed malformed, schema-invalid, identity-mismatched, rejected, explicit,
-or semantic failure returns are persisted and are not retried. Only a confirmed
-terminated transport timeout within `maximum_attempts` may retry; unknown
-termination fails closed. Other provider failures leave the step unfinished
-and the current invocation stopped.
-
-## 28. Validator Boundary path
-
-1. validate Task requires validation;
-2. create compact final index;
-3. persist request in a monotonic attempt directory;
-4. invoke a separate Validator role with Validator-specific instructions, no Planner or Worker conversation, and only persisted referenced evidence;
-5. persist raw return;
-6. validate result schema;
-7. apply mechanical status floors, including failure when any required Task output is missing or mismatched;
-8. verify every terminal output is either an accepted step output or a Boundary-assigned Validator artifact, including name, type, path, hash, and size;
-9. publish validation report;
-10. publish `result.json`;
-11. verify only complete atomically published canonical artifacts; never adopt temporary residue;
-12. append `TASK_FINISHED`;
-13. return compact receipt.
-
-Record requested provider/model/effort always; record actual provider/model/effort
-only when observable, otherwise `UNKNOWN`. Never infer routing.
-
-## 29. Tests
+## 37. Tests
 
 Prove:
 
-- every provider call has unique dispatch ID;
-- mismatched return rejected;
-- raw return persists;
-- malformed Plan never becomes accepted state;
-- bounded request contains references, not bodies;
-- oversized return fails;
-- semantic roles cannot request `.git`, `.stt`, symlinks, special files, or containment escapes as workspace paths;
-- exact declared Task-artifact references under `.stt` are accepted and arbitrary `.stt` reads are rejected;
-- Worker cannot write outside assigned step output;
-- child and Task terminal output provenance and required-output completeness are enforced;
-- Validator receives no Planner or Worker conversation and hidden isolation is reported `UNKNOWN`;
-- Validator `COMPLETE` is rejected when a step failed;
-- failed step forces final `FAILED`;
-- blocked step forces final `BLOCKED_UNKNOWN`;
-- Planner/Worker/Validator provider outages remain nonterminal and resumable;
-- compact receipts do not inline substantive content.
+- every outer call has a unique dispatch identity;
+- request identity binds return evidence;
+- mismatched dispatch is rejected;
+- raw returns persist;
+- malformed Planner return becomes planning Gave Up, not Plan;
+- oversized return is rejected and preserved as evidence;
+- launch, completion, and settlement observations persist;
+- named target outputs are verified by containment and identity;
+- compact receipts contain no substantive body;
+- live adapters require authorization;
+- controlled Claude Code and Codex adapter tests pass.
 
-## 30. Commit acceptance
+## 38. Commit acceptance
 
-Slices 1–3 pass.
-
-Slice 3 acceptance additionally requires `tests/concepts/stt/test_launcher.py`,
-`tests/concepts/stt/test_provider_claude_code.py`, and
-`tests/concepts/stt/test_provider_codex.py` to pass.
+Slices 1–4 pass.
 
 Commit:
 
@@ -848,13 +802,13 @@ stt: add provider boundary
 
 ---
 
-# Slice 4 — Mechanical Lead and recursive Tasks
+# Slice 5 — Mechanical Lead and recursive Tasks
 
-## 31. Goal
+## 39. Goal
 
-Implement the one Lead loop and durable DFS recursion.
+Implement one mechanical depth-first Lead and ordinary recursive Task execution.
 
-## 32. Production files
+## 40. Production file
 
 Create:
 
@@ -862,124 +816,101 @@ Create:
 concepts/stt/lead.py
 ```
 
-Use `task.py` and `boundary.py`; do not duplicate lifecycle logic.
+## 41. Lead algorithm
 
-## 33. Lead API
-
-```python
-run_until_terminal(run_root)
-advance_once(root_task_ref)
-```
-
-`advance_once` performs one bounded transition and returns one compact receipt.
-
-`run_until_terminal` loops until:
-
-- root terminal;
-- genuine invalid state;
-- operator interruption;
-- provider/host boundary requires external intervention.
-
-## 34. Child creation
-
-When current step is `task`:
-
-1. derive canonical child path;
-2. resolve and validate declared child inputs and required-output contract;
-3. if absent, Boundary creates child with those bindings;
-4. if present, validate exact identity, inputs, outputs, and authority binding;
-5. if unfinished, recurse/descend;
-6. if terminal, Boundary validates output provenance and records parent step result;
-7. return to the parent after every terminal child result, continuing later steps only after `COMPLETE`.
-
-No separate child-state enum beyond ordinary Task state.
-
-## 35. Failure path
-
-If any step is non-`COMPLETE`:
-
-- do not advance to later steps;
-- call current Validator;
-- return terminal result to parent through ordinary child result processing.
-
-Prohibit a direct “propagate failure” function that writes ancestor terminal state.
-
-## 36. Crash and resume cases
-
-Implement and test:
-
-### Case A
+Conceptually:
 
 ```text
-parent STEP_STARTED
-child absent
+advance(task):
+    validate task and ledger
+
+    state = derive_task_state(task)
+
+    if state == NEEDS_PLANNING:
+        Boundary.finish_planning(task)
+        return
+
+    if state == NEEDS_STEP:
+        step = first unfinished step
+
+        if step.kind == task:
+            child = Boundary.create_or_verify_child(task, step)
+
+            if child is not terminal:
+                advance(child)
+                return
+
+            Boundary.finish_task_step_from_child(task, step, child)
+            return
+
+        if step.kind == worker:
+            Boundary.execute_worker_step(task, step)
+            return
+
+        if step.kind == command:
+            Boundary.execute_command_step(task, step)
+            return
+
+    if state == NEEDS_VALIDATION:
+        Boundary.validate_and_finish_task(task)
+        return
 ```
 
-Safe action: create canonical child.
+The outer loop repeats until root terminal, invalid, or operationally blocked.
 
-### Case B
+The Lead does not scan arbitrary Task directories or maintain a separate scheduler or stack file.
+
+## 42. Child behavior
+
+Prove these interruption cases:
 
 ```text
-child TASK_CREATED
-parent step unfinished
+parent step started, child absent
+→ create deterministic child
+
+child created, parent unfinished
+→ resume child
+
+child terminal, parent unfinished
+→ validate and finish parent step
+
+parent step finished
+→ continue parent
+
+conflicting child identity
+→ invalid Run
 ```
 
-Safe action: resume child.
+A byte-identical child mission is valid.
 
-### Case C
+The Lead does not detect semantic recursion or impose depth limits.
 
-```text
-child TASK_FINISHED
-parent step unfinished
-```
+## 43. Non-complete step behavior
 
-Safe action: validate child and finish parent step.
+After Worker, command, or child status `FAILED` or `GAVE_UP`:
 
-### Case D
+- do not run later steps;
+- derive `NEEDS_VALIDATION`;
+- invoke the current Task Validator.
 
-```text
-parent STEP_FINISHED
-child terminal
-```
+Every valid ancestor performs its own Validator after a non-complete child returns.
 
-Safe action: continue parent.
-
-### Case E
-
-Conflicting child identity or duplicate child location.
-
-Safe action: invalid run; stop.
-
-## 37. Tests
-
-Use realistic root/child/grandchild Plans.
-
-Prove exact event order for:
-
-```text
-root Planner
-root Task step start
-child Planner
-child Worker/Command steps
-child Validator
-parent child-step finish
-root later step
-root Validator
-```
+## 44. Tests
 
 Prove:
 
-- depth-first ordering;
-- parent cursor remains on child step;
-- no later parent step before child terminal success;
-- child initial inputs and required outputs are bound;
-- child result provenance is verified and referenced, not copied;
-- failed child still leads to parent Validator;
-- failed parent still leads to root Validator;
-- grandchild failure validates every ancestor;
-- no scheduler data file.
+- root Plan execution order;
+- child and grandchild depth-first order;
+- deterministic child paths;
+- parent cursor remains on child until child terminal;
+- later parent steps wait for child Complete;
+- byte-identical child mission with richer inputs;
+- no Task-depth guard;
+- child Failed triggers parent and root Validators;
+- child Gave Up triggers parent and root Validators;
+- no scheduler or mutable stack file.
 
-## 38. Commit acceptance
+## 45. Commit acceptance
 
 Recursive lifecycle tests pass.
 
@@ -991,368 +922,260 @@ stt: add mechanical lead and recursive tasks
 
 ---
 
-# Slice 5 — Command and workspace mutation safety
+# Slice 6 — Live Worker, command, and give-up handling
 
-## 39. Goal
+## 46. Goal
 
-Implement:
+Implement live target execution without claiming containment or complete effect observation.
 
-- one canonical read/write path admission primitive;
-- read identity;
-- staged replacement validation;
-- non-mutating commands;
-- before-images;
-- mutation intent;
-- deterministic installation;
-- uncertainty handling.
-
-## 40. Production files
+## 47. Production files
 
 Extend/create:
 
 ```text
-concepts/stt/workspace.py  # extend the Slice 2 path/index primitive with file and tree identities
+concepts/stt/workspace.py
 concepts/stt/command.py
-concepts/stt/mutation.py
+concepts/stt/contracts/worker.md
 ```
 
-## 41. Path validation
+## 48. Worker invocation
 
-Implement one shared canonical path admission primitive used at object-open time for all model-visible reads and all workspace writes.
+Boundary constructs a bounded Worker request containing:
 
-Reject:
+- one step;
+- target root;
+- exact inputs;
+- responsibility scope;
+- named outputs;
+- fixed Worker contract;
+- report schema;
+- give-up policy.
 
-- absolute paths;
-- empty control-bearing paths;
-- `.` where a file is required;
-- `..`;
-- NUL;
-- `.git` component;
-- `.stt` component;
-- any symlink path component;
-- symlink leaf;
-- special files;
-- paths outside workspace after resolution;
-- nested repository control paths when relevant.
-
-Do not require Git.
-
-## 42. File identities
-
-The complete workspace identity for every entry is represented by:
+A valid Worker report contains:
 
 ```text
-path
-object_type
-regular-file bytes/sha256 when applicable
-symlink target when applicable
-relevant regular-file mode bits where supported
-relevant directory mode bits where supported
+status
+summary
+named outputs
+best-effort created paths
+best-effort changed paths
+best-effort deleted paths
+verification performed
+warnings
+unknowns
 ```
 
-Use canonical `path`, `object_type`, regular-file `bytes`/`sha256` when
-applicable, `symlink_target` when applicable, and relevant regular-file and
-directory `mode_bits` where supported and meaningful, so a mode-only change
-such as `chmod` is an unauthorized mutation and yields
-`BLOCKED_UNKNOWN`. The MVP does not claim universal ACL, ownership, extended
-attribute, or platform metadata coverage; unsupported required observations fail
-closed or are explicitly outside the supported host contract.
+Boundary validates the report schema and verifies named outputs against the current target.
 
-Represent absence explicitly.
+Do not attempt to prove the reported changed-path list is exhaustive.
 
-Before-image manifests must distinguish:
+## 49. Explicit command runner
 
-- existing file;
-- absent path;
-- existing required directory.
+The command runner must:
 
-## 43. Replacement manifest
+1. validate explicit argv;
+2. resolve executable information where supported;
+3. validate explicit cwd;
+4. build a bounded environment;
+5. persist the request before launch;
+6. stream stdout and stderr to files;
+7. apply the declared adapter give-up policy;
+8. record launch, completion, settlement, exit, and timing observations;
+9. record best-effort target before-and-after evidence;
+10. verify declared named outputs;
+11. never automatically repeat an abandoned command.
 
-Define canonical schema:
+A target change does not automatically fail the step.
 
-```json
-{
-  "schema": "stt.replacement-manifest.v1",
-  "entries": [
-    {
-      "path": "src/file.py",
-      "operation": "create|replace|delete",
-      "before": {},
-      "replacement": {}
-    }
-  ]
-}
-```
+Do not create a complete-tree scan whose purpose is permission enforcement. Target observations are evidence for the Validator.
 
-Replacement bytes live in step-owned files.
+## 50. Give-up behavior
 
-Validate:
+For Worker and command outer outcomes:
 
-- unique paths;
-- sorted canonical order;
-- operation matches before-state;
-- replacement hash/size;
-- exact write authority;
-- no overlapping file/directory contradiction.
+- `RETURNED` with local success → step `COMPLETE`;
+- `RETURNED` with conclusive local failure → step `FAILED`;
+- `GAVE_UP` → step `GAVE_UP`.
 
-## 44. Non-mutating command runner
+After `FAILED` or `GAVE_UP`, later steps stop and validation begins.
 
-Command runner:
+When settlement is `UNSETTLED` or `UNKNOWN`, persist that fact prominently. The Validator cannot produce Task Complete.
 
-1. validates exact argv;
-2. resolves `argv[0]` to an absolute executable and records its observable identity;
-3. validates cwd;
-4. constructs a sanitized explicit environment plus bounded declared overrides;
-5. validates mandatory `replay_safe`;
-6. records pre-command complete workspace identity;
-7. runs without shell;
-8. streams complete stdout/stderr to files;
-9. enforces timeout;
-10. records exit code;
-11. records post-command complete workspace identity;
-12. detects unexpected mutation.
+Same-Run resume never automatically re-invokes the step.
 
-Workspace identity strategy for MVP:
+## 51. Scope implementation
 
-- inspect the complete workspace tree, including `.git` and `.stt`;
-- exclude only the exact Boundary-owned stdout, stderr, and temporary files expected to change during that command;
-- record canonical path, object type, regular-file bytes, symlink target, and
-  relevant regular-file and directory mode bits where supported;
-- optimize implementation later only if the correctness scope remains complete;
-- document that hostile processes are out of scope.
+Scope controls:
 
-Unexpected change:
+- context selection;
+- responsibility wording;
+- expected path reporting;
+- named output validation;
+- audit findings.
 
-```text
-BLOCKED_UNKNOWN
-```
+It does not claim to prevent arbitrary process access outside scope.
 
-because the command’s effects may not be safely reversible or fully known.
+Tests must not assert sandbox behavior.
 
-A process disappearance or host interruption after command start but before a
-durable result is fail-closed. Persist `TERMINATION_UNKNOWN` unless positive
-termination is established. Replay requires all of: `replay_safe: true`, prior
-state `TIMED_OUT_CONFIRMED_TERMINATED`, unchanged complete workspace identity,
-and `attempt_count < maximum_attempts`; otherwise record `BLOCKED_UNKNOWN`.
-Never infer that the command did not complete.
-
-## 45. Mutation operation
-
-Before writing:
-
-1. validate replacement manifest;
-2. re-observe every destination;
-3. compare with admitted before-state;
-4. write before-images and absence markers;
-5. verify preserved before data;
-6. append `MUTATION_INTENT`.
-
-Installation:
-
-- create parent directories only when real and authorized;
-- write replacement to same-directory temporary sibling;
-- fsync file where supported;
-- atomically replace one file at a time;
-- unlink only for declared delete;
-- verify each final identity.
-
-After all entries verify:
-
-- write mutation result;
-- append `STEP_FINISHED COMPLETE`.
-
-No multi-file atomicity claim.
-
-## 46. Interruption injection
-
-Add deterministic test hooks at:
-
-1. before `MUTATION_INTENT`;
-2. immediately after `MUTATION_INTENT`;
-3. before first file installation;
-4. after one file installation;
-5. after all installations before verification;
-6. after result write before `STEP_FINISHED`;
-7. after `STEP_FINISHED`.
-
-Test hooks must not appear as a production recovery framework. They exist only to prove resume behavior.
-
-## 47. Resume after uncertainty
-
-When ledger contains `MUTATION_INTENT` without `STEP_FINISHED`:
-
-- never call installation again;
-- observe current destinations;
-- write `uncertainty.json`;
-- write step result `BLOCKED_UNKNOWN`;
-- append `STEP_FINISHED`;
-- run Validator.
-
-This transition must be idempotent.
-
-## 48. Tests
+## 52. Tests
 
 Prove:
 
-- create/replace/delete;
-- before-image exactness;
-- absent-before marker;
-- out-of-scope rejection;
-- `.git` and `.stt` semantic read/write rejection;
-- traversal and containment rejection;
-- symlink-component and symlink-leaf read/write rejection;
-- special-file read/write rejection;
-- current-state mismatch rejection before intent;
-- no mutation before intent;
-- interruption before intent permits clean retry;
-- interruption after intent never replays;
-- partial multi-file mutation becomes `BLOCKED_UNKNOWN`;
-- command stdout/stderr complete;
-- command timeout;
-- command nonzero exit;
-- resolved executable identity and sanitized environment;
-- full-workspace command accidental mutation detection;
-- mode-only workspace mutation detection;
-- malformed Planner output and completed provider failure are not retried;
-- confirmed terminated timeout retries only within finite `maximum_attempts`;
-- unknown termination blocks retry;
-- `replay_safe: false`, changed workspace identity, and exhausted attempt budget each block command replay;
-- replay-safe interrupted command retry only under the complete confirmed-timeout policy;
-- non-replay-safe interrupted command `BLOCKED_UNKNOWN`;
-- plain-directory success;
-- Git repository success without using Git as authority.
+- Worker creates, edits, moves, and deletes target files;
+- Worker runs an internal command and reports it;
+- named outputs are verified;
+- omitted or incorrect named output fails local acceptance;
+- changed-path report is persisted as evidence;
+- command changes target and may still Complete;
+- command nonzero exit may Fail according to declared local conditions;
+- stdout and stderr are complete and file-backed;
+- settled Worker give-up stops later steps;
+- unsettled command give-up stops later steps and prevents Task Complete;
+- same-Run resume does not replay abandoned work;
+- plain-directory and Git-directory target observations both work;
+- no target `.stt` orchestration state is written.
 
-## 49. Commit acceptance
+## 53. Commit acceptance
 
-Workspace safety and interruption matrix pass.
+Live execution and give-up tests pass.
 
 Commit:
 
 ```text
-stt: add safe workspace mutation
+stt: add live workers commands and give-up handling
 ```
 
 ---
 
-# Slice 6 — Frozen runtime and dogfooding
+# Slice 7 — Validator and prior-Run evidence
 
-## 50. Goal
+## 54. Goal
 
-Implement one frozen runtime per Run and prove self-modification safety.
+Implement independent investigation, fact-based terminal judgment, reusable reports, and verified prior-Run evidence.
 
-## 51. Production files
+## 55. Production files
 
-Create:
+Extend/create:
 
 ```text
-concepts/stt/runtime.py
-concepts/stt/bootstrap.py
+concepts/stt/boundary.py
+concepts/stt/task.py
+concepts/stt/contracts/validator.md
 ```
 
-## 52. Runtime dependency allowlist
+## 56. Final evidence index
 
-Define the runtime allowlist from explicit package files.
+Boundary creates a bounded Validator index referencing:
 
-Do not recursively copy the repository.
+- mission;
+- planning result;
+- every step result;
+- Worker reports;
+- command logs;
+- child results and reports;
+- current target observations;
+- required outputs;
+- selected prior evidence;
+- active or unsettled-operation facts.
 
-Provide a function:
+Do not inline complete logs, child ledgers, or broad target bodies.
 
-```python
-collect_runtime_files(source_root) -> list[RuntimeFile]
+## 57. Validator return
+
+Require:
+
+```text
+terminal status: COMPLETE | FAILED | BLOCKED_UNKNOWN
+concise reason
+material findings
+unknowns
+named terminal outputs
+validation report
 ```
 
-It uses one maintained literal list of exact runtime paths. Do not use globs during reconstruction and do not derive a dynamic import graph for the MVP.
+Boundary validates schema and verifies terminal outputs against current target or accepted Task artifacts.
 
-Tests must fail when a required runtime file is absent from the allowlist.
+## 58. Mechanical floors
 
-## 53. Freeze operation
+Boundary overrides an attempted Validator Complete only when:
 
-`freeze_runtime`:
+- orchestration state is invalid;
+- an outer operation may still be active;
+- a required terminal output is missing or unverifiable.
 
-1. determines source root;
-2. validates allowlist paths;
-3. copies bytes into a temporary persistent bundle;
-4. records exact file manifest plus Python interpreter realpath/version and observable provider/dependency identities;
-5. verifies all bytes;
-6. publishes bundle create-only;
-7. creates active temporary control copy;
-8. verifies active copy;
-9. re-executes from active control.
+Do not force terminal status solely from an intermediate step status.
 
-Persist source provenance as informational metadata:
+Tests must prove that Validator may independently establish Complete after a settled interrupted operation changed the target successfully.
 
-- source workspace path;
-- source commit when Git is available;
-- source file identities.
+## 59. Validator give-up
 
-Runtime correctness for STT-owned control source relies on the bundle manifest, not Git. The operating system, interpreter installation, provider service, and complete host environment are not frozen.
+If the Validator adapter returns Gave Up without an accepted semantic result:
 
-## 54. Reconstruction
+- preserve all evidence;
+- do not append `TASK_FINISHED`;
+- leave Task state `NEEDS_VALIDATION` with an operational blocker;
+- do not silently retry on same-Run resume;
+- allow a new Run to consume the evidence.
 
-`reconstruct_runtime`:
+## 60. Prior-Run evidence
 
-1. reads persistent manifest;
-2. validates bundle and required recorded external dependency compatibility;
-3. creates fresh active control directory;
-4. copies only bundle files;
-5. verifies active identities;
-6. re-executes.
+`start --prior-run` must:
 
-It must not read runtime source from the target workspace.
+1. validate the prior Run directory and runtime-independent evidence identities;
+2. select verified prior references;
+3. never merge ledgers or cursor state;
+4. bind selected evidence into the new root Task;
+5. allow the new Planner to decide whether to verify, continue, repair, replace, or decline.
 
-## 55. Dogfood scenario
+Eligible prior references include:
 
-Create a fake-provider root mission whose Plan:
+- submission;
+- planning result;
+- terminal result;
+- Validator report;
+- selected step reports and logs;
+- named outputs.
 
-1. Worker prepares a change to one active STT source file in the target workspace;
-2. mutation installs it;
-3. command/test verifies target workspace content;
-4. active generation A continues and validates successfully;
-5. a new Run freezes generation B from the changed workspace.
+Uncommitted prior files may be labeled diagnostic evidence but never accepted facts.
 
-Proofs:
-
-- generation A runtime manifest remains unchanged;
-- generation A imports remain under temporary control;
-- deleting target workspace STT source after root creation does not stop generation A;
-- generation B runtime identity differs and includes the new source.
-
-## 56. Tests
+## 61. Tests
 
 Prove:
 
-- exact literal allowlist and no reconstruction glob;
-- manifest verification;
-- interpreter and observable provider/dependency recording;
-- incompatible required dependency fails visibly;
-- excluded archive/tests/plans;
-- missing active runtime reconstruction;
-- corrupted persistent bundle rejection;
-- no reconstruction from workspace;
-- all child Tasks share root runtime identity;
-- source modification does not affect active runtime;
-- source deletion does not affect active runtime;
-- generation B sees later source.
+- normal Complete, Failed, and Blocked Unknown;
+- Planner Decline still runs Validator;
+- planning Gave Up still runs Validator;
+- settled interrupted work may be independently validated Complete;
+- insufficient interruption evidence becomes Blocked Unknown;
+- intermediate Failed does not mechanically force Task Failed;
+- unsettled operation rejects Validator Complete;
+- missing required output rejects Validator Complete;
+- Validator does not repair target in deterministic fixtures;
+- Validator report reaches ancestor Validator evidence;
+- new Run consumes verified prior Validator report;
+- prior state is not merged;
+- invalid prior reference is rejected;
+- Validator give-up leaves operational Needs Validation.
 
-## 57. Commit acceptance
+## 62. Commit acceptance
 
-Frozen runtime and dogfood tests pass.
+Validation and prior-Run tests pass.
 
 Commit:
 
 ```text
-stt: add frozen runtime
+stt: add validation and prior-run evidence
 ```
 
 ---
 
-# Slice 7 — CLI, status, and diagnosis
+# Slice 8 — CLI, diagnostics, qualification, and cleanup
 
-## 58. Goal
+## 63. Goal
 
-Expose the MVP without adding orchestration complexity.
+Expose the complete MVP, prove the architecture, remove accidental complexity, and stop.
 
-## 59. Production files
+## 64. Production files
 
 Create:
 
@@ -1361,643 +1184,279 @@ concepts/stt/cli.py
 scripts/stt.py
 ```
 
-## 60. Commands
+## 65. CLI
 
-### `start`
-
-```text
-stt start --workspace <path> --mission-file <path> --provider <fake|claude-code|codex> [--model <value>] [--effort <value>] [--maximum-attempts <positive-integer>] [--allow-live-provider] [--evidence <relative-path>]...
-```
-
-`provider` is required. `maximum_attempts` is finite and positive; omitted
-model/effort persist as `UNSPECIFIED`. `fake` never requires live authorization;
-`claude-code` and `codex` fail before launch without `--allow-live-provider`.
-Unsupported provider/model/effort combinations fail closed. `live_provider_authorized`
-is frozen in `run.json` at start; `stt run` cannot add or remove it, and any
-binding change requires a new Run.
-
-Behavior:
-
-1. validate workspace;
-2. read mission;
-3. validate explicit evidence references;
-4. bind provider routes;
-5. create unique Run root;
-6. freeze runtime and re-execute from frozen control without reading Task lifecycle state;
-7. acquire the exclusive writer lock in the frozen process before lifecycle publication;
-8. build and persist the deterministic root workspace index;
-9. create root Task with initial inputs and required outputs;
-10. run until terminal;
-11. print compact terminal receipt.
-
-### `run`
+### Start
 
 ```text
-stt run --run-root <path>
+stt start \
+  --workspace <target-path> \
+  --submission <submission-file> \
+  --provider <provider> \
+  [--model <model>] \
+  [--effort <effort>] \
+  [--prior-run <run-directory>]
 ```
 
 Behavior:
 
-- validate and reconstruct the persistent runtime without reading Task lifecycle state;
-- re-execute from frozen control;
-- acquire the exclusive Run writer lock in the frozen process or fail without lifecycle action;
-- validate persistent lifecycle state;
-- resume Lead;
-- do not change provider, model, effort, maximum attempts, or authorization;
+1. validate source, target, submission, and optional prior Run;
+2. freeze role and provider bindings;
+3. prepare copied Run runtime;
+4. re-execute from the copy;
+5. acquire writer lock;
+6. create `run.json` and root Task;
+7. execute until root terminal, invalid, or operationally blocked;
+8. print compact result, Run path, and resume command.
+
+### Run
+
+```text
+stt run --run-root <run-directory>
+```
+
+Behavior:
+
+- execute from copied runtime;
+- acquire writer lock;
+- validate identities and ledgers;
+- resume without replanning or replaying abandoned work;
 - print compact receipt.
 
-### `status`
+### Status
 
 ```text
-stt status --run-root <path>
+stt status --run-root <run-directory>
 ```
 
-Behavior:
+Report:
 
-- reconstruct and re-execute from the Run's frozen control without reading Task lifecycle state;
-- acquire a shared nonblocking Run lock;
-- report `RUN_BUSY` without reading changing lifecycle state when a writer is active;
-- otherwise remain read-only and validate ledgers;
-- report:
-  - run ID;
-  - runtime identity;
-  - root status;
-  - deepest active Task;
-  - next action;
-  - blocker;
-  - terminal result reference.
+- Run and runtime identity;
+- target identity;
+- root state;
+- deepest active Task;
+- next action;
+- give-up or invalid blocker;
+- terminal result reference;
+- exact resume command.
 
-### `diagnose`
+Remain read-only.
+
+### Diagnose
 
 ```text
-stt diagnose --run-root <path>
+stt diagnose --run-root <run-directory>
 ```
 
-Behavior:
+Report:
 
-- reconstruct and re-execute from the Run's frozen control without reading Task lifecycle state;
-- acquire a shared nonblocking Run lock;
-- report `RUN_BUSY` when a writer is active;
-- otherwise remain strictly read-only and report invalid identity, missing file, ledger corruption, mutation uncertainty, or provider failure;
-- never write diagnosis artifacts or repair automatically.
+- missing Run directory;
+- copied-runtime corruption;
+- target mismatch;
+- ledger corruption;
+- conflicting publication;
+- planning or operation give-up;
+- unsettled operation;
+- Validator give-up;
+- missing or mismatched artifact.
 
-## 61. Output
+Never repair automatically.
 
-Use canonical JSON option and readable text option.
+## 66. Public exit codes
 
-No full logs or bodies on stdout.
-
-Print precise paths and hashes.
-
-## 62. Exit codes
-
-Define a small stable set, for example:
+Use a small stable set, for example:
 
 ```text
-0 COMPLETE or successful read-only query
-2 FAILED
-3 BLOCKED_UNKNOWN
-4 INVALID_RUN
-5 USAGE_ERROR
+0  COMPLETE or successful read-only query
+2  FAILED
+3  BLOCKED_UNKNOWN
+4  OPERATIONALLY_BLOCKED
+5  INVALID_RUN
+6  USAGE_ERROR
 ```
 
-Avoid mapping every internal error to a public exit code.
-
-## 63. Tests
-
-Prove:
-
-- start to COMPLETE with fake provider;
-- start to FAILED;
-- start to BLOCKED_UNKNOWN;
-- resume unfinished child;
-- status no mutation;
-- diagnose ledger corruption;
-- no body leakage to stdout;
-- plain directory;
-- path with spaces;
-- multiple Runs without collisions;
-- competing writer rejected;
-- status and diagnose report `RUN_BUSY` without reading changing state while a writer exists.
-
-## 64. Commit acceptance
-
-CLI scenarios pass.
-
-Commit:
-
-```text
-stt: add cli and diagnostics
-```
-
----
-
-# Slice 8 — Full qualification and cleanup
-
-## 65. Goal
-
-Prove every architecture qualification scenario, remove accidental complexity, and stop.
-
-## 66. Qualification test
-
-Create one top-level qualification module:
-
-```text
-tests/concepts/stt/test_qualification.py
-```
-
-It should compose existing helpers rather than duplicate all low-level assertions.
-
-Run at least these end-to-end scenarios.
-
-### Q1 — Simple research Task
-
-```text
-root Planner
-→ command/worker evidence step
-→ root Validator
-→ COMPLETE
-```
-
-### Q2 — Root mutation Task
-
-```text
-Planner
-→ Worker staged replacement
-→ mutation
-→ command test
-→ Validator
-→ COMPLETE
-```
-
-### Q3 — Child Task
-
-```text
-root Planner
-→ child Task
-→ child Planner
-→ child steps
-→ child Validator
-→ parent continuation
-→ root Validator
-```
-
-### Q4 — Grandchild Task
-
-Prove exact DFS order.
-
-### Q5 — Child semantic failure
-
-Prove:
-
-- child Validator runs;
-- parent Validator runs;
-- root Validator runs;
-- no later sibling step runs.
-
-### Q6 — Mutation uncertainty
-
-Interrupt after `MUTATION_INTENT`.
-
-Prove:
-
-- no replay;
-- current Task `BLOCKED_UNKNOWN`;
-- every ancestor Validator runs;
-
-### Q7 — Retry and provider contracts
-
-Prove malformed Planner output and completed provider failure are not retried;
-only a confirmed terminated timeout retries within finite `maximum_attempts`;
-unknown termination blocks; and command replay is blocked by
-`replay_safe: false`, changed workspace identity, or exhausted budget. Use
-controlled fake executables to prove launcher argv, request/raw-return
-persistence, timeout classification, bounded output, dispatch mismatch,
-requested routing, observable actual routing, truthful `UNKNOWN`, unavailable
-executable failure, and `--allow-live-provider` enforcement for both Claude
-Code and Codex. No paid live call is made.
-
-### Q8 — Atomic Task publication
-
-Prove root and child creation constructs all initial authoritative files under a
-same-parent temporary directory, including `TASK_CREATED`, then publishes by
-atomic rename and verifies the final directory. Inject interruption before
-temporary construction completes, after temporary files exist, and immediately
-after rename; prove temporary residue is non-authoritative, a pre-existing final
-path fails closed, complete published Tasks resume normally, no visible final
-Task lacks `TASK_CREATED`, and parent-directory fsync limitations are reported
-honestly.
-
-### Q9 — Command safety
-
-Prove resolved executable identity, sanitized environment, complete-workspace accidental-mutation detection, replay-safe interruption retry, and non-replay-safe `BLOCKED_UNKNOWN`.
-
-### Q10 — Plain directory
-
-No `.git` exists.
-
-Full successful change and validation.
-
-### Q11 — Git repository
-
-Git exists but STT does not commit, stage, or use Git as lifecycle authority.
-
-### Q12 — Dogfood generation
-
-Generation A modifies target STT source and completes from frozen A. Generation B freezes changed source.
-
-### Q13 — Writer and durable publication
-
-Prove a competing writer is rejected and one torn trailing ledger append is
-recovered under lock. Task temporary residue is non-authoritative and is never
-adopted; conflicting or incomplete publication state fails closed, and
-mutation uncertainty is never bypassed.
-
-### Q14 — Child evidence and output provenance
-
-Prove root/child initial-input ownership, child required-output binding, and rejection of Validator-invented or mismatched terminal outputs.
-
-The complete qualification set is 101 scenarios: baseline scenarios 1–74 and
-the explicit added scenarios 75–101 below.
-
-#### Added numbered scenarios
-
-#### Retry and persisted blocker behavior
-
-75. Malformed Planner is not retried in process.
-76. Malformed Planner remains blocked after restart.
-77. Completed Worker failure remains blocked after restart.
-78. Completed Validator failure remains blocked after restart.
-79. Confirmed terminated timeout retries within budget.
-80. Exhausted timeout remains blocked after restart.
-81. Unknown termination remains blocked after restart.
-
-#### Recorded launcher and provider adapters
-
-82. The canonical attempt disposition persists.
-83. Request identity binds the attempt disposition.
-84. The Claude Code adapter translates the common request.
-85. The Codex adapter translates the common request.
-86. Both live adapters fail before launch without authorization.
-87. Omitted model and effort remain explicitly unspecified.
-88. Unsupported provider combinations fail closed.
-
-#### Permission-only mutation detection
-
-89. Regular-file mode-only mutation is detected.
-90. Directory mode-only mutation is detected.
-91. Canonical path and object type are recorded.
-92. Regular-file bytes and symlink target are recorded where applicable.
-93. ACL, ownership, and extended-attribute limits are reported honestly.
-
-#### Atomic Task publication
-
-94. Root publication has `TASK_CREATED` before rename.
-95. Child publication has `TASK_CREATED` before rename.
-96. Interruption before temporary construction leaves no authoritative final Task.
-97. Temporary residue is non-authoritative.
-98. Post-rename interruption verifies the final directory.
-99. A pre-existing final path fails closed.
-100. Complete publication resumes normally.
-101. No visible final Task lacks `TASK_CREATED`.
-
-## 67. Active reachability check
-
-Add a deterministic test that imports or statically scans active STT modules and fails if they import:
-
-```text
-archive.target-task-overbuilt
-concepts.target_task
-```
-
-Adapt exact prohibited namespaces to actual repository paths.
-
-Also reject references to archived lifecycle terms in production STT source when they imply active behavior:
-
-```text
-Fix Loop
-Find Loop
-three-pass
-ADVANCE
-candidate commit
-rollback
-scheduler
-```
-
-Documentation comments explaining exclusions are allowed.
-
-## 68. Context-bound tests
-
-Instrument fake provider requests.
-
-Assert:
-
-- Lead receipt maximum remains small;
-- Planner receives only mission, authority, required outputs, explicit initial inputs, and deterministic workspace index;
-- Worker receives only declared inputs;
-- Validator receives final index plus selected files;
-- child ledger is not included in parent provider requests;
-- command logs are referenced, not inlined.
-
-Use byte limits as test configuration constants rather than hidden magic numbers.
-
-## 69. Full repository tests
+Do not expose every internal exception as a distinct public code.
+
+## 67. End-to-end qualification
+
+Create a top-level qualification module that composes focused helpers rather than duplicating all assertions.
+
+Prove at least:
+
+1. root Worker success;
+2. root command success that changes target;
+3. Worker edits target and returns verified output;
+4. target changes are not automatic command failure;
+5. evidence gathering followed by byte-identical child mission;
+6. child and grandchild depth-first order;
+7. Planner Decline;
+8. planning Gave Up and audit;
+9. child failure validates every ancestor;
+10. Worker give-up stops later steps;
+11. unsettled command give-up prevents Task Complete;
+12. settled interruption independently validates Complete;
+13. insufficient evidence becomes Blocked Unknown;
+14. same-Run resume preserves planning result;
+15. new Run consumes prior Validator report;
+16. generation A survives target Skeptic edits and deletion;
+17. source copy race is detected;
+18. deleted Run root is non-resumable;
+19. competing writer is rejected;
+20. torn tail is handled narrowly and interior corruption fails;
+21. invalid publication never yields semantic success;
+22. plain directory succeeds;
+23. Git repository succeeds without Git lifecycle authority;
+24. archived runtime imports are absent;
+25. controlled provider-adapter tests pass;
+26. full repository suite passes.
+
+## 68. Static consistency checks
+
+Fail qualification if active production STT contains obsolete architecture concepts or dependencies.
+
+Check that:
+
+- only `worker`, `command`, and `task` step kinds exist;
+- no fourth target-change installation step exists;
+- commands have no effect classification field;
+- commands have no automatic replay declaration;
+- Workers operate against the live target;
+- Run state is outside the target;
+- same-Run resume never replans;
+- same-mission child delegation has no depth field;
+- Validator terminal judgment is not mechanically copied from step status;
+- active STT imports no archived Target Task package.
+
+Comments explaining exclusions are allowed.
+
+## 69. Context tests
+
+Instrument fake provider requests and assert:
+
+- Lead receipts remain compact;
+- Planner receives only its bounded planning inputs;
+- Worker receives one step and exact inputs;
+- Validator receives a bounded evidence index;
+- child ledgers are referenced rather than copied;
+- command logs remain file-backed;
+- prior Run evidence is selected rather than recursively loaded.
+
+Use explicit configurable byte limits in tests.
+
+## 70. Full repository checks
 
 Run:
 
 - focused STT suite;
-- full repository test suite;
+- full repository suite;
 - Python compile checks;
-- formatting/lint checks already used by the repository;
-- shell syntax for scripts;
+- repository formatting and lint checks already in use;
+- shell syntax checks for scripts;
 - `git diff --check`.
 
-Do not add a new tool solely for this implementation unless necessary.
+Do not introduce a new tool solely for this implementation unless required.
 
-## 70. Complexity review
+## 71. Complexity review
 
-Before final commit, inspect:
+Before final acceptance, inspect:
 
-- module count;
 - duplicated schema logic;
-- duplicated path logic;
-- duplicated lifecycle logic;
-- unused abstractions;
+- duplicated lifecycle derivation;
+- duplicated path and identity logic;
+- unnecessary provider abstractions;
+- hidden target containment claims;
+- automatic replay paths;
+- mutable cursors;
 - dead compatibility code;
 - broad exception catches;
-- unbounded context;
-- hidden Git assumptions.
+- unbounded model context;
+- hidden Git assumptions;
+- unused modules.
 
-Remove mechanisms that are not required by an invariant or qualification test.
+Delete mechanisms not required by an architecture invariant or qualification.
 
-Do not optimize for an arbitrary line-count target. Explain any unusually large module.
-
-## 71. Final commit
+## 72. Final commit
 
 Commit:
 
 ```text
-stt: qualify mvp invariants
+stt: add cli and qualify mvp
 ```
 
 Stop after all qualification scenarios and the full repository suite pass.
 
-Do not begin later recovery, concurrency, rollback, publication, or generalized orchestration work.
-
 ---
 
-## 72. Detailed invariant-to-code map
+## 73. Invariant-to-code map
 
 | Architecture invariant | Primary code | Primary tests |
 |---|---|---|
-| one Task lifecycle | `task.py`, `lead.py` | `test_lead.py`, `test_qualification.py` |
-| one Run writer | `run_lock.py`, CLI/bootstrap | `test_run_lock.py`, qualification |
-| durable publication and non-authoritative temporary residue | `launcher.py`, `task.py`, `boundary.py` | torn-tail/publication tests |
-| every Task plans | `boundary.py`, `lead.py` | `test_lead.py`, `test_recursive_tasks.py` |
-| four step kinds | `plan.py` | `test_plan.py` |
-| every call through Boundary | `lead.py`, `boundary.py` | `test_boundary.py`, call spies |
-| durable DFS | `task.py`, `lead.py` | `test_recursive_tasks.py` |
-| child evidence/output contract and result return | `boundary.py`, `task.py` | `test_recursive_tasks.py` |
-| every Task validates | `lead.py`, `boundary.py` | failure propagation tests |
-| failure does not bypass ancestors | `lead.py` | child/grandchild failure tests |
-| Task-local ledger | `ledger.py`, `task.py` | `test_ledger.py`, recursion tests |
-| context references, not bodies | `boundary.py`, `receipt.py` | `test_context_bounds.py` |
-| common read/write path admission | `workspace.py`, `boundary.py` | `test_workspace.py`, boundary tests |
-| separate Validator role invocation | `boundary.py`, provider | validator context tests |
-| Workers stage only | `boundary.py`, `workspace.py` | `test_boundary.py`, `test_workspace.py` |
-| commands non-mutating and replay-explicit | `command.py` | `test_command.py` |
-| deterministic mutation only | `mutation.py` | `test_workspace.py` |
-| before-images | `mutation.py` | before-image tests |
-| intent before mutation | `mutation.py`, `ledger.py` | interruption matrix |
-| uncertainty never replayed | `mutation.py`, `lead.py` | `test_mutation_interruptions.py` |
-| one frozen runtime | `runtime.py`, `bootstrap.py` | `test_runtime.py` |
-| reconstruction from bundle | `runtime.py` | runtime deletion tests |
-| plain directories | `workspace.py` | plain-directory E2E |
-| Git optional | `workspace.py` | Git/plain comparison |
-| no archived compatibility | package imports | active reachability test |
+| one Task lifecycle | `task.py`, `lead.py` | lead and qualification tests |
+| copied Run runtime | `runtime.py`, `bootstrap.py` | runtime and self-update tests |
+| authoritative state outside target | Bootstrap and Task paths | runtime and CLI tests |
+| immutable planning outcome | `plan.py`, `task.py` | planning tests |
+| Plan, Decline, Gave Up | `plan.py`, `boundary.py` | planning and provider tests |
+| three step kinds | `plan.py` | Plan-schema tests |
+| same-mission recursion without cap | `lead.py`, `task.py` | recursive Task tests |
+| every outer call through Boundary | `lead.py`, `boundary.py` | Boundary call-spy tests |
+| live Worker execution | Boundary and Worker contract | Worker E2E tests |
+| exact command execution | `command.py`, `launcher.py` | command tests |
+| give-up stops later steps | Lead and Boundary | interruption tests |
+| no automatic replay | Lead and cursor derivation | resume tests |
+| fact-based Validator | Boundary and Validator contract | validation tests |
+| unsettled operation blocks Complete | Boundary | validation-floor tests |
+| Task-local ledger | `ledger.py`, `task.py` | ledger and recursion tests |
+| deterministic child path | `task.py`, `lead.py` | child resume tests |
+| compact context | `boundary.py`, `receipt.py` | context tests |
+| new Run prior evidence | Bootstrap and Boundary | prior-Run tests |
+| plain directory and Git optional | `workspace.py` | target comparison tests |
+| one writer | `run_lock.py` | locking tests |
+| no archive reachability | package imports | static reachability test |
 
 ---
 
-## 73. Schema and file acceptance checklist
-
-Before declaring MVP complete, verify:
-
-### Run
-
-- `run.json` canonical;
-- runtime identity present;
-- root path fixed;
-- bindings fixed;
-- mutating execution holds one exclusive writer lock.
-
-### Task
-
-- `task.json` immutable;
-- mission hash correct;
-- `workspace-index.json` bounded, deterministic, and identity-bound;
-- parent binding correct;
-- initial inputs and required outputs bound;
-- authority canonical;
-- ledger begins with matching `TASK_CREATED`.
-
-### Plan
-
-- canonical;
-- four kinds only;
-- references backward only;
-- outputs named;
-- authority valid;
-- Task input/output contract valid;
-- command replay safety explicit;
-- immutable after acceptance.
-
-### Step
-
-- deterministic directory;
-- request persisted before invocation;
-- raw return preserved;
-- accepted result canonical;
-- one terminal `STEP_FINISHED`;
-- incomplete or temporary result is non-authoritative and conflicting publication fails;
-- mutation orphan results never bypass `MUTATION_INTENT` uncertainty.
-
-### Child
-
-- canonical path;
-- parent Plan hash bound;
-- initial inputs and required outputs bound;
-- result provenance verified before parent finish;
-- no child history copied upward.
-
-### Validator
-
-- final index bounded;
-- separate role invocation with no Planner/Worker conversation;
-- hidden isolation reported honestly;
-- report persisted;
-- output provenance and mechanical status/required-output floors applied;
-- `TASK_FINISHED` commits report and result.
-
-### Mutation
-
-- before-images;
-- replacement bytes;
-- intent event;
-- installed verification;
-- no replay after uncertainty.
-
-### Runtime
-
-- literal exact allowlist;
-- interpreter and observable external dependency identity recorded;
-- persistent bundle verified;
-- active copy verified;
-- no workspace import after freeze.
-
----
-
-## 74. Expected implementation risks and smallest responses
-
-### Risk: Plan schema becomes a workflow language
-
-Response:
-
-- keep only four kinds;
-- no conditions;
-- no loops;
-- no dynamic branching;
-- no arbitrary operation plugins.
-
-### Risk: Boundary becomes a monolith
-
-Response:
-
-- Boundary remains the single façade;
-- delegate deterministic algorithms to focused modules;
-- do not create multiple gateways or agent roles.
-
-### Risk: Provider adapter dictates architecture
-
-Response:
-
-- keep a small provider protocol;
-- isolate host details under `providers/`;
-- qualify with fake provider.
-
-### Risk: economical Worker causes bad mutation
-
-Response:
-
-- narrow step;
-- exact scope;
-- staged output;
-- deterministic manifest validation;
-- allow strong Worker only when frozen and selected;
-- independent final Validator;
-- honest failure.
-
-### Risk: command mutates unexpectedly or is replayed ambiguously
-
-Response:
-
-- command steps declare non-mutation and `replay_safe`;
-- resolve executable and sanitize environment;
-- complete-workspace before/after identity;
-- `BLOCKED_UNKNOWN` on unexpected mutation or unsafe interrupted replay;
-- no rollback.
-
-### Risk: self-update imports changed workspace code
-
-Response:
-
-- re-exec early;
-- assert module paths are under frozen control;
-- runtime tests delete workspace STT source.
-
-### Risk: old Target Task code is tempting to reuse
-
-Response:
-
-- active reachability test;
-- no compatibility imports;
-- reimplement small primitives with STT schemas.
-
-### Risk: two processes advance one Run
-
-Response:
-
-- one OS-backed exclusive writer lock;
-- second writer fails before lifecycle action;
-- no scheduler, lease, or distributed lock.
-
-### Risk: resume logic grows into recovery framework
-
-Response:
-
-- derive state from ledger;
-- support only specified interruption cases and one torn trailing append; temporary residue is never adopted;
-- diagnose all other invalid state;
-- no automatic generalized repair.
-
----
-
-## 75. Definition of done
+## 74. Definition of done
 
 The STT MVP is done when:
 
-1. the corrected architecture file remains the source of truth;
-2. all planned production files are implemented or deliberately consolidated;
-3. every qualification scenario passes;
+1. architecture and implementation match;
+2. all implemented production modules are necessary;
+3. all qualification scenarios pass;
 4. focused STT tests pass;
 5. full repository tests pass;
-6. active STT has no archived Target Task reachability;
-7. plain-directory and Git-directory scenarios both pass;
-8. competing writer and torn-tail proofs pass; Task publication uses complete
-   same-parent temporary directories and never adopts temporary residue;
-9. root, child, and grandchild lifecycle proofs pass;
-10. child evidence and terminal-output provenance proofs pass;
-11. every failure path still calls every ancestor Validator;
-12. mutation uncertainty is never replayed;
-13. frozen runtime dogfood passes with honest external-dependency limits;
-14. CLI start/run/status/diagnose pass;
-15. no compatibility or deferred feature was added;
-16. final diff contains no unexplained mechanism;
-17. all Planner, Worker, and Validator retry paths have finite
-    `maximum_attempts` and require `TIMED_OUT_CONFIRMED_TERMINATED`;
-18. mandatory recorded launcher, Claude Code adapter, and Codex adapter tests
-    pass with `--allow-live-provider` enforcement and no paid call;
-19. complete workspace identity observes supported mode bits and detects a
-    mode-only mutation;
-20. root and child Task creation has no visible final directory without
-    `TASK_CREATED`;
-21. implementation stops.
+6. copied runtime self-update proof passes;
+7. source-copy race detection passes;
+8. plain-directory and Git-directory scenarios pass;
+9. same-mission delegation and Planner Decline pass;
+10. settled and unsettled give-up behavior pass;
+11. same-Run resume never replans or replays abandoned work;
+12. prior-Run evidence starts a distinct new lifecycle;
+13. Validator may independently establish completion from facts;
+14. unsettled execution cannot yield Complete;
+15. no authoritative state is written under the target;
+16. active STT imports no archived Target Task code;
+17. no containment, rollback, or complete-effect-detection claim is made;
+18. CLI start, run, status, and diagnose pass;
+19. final diff contains no unexplained mechanism;
+20. implementation stops.
 
 ---
 
-## 76. Final execution instruction
+## 75. Final execution instruction
 
 ```text
 Implement only plans/stt-mvp-architecture-plan.md.
 
 Use this implementation plan as the ordered build map.
 
-Begin from the final documentation commit containing both plans.
+Build small vertical slices. Add deterministic tests with each slice. Preserve
+prior passing behavior. Remove unnecessary machinery before each commit.
 
-Make small reviewable commits.
+Do not restore archived Target Task behavior. Do not add concurrency, rollback,
+a scheduler, a workflow language, automatic Git publication, target sandboxing,
+semantic recursion limits, dynamic Plan editing, or automatic replay of
+abandoned work.
 
-For each slice:
-- implement the smallest vertical behavior;
-- add focused deterministic tests;
-- run prior STT tests;
-- inspect the diff for unnecessary machinery;
-- commit only when the slice invariant is proven.
-
-Do not copy the archived Target Task lifecycle.
-Do not add compatibility.
-Do not add concurrency, rollback, generalized recovery, RunSkeptic loops,
-three-pass convergence, ADVANCE protocols, Git publication, or remote
-integration.
-
-Stop when the STT MVP qualification scenarios and full repository tests pass.
-Do not continue into later features.
+Stop when the focused qualification scenarios and the full repository suite
+pass. Do not continue into later features.
 ```
