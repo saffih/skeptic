@@ -5,6 +5,7 @@ This repository is a portable prompt and review library. Its capabilities valida
 ## Entry map
 
 - Review an artifact, decision, or RunSkeptic: read `skeptic.md` and only explicitly applicable companions.
+- Write or review a design, architecture, or software design document (SDD): read `docs/well.md`, because that file is the canonical WELL profile for design documentation.
 - Lead execution: read `agents/lead_agent.md`; add `agents/model_routing_policy.md` when routing is needed and `agents/agent_return_contract.md` for delegated returns.
 - Target Task planning: dispatch the bounded Planner in `agents/planner.md` before execution; its return is advisory and requires Lead validation and acceptance. Supplied drafts are Planner input only.
 - Substantive bounded plan construction or repair for ordinary work: use the bounded Planner in `agents/planner.md` when focused construction materially helps; its output is not execution authority.
