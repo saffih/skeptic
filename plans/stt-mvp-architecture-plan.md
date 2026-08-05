@@ -1,9 +1,9 @@
 # STT MVP Architecture Plan
 
-**Status:** Canonical candidate — implementation prohibited until the unchanged architecture and implementation plan pass WELL, RunSkeptic, and promotion review
+**Status:** Architecture candidate — implementation-plan conformance update waits for architecture convergence, and implementation remains prohibited until the unchanged pair passes WELL, RunSkeptic, and promotion review
 **Repository:** `saffih/skeptic`
 **Historical reconstruction base:** `74c4f6a2c34da501101141525c8a34d691c384a1`
-**Companion implementation plan:** `plans/stt-mvp-implementation-plan.md`
+**Companion implementation plan:** `plans/stt-mvp-implementation-plan.md` — pending conformance update after architecture convergence
 **Document profile:** `docs/well.md`
 **Scope:** STT MVP runtime architecture
 
@@ -11,7 +11,9 @@ This document is the sole authority for STT runtime meaning, because one normati
 
 The implementation plan owns construction order and executable proof but may not redefine lifecycle meaning, because proof planning and semantic authority are different responsibilities.
 
-This architecture states only the minimum complete semantic decisions, invariants, boundaries, and warrants needed to define what STT must mean without implementation guesswork, while the implementation plan owns construction, schemas, algorithms, and proof detail, because architecture should constrain what must be true without prescribing how it is built.
+A proposition belongs in this architecture only when omitting it would leave runtime meaning ambiguous, permit a materially unsafe implementation to claim conformance, or remove a necessary falsification path, because architecture should constrain what must be true without prescribing construction.
+
+Concrete serialization schemas, file and directory conventions, algorithms, construction order, and executable proof belong to the implementation plan while this architecture retains required semantic fields and meanings, because implementation must not invent lifecycle semantics yet needs one exact build contract.
 
 ---
 
@@ -37,7 +39,7 @@ The following rules dominate narrower text, because one general rule should repl
 | Trusted thinking, mechanical control | Planner and Validator own semantic judgment while Lead and Boundary enforce lifecycle integrity and operational admission | mechanical code cannot replace contextual reasoning safely |
 | Free persisted context | the authoritative STT filesystem is the history interface, Planner and Validator may read the complete current STT tree, and Planner may delegate that read ability to any planned entity | runtime-selected context can omit information needed for correct reasoning |
 | No semantic recursion limits | Planner may create any child-Task structure, including byte-identical parent missions, and Validator may repeat the same Task for as many useful Rounds as it judges necessary | arbitrary count limits would override the thinking roles’ mandates |
-| Fresh work, never replay | every Round, child Task, and continuation uses fresh identities while no outer operation launches twice after a launch marker | continuation is legitimate while replay after uncertain effects is unsafe |
+| Fresh work, never replay | every Round, child Task, and continuation uses fresh identities while actual or uncertain launch permanently forbids another launch of the same OperationRequest | continuation is legitimate while replay after possible effects is unsafe |
 | Live target, bounded admission | effectful work reaches the live target only through admitted Worker routes or command profiles while hidden process behavior remains outside containment claims | STT can constrain constructed requests but not arbitrary process behavior |
 | Append-only truth | accepted lifecycle facts are immutable and ledger-backed while resume completes only uniquely determined non-effectful transitions | reconstruction becomes unsafe when accepted facts can be replaced |
 | Judgment is not transport | mission success, failure, and uncertainty remain separate from provider/process return and local-settlement facts | operational events do not prove semantic outcomes |
@@ -129,7 +131,6 @@ Planner may choose the following forms, because each can be the simplest path fr
 
 - direct execution;
 - investigation;
-- zero-step validation;
 - any number or depth of child Tasks;
 - a child mission identical to its parent;
 - a different approach from earlier Planners;
@@ -201,7 +202,7 @@ Planner may grant the same read-only access or a convenient starting subtree to 
 
 Planner owns the semantic consequences of delegated visibility, because STT cannot promise unrestricted context while independently redacting material the Planner chose to expose.
 
-Roles may use ordinary read and search tools such as `ls`, `find`, `tree`, `cat`, `grep`, `rg`, `jq`, `sed`, `head`, and `tail`, because direct filesystem navigation is simpler and more flexible than a custom history-query protocol.
+Roles may use read-only equivalents of listing, tree navigation, finding, file reading, ranged reading, text search, structured JSON querying, and tail inspection, because direct filesystem navigation is simpler and more flexible than a curated history package.
 
 Read-tool calls remain part of the entity’s one outer operation and persist the request, exact source identities or ranges, and generated search results without becoming separate lifecycle steps, because immutable source files need not be copied again merely to reconstruct what was read.
 
@@ -333,11 +334,13 @@ Valid return combinations are limited to the following forms, because every othe
 
 `SETTLED` proves only that the observed local process group and communication channel ended, because remote, billing, logging, daemon, escaped-child, and other external effects may remain.
 
-Before a launch marker, launch is mechanically disproved and a later invocation may re-evaluate prerequisites and launch that exact request, because no operation has yet occurred.
+Before launch intent is persisted, launch is mechanically disproved and a later invocation may re-evaluate prerequisites and launch that exact OperationRequest, because no operation has yet occurred.
 
-After a launch marker, the OperationRequest is never launched again in the same Run regardless of role, timeout, return kind, or termination observation, because a second launch could replay hidden effects.
+After launch intent is persisted, another Attempt for the same OperationRequest is permitted only when the adapter positively proves that it created no process and sent no provider request, because proven absence of launch means no operation occurred.
 
-A launch marker without a complete uniquely recoverable call outcome after interruption makes the Run `NON_RESUMABLE`, because STT cannot infer what the launched operation did.
+Actual launch or uncertainty about whether launch occurred permanently forbids another launch of the same OperationRequest in the Run, because a second launch could replay hidden effects.
+
+Interruption after launch intent without either complete proof of non-launch or a uniquely recoverable call outcome makes the Run `NON_RESUMABLE`, because STT cannot infer whether the operation occurred.
 
 After every outer call and before accepting its result, Boundary revalidates frozen runtime, Run, target-root, Task, Round, request, and prelaunch ledger-prefix identities, because lower-trust activity must not alter authoritative context unnoticed.
 
@@ -349,7 +352,9 @@ Settled Validator failure leaves the Task `OPERATIONALLY_STOPPED` without a miss
 
 Any relevant `UNSETTLED` or `UNKNOWN` operation blocks later steps and Validator execution, because semantic judgment must not race possibly active local work.
 
-Only an accepted WorkerResult or CommandResult may establish `SATISFIED` or `NOT_SATISFIED`, because settled transport failure is not semantic proof.
+Only an accepted WorkerResult or CommandResult may establish the corresponding Worker or command step’s `SATISFIED` or `NOT_SATISFIED` outcome, because settled transport failure is not semantic proof.
+
+Validator alone establishes the Task-level judgment from all committed admissible evidence, including accepted step outcomes, child results, existing verified artifacts, and a Planner `DECLINE`, because Task completion is broader than any one execution result.
 
 Settled `ERR`, `REJECTED`, or `NO_RETURN` always maps to `INDETERMINATE` evidence, because no accepted role result exists.
 
@@ -494,13 +499,9 @@ NOT_SATISFIED
 INDETERMINATE
 ```
 
-Operational states are defined as follows, because operators and resume logic need deterministic names for nonsemantic conditions:
+Public operational outcomes are defined as follows, because operators need stable names for conditions that prevent or end advancement without fabricating mission meaning:
 
 ```text
-NEEDS_ROUND
-NEEDS_PLANNING
-NEEDS_STEP
-NEEDS_VALIDATION
 OPERATIONALLY_BLOCKED
 OPERATIONALLY_STOPPED
 NON_RESUMABLE
@@ -508,7 +509,9 @@ INVALID
 TERMINAL
 ```
 
-An accepted `REPEAT` transitions directly to `NEEDS_ROUND` without `AWAITING_REPEAT`, because Validator already authorized continuation.
+Lead derives the unique next lifecycle action from committed history without a mutable cursor, while exact internal derivation labels and precedence belong to the implementation plan, because orchestration mechanics must be deterministic without becoming architecture vocabulary.
+
+An accepted `REPEAT` starts the next contiguous Round automatically without `AWAITING_REPEAT`, because Validator already authorized continuation.
 
 `PRELAUNCH_BLOCKED` and `RUN_BUSY` are transient invocation or query outcomes rather than persisted lifecycle states, because absence of launch and temporary lock ownership are current observations rather than committed semantic facts.
 
@@ -519,9 +522,14 @@ stt start --workspace <target> --task-spec <spec> --routing-file <routing> [--pr
 stt run --run-root <run-root>
 stt status --run-root <run-root>
 stt diagnose --run-root <run-root>
+stt stop --run-root <run-root>
 ```
 
 `start` and `run` advance through deterministic transitions, child Tasks, and Validator-requested Rounds until terminal, blocked, stopped, non-resumable, invalid, or prelaunch-blocked, because ordinary continuation should not require repeated caller approval.
+
+`stop` records an operator cancellation without creating a mission judgment, because operational control must remain available without overriding Planner or Validator semantics.
+
+Cancellation between outer operations derives `OPERATIONALLY_STOPPED`, while cancellation during possibly active work follows the ordinary settlement rules and may derive `OPERATIONALLY_BLOCKED` or `NON_RESUMABLE`, because STT must not claim quiescence it cannot prove.
 
 `status` and `diagnose` are read-only and never repair state, because observation must not alter the lifecycle being observed.
 
