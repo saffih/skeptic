@@ -1,6 +1,6 @@
 # STT MVP Architecture Plan
 
-**Status:** Canonical cumulative candidate; historical reconstruction complete; implementation prohibited until the final independent review gates pass
+**Status:** Implementation-ready canonical architecture; historical reconstruction complete
 **Repository:** `saffih/skeptic`
 **Historical reconstruction base:** `74c4f6a2c34da501101141525c8a34d691c384a1`
 **Implementation-base rule:** implementation branches from the exact repository commit that contains the accepted unchanged canonical document pair; that commit is recorded in the implementation handoff or execution receipt after document promotion and is not inserted retroactively into the accepted files
@@ -23,9 +23,11 @@ The complete normative WELL profile is defined in `docs/well.md`, because one ca
 
 ## 1. Purpose and authority
 
-Safe Target Task (STT) executes one immutable mission against a live target through bounded planning, sequential execution, independent validation, and durable evidence, because live execution requires admitted profiles and truthful evidence without a containment claim.
+Safe Target Task (STT) executes one immutable mission against a live target through bounded planning, sequential execution, independent validation, and durable evidence, because ordinary agent execution can lose identity, exceed intended authority, replay uncertain operations, or claim unsupported completion.
 
-These controls are required because ordinary agent execution can lose identity, repeat uncertain operations, accept unverified outputs, or claim completion without inspectable support.
+`Safe` means that STT preserves its own control and evidence integrity, bounds admitted work, reports uncertainty truthfully, and stops visibly when required confidence is lost, because an open target cannot be made continuously stable or fully contained by this MVP.
+
+Safety does not mean guaranteed mission completion, exclusive target access, rollback, complete effect detection, or continuing target-state validity, because external actors and systems remain outside STT control.
 
 The STT MVP architecture is the only source of truth for STT runtime meaning, because runtime meaning needs one canonical owner and an explicit protection boundary.
 
@@ -37,7 +39,7 @@ Every retained proposition is represented in the current contracts and the canon
 
 Historical P0–P5 and W0–W4 material is secondary evidence only and cannot override this canonical architecture, because repository implementation needs one current source of truth.
 
-STT protects, because runtime meaning needs one canonical owner and an explicit protection boundary:
+STT protects the following integrity properties, because each one addresses a distinct way ordinary agent execution can lose control, evidence, or truthful completion:
 
 - immutable mission, authority, routing, policy, and accepted planning decisions;
 - separation of planning, execution, validation, and deterministic orchestration;
@@ -47,7 +49,7 @@ STT protects, because runtime meaning needs one canonical owner and an explicit 
 - bounded, reconstructible model context through identity-bound references;
 - truthful distinctions among returned values, rejected returns, missing returns, semantic failure, and uncertain local settlement;
 - exceptional same-mission continuation through finite caller-mediated Rounds;
-- a frozen active runtime when Skeptic is itself the target, because runtime meaning needs one canonical owner and an explicit protection boundary.
+- a frozen active runtime when Skeptic is itself the target.
 
 STT does not prevent or fully observe arbitrary filesystem, process, credential, network, service, remote, or external effects, because it is an orchestration system without OS-level containment or complete process instrumentation.
 
@@ -180,7 +182,7 @@ Stable decision identifiers are required because the implementation plan and fut
 | `D3` | A Task owns zero or more Rounds until Round 0 commits; every repeated Round is fresh and finite. | Atomic Task publication creates a valid pre-Round state, while unbounded repetition can consume resources indefinitely. | Round numbers are contiguous, mission bytes remain equal, and the finite round cap is enforced. |
 | `D4` | Lead is mechanical; every lifecycle transition and outer operation is mediated by Boundary. | Semantic authority must not leak into orchestration or persistence. | Instrumentation detects any direct Lead-to-provider or Lead-to-state mutation path. |
 | `D5` | The authoritative Run root and per-call exchange are disjoint from source and target; source and target are either exactly equal or neither is an ancestor of the other; the active runtime is frozen. | Self-modification must remain possible without ambiguous partial overlap or letting target edits and lower-trust calls replace the controller. | Runtime survives target edits; provider requests contain no authoritative Run-root path; equal and disjoint source/target cases qualify while ancestor overlap fails. |
-| `D6` | STT runs only on a host that satisfies an explicit capability floor. | Locking, atomic publication, and process observation cannot be left as late implementation preferences. | Bootstrap fails before Run publication when a required primitive is unavailable. |
+| `D6` | STT runs only on a host that satisfies an explicit capability floor, including one per-Run lifecycle writer lock. | Competing conforming writers, ambiguous publication, or unobservable local settlement would make one Run history unsafe to derive or resume. | Bootstrap fails before Run publication when a required primitive is unavailable. |
 | `D7` | Lifecycle identities and accepted payloads are immutable; ledger events commit verified transition packages. | Resume is unsafe when accepted facts can be overwritten or silently rebound. | Mutation, mismatched package/event, sequence gaps, and conflicting publication fail visibly. |
 | `D8` | Lower-trust semantic processes receive non-authoritative exchange copies, never authoritative Run-state paths, and authoritative identities are revalidated after every call. | Reverification of one artifact cannot protect the ledger or runtime from a process given or discovering control-state locations. | Request inspection proves no Run-root path is disclosed; post-call mutation fixtures invalidate the Run before result acceptance. |
 | `D9` | TaskAuthority separates enforceable STT admission from cooperative effect responsibility, contains explicit capability profiles, and exposes only path-free TaskAuthorityView and CapabilityProfileView data to non-Worker semantic roles. | Path lists alone cannot authorize or bound commands, environment inheritance, network use, or remote mutation. | Child expansion and undeclared profile use are rejected; reported out-of-scope effects are preserved for Validator judgment, while authoritative-state mutation or unresolved local activity still fails mechanically. |
@@ -240,7 +242,7 @@ same immutable Task mission, authority, outputs, and routes
 → FINISH or exceptional REPEAT
 ```
 
-A repeated Round never reuses the previous Plan, step, child Task, provider request, or command launch, because mission judgment must remain separate from continuation and operational failure.
+A repeated Round never reuses the previous Plan, step, child Task, provider request, or command launch, because each Round must replan from current admitted evidence without replaying prior semantic or effectful work.
 
 It receives current target observations and selected immutable evidence, because same-mission continuation must still replan against reality.
 
@@ -250,13 +252,13 @@ Round numbers are contiguous from zero, because a gap or duplicate would make th
 
 The root Task counts as task 1, root depth is 0, Round 0 counts toward the per-Task Round limit, and every accepted Plan array element counts toward the per-Round step limit, because off-by-one policy interpretations would change authorized work.
 
-The Validator request includes the remaining Round capacity, because mission judgment must remain separate from continuation and operational failure.
+The Validator request includes the remaining Round capacity, because the Validator must not request a Round that policy cannot authorize.
 
 When no repeated Round remains available, Boundary supplies an exact Validator output schema that permits only `FINISH`; the frozen private contract explains the conditional rule, and a returned `REPEAT` is `RETURNED + REJECTED` and the settled Validator operation leaves the Task `OPERATIONALLY_STOPPED`, because Boundary must not coerce a semantic disposition after return.
 
 ### 5.3 Attempt and OperationRequest
 
-`OperationRequest` is the immutable semantic request for one Planner, Worker, command, or Validator operation, because mission judgment must remain separate from continuation and operational failure.
+`OperationRequest` is the immutable semantic request for one Planner, Worker, command, or Validator operation, because every outer launch needs one exact request identity for binding, settlement, and replay prevention.
 
 It binds role, Task, Round, step where applicable, exact admitted inputs, contract identity, routing/capability profile, limits, and output schema, because independent implementations need one mechanically decidable contract.
 
@@ -320,13 +322,13 @@ INDETERMINATE + FINISH
 INDETERMINATE + REPEAT
 ```
 
-`REPEAT` means the current non-Decline Round produced novel eligible evidence that materially narrows a concrete remaining gap and gives a fresh Planner a credible better basis, because mission judgment must remain separate from continuation and operational failure.
+`REPEAT` means the current non-Decline Round produced novel eligible evidence that materially narrows a concrete remaining gap and gives a fresh Planner a credible better basis, because a new Round is justified only when current work has created a materially better planning basis.
 
 It is exceptional because repeated activity is not progress.
 
-Use `FINISH + NOT_SATISFIED` for far failure, hard authority or dependency blockers, no useful leverage, or likely futility, because mission judgment must remain separate from continuation and operational failure.
+Use `FINISH + NOT_SATISFIED` for far failure, hard authority or dependency blockers, no useful leverage, or likely futility, because another Round lacks a credible bounded path to close the gap.
 
-Use `FINISH + INDETERMINATE` when the facts cannot establish the mission and another permitted Round is not credibly useful, because mission judgment must remain separate from continuation and operational failure.
+Use `FINISH + INDETERMINATE` when the facts cannot establish the mission and another permitted Round is not credibly useful, because uncertainty alone does not justify repeated activity.
 
 `SATISFIED + REPEAT`, a Decline Round with `REPEAT`, or `REPEAT` beyond the finite Round cap is invalid, because mission judgment must remain separate from continuation and operational failure.
 
@@ -336,7 +338,7 @@ Use `FINISH + INDETERMINATE` when the facts cannot establish the mission and ano
 
 The MVP does not provide, because the MVP must not imply protection that it cannot enforce:
 
-- concurrency, parallel Task execution, distributed scheduling, or target-wide writer exclusion;
+- parallel Task or step execution inside one Run, distributed scheduling, built-in cross-Run coordination, or target-wide writer exclusion;
 - a general workflow language or dynamic editing of an accepted Plan;
 - automatic retry or replay after any outer operation may have launched;
 - automatic model escalation, semantic repair loop, or hidden internal Round loop;
@@ -351,6 +353,16 @@ The MVP does not provide, because the MVP must not imply protection that it cann
 - RunSkeptic as part of STT runtime execution, because the MVP must not imply protections or automation that it cannot enforce safely.
 
 The explicit non-goals are part of the design boundary because careful evidence handling must not imply protections STT cannot deliver.
+
+Execution inside one Run is sequential through one active root-to-leaf Task frontier, because the mechanical Lead must derive exactly one next action.
+
+The Run writer lock serializes trusted lifecycle mutation for one Run root among conforming STT processes, because competing ledger writers could create contradictory histories.
+
+STT does not lock the target or reserve target paths across Runs, because unrelated writers cannot be required to participate in one portable STT coordination protocol.
+
+Separate STT Runs may execute concurrently under caller-managed practical non-overlap, because the MVP neither coordinates Runs nor proves that distinct paths imply disjoint filesystem, process, command, or external effects.
+
+Read and write-responsibility scopes are admission and accountability boundaries inside one Run rather than reservations against external writers or other Runs, because STT does not own the target.
 
 ---
 
@@ -379,11 +391,11 @@ Exchange roots must be outside the authoritative Run root and target, because co
 
 Authoritative STT state never lives under `<target>/.stt/`, because target cleanup or self-modification must not rewrite lifecycle evidence.
 
-STT does not prune Run roots automatically, because controller and evidence integrity depend on verified disjoint locations and supported host primitives.
+STT does not prune Run roots automatically, because deletion would destroy same-Run resume and authoritative evidence.
 
-The caller or host owns retention and deletion after it no longer needs resume or evidence; status and terminal output warn that deleting the temporary Run root permanently ends same-Run resume, because controller and evidence integrity depend on verified disjoint locations and supported host primitives.
+The caller or host owns retention and deletion after it no longer needs resume or evidence; status and terminal output warn that deleting the temporary Run root permanently ends same-Run resume, because only the caller knows when those records are no longer required.
 
-An implementation may accept an explicit Run-root parent, but it may not silently convert temporary evidence into archival durability, because controller and evidence integrity depend on verified locations, host primitives, and a frozen runtime.
+An implementation may accept an explicit Run-root parent, but it may not silently convert temporary evidence into archival durability, because choosing a location does not prove retention, backup, or power-loss guarantees.
 
 ### 8.2 Supported-host capability floor
 
@@ -398,7 +410,7 @@ Before Run publication, Bootstrap must establish the following capabilities, bec
 - create-only regular-file publication;
 - file flush and reread verification;
 - directory sync and recorded durability observations sufficient for `LOCAL_MVP_V1`, without claiming universal power-loss durability;
-- an exclusive local writer-lock primitive;
+- a local interprocess writer-lock primitive that serializes conforming STT writers for one Run root;
 - `lstat`-style path observation without symlink following;
 - stable regular-file byte hashing;
 - process launch without shell interpolation;
@@ -407,7 +419,7 @@ Before Run publication, Bootstrap must establish the following capabilities, bec
 
 The Run fails before lifecycle publication when a required primitive is unavailable, because controller and evidence integrity depend on verified locations, host primitives, and a frozen runtime.
 
-Non-local filesystems and advisory-lock semantics are unsupported by `LOCAL_MVP_V1` unless the adapter proves behavior equivalent to every fixed floor item, because the MVP must not imply protection that it cannot enforce.
+A filesystem or lock implementation is unsupported when STT cannot demonstrate mutual exclusion among conforming writers and the required publication and observation semantics for one Run; the lock does not claim to exclude arbitrary same-user processes, because the MVP coordinates its own lifecycle writers rather than the open target environment.
 
 Power-loss durability is not claimed by the MVP, because the MVP must not imply protection that it cannot enforce.
 
@@ -417,15 +429,15 @@ The architecture does not postpone this feasibility decision to implementation, 
 
 Bootstrap copies an explicit maintained runtime manifest, not a directory-wide or import-discovered guess, because root semantics and host assumptions must be frozen before semantic execution.
 
-The manifest lists exact code, private role contracts, provider adapters, data files, and package initializers required by the active entry point, because controller and evidence integrity depend on verified locations, host primitives, and a frozen runtime.
+The manifest lists exact code, private role contracts, provider adapters, data files, and package initializers required by the active entry point, because an incomplete closure could make the frozen copy depend on mutable source files.
 
 Bootstrap rejects symlinks and special files, records path/size/SHA-256/normalized executable mode, verifies the copy, re-observes source identities to reject a mixed generation, and re-executes only from `<run-root>/runtime/`, because path admission must not escape the target or reach control-state locations.
 
 Tests must prove import and runtime-data closure and reject archive or unrelated-package reachability, because the design claim must remain executable and falsifiable.
 
-Dynamic imports or data dependencies absent from the maintained manifest are architecture violations rather than runtime surprises, because controller and evidence integrity depend on verified locations, host primitives, and a frozen runtime.
+Dynamic imports or data dependencies absent from the maintained manifest are architecture violations rather than runtime surprises, because unmanifested dependencies would bypass frozen-runtime identity.
 
-The frozen runtime protects ordinary self-modification, because controller and evidence integrity depend on verified disjoint locations and supported host primitives.
+The frozen runtime protects ordinary self-modification, because target edits cannot replace the controller bytes already executing for the Run.
 
 It does not prevent a same-user hostile process from searching the filesystem or attacking the controller, because the MVP must not imply protection that it cannot enforce.
 
@@ -461,11 +473,11 @@ Routing binds the following fields, because resume must reconstruct the exact fr
 - named command profiles;
 - provider, requested model, requested effort, adapter, executable policy, and observable isolation properties, because resume must reconstruct the exact frozen execution context without inventing actual routing facts.
 
-Requested routing is not actual routing, because resume must reconstruct the exact frozen execution context without inventing actual routing facts.
+Requested routing is not actual routing, because a requested provider, model, or effort is not evidence of what the host actually supplied.
 
 Omitted model or effort is `UNSPECIFIED`; unobservable actual provider/model/effort/context isolation is `UNKNOWN`, because resume must reconstruct the exact frozen execution context without inventing actual routing facts.
 
-Live routes require frozen explicit authorization, because resume must reconstruct the exact frozen execution context without inventing actual routing facts.
+Live routes require frozen explicit authorization, because launching a paid or externally effectful provider must be an accountable caller decision.
 
 Resume cannot add or remove authorization or change a route, because resume must reconstruct the exact frozen execution context without inventing actual routing facts.
 
@@ -481,7 +493,7 @@ Bootstrap combines `RootAuthoritySpec` with the resolved target identity to crea
 
 `TaskAuthority` governs what STT may admit into requests, because semantic roles must not acquire hidden path, process, environment, credential, or effect authority.
 
-`TaskAuthority` does not prove what an arbitrary launched process actually does, because semantic roles must not acquire hidden path, process, environment, credential, or effect authority.
+`TaskAuthority` does not prove what an arbitrary launched process actually does, because request admission constrains STT construction rather than operating-system behavior.
 
 Canonical RootAuthoritySpec contains the following fields, because semantic roles must not acquire hidden path, process, environment, credential, or effect authority:
 
@@ -501,7 +513,7 @@ Runtime TaskAuthority adds the exact resolved `target_root_identity` and the Roo
 
 A TaskStep may declare only ChildAuthoritySpec; Boundary validates it as a subset of the parent TaskAuthority and combines it with the unchanged parent target identity to construct the child TaskAuthority, because Planner cannot manufacture hidden host identity fields.
 
-`TaskAuthorityView` is the only authority representation exposed to Planner or Validator, because mission judgment must remain separate from continuation and operational failure:
+`TaskAuthorityView` is the only authority representation exposed to Planner or Validator, because those roles need relative grants without authoritative target identity or host-location metadata:
 
 ```text
 task_authority_sha256
@@ -513,7 +525,7 @@ allowed_command_profiles
 allowed_external_effect_classes
 ```
 
-`CapabilityProfileView` is the only profile representation exposed to Planner or Validator, because mission judgment must remain separate from continuation and operational failure.
+`CapabilityProfileView` is the only profile representation exposed to Planner or Validator, because those roles need selectable capability meaning without executable, credential, or launch authority.
 
 It contains profile name, Worker or command kind, relative responsibility/cwd scopes, declared effect classes, command slot names/kinds/bounds where applicable, wait bounds, and a concise caller-authored purpose description, because live execution requires admitted profiles and truthful evidence without a containment claim.
 
@@ -625,11 +637,11 @@ Path scopes use canonical target-relative component-aware rules, because path ad
 
 Absolute paths, traversal, symlink components or leaves, special files, `.git`, authoritative Run paths, exchange-to-Run traversal, and containment escapes are rejected as semantic target paths, because semantic roles and lower-trust calls must receive bounded evidence without authoritative host-location access.
 
-Child authority must be a mechanical subset in every field, because delegation and same-mission continuation need distinct identity and failure rules.
+Child authority must be a mechanical subset in every field, because delegation must not expand the parent Task's admitted authority.
 
-A child cannot add a path scope, step kind, Worker route, command profile, inherited environment name, or effect class, because live execution requires admitted profiles and truthful evidence without a containment claim.
+A child cannot add a path scope, step kind, Worker route, command profile, inherited environment name, or effect class, because a descendant cannot acquire authority that its parent did not possess.
 
-Every selected Worker or command profile must itself be a subset of TaskAuthority effect classes and environment names, because live execution requires admitted profiles and truthful evidence without a containment claim.
+Every selected Worker or command profile must itself be a subset of TaskAuthority effect classes and environment names, because choosing a mechanism must not bypass the Task's frozen grants.
 
 The Planner may select only profiles already admitted by TaskAuthority, because planning must remain immutable, bounded, and unable to redefine runtime authority.
 
@@ -647,9 +659,13 @@ The Run becomes `OPERATIONALLY_BLOCKED` when the reported effect creates unresol
 
 STT does not claim to detect unreported effects, because cooperative reporting is not complete effect observation.
 
-The target is not exclusively locked, because external processes and concurrent modifications outside STT can occur at any time.
+The target is not exclusively locked, because external writers cannot be made to honor an STT-specific protocol.
 
-Every STT-named TARGET ArtifactRef, PlanInputResolution, command path, and output is identity-checked at its Boundary use; concurrent target change produces a visible mismatch or indeterminate observation rather than silent rebinding, because trusted lifecycle mutation must remain centralized and mechanically verifiable.
+A change to an exact TARGET identity produces a visible mismatch or indeterminate observation only when Boundary later reuses and reverifies that identity, because STT must reject silent rebinding of evidence it actually consumes.
+
+Unrelated, unobserved, or later external changes may remain unknown, because every target observation is a point-in-time fact rather than a lease on future target state.
+
+A Planner should place decision-critical precondition checks as close as practical to the dependent action, because late checks can reduce stale-assumption risk even though only a target-specific atomic operation can eliminate the check-to-action race.
 
 Opaque Worker reads performed directly inside the admitted live target remain cooperative and are not claimed to be exhaustively observed, because live execution requires admitted profiles and truthful evidence without a containment claim.
 
@@ -717,7 +733,7 @@ Each Round lives at `rounds/<contiguous-number>/` and binds the following fields
 - predecessor Round and Validator report when repeated;
 - selected eligible repeat evidence when repeated, because mission judgment must remain separate from continuation and operational failure.
 
-A Round directory is an immutable identity container whose predetermined child locations receive create-only transition packages, because delegation and same-mission continuation need distinct identity and failure rules.
+A Round directory is an immutable identity container whose predetermined child locations receive create-only transition packages, because resume must permit append-only evidence growth without replacing accepted Round identity.
 
 “Immutable Round” therefore means no accepted identity or payload is replaced, not that the directory remains byte-for-byte empty after publication, because Boundary can safely bind and reverify only the artifact forms admitted by the MVP.
 
@@ -860,7 +876,7 @@ intent
 steps
 ```
 
-Exactly three step kinds exist, because artifact availability, resolution, and consumption must not be silently rebound or fabricated:
+Exactly three step kinds exist, because the MVP supports semantic Worker execution, admitted deterministic commands, and distinct child Tasks without a generic workflow language:
 
 ```text
 worker
@@ -899,7 +915,7 @@ argument_values
 
 `cwd` is target-relative and must be admitted by the selected profile’s `cwd_scopes`, because artifact availability, resolution, and consumption must not be silently rebound or fabricated.
 
-A TaskStep additionally binds the following fields, because artifact availability, resolution, and consumption must not be silently rebound or fabricated:
+A TaskStep additionally binds the following fields, because child identity, mission relation, narrowed authority, and required outputs must be explicit before child publication:
 
 ```text
 child_mission
@@ -943,9 +959,9 @@ principal_consumer
 
 `artifact_type` is a stable restricted identifier compared by exact equality; the MVP does not load a type plugin or infer semantic content from that label. `producer_constraint` is `NONE` for `EXISTING_ALLOWED`, `CURRENT_TASK_TREE` for `PRODUCED_IN_TASK`, or `EXACT_STEP(step_id)` for `PRODUCED_BY_STEP`, because producer admission must be mechanically decidable rather than inferred from prose.
 
-`purpose` is one stable restricted identifier declared by the selector or requirement, and purpose compatibility is exact identifier equality. `principal_consumer` is one structured intended-use label: `TASK_TERMINAL`, `VALIDATOR`, `NEXT_ROUND_PLANNER`, or `STEP(step_id)`, because mission judgment must remain separate from continuation and operational failure.
+`purpose` is one stable restricted identifier declared by the selector or requirement, and purpose compatibility is exact identifier equality. `principal_consumer` is one structured intended-use label: `TASK_TERMINAL`, `VALIDATOR`, `NEXT_ROUND_PLANNER`, or `STEP(step_id)`, because intended use must remain traceable without becoming runtime consumption authority.
 
-Plan validation checks structural compatibility: `TASK_TERMINAL` is allowed only on a Task terminal requirement, `STEP(step_id)` must name a later admitted step that references the requirement, and `NEXT_ROUND_PLANNER` must name an output form that can be frozen as repeat evidence, because mission judgment must remain separate from continuation and operational failure.
+Plan validation checks structural compatibility: `TASK_TERMINAL` is allowed only on a Task terminal requirement, `STEP(step_id)` must name a later admitted step that references the requirement, and `NEXT_ROUND_PLANNER` must name an output form that can be frozen as repeat evidence, because an intended-use label must correspond to a structurally possible lifecycle use.
 
 The label does not force that lifecycle use to occur and does not authorize consumption; every actual use still requires its own admitted InputRef, so early FINISH does not invalidate an otherwise satisfied output merely because its intended downstream use was unnecessary.
 
@@ -957,7 +973,7 @@ Step requirements use `PRODUCED_BY_STEP`; TARGET outputs must be inside the step
 
 `BOUNDARY_ASSIGNED` is allowed only for RUN artifacts whose authoritative path Boundary assigns while importing verified bytes from exchange or deterministic observation, because trusted lifecycle mutation must remain centralized and mechanically verifiable.
 
-A Task, step, or command is not satisfied until every requirement is matched by one verified ArtifactRef with the permitted producer, satisfaction mode, and consumer binding, because resume and substitution checks require exact facts to remain uniquely bound.
+A Task, step, or command is not satisfied until every requirement is matched by one verified ArtifactRef with the permitted producer, satisfaction mode, purpose, path, type, and mode constraints, because an intended-use label is checked structurally but does not itself authorize or require consumption.
 
 ### 14.2 ArtifactRef
 
@@ -1058,7 +1074,7 @@ requirement_id
 purpose
 ```
 
-ArtifactRefView omits authoritative RUN relative paths, canonical target roots, device/inode data, source-observation host locations, prior-root paths, and other launch/control metadata, because resume and substitution checks require exact facts to remain uniquely bound.
+ArtifactRefView omits authoritative RUN relative paths, canonical target roots, device/inode data, source-observation host locations, prior-root paths, and other launch/control metadata, because semantic roles need evidence meaning rather than authoritative host-location access.
 
 A role cannot use ArtifactRefView as authority; Boundary retains and reverifies the full ArtifactRef and InputRef, because trusted lifecycle mutation must remain centralized and mechanically verifiable.
 
@@ -1147,9 +1163,9 @@ INVESTIGATE
 
 `EXECUTE` means current evidence supports a credible complete path, because planning must remain bounded, reconstructible, immutable, and unable to mutate lifecycle authority.
 
-`INVESTIGATE` means one named decision-critical unknown blocks a credible complete path, but admitted bounded steps can produce evidence for a later Round, because finite policy must prevent unbounded work and keep resource use structurally visible.
+`INVESTIGATE` means one named decision-critical unknown blocks a credible complete path, but admitted bounded steps can produce evidence for a later Round, because investigation is justified only when a bounded probe can materially improve the next planning basis.
 
-An investigative Plan states the unknown, why it blocks execution, the bounded probe, and expected evidence outputs, because finite policy must prevent unbounded work and keep resource use structurally visible.
+An investigative Plan states the unknown, why it blocks execution, the bounded probe, and expected evidence outputs, because the Validator and next Planner must be able to distinguish useful evidence generation from activity.
 
 A zero-step Plan is valid when existing evidence may already establish the mission, because planning must remain bounded, reconstructible, immutable, and unable to mutate lifecycle authority.
 
@@ -1163,7 +1179,7 @@ A Decline Round runs the Validator against current evidence and must `FINISH`, b
 
 It cannot `REPEAT`, because repetition would contradict the Planner’s accepted claim that no useful bounded next path exists.
 
-Changed authority, policy, mission, or dependency assumptions require a new Run, because the MVP should minimize supply and compatibility risk until a dependency proves a correctness benefit.
+Changed authority, policy, mission, or dependency assumptions require a new Run, because those changes alter frozen root semantics rather than continue the same Task.
 
 ### 16.3 Planning persistence
 
@@ -1317,7 +1333,7 @@ Any relevant `UNSETTLED | UNKNOWN` local settlement blocks later steps and seman
 
 ### 19.1 Validator context
 
-Before Validator launch, Boundary builds one bounded immutable evidence index containing exact references to mission, RunPolicyView, required outputs, Round, Planner outcome, Plan or Decline, step results, command observations, child results or operational evidence, current required-output observations, selected prior evidence, and local-settlement facts, because mission judgment must remain separate from continuation and operational failure.
+Before Validator launch, Boundary builds one bounded immutable evidence index containing exact references to mission, RunPolicyView, required outputs, Round, Planner outcome, Plan or Decline, step results, command observations, child results or operational evidence, current required-output observations, selected prior evidence, and local-settlement facts, because Validator judgment must be reconstructible from one closed persisted evidence set.
 
 The Validator has no canonical target-root or host path, authoritative Run path, interactive tools, command callback, or repair capability, because semantic roles and lower-trust calls must receive bounded evidence without authoritative host-location access.
 
@@ -1329,7 +1345,7 @@ When available evidence cannot establish the mission, the Validator returns `IND
 
 ### 19.2 Eligible repeat evidence
 
-Eligible repeat evidence must satisfy the following requirements, because mission judgment must remain separate from continuation and operational failure:
+Eligible repeat evidence must satisfy the following requirements, because continuation must depend on mechanically novel current-Round work rather than prose or recycled history:
 
 - be produced in the current Round under an accepted PLAN by a WorkerStep, CommandStep, or completed child Task; a Round with DECLINE or no accepted Plan cannot repeat;
 - be imported and verified as a frozen RUN ArtifactRef;
@@ -1338,13 +1354,13 @@ Eligible repeat evidence must satisfy the following requirements, because missio
 - record current-Round provenance, purpose, originating requirement or observation method, and exact observation identity;
 - be selected explicitly by the Validator, because mission judgment must remain separate from continuation and operational failure.
 
-Boundary mechanically rejects byte-identical copies, renames, and repeated canonical observations even when their path or producer label changes, because mission judgment must remain separate from continuation and operational failure.
+Boundary mechanically rejects byte-identical copies, renames, and repeated canonical observations even when their path or producer label changes, because relabelling existing evidence must not manufacture progress.
 
 A semantically unchanged wrapper whose bytes differ cannot be recognized universally by deterministic orchestration; the private Validator contract must reject such restatement as immaterial, and adversarial fixtures challenge representative wrappers without claiming complete semantic detection, because mission judgment must remain separate from continuation and operational failure.
 
-Validator prose, Planner prose, a prior-Run artifact, a fresh workspace-index entry alone, or an arbitrary Validator-requested freeze is ineligible, because mission judgment must remain separate from continuation and operational failure.
+Validator prose, Planner prose, a prior-Run artifact, a fresh workspace-index entry alone, or an arbitrary Validator-requested freeze is ineligible, because repeat leverage must originate in admitted work performed during the current Round.
 
-Boundary may freeze a declared current-Round TARGET output into RUN evidence, but it cannot turn arbitrary current target content into new progress evidence after execution stops, because trusted lifecycle mutation must remain centralized and mechanically verifiable.
+Boundary may freeze a declared current-Round TARGET output into RUN evidence, but it cannot turn arbitrary current target content into new progress evidence after execution stops, because post-hoc selection would let orchestration manufacture a reason to repeat.
 
 ### 19.3 Validator return and floors
 
@@ -1452,7 +1468,7 @@ It may create Round 0, consume one pre-existing repeat transition, invoke one op
 
 Lead never reads broad target content, invents a step, changes a Plan, selects prior evidence, chooses a judgment, or consumes a newly produced `REPEAT` in the same invocation, because mission judgment must remain separate from continuation and operational failure.
 
-One invocation may consume at most one `AWAITING_REPEAT` state that existed at invocation start across the entire Task tree, because mission judgment must remain separate from continuation and operational failure.
+One invocation may consume at most one `AWAITING_REPEAT` state that existed at invocation start across the entire Task tree, because every additional Round must remain an explicit caller-mediated continuation.
 
 Initial Round 0 creation for new Tasks does not consume that allowance, because orchestration must remain mechanical while Boundary owns trusted lifecycle transitions.
 
@@ -1598,7 +1614,7 @@ The index is context, not permission or immutable evidence, because workspace co
 
 Every target file consumed later is opened through Boundary admission and identity verification, because trusted lifecycle mutation must remain centralized and mechanically verifiable.
 
-Before Validator, Boundary may deterministically observe required exact target outputs and already declared current-Round outputs, because mission judgment must remain separate from continuation and operational failure.
+Before Validator, Boundary may deterministically observe required exact target outputs and already declared current-Round outputs, because Validator needs exact admitted terminal evidence without gaining open-ended investigation authority.
 
 It does not perform open-ended semantic investigation or choose arbitrary evidence after execution stops, because workspace context must not become permission or unverified immutable evidence.
 
@@ -1645,9 +1661,9 @@ Parent and prior context references exact selected artifacts rather than copying
 
 ### 26.1 Call and cost visibility
 
-Run creation computes and records conservative structural maxima for Planner, Validator, and total step-operation launches from the finite Task/Round/step policy, because model calls must be reconstructible and independence claims must stop at observable evidence.
+Run creation computes and records conservative structural maxima for Planner, Validator, and total step-operation launches from the finite Task/Round/step policy, because finite execution can still hide substantial call and cost exposure.
 
-Status and terminal receipts always report actual OperationRequests and launched Attempts grouped by role, route, requested model, and requested effort, because model calls must be reconstructible and independence claims must stop at observable evidence.
+Status and terminal receipts always report actual OperationRequests and launched Attempts grouped by role, route, requested model, and requested effort, because operators need visible actual usage rather than only theoretical bounds.
 
 Monetary price estimates are optional external annotations rather than architecture facts, because prices change independently of the frozen Run.
 
@@ -1753,7 +1769,7 @@ stt status --run-root <run-root>
 stt diagnose --run-root <run-root>
 ```
 
-`--prior-run` supplies the root from which selectors in RootTaskSpec are validated; it does not authorize Boundary to choose evidence, because trusted lifecycle mutation must remain centralized and mechanically verifiable.
+`--prior-run` supplies only the location from which RootTaskSpec selectors are validated, because evidence selection must remain an explicit frozen caller decision.
 
 `start` freezes the spec and routing, validates host/source/target/prior evidence, prepares runtime, publishes Run and root Task, and advances until FINISH, REPEAT, transient `PRELAUNCH_BLOCKED`, operational stop, non-resumability, or invalidity, because a second launch could replay hidden target, billing, network, remote, or escaped-child effects.
 

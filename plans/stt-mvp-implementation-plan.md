@@ -1,6 +1,6 @@
 # STT MVP Implementation Plan
 
-**Status:** Canonical derived candidate; execution prohibited until the architecture passes the final independent review gates
+**Status:** Implementation-ready canonical implementation design derived from the accepted architecture
 **Architecture source of truth:** `plans/stt-mvp-architecture-plan.md`
 **Repository:** `saffih/skeptic`
 **Historical reconstruction base:** `74c4f6a2c34da501101141525c8a34d691c384a1`
@@ -113,13 +113,13 @@ Split them only when tests or coupling show a concrete need, because the design 
 
 ### 5.1 Standard library first
 
-Prefer Python standard-library primitives such as `dataclasses`, `pathlib`, `json`, `hashlib`, `subprocess`, `tempfile`, `os`, `shutil`, `stat`, and supported locking, because shared primitives must not fork identity, schema, path, or error semantics.
+Prefer Python standard-library primitives such as `dataclasses`, `pathlib`, `json`, `hashlib`, `subprocess`, `tempfile`, `os`, `shutil`, `stat`, and supported locking, because minimizing dependencies reduces supply, compatibility, installation, and runtime-closure risk for the MVP.
 
 Add no dependency unless it materially reduces a verified correctness risk and fits repository policy, because the MVP should minimize supply and compatibility risk until a dependency proves a correctness benefit.
 
 ### 5.2 One canonical serializer
 
-All control JSON uses one bounded canonical serializer and parser, because finite policy must prevent unbounded work and keep resource use structurally visible:
+All control JSON uses one bounded canonical serializer and parser, because identity bytes must be deterministic and parsing must remain bounded across implementations:
 
 - UTF-8;
 - sorted keys;
@@ -128,7 +128,7 @@ All control JSON uses one bounded canonical serializer and parser, because finit
 - no NaN or Infinity;
 - explicit schema IDs;
 - duplicate-key rejection;
-- configured byte and nesting limits, because finite policy must prevent unbounded work and keep resource use structurally visible.
+- configured byte and nesting limits.
 
 Identity hashes are over exact canonical bytes, not reconstructed objects, because resume and substitution checks require exact facts to remain uniquely bound.
 
@@ -175,7 +175,7 @@ Do not mirror every state transition with a new exception class, because shared 
 
 Path admission, profiles, exchange isolation, and effect reports are orchestration protections, because semantic roles and lower-trust calls must receive bounded evidence without authoritative host-location access.
 
-Tests and user output must not call them a sandbox or complete effect boundary, because trusted lifecycle mutation must remain centralized and mechanically verifiable.
+Tests and user output must not call them a sandbox or complete effect boundary, because these mechanisms do not constrain arbitrary operating-system or external behavior.
 
 ---
 
@@ -220,13 +220,13 @@ Implement `D1`, `D5`, `D6`, and the Run-level portions of `D9`, `D10`, and `D19`
 
 ## 10. Required behavior
 
-Implement exact parsers and validators for, because mission judgment must remain separate from continuation and operational failure:
+Implement exact parsers and validators for, because Bootstrap must reject ambiguous or incomplete root contracts before lifecycle publication:
 
 - `RootTaskSpec`, including RootAuthoritySpec, target-relative and task-spec-parent-relative initial selectors, prior selectors, exact count fields `maximum_task_depth | maximum_tasks_per_run | maximum_rounds_per_task | maximum_steps_per_round`, the complete byte/depth/entry fields of `capture_limits` including total per-call exchange-input bytes, the role-seconds and termination-grace fields of `wait_limits`, and `host_profile = LOCAL_MVP_V1`;
 - routing and named capability/command profiles;
 - prior-Run root plus exact selectors and create-only import of selected committed evidence into the new Run;
 - live-provider authorization;
-- finite depth/Round/capture/wait policy, because finite policy must prevent unbounded work and keep resource use structurally visible.
+- finite depth/Round/capture/wait policy.
 
 Bootstrap must satisfy the following requirements, because root semantics and host assumptions must be frozen before semantic execution:
 
@@ -244,11 +244,11 @@ Bootstrap must satisfy the following requirements, because root semantics and ho
 12. never reread mutable original spec, routing, initial selector source, or prior Run evidence after root Task publication;
 13. perform no model call, semantic defaulting, or mission completion during Bootstrap, because root semantics and host assumptions must be frozen before semantic execution.
 
-Publish `run.json` with every identity and observation required by architecture §9, including exact RootTaskSpec, source, target-root, runtime-manifest, routing, live authorization, finite policy, host profile/observations, structural call bounds, and optional prior-root identity, because controller and evidence integrity depend on verified disjoint locations and supported host primitives.
+Publish `run.json` with every identity and observation required by architecture §9, including exact RootTaskSpec, source, target-root, runtime-manifest, routing, live authorization, finite policy, host profile/observations, structural call bounds, and optional prior-root identity, because resume must reconstruct the exact frozen Run without mutable external inputs.
 
 Choose documented conservative hard ceilings for every count, byte, depth, entry, and duration field; reject nonpositive or above-ceiling values without changing architecture units, because independent implementations need one mechanically decidable contract.
 
-Compute conservative overflow-safe structural upper bounds for Planner, Validator, and total step-operation launches from the frozen Task/Round/step policy and bind them into `run.json`, because mission judgment must remain separate from continuation and operational failure.
+Compute conservative overflow-safe structural upper bounds for Planner, Validator, and total step-operation launches from the frozen Task/Round/step policy and bind them into `run.json`, because finite policy must expose worst-case call and cost shape before execution.
 
 Maintain one explicit runtime allowlist and tests for import/data closure, because the design claim must remain executable and falsifiable.
 
@@ -285,7 +285,7 @@ Authority validation must use component-aware canonical target-relative paths an
 
 Every selected Worker route or command profile must also be a subset of the current TaskAuthority effect classes and inherited environment names, and each Worker route resolves to exactly one frozen capability profile, because live execution requires admitted profiles and truthful evidence without a containment claim.
 
-Task publication atomically includes task identity, exact mission, structured required outputs, Task-scoped EvidenceBindings, frozen role/routing references, predetermined create-only child locations, and the initial `TASK_CREATED` event, because delegation and same-mission continuation need distinct identity and failure rules.
+Task publication atomically includes task identity, exact mission, structured required outputs, Task-scoped EvidenceBindings, frozen role/routing references, predetermined create-only child locations, and the initial `TASK_CREATED` event, because resume requires one complete immutable starting identity for each Task.
 
 Root Task counts as task 1 at depth 0; Round 0 and every Plan element count toward their respective finite limits, because finite policy must prevent unbounded work and keep resource use structurally visible.
 
@@ -301,7 +301,7 @@ Plan validation separately enforces the architecture’s structural `principal_c
 
 A Plan contains only declarative PlanInputs; Plan validation rejects fabricated ArtifactRefs/InputRefs and future step outputs, because planning must remain immutable, bounded, and unable to redefine runtime authority.
 
-Boundary publishes immutable PlanInputResolutions when accepting the Plan, leaves prior-step outputs as requirement references until committed, reverifies resolved target/evidence identities before launch, returns transient `PRELAUNCH_BLOCKED` on named target-input mismatch, and only then creates the role/Task/Round/step-bound InputRef, because a second launch could replay hidden target, billing, network, remote, or escaped-child effects.
+Boundary publishes immutable PlanInputResolutions when accepting the Plan, leaves prior-step outputs as requirement references until committed, reverifies resolved target/evidence identities before launch, returns transient `PRELAUNCH_BLOCKED` on named target-input mismatch, and only then creates the role/Task/Round/step-bound InputRef, because accepted Plans must bind every declared dependency without partial publication or silent rebinding.
 
 Task and Round publication store EvidenceBindings rather than consumption references, because resume and substitution checks require exact facts to remain uniquely bound.
 
@@ -417,7 +417,7 @@ PLAN validation uses the shared schemas and authority/profile checks, publishes 
 
 DECLINE creates no steps; state derivation reads the accepted Decline directly and permits validation but no REPEAT, so no duplicate mutable or persisted repeat-forbidden flag exists, because mission judgment must remain separate from continuation and operational failure.
 
-Any launched Planner operation has one Attempt only, because planning must remain immutable, bounded, and unable to redefine runtime authority.
+Any launched Planner operation has one Attempt only, because a second post-launch attempt could repeat external or hidden effects.
 
 A settled non-OK outcome also proceeds to validation with no Plan; unsettled/unknown blocks, because return validity and local process settlement have different safety and recovery consequences.
 
@@ -440,7 +440,7 @@ Boundary must satisfy the following requirements, because trusted lifecycle muta
 
 ## 23. Command
 
-Resolve the CommandStep’s PlanInputs into exact InputRefs, validate its target-relative cwd, bind input/output exchange slots to exact InputRefs and OutputRequirements, validate scalar slot values, apply the profile’s frozen environment and accepted-exit-code policy, render and run the exact argv template, apply the architecture command judgment, and produce deterministic observation artifacts, because mission judgment must remain separate from continuation and operational failure.
+Resolve the CommandStep’s PlanInputs into exact InputRefs, validate its target-relative cwd, bind input/output exchange slots to exact InputRefs and OutputRequirements, validate scalar slot values, apply the profile’s frozen environment and accepted-exit-code policy, render and run the exact argv template, apply the architecture command judgment, and produce deterministic observation artifacts, because command behavior must remain reproducible from one frozen profile and exact runtime bindings.
 
 Do not implement generic expressions or stdout-regex success, because command execution must remain within one frozen profile and exact argv.
 
@@ -465,7 +465,7 @@ At invocation start, because Lead must derive one mechanical next action without
 3. permit at most one consumption of that pre-existing transition;
 4. repeatedly derive one mechanical next action until the invocation must stop, because mission judgment must remain separate from continuation and operational failure.
 
-The loop may advance within one current Round, but it stops when any Round newly returns `REPEAT`, because mission judgment must remain separate from continuation and operational failure.
+The loop may advance within one current Round, but it stops when any Round newly returns `REPEAT`, because creation of the next Round must remain caller-mediated rather than an internal loop.
 
 Lead uses only Boundary entry points and compact receipts, because trusted lifecycle mutation must remain centralized and mechanically verifiable.
 
@@ -484,7 +484,7 @@ Implement the mapping in architecture §20 exactly, including, because child ide
 - whole-Run `OPERATIONALLY_BLOCKED` for unsettled/unknown child work;
 - whole-Run invalidity for conflicting child identity, because delegation and same-mission continuation need distinct identity and failure rules.
 
-Implement deterministic child-to-parent finalization when child evidence is committed but parent `STEP_FINISHED` is absent, because mission judgment must remain separate from continuation and operational failure.
+Implement deterministic child-to-parent finalization when child evidence is committed but parent `STEP_FINISHED` is absent, because crash recovery must complete the uniquely determined parent transition without rerunning the child.
 
 ## 28. Proof links
 
@@ -500,13 +500,13 @@ Implement `D16`, the Validator portion of `D18`, and Round/Task finalization fro
 
 ## 30. Validator request
 
-Boundary first performs only the deterministic pre-Validator observations admitted by architecture §24, including required exact target outputs and already declared current-Round outputs, then builds one bounded Validator evidence index, because mission judgment must remain separate from continuation and operational failure.
+Boundary first performs only the deterministic pre-Validator observations admitted by architecture §24, including required exact target outputs and already declared current-Round outputs, then builds one bounded Validator evidence index, because Validator judgment must depend on one closed reconstructible evidence set rather than hidden investigation.
 
 The Validator request contains RunPolicyView with remaining Round capacity, admitted reference identities, path-free ArtifactRefViews, and bounded ArtifactViews; it contains no canonical target root, authoritative RUN path, full InputRef/ArtifactRef serialization, interactive tools, or command callback, because semantic roles and lower-trust calls must receive bounded evidence without authoritative host-location access.
 
-When capacity is zero, the exact request output schema permits only `FINISH`, while the frozen private contract states why, because mission judgment must remain separate from continuation and operational failure.
+When capacity is zero, the exact request output schema permits only `FINISH`, while the frozen private contract states why, because policy cannot authorize another Round.
 
-The fake provider must expose the exact Validator request for context assertions, because mission judgment must remain separate from continuation and operational failure.
+The fake provider must expose the exact Validator request for context assertions, because qualification must prove the bounded request contains exactly the admitted evidence and no hidden authority.
 
 ## 31. Evidence eligibility
 
@@ -518,7 +518,7 @@ Implement the architecture §19 predicate as a deterministic mechanical floor, b
 - admitted requirement/observation binding;
 - novelty identity absent from selected Round inputs, binding content SHA-256, artifact type, purpose, and originating requirement or observation method, so copy/rename/rewrap cannot create novelty;
 - exact current-Round provenance;
-- explicit Validator selection, because mission judgment must remain separate from continuation and operational failure.
+- explicit Validator selection.
 
 Materiality remains semantic and is qualified through adversarial fixtures rather than a scoring engine, because repeat evidence must represent materially new current-Round information rather than relabelled prior content.
 
@@ -538,13 +538,13 @@ Then publish/commit `VALIDATION_RECORDED` with the call outcome and an accepted 
 
 A returned result that violates a floor is `RETURNED + REJECTED`, commits no accepted ValidatorResult, and yields settled `OPERATIONALLY_STOPPED` without semantic coercion, because return validity and local process settlement have different safety and recovery consequences.
 
-On accepted ValidatorResult, because mission judgment must remain separate from continuation and operational failure:
+On accepted ValidatorResult, apply the following deterministic finalization, because accepted judgment and continuation must be committed without semantic reinterpretation:
 
 - publish/commit Round result;
 - if REPEAT, derive `AWAITING_REPEAT` and stop invocation;
-- if FINISH, deterministically publish/commit Task result, because mission judgment must remain separate from continuation and operational failure.
+- if FINISH, deterministically publish/commit Task result.
 
-Implement safe Round finalization when `VALIDATION_RECORDED` contains an accepted result but `ROUND_FINISHED` is absent, and safe Task finalization when `ROUND_FINISHED + FINISH` exists but `TASK_FINISHED` is absent, because mission judgment must remain separate from continuation and operational failure.
+Implement safe Round finalization when `VALIDATION_RECORDED` contains an accepted result but `ROUND_FINISHED` is absent, and safe Task finalization when `ROUND_FINISHED + FINISH` exists but `TASK_FINISHED` is absent, because resume must complete uniquely determined transitions without relaunching Validator or changing its judgment.
 
 A Validator with unsettled or unknown local work blocks the Run, because later semantic execution cannot safely proceed while the operation may remain active.
 
@@ -580,7 +580,7 @@ stt diagnose --run-root <run-root>
 
 `start` validates and freezes all inputs, prepares runtime, publishes the Run and root Task, and advances until semantic finish, newly produced repeat, transient prelaunch block, operational stop/block, non-resumability, or invalidity, because a second launch could replay hidden target, billing, network, remote, or escaped-child effects.
 
-`run` changes no immutable field, because independent implementations need one mechanically decidable contract.
+`run` changes no immutable field, because resumption must preserve the frozen Run identity and policy.
 
 It reports `OPERATIONALLY_BLOCKED`, `OPERATIONALLY_STOPPED`, `NON_RESUMABLE`, or `INVALID` without launching a settlement probe or semantic operation, because CLI behavior must preserve immutable Run identity and truthful operator actions.
 
@@ -596,13 +596,13 @@ Do not retain competing mission/provider/model/effort/attempt flags from superse
 
 The core performs no automatic polling; any automated host wrapper must require a finite caller-owned invocation budget and surface exhaustion explicitly, because finite policy must prevent unbounded work and keep resource use structurally visible.
 
-The core never prunes a Run root automatically, because controller and evidence integrity depend on verified disjoint locations and supported host primitives.
+The core never prunes a Run root automatically, because deletion would destroy same-Run resume and authoritative evidence.
 
 ## 36. Prior evidence
 
 Validate only selectors supplied in RootTaskSpec against the optional prior root, because root semantics and host assumptions must be frozen before semantic execution.
 
-Accept only prior RUN artifacts/reports/logs with exact bytes under the prior root, or a prior Boundary-frozen RUN copy of target bytes; reject direct live TARGET references, because live execution requires admitted profiles and truthful evidence without a containment claim.
+Accept only prior RUN artifacts/reports/logs with exact bytes under the prior root, or a prior Boundary-frozen RUN copy of target bytes; reject direct live TARGET references, because mutable external target state cannot serve as immutable prior evidence.
 
 Before root Task publication, copy every accepted selected artifact into a create-only current-Run ArtifactRef that preserves prior origin and committed-event provenance, because resume and substitution checks require exact facts to remain uniquely bound.
 
@@ -653,20 +653,20 @@ Each scenario is parameterized over its listed positive and known-bad cases, bec
 
 - `Q05` **RootTaskSpec:** exact task-spec/routing bytes freeze before parsing and RootTaskSpec routing identity must match; complete specification starts; root Task is count 1 at depth 0 and Round 0/Plan elements count toward their limits; `host_profile` is exactly `LOCAL_MVP_V1`; every named count/capture/wait field exists with fixed byte/second units, finite positive values, and conservative ceiling rejection; structured required_outputs always governs artifact matching while mission prose is never parsed as an output contract; selector purpose and type are explicit; TARGET_PATH resolves only under target; BOOTSTRAP_FILE resolves only under the canonical task-spec parent and rejects absolute/traversal/symlink/special/`.git`/escape cases; prior selectors require exactly one prior root and an unused prior root rejects; missing, structurally inconsistent, mutable, or unresolved fields reject without claiming semantic prose-conflict detection, because root configuration must freeze before any semantic execution begins.
 - `Q06` **Frozen runtime:** source root resolves uniquely from the active entry point and manifest root; explicit manifest closure, bytes/mode, symlink/special-file, mixed-generation, target self-update, dynamic data/import, and archive reachability cases, because runtime must be immutable and closed during execution to prevent semantic drift.
-- `Q07` **Location, retention, target identity, and external-evidence independence:** source may equal target or otherwise be mutually non-containing; Run and exchange remain disjoint; same-path target replacement is detected or the host is rejected; selected prior evidence is imported before Task publication; deletion or mutation of the prior root after publication does not change current evidence; no automatic pruning occurs and deletion warnings are explicit, because prior evidence must remain independent from the current Run and mutations.
+- `Q07` **Location, retention, target identity, and external-evidence independence:** source may equal target or otherwise be mutually non-containing; Run and exchange remain disjoint; same-path target replacement is detected or the host is rejected; selected prior evidence is imported before Task publication; deletion or mutation of the prior root after publication does not change current evidence; no automatic pruning occurs and deletion warnings are explicit, because location separation protects control state, root identity prevents silent rebinding, frozen imports remove dependence on prior roots, and explicit retention keeps evidence loss operator-visible.
 
 ### Authority, trust, and schemas
 
 - `Q08` **Path and child authority:** component-aware containment plus absolute, traversal, symlink, special, `.git`, Run path, and every child-expansion case, because path scope must be mechanically enforceable without silent escape.
 - `Q09` **Capability and secret admission:** unique Worker-route-to-profile binding; command `EXACT_PATH` and `PATH_LOOKUP_AT_BOOTSTRAP` resolution; executable identity revalidation; finite accepted exits; fixed explicit environment overrides; target-relative cwd; reusable slot schemas plus step-time target-path/PlanInput/OutputRequirement/enum/integer/bounded-text bindings; effect classes; inherited environment names; fixed provider credential-name allowlists; declared-nonsecret fixed-field placement and known-prohibited-field rejection without treating model-supplied text as proven non-secret; and reported out-of-scope effects, because secrets and capabilities must be mechanically bounded and verifiable at admission.
 - `Q10` **Instruction trust and private contracts:** target/prior injection cannot alter mission, authority, routing, policy, schema, or role contract; Planner/Validator receive path-free TaskAuthorityView, WorkerRouteView, and CapabilityProfileView rather than canonical target, executable, adapter, or credential-launch metadata; general repository contracts do not govern STT runtime, because target data must not become executable control authority.
-- `Q11` **Exchange and post-call integrity:** exchange roots are owner-exclusive and disjoint; no authoritative Run path is exposed; only admitted bytes cross; outputs remain non-authoritative until import; post-call runtime/target/Run/ledger mutation invalidates before acceptance, because exchange isolation prevents unauthorized state mutation or evidence contamination.
+- `Q11` **Exchange and post-call integrity:** exchange roots are owner-exclusive and disjoint; no authoritative Run path is exposed; only admitted bytes cross; outputs remain non-authoritative until import; post-call runtime/target/Run/ledger mutation invalidates before acceptance, because minimizing control-state exposure and revalidating it after the call prevents contaminated evidence from being accepted without claiming hostile containment.
 - `Q12` **Input/output/artifact binding:** PlanInputs remain declarative and cannot contain authoritative ArtifactRefs or InputRefs; Boundary-owned immutable PlanInputResolutions bind current evidence/target identities and defer prior-step requirements; initial, prior, child, and repeat EvidenceBindings remain availability records rather than consumption authority and expose only path-free EvidenceBindingViews to Planner; every use reverifies the resolution and creates a complete role/Task/Round/step-bound InputRef; named target mutation yields transient prelaunch mismatch rather than rebinding; discriminated provenance covers Bootstrap/prior/existing-target/step/child/command/Boundary origins; `EXISTING_ALLOWED` versus produced-output authority, closed producer constraints, exact purpose, structural principal-consumer compatibility without mandatory downstream consumption, canonical OutputRequirement matching, discriminated Boundary-owned StepResult binding without fabricated role/child results, exact artifact-type label equality without plugin semantics, mode/path, mutation-before-use, and special-file rejection all qualify, because artifact provenance must remain distinct and verifiable to prevent substitution.
 - `Q13` **Plan schema and limits:** identity header; exact common and kind-specific fields; route-derived Worker profile without a second profile field; command cwd and slot bindings; declarative ChildAuthoritySpec without resolved target identity or duplicate route/profile fields; exact StepOutcome vocabulary; TaskStep-only `OPERATIONAL_INDETERMINATE`; complete PlanInputResolution variants; accepted-Plan and resolution immutability; declarative EVIDENCE_BINDING/TARGET_PATH/STEP_OUTPUT PlanInputs; future/cross-Task references; fabricated authoritative references; duplicate step/input/output IDs or names; unknown profiles; generic success expression; and per-Round step cap, because Plan structure must be unambiguous and finite to prevent semantic drift during execution.
 
 ### Semantic roles and operations
 
-- `Q14` **Planner:** exact RunPolicyView and remaining Task/depth/Round/step capacity, EXECUTE, INVESTIGATE, zero-step, DECLINE, complete PlanInputResolution publication with the accepted Plan, missing/unresolvable input rejection, settled non-OK, rejected return, and unsettled block; Decline never creates steps or REPEAT, because planning must remain deterministic and finite without hidden semantic choices.
+- `Q14` **Planner:** exact RunPolicyView and remaining Task/depth/Round/step capacity, EXECUTE, INVESTIGATE, zero-step, DECLINE, complete PlanInputResolution publication with the accepted Plan, missing/unresolvable input rejection, settled non-OK, rejected return, and unsettled block; Decline never creates steps or REPEAT, because Planner semantics may be judgmental while its authority, inputs, outputs, limits, and persistence must remain closed and finite.
 - `Q15` **Call and local-settlement algebra:** every valid and invalid post-launch return/result/settlement combination, no persisted call outcome before a marker, Worker/command role-result versus Boundary-owned StepResult separation, settled non-OK mapping to `INDETERMINATE` unless accepted facts establish `NOT_SATISFIED`, no fabricated success, bounded capture, truthful local-only settlement, accepted structured binding, and same-Run stopping on unsettled or unknown work without a settlement-probe transition, because return values must be truthful and distinguishable to preserve mission judgment integrity.
 - `Q16` **Exactly one launch:** marker ordering, no second launch for any role, transient non-persisted `PRELAUNCH_BLOCKED` on current prerequisite failure, explicit prelaunch reevaluation while no marker exists, and non-resumable ambiguous launch, because a second post-launch attempt could replay target, billing, network, remote, or escaped-child effects.
 - `Q17` **Worker:** satisfied/not-satisfied/indeterminate outcomes, live target create/edit/move/delete, admitted output import, opaque provider-internal tools, effect-report limits, persistence of a reported scope violation for Validator judgment without automatic Worker-outcome override, continued ordered execution when no mechanical blocker exists, authoritative-state mutation to `INVALID`, and unresolved local activity to `OPERATIONALLY_BLOCKED`, because Worker outcomes must be truthful and reported effects must inform Validator judgment without automated override.
@@ -679,7 +679,7 @@ Each scenario is parameterized over its listed positive and known-bad cases, bec
 - `Q21` **Child failure propagation:** semantic mapping, settled child `OPERATIONALLY_STOPPED` to parent `OPERATIONAL_INDETERMINATE` StepResult and parent audit, unsettled/unknown whole-Run block, and invalid child, because settled child failure must remain auditable without racing active child work or fabricating a judgment.
 - `Q22` **Validator context and independence:** RunPolicyView plus bounded evidence index with authoritative reference hashes, path-free ArtifactRefViews, and ArtifactViews, no canonical target/authoritative Run path or interactive tools, separate invocation, truthful `UNKNOWN` isolation, and explicit `INDETERMINATE + FINISH` when omitted evidence cannot be gathered safely, because Validator must remain independent and evidence-bounded to prevent semantic drift or hidden authority.
 - `Q23` **Terminal judgment and outputs:** all Validator mechanical floors execute before accepted-result classification, `VALIDATION_RECORDED` records every call outcome, `FINISH + SATISFIED` proves successful termination, `FINISH + NOT_SATISFIED` proves failed termination, `FINISH + INDETERMINATE` proves inconclusive termination, `REPEAT` requires a concrete credibly closable gap, Validator operation failure uses the common Boundary call/settlement mechanism without fabricated judgment, floor-violating returns become rejected and settled `OPERATIONALLY_STOPPED` without judgment, accepted-result Round finalization, required-output floor, wrong terminal selection, and Validator unsettled operational block as a same-Run stop, because terminal decisions must be mutually exclusive and final without replay.
-- `Q24` **REPEAT evidence:** current PLAN Round producer, frozen RUN import including a declared current-Round TARGET output copied deterministically by Boundary, mechanical novelty by exact file content/type or canonical observation identity, and rejection of prose, prior evidence, byte-identical copy/rename, repeated observations, arbitrary freezes, and no-Plan/Decline cases; representative changed-byte wrappers are challenged semantically without a universal wrapper-detection claim, because repeat evidence must represent genuinely novel current-Round work to prevent infinite loops.
+- `Q24` **REPEAT evidence:** current PLAN Round producer, frozen RUN import including a declared current-Round TARGET output copied deterministically by Boundary, mechanical novelty by exact file content/type or canonical observation identity, and rejection of prose, prior evidence, byte-identical copy/rename, repeated observations, arbitrary freezes, and no-Plan/Decline cases; representative changed-byte wrappers are challenged semantically without a universal wrapper-detection claim, because repeat evidence must be mechanically new current-Round work before Validator can judge whether it is materially useful.
 - `Q25` **REPEAT semantic boundary:** Validator-policy rejection of semantically unchanged wrappers, restatement, cosmetic activity, far failure, hard blocker, and circular replay; positive material leverage, incidentally satisfied investigation, partial execution progress, and next-Planner independence; Boundary performs no semantic replay-wording detector, because REPEAT must not loop on unchanged work or circular replay.
 - `Q26` **Finite continuation:** identical mission/fresh Plan, contiguous Rounds, Round/step/Task/depth limits, RunPolicyView remaining-capacity input to Planner/Validator, FINISH-only schema at zero capacity, violating REPEAT classified rejected without coercion, one pre-existing repeat consumption per invocation, and child Round 0 exemption, because REPEAT budget must be finite and mechanically enforced to prevent runaway loops.
 
@@ -688,7 +688,7 @@ Each scenario is parameterized over its listed positive and known-bad cases, bec
 - `Q27` **Prior evidence:** caller-selected committed compatible prior RUN artifacts/reports/logs, including Boundary-frozen RUN copies of target bytes, are copied into current-Run ArtifactRefs before Task publication and remain advisory; direct live TARGET references reject; prior-root deletion after publication does not affect current evidence; unselected, uncommitted, incompatible, injected, externally rebound, or lifecycle-merging material rejects, because prior evidence must remain advisory and separate from current-Run lifecycle state.
 - `Q28` **CLI immutability:** task-spec/routing entry, prior-root/selector consistency, no superseded semantic flags, resume cannot change policy/routing/auth, `RUN_BUSY` query behavior, and exact exit-state mapping, because CLI must preserve Run identity through all operations without hidden mutation.
 - `Q29` **Status and diagnosis:** nonblocking read-only locking with `RUN_BUSY`, exact state/blocker/next action, OperationRequest and launch counts, terminal receipt visibility, retention warning, same-Run operational-stop reporting, no unsafe immediate-restart advice after unknown settlement or ambiguous launch, missing root, and no automatic repair, because status must be truthful and unsuggestive of repair to prevent operator confusion.
-- `Q30` **Plain and Git targets:** both work without Git lifecycle authority, no target `.stt`, and target concurrency yields visible identity conflict rather than rebinding, because targets must work without assuming Git semantics or hidden lifecycle authority.
+- `Q30` **Plain and Git targets:** both work without Git lifecycle authority or target `.stt`; a change to an exact target identity that Boundary later reuses yields a visible mismatch rather than silent rebinding, while unrelated or unobserved external changes may remain unknown, because STT must preserve evidence it consumes without claiming control over the open target.
 - `Q31` **Bounded context:** the canonical ArtifactRefView/ArtifactView builder emits path-free metadata plus full, bounded-text, or metadata-only content through deterministic range/truncation/metadata policy and no Boundary-generated semantic summary; Planner receives EvidenceBindingView and Planner/Validator receive RunPolicyView, TaskAuthorityView, WorkerRouteView, CapabilityProfileView, and authoritative reference hashes but never full InputRef/ArtifactRef, canonical target, authoritative RUN path, device/inode, executable, adapter, credential, or launch metadata, while path-like strings inside admitted untrusted bodies remain data; Planner/Worker/Validator receive only role-specific admitted views; truncation is visible and cannot masquerade as complete evidence; Lead carries references only, because lower-trust roles must not receive authoritative metadata or control-state paths.
 - `Q32` **Provider adapters and routing truth:** fake and controlled Claude/Codex launchers, explicit live authorization, requested versus observed routing including `UNSPECIFIED` requested fields and truthful `UNKNOWN` observations, fixed inherited credential-name allowlists, secret-value non-persistence, no automatic model/route escalation, and no semantic adapter logic, because provider translation must preserve request identity and report unobservable routing facts as unknown.
 - `Q33` **Resource, capture, and call visibility:** finite Task/Round/step budgets, complete fixed-unit capture/wait schemas including structured-request and total exchange-input separation, conservative hard-ceiling rejection, byte/time/entry enforcement, deterministic overflow, structural semantic-call bounds, actual role/route/model/effort OperationRequest and launch counts, terminal receipt visibility, a separately persisted finite automated-host polling budget when such a host exists, retention warnings, and honest stop at policy boundaries, because resource budgets must be finite and mechanically enforced to prevent runaway work.
@@ -722,7 +722,7 @@ Fail qualification when active STT documents or code contain, because static che
 - unbounded per-Task Round count;
 - whole-Run blocking for a child `OPERATIONALLY_STOPPED` state without the parent-audit rule;
 - competing architecture semantics in the implementation plan;
-- concurrency, parallel Task execution, a second active frontier, or target-wide writer exclusion;
+- parallel Task or step execution inside one Run, a second active frontier, built-in cross-Run coordination, or target-wide writer exclusion;
 - automatic Git commit, staging, push, merge, rebase, or publication;
 - automatic rollback, target restoration, or multi-resource transaction;
 - RunSkeptic or archived Target Task execution inside the STT runtime;
@@ -823,6 +823,7 @@ The STT MVP is done only when, because implementation must stop only after every
 12. status and diagnosis report uncertainty, `RUN_BUSY`, OperationRequest/launch counts, terminal receipt visibility, and retention risk without repair or semantic fabrication;
 13. implementation contains no archive dependency, target `.stt` authority, sandbox claim, or automatic publication;
 14. final WELL and RunSkeptic review finds no unresolved promotion blocker, and any status-line change has restarted and completed those reviews on the final unchanged bytes;
-15. implementation stops.
+15. per-Run writer locking, target non-locking, caller-managed cross-Run non-overlap, and point-in-time target observations follow the architecture exactly;
+16. implementation stops.
 
 The implementation-done definition is executable acceptance rather than proof that every provider or arbitrary process behaves honestly, because implementation must stop only after every accepted architecture and proof obligation is satisfied.
