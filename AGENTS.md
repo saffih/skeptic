@@ -7,7 +7,6 @@ This repository is a portable prompt and review library. Its capabilities valida
 - Review an artifact, decision, or RunSkeptic: read `skeptic.md` and only explicitly applicable companions.
 - Write or review a design, architecture, or software design document (SDD): read `docs/well.md`, because that file is the canonical WELL profile for design documentation.
 - Lead execution: read `agents/lead_agent.md`; add `agents/model_routing_policy.md` when routing is needed and `agents/agent_return_contract.md` for delegated returns.
-- Target Task planning: dispatch the bounded Planner in `agents/planner.md` before execution; its return is advisory and requires Lead validation and acceptance. Supplied drafts are Planner input only.
 - Substantive bounded plan construction or repair for ordinary work: use the bounded Planner in `agents/planner.md` when focused construction materially helps; its output is not execution authority.
 - Define or execute a substantive workflow: read `workflows/task_prompt.md`.
 - Build a Task Prompt (`TP: <objective>`, `Create task prompt for: <objective>`, `Create a task prompt for: <objective>`, or `Task prompt for: <objective>`): first read `workflows/task_prompt_builder.md` before interpreting or responding, then process the complete user request according to it. If the file cannot be read, stop visibly with `TASK_PROMPT_BUILDER_UNAVAILABLE`. Do not route an alias directly to `workflows/task_prompt.md`.

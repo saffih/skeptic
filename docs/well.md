@@ -1,113 +1,177 @@
 # WELL — Warranted, Explicit, Lean, Linked
 
-WELL is a normative profile for design and architecture documents, including software design documents (SDDs), because design reasoning must remain inspectable and resistant to drift. WELL governs this document, because an exempt standard cannot demonstrate feasibility.
+WELL is the normative profile for architecture, software-design, architecture-decision, and equivalent design documents, because design meaning must remain inspectable and resistant to drift.
 
-## Scope, purpose, and boundaries
+WELL governs this document, because a design standard must demonstrate that its own requirements are usable.
 
-WELL applies only to architecture descriptions, SDDs, design specifications, architecture decision records, and similar artifacts that define or justify a design, because those decisions must survive implementation.
+## Scope and purpose
 
-WELL does not govern prompts, code, reviews, reports, status updates, test results, runbooks, user documentation, or ordinary communication, because those artifacts serve different purposes. Scope follows function, because naming cannot extend authority.
+WELL applies to documents that define or justify a design, because their propositions must survive implementation, review, extraction, movement, and later modification.
 
-WELL prevents unsupported statements gaining authority, decisions losing reasons, repeated rationale drifting, compression deleting meaning, and explanation hiding the design chain, because each failure weakens maintenance.
+WELL does not govern prompts, source code, reviews, reports, status updates, test output, runbooks, user documentation, or ordinary communication, because those artifacts serve different functions and require different forms.
 
-WELL governs design-writing structure rather than Skeptic review, because overlapping authority would create drift. WELL is not a language, proof system, demand for hidden reasoning, proof of design correctness, or requirement for visible sentence metadata, because structure is neither truth nor mandatory formalism.
+Scope follows function rather than filename, because renaming an artifact must not silently extend or remove normative authority.
 
-## Primary invariant and roles
+WELL protects document integrity, because unsupported claims, detached reasons, hidden qualifications, duplicated rationale, and disconnected checks can cause a later edit to change the design unintentionally.
 
-Every retained sentence in a WELL-governed design document must have a recoverable reason for existing, because arbitrary, unsupported, or purpose-disconnected statements cannot preserve rational integrity.
+WELL governs design-writing structure rather than Skeptic review or executable qualification, because inspectable reasoning, adversarial criticism, and runtime proof are complementary authorities rather than substitutes.
 
-A sentence satisfies the invariant only when it performs a necessary role, because nonoperative text cannot justify maintenance:
+WELL is not a proof system, a demand for hidden reasoning, or proof that a design is correct, because explicit structure can expose an error without resolving it.
 
-- **Ground** — objective, constraint, observation, authority, assumption, or unknown.
-- **Definition** — stable meaning needed by later reasoning.
-- **Proposition** — design claim, requirement, recommendation, or decision.
-- **Qualification** — scope, condition, boundary, or exception.
-- **Consequence** — effect, cost, risk, or trade-off.
-- **Check** — evidence, acceptance, verification, or falsification.
-- **Open item** — unresolved unknown, conflict, or decision.
-- **Structure** — connection or navigation for reasoning.
+## Self-contained design propositions
 
-A sentence may combine roles, because forced separation adds length. Labels are optional when roles are clear, because ceremony can imitate rigor. Remove a sentence with no role, because unnecessary text creates noise and drift.
+A design proposition is the smallest prose unit that independently asserts a design fact, definition, requirement, decision, qualification, consequence, check, assumption, unknown, or relationship, because independently changeable meaning needs an independently recoverable warrant.
 
-## Sentence warrant and termination
+A WELL-governed design document expresses each independent design proposition as a self-contained unit, because searching, quoting, moving, reviewing, or modifying the proposition must not separate its claim from its reason.
 
-A sentence is reason-bearing when it uses `because`, `to`, `so that`, `therefore`, an equivalent causal construction, or one explicit local warrant, because readers must not reconstruct distant intent. Prefer a direct reason when natural, but share a local warrant when repetition adds nothing, because WELL must remain Explicit and Lean.
+Every complete prose sentence must contain the literal word `because`, because the proposition and its warrant must remain recoverable when the sentence is read outside its surrounding prose.
 
-A support path may end at an objective, constraint, observation, authoritative input, definition, assumption, or unknown, because finite documents need stopping points. Mark assumptions and unknowns, because status does not prove them. Grounds and definitions may end locally, but still need inclusion reasons, because necessity differs from evidence. Do not justify reasons recursively, because infinite regress is unusable.
+The `because` clause must state a concrete local reason, protection, consequence, dependency, or inclusion rationale, because ceremonial or circular wording cannot preserve design integrity.
 
-## Dimensions
+A clause that merely cites the standard or labels the proposition important is nonconforming, because it does not explain why the proposition belongs in the design.
 
-**Warranted.** Give design claims, requirements, recommendations, and decisions sufficient relevant grounds, because unsupported propositions cannot be assessed reliably.
+Headings, metadata fields, schemas, tables, code, formulas, diagrams, identifiers, state vocabularies, and genuine list fragments do not require their own `because`, because they are structural notation rather than independent prose propositions.
 
-**Explicit.** State scope, conditions, assumptions, limits, exceptions, consequences, conflicts, and unknowns when omission could change interpretation or implementation, because incomplete design prose can mislead.
+A list may inherit one explicit warrant from its introductory sentence only when every child item is a subordinate fragment, because an independently meaningful list sentence must preserve its own reason.
 
-**Lean.** Use the shortest form that preserves operative design meaning, because extra text hides distinctions and increases drift. Do not remove necessary reasoning, qualification, uncertainty, consequence, or verification, because brevity without integrity is false simplicity.
+A complete prose sentence inside a list must contain its own literal `because`, because list formatting does not remove the sentence's independent meaning.
 
-**Linked.** Make relationships among propositions, grounds, qualifications, consequences, checks, and open items recoverable, because disconnected statements cannot form a maintainable design chain. Use any unambiguous representation, because no format is mandatory.
+A quoted nonconforming sentence may omit `because` only when the surrounding warranted proposition identifies it explicitly as a failure example, because examples must be able to display the defect they explain.
 
-## Normative rules
+WELL formation protects modification integrity, because cohesive and locally warranted propositions can be searched, extracted, moved, compared, replaced, and updated without silently losing the reasoning that constrains them.
 
-Ground every derived or normative design proposition and end its support path explicitly, because implementation must not depend on unsupported premises. State qualifications and consequences that could change a design choice, because unbounded statements and hidden costs can mislead. Give checkable propositions a verification or falsification path, and mark assumptions, unknowns, conflicts, and unresolved decisions, because claims must be able to fail and uncertainty must remain visible.
+## Proposition roles
 
-Define shared terms and rationale once, keep enough reasoning local to prevent guessing, and reference detail instead of repeating it, because canonical meaning reduces drift. Remove nonoperative content, prefer readable prose over metadata, and add structure only for a credible design-document failure, because WELL should improve understanding rather than create forms.
+Every retained design proposition performs at least one necessary role, because nonoperative prose cannot justify maintenance:
 
-## Searchability guidance
+- ground: objective, constraint, observation, authority, assumption, or unknown
+- definition: stable meaning needed by later reasoning
+- proposition: design claim, requirement, recommendation, or decision
+- qualification: scope, condition, boundary, or exception
+- consequence: effect, cost, risk, or trade-off
+- check: evidence, acceptance, verification, or falsification path
+- open item: unresolved unknown, conflict, or decision
+- structure: explicit connection or navigation needed by the reasoning chain
 
-For material design content, prefer one complete proposition per paragraph and keep that proposition, including its local reason, on one physical source line, because `grep`, diffs, and agents can then retrieve it as one bounded reasoning unit.
+A proposition may combine roles when the roles share one reason, because forced separation can add noise without improving integrity.
 
-Separate proposition paragraphs with blank lines, because clear source boundaries make propositions easier to add, remove, move, and review independently.
+A proposition must be split when its independently changeable claims need different reasons, because one `because` clause must not conceal unrelated decisions.
 
-Choose one canonical term when a material concept is first defined, and reuse that term in related propositions instead of relying only on pronouns or changing synonyms, because exact-text search should find the concept’s relevant claims, constraints, decisions, and checks.
+A proposition with no necessary role must be removed, because unnecessary prose increases search noise and drift.
 
-Prefer explicit relationship phrases such as `depends on`, `constrains`, `supports`, `verifies`, `contradicts`, and `supersedes`, because directional wording helps readers and agents understand what a change may affect.
+## Warrant termination
 
-Use editor soft wrapping rather than inserting source line breaks inside a proposition, because visual readability can be preserved without weakening search results.
+A support path may terminate at an objective, constraint, direct observation, authoritative input, stable definition, explicit assumption, or explicit unknown, because finite design documents need legitimate stopping points.
 
-Depart from this guidance when it would materially harm clarity or force one connected piece of reasoning into unnatural fragments, because searchability supports WELL but does not override reasoning integrity.
+A ground or definition still needs a local inclusion reason, because being foundational does not explain why that particular foundation is required here.
 
-## Document obligations and verification boundary
+Assumptions and unknowns must remain labelled, because their presence in a design document does not make them true or resolved.
 
-A WELL-governed design document must establish applicable purpose, scope, grounds, constraints, decisions, qualifications, consequences, checks, and unresolved matters, because these make reasoning inspectable. Omit inapplicable obligations, because ceremony violates Lean.
+Reasons do not require infinite recursive justification, because an explicit terminal ground is sufficient for a finite recoverable design chain.
 
-WELL review may identify unsupported propositions, hidden assumptions, undefined terms, missing qualifications, consequences, or checks, contradictions, broken links, repeated rationale, and removable text, because these are structurally inspectable. Conformance cannot prove evidence true, grounds sufficient, inference valid, a design correct or optimal, context complete, or wording maximally lean, because inspectable reasoning is not correct reasoning.
+## WELL dimensions
+
+**Warranted.** A design claim, requirement, recommendation, or decision states sufficient relevant grounds, because an unsupported proposition cannot be assessed or safely preserved.
+
+**Explicit.** A proposition states every scope, condition, assumption, limit, exception, consequence, conflict, and unknown whose omission could change implementation or interpretation, because hidden qualifications create false certainty.
+
+**Lean.** A proposition uses the shortest form that preserves operative meaning and its reason, because excess text hides distinctions and creates duplicate places to update.
+
+Necessary reasoning, qualification, uncertainty, consequence, and verification must not be removed for brevity, because compression without integrity creates false simplicity.
+
+**Linked.** Relationships among propositions, grounds, qualifications, consequences, checks, and open items remain recoverable, because isolated sentences cannot form a maintainable design.
+
+No specific link format is mandatory, because prose references, identifiers, tables, and other unambiguous structures can preserve the same relationship.
+
+## Normative writing rules
+
+Each material proposition states its concrete local warrant and explicit support terminus, because implementation must not depend on distant or guessed intent.
+
+Each material qualification and consequence remains attached to the proposition it constrains, because extraction or movement must not silently broaden the claim.
+
+Each checkable proposition identifies a verification or falsification path directly or through an explicit canonical link, because a design claim must be able to fail.
+
+Shared terms and reusable rationale have one canonical definition with explicit references from dependent propositions, because repeated definitions and reasons can diverge.
+
+Enough reasoning remains local to make an extracted proposition coherent, because a reference cannot substitute for the proposition's immediate reason.
+
+Nonoperative content and duplicate authority are removed, because WELL should improve understanding rather than create ceremonial documentation.
+
+## Searchability and encapsulation
+
+One complete proposition per paragraph is preferred, because bounded source units are easier to search, compare, move, and review.
+
+A material proposition and its local `because` clause should remain on one physical source line when practical, because exact-text tools should retrieve the claim and warrant together.
+
+Blank lines should separate proposition paragraphs, because visible source boundaries reduce accidental partial edits.
+
+One canonical term should name each material concept, because changing synonyms and unqualified pronouns can hide related propositions from search.
+
+Directional terms such as `depends on`, `constrains`, `supports`, `verifies`, `contradicts`, and `supersedes` should be explicit when material, because readers and tools need to recover change impact.
+
+Editor soft wrapping should be preferred over inserted hard line breaks inside one proposition, because visual readability need not fragment the searchable source unit.
+
+A justified departure from the preferred physical form is allowed when the alternative materially improves reasoning clarity, because searchability supports rather than overrides semantic integrity.
+
+## Document obligations
+
+A WELL-governed design document establishes its purpose, scope, authority, grounds, constraints, decisions, qualifications, consequences, checks, and unresolved matters when applicable, because those elements make the design chain inspectable.
+
+An inapplicable obligation may be omitted explicitly or by clear structure, because mandatory empty sections would violate Lean without preserving meaning.
+
+A document must distinguish current authority from historical evidence, because lineage must inform the design without competing with it.
+
+A document must identify which artifact owns each normative meaning and which artifact owns executable proof, because duplicated authority creates drift.
+
+## Conformance and verification
+
+A design document is WELL-conformant only when every complete prose sentence contains a substantive literal `because`, every material proposition is sufficiently warranted and qualified, reasoning links and checks are recoverable, duplicate authority and nonoperative prose are absent, and unresolved matters remain unresolved, because partial compliance cannot preserve the design chain.
+
+A mechanical sentence checker is required as an aid, because a complete pass over a large document is easy to perform inconsistently by inspection alone.
+
+The checker must ignore only genuine structural notation and subordinate fragments, because broad exemptions can hide independent propositions.
+
+Every mechanical exemption requires manual review, because Markdown classification cannot determine semantic independence reliably.
+
+Human review remains required after a zero-violation checker result, because the presence of `because` does not prove that the warrant is relevant, sufficient, true, local, or non-circular.
+
+WELL review can identify unsupported propositions, hidden assumptions, missing qualifications, broken links, repeated rationale, and removable prose, because those defects are structurally inspectable.
+
+WELL conformance cannot prove evidence true, inference valid, context complete, or a design correct or optimal, because inspectable reasoning is not the same as correct reasoning.
 
 ## Application
 
-1. Establish purpose, because sentence necessity depends on the design outcome.
-2. Identify material propositions, because grounds and checks attach to them.
-3. Establish grounds, qualifications, consequences, and checks, because they form the reasoning chain.
-4. Expose assumptions, unknowns, and conflicts, because concealed uncertainty causes false confidence.
-5. Consolidate definitions and rationale, because canonical statements reduce drift.
-6. Apply the searchability guidance where it preserves reasoning integrity, because bounded source units improve retrieval and review.
-7. Remove repetition and nonoperative text, because unnecessary content weakens Lean.
-8. Verify preserved meaning after compression, because deletion can create false simplicity.
-9. Review the complete document, because locally valid sections can conflict globally.
-10. Review every sentence’s reason, because WELL applies at sentence and document levels.
+Apply WELL in this order, because early identification of proposition boundaries prevents later ceremonial repair:
 
-## Conformance
-
-A design document is WELL-conformant only when sentences have recoverable reasons, material propositions have sufficient grounds, limits and consequences are explicit, assumptions and unknowns remain visible, checkable propositions have checks, reasoning links are recoverable, no sentence is removable without loss, applicable obligations are discharged, and unresolved matters remain unresolved, because partial compliance cannot preserve the design chain.
-
-Conformance requires judgment, because sufficiency, necessity, validity, and justified departures from searchability guidance are not fully mechanical.
+1. establish document purpose and authority
+2. identify independently changeable propositions
+3. identify each proposition's concrete ground, qualification, consequence, and check
+4. split propositions whose claims require different reasons
+5. expose assumptions, unknowns, conflicts, and authority boundaries
+6. consolidate repeated definitions and rationale behind canonical links
+7. convert only genuine subordinate enumerations into fragments under one warranted introduction
+8. remove nonoperative and duplicated prose
+9. run the sentence checker and inspect every exemption
+10. review the complete document for cross-section contradiction and semantic drift
 
 ## Examples
 
-### Example 1 — unsupported design proposition
+`Use event sourcing` is nonconforming when asserted alone, because the sentence states a design choice without its design ground.
 
-“Use event sourcing” fails because it gives no design ground. “Use event sourcing for the audit ledger, because immutable history is required for reconstruction” adds one.
+`Use event sourcing for the audit ledger, because immutable history is required for reconstruction` is locally warranted, because the sentence keeps the choice and the protected need in one proposition.
 
-### Example 2 — definition without inclusion rationale
+`Boundary is the validation façade` is nonconforming when asserted alone, because the definition does not explain why the role is needed.
 
-“Boundary is the validation façade” fails because its design function is unstated. “Boundary means the validation façade, because later interface rules assign trust transitions to that role” explains its need.
+`Boundary means the validation façade, because later interface rules assign every trust transition to that role` is locally warranted, because the definition includes its architectural function.
 
-### Example 3 — excessive repeated reasoning
+Repeating `because the controller must remain deterministic` after unrelated controller rules is nonconforming, because one reason cannot justify independently changeable claims merely by repetition.
 
-Repeating “because the controller must remain deterministic” after every controller rule violates Lean because one local warrant can govern the group. State it once before the rules, because local scope preserves the link without noise.
-
-### Example 4 — search-fragmented proposition
-
-A material proposition split across several hard-wrapped source lines is harder to retrieve as one reasoning unit. Keep the complete proposition and its local reason on one source line when clarity permits, because editors can soft-wrap the line for display.
+A warranted introductory sentence may govern a list of subordinate fields, because the fields are structural components of the proposition rather than independent claims.
 
 ## Self-application
 
-Every retained sentence in this document has a direct or unambiguous local reason for existing, because sentence-level warrant is WELL’s primary integrity mechanism. The searchability section uses one proposition paragraph per physical source line and canonical terms, because self-application requires the profile to demonstrate its own guidance. This claim rests on sentence review, rationale consolidation, explicit scope limits, and source-format inspection, because self-application requires inspection rather than assertion.
+Every complete prose sentence in this document contains a substantive literal `because`, because sentence-level local warrant is WELL's primary encapsulation mechanism.
+
+Every structural exemption in this document is limited to headings or subordinate list fragments, because the standard must not evade its own rule through formatting.
+
+The document uses canonical terms and proposition-sized paragraphs, because self-application must demonstrate cohesive search, extraction, and modification units.
