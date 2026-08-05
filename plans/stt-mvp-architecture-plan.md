@@ -49,11 +49,11 @@ STT protects, because runtime meaning needs one canonical owner and an explicit 
 - exceptional same-mission continuation through finite caller-mediated Rounds;
 - a frozen active runtime when Skeptic is itself the target, because runtime meaning needs one canonical owner and an explicit protection boundary.
 
-STT does not prevent or fully observe arbitrary filesystem, process, credential, network, service, remote, or external effects, because persisted requests must not acquire or disclose undeclared host credentials.
+STT does not prevent or fully observe arbitrary filesystem, process, credential, network, service, remote, or external effects, because it is an orchestration system without OS-level containment or complete process instrumentation.
 
 It is an orchestration-integrity system rather than an operating-system sandbox, so every enforceable admission rule is separated below from cooperative responsibility and unknown process behavior, because the MVP must not imply protection that it cannot enforce.
 
-Archived Target Task material is historical evidence only, because runtime meaning needs one canonical owner and an explicit protection boundary.
+Archived Target Task material is historical evidence only, because only current documents own normative meaning for the active runtime.
 
 No previous lifecycle is inherited wholesale, because every retained protection must fit the current live-target and Round model.
 
@@ -78,7 +78,7 @@ routing_identity
 
 `mission` contains the objective, scope, constraints, non-artifact success meaning, and prohibited actions, because Bootstrap must freeze accountable root semantics before any semantic execution.
 
-Structured `required_outputs` are the only normative artifact-output contract, because Bootstrap must freeze accountable root semantics before any semantic execution.
+Structured `required_outputs` are the only normative artifact-output contract, because artifact outputs need one unambiguous contract separate from mission prose.
 
 Runtime output matching never interprets mission prose as an artifact requirement and always gives the structured contract precedence, because target and prior content must not acquire control authority.
 
@@ -128,7 +128,7 @@ wait_limits:
   termination_grace_seconds
 ```
 
-`max_request_bytes` bounds structured request material and prompt bytes, while `max_exchange_input_bytes` bounds the total exact artifact bytes copied into one exchange, because Bootstrap must freeze accountable root semantics before any semantic execution.
+`max_request_bytes` bounds structured request material and prompt bytes, while `max_exchange_input_bytes` bounds the total exact artifact bytes copied into one exchange, because these represent distinct exchange phases with independent constraints.
 
 Every count, byte limit, depth, and duration is a finite positive integer; byte fields use bytes and duration fields use seconds, because independent implementations need one mechanically decidable contract.
 
@@ -142,7 +142,7 @@ The host or caller that creates `RootTaskSpec` owns mission finalization, root a
 
 STT validates and freezes the specification but does not semantically complete it, because deterministic Bootstrap must not become an undeclared Planner.
 
-Bootstrap first copies and verifies exact task-spec and routing bytes into its bounded handoff, parses only those frozen copies, and requires `RootTaskSpec.routing_identity` to equal the exact frozen routing-file identity, because finite policy must prevent unbounded work and keep resource use structurally visible.
+Bootstrap first copies and verifies exact task-spec and routing bytes into its bounded handoff, parses only those frozen copies, and requires `RootTaskSpec.routing_identity` to equal the exact frozen routing-file identity, because parsing only frozen copies prevents mutation during interpretation.
 
 A changed `RootTaskSpec` or routing file starts a new Run, because root semantics and host assumptions must be frozen before semantic execution.
 
@@ -647,7 +647,7 @@ The Run becomes `OPERATIONALLY_BLOCKED` when the reported effect creates unresol
 
 STT does not claim to detect unreported effects, because cooperative reporting is not complete effect observation.
 
-The target is not exclusively locked, because semantic roles must not acquire hidden path, process, environment, credential, or effect authority.
+The target is not exclusively locked, because external processes and concurrent modifications outside STT can occur at any time.
 
 Every STT-named TARGET ArtifactRef, PlanInputResolution, command path, and output is identity-checked at its Boundary use; concurrent target change produces a visible mismatch or indeterminate observation rather than silent rebinding, because trusted lifecycle mutation must remain centralized and mechanically verifiable.
 
@@ -657,7 +657,7 @@ Opaque Worker reads performed directly inside the admitted live target remain co
 
 ## 11. STT-private role contracts and instruction trust
 
-The frozen runtime contains private contracts, because controller and evidence integrity depend on verified disjoint locations and supported host primitives:
+The frozen runtime contains private contracts, because role semantics must be frozen before execution and mutable repository instructions must not alter the current Run:
 
 ```text
 concepts/stt/contracts/planner.md
@@ -704,7 +704,7 @@ A child derives them from one accepted TaskStep, because delegation and same-mis
 
 Task identity binds Run, parent relation, mission, authority, required outputs, initial inputs, routes, depth, and policy identities, because resume and lineage require immutable and uniquely bound Task and Round identities.
 
-Mission prose does not redefine the structured output contract, because resume and lineage require immutable and uniquely bound Task and Round identities.
+Mission prose does not redefine the structured output contract, because prose reinterpretation would create ambiguous artifacts and multiple competing meanings.
 
 ### 12.2 Round identity
 
@@ -763,7 +763,7 @@ owner_task
 owner_round   # required only for ROUND_REPEAT
 ```
 
-A root or child Task is published with Task-scoped bindings; a repeated Round is published with Round-scoped repeat bindings, because mission judgment must remain separate from continuation and operational failure.
+A root or child Task is published with Task-scoped bindings; a repeated Round is published with Round-scoped repeat bindings, because bindings must respect scope boundaries to prevent cross-Round visibility leakage.
 
 A binding is not an `InputRef`, because the exact Round and consuming role may not exist when the binding is created.
 
@@ -780,7 +780,7 @@ owner_task
 owner_round
 ```
 
-EvidenceBindingView omits the full ArtifactRef, source path, and host observation, because resume and substitution checks require exact facts to remain uniquely bound.
+EvidenceBindingView omits the full ArtifactRef, source path, and host observation, because lower-trust roles must not receive host-location metadata.
 
 It exists so Planner can name `source_binding_id` without receiving authoritative control objects, because planning must remain immutable, bounded, and unable to redefine runtime authority.
 
