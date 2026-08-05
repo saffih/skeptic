@@ -51,6 +51,20 @@ Ground every derived or normative design proposition and end its support path ex
 
 Define shared terms and rationale once, keep enough reasoning local to prevent guessing, and reference detail instead of repeating it, because canonical meaning reduces drift. Remove nonoperative content, prefer readable prose over metadata, and add structure only for a credible design-document failure, because WELL should improve understanding rather than create forms.
 
+## Searchability guidance
+
+For material design content, prefer one complete proposition per paragraph and keep that proposition, including its local reason, on one physical source line, because `grep`, diffs, and agents can then retrieve it as one bounded reasoning unit.
+
+Separate proposition paragraphs with blank lines, because clear source boundaries make propositions easier to add, remove, move, and review independently.
+
+Choose one canonical term when a material concept is first defined, and reuse that term in related propositions instead of relying only on pronouns or changing synonyms, because exact-text search should find the concept’s relevant claims, constraints, decisions, and checks.
+
+Prefer explicit relationship phrases such as `depends on`, `constrains`, `supports`, `verifies`, `contradicts`, and `supersedes`, because directional wording helps readers and agents understand what a change may affect.
+
+Use editor soft wrapping rather than inserting source line breaks inside a proposition, because visual readability can be preserved without weakening search results.
+
+Depart from this guidance when it would materially harm clarity or force one connected piece of reasoning into unnatural fragments, because searchability supports WELL but does not override reasoning integrity.
+
 ## Document obligations and verification boundary
 
 A WELL-governed design document must establish applicable purpose, scope, grounds, constraints, decisions, qualifications, consequences, checks, and unresolved matters, because these make reasoning inspectable. Omit inapplicable obligations, because ceremony violates Lean.
@@ -64,16 +78,17 @@ WELL review may identify unsupported propositions, hidden assumptions, undefined
 3. Establish grounds, qualifications, consequences, and checks, because they form the reasoning chain.
 4. Expose assumptions, unknowns, and conflicts, because concealed uncertainty causes false confidence.
 5. Consolidate definitions and rationale, because canonical statements reduce drift.
-6. Remove repetition and nonoperative text, because unnecessary content weakens Lean.
-7. Verify preserved meaning after compression, because deletion can create false simplicity.
-8. Review the complete document, because locally valid sections can conflict globally.
-9. Review every sentence’s reason, because WELL applies at sentence and document levels.
+6. Apply the searchability guidance where it preserves reasoning integrity, because bounded source units improve retrieval and review.
+7. Remove repetition and nonoperative text, because unnecessary content weakens Lean.
+8. Verify preserved meaning after compression, because deletion can create false simplicity.
+9. Review the complete document, because locally valid sections can conflict globally.
+10. Review every sentence’s reason, because WELL applies at sentence and document levels.
 
 ## Conformance
 
 A design document is WELL-conformant only when sentences have recoverable reasons, material propositions have sufficient grounds, limits and consequences are explicit, assumptions and unknowns remain visible, checkable propositions have checks, reasoning links are recoverable, no sentence is removable without loss, applicable obligations are discharged, and unresolved matters remain unresolved, because partial compliance cannot preserve the design chain.
 
-Conformance requires judgment, because sufficiency, necessity, and validity are not fully mechanical.
+Conformance requires judgment, because sufficiency, necessity, validity, and justified departures from searchability guidance are not fully mechanical.
 
 ## Examples
 
@@ -89,6 +104,10 @@ Conformance requires judgment, because sufficiency, necessity, and validity are 
 
 Repeating “because the controller must remain deterministic” after every controller rule violates Lean because one local warrant can govern the group. State it once before the rules, because local scope preserves the link without noise.
 
+### Example 4 — search-fragmented proposition
+
+A material proposition split across several hard-wrapped source lines is harder to retrieve as one reasoning unit. Keep the complete proposition and its local reason on one source line when clarity permits, because editors can soft-wrap the line for display.
+
 ## Self-application
 
-Every retained sentence in this document has a direct or unambiguous local reason for existing, because sentence-level warrant is WELL’s primary integrity mechanism. This claim rests on sentence review, rationale consolidation, and explicit scope limits, because self-application requires inspection rather than assertion.
+Every retained sentence in this document has a direct or unambiguous local reason for existing, because sentence-level warrant is WELL’s primary integrity mechanism. The searchability section uses one proposition paragraph per physical source line and canonical terms, because self-application requires the profile to demonstrate its own guidance. This claim rests on sentence review, rationale consolidation, explicit scope limits, and source-format inspection, because self-application requires inspection rather than assertion.

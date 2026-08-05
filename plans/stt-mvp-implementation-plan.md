@@ -1,1495 +1,708 @@
 # STT MVP Implementation Plan
 
-**Status:** Complete implementation plan for the Round-and-Repeat architecture
+**Status:** Canonical derived candidate; execution prohibited until the architecture passes the final independent review gates
 **Architecture source of truth:** `plans/stt-mvp-architecture-plan.md`
 **Repository:** `saffih/skeptic`
-**Repository base:** `702b480dc55ef935970fd60031f80d4320e43ad8`
+**Historical reconstruction base:** `74c4f6a2c34da501101141525c8a34d691c384a1`
+**Implementation-base rule:** branch from the exact repository commit that contains the accepted unchanged canonical architecture and implementation pair, as recorded in the implementation handoff or execution receipt
+**Canonical reconstruction source:** W5 implementation SHA-256 `7a619bd454a7349609cf66ac313aa3aa5236f397ab2df6d9803f8d5b848572da`
+**Document profile:** `docs/well.md`
 **Implementation authority:** STT MVP only
 
 ---
 
-## 1. Objective
+## 1. Objective and authority
 
-Implement the smallest complete STT described by the architecture plan.
+Implement the smallest complete runtime that satisfies architecture decisions `D1`–`D23`.
 
-The implementation must prove:
+The architecture owns runtime meaning, contracts, limitations, and warrants; the implementation plan owns responsibility boundaries, construction order, and executable proof.
 
-```text
-Task mission
-→ one immutable Round
-→ Planner
-→ immutable planning outcome
-→ sequential ordered steps
-→ Validator
-→ FINISH or exceptional REPEAT
-```
+When code, this plan, or a proposed simplification conflicts with architecture, stop and repair the design documents before implementation. Silent interpretation is forbidden because it would create an unreviewed architecture branch inside code.
 
-A later explicit caller invocation may run the same Task through one repeated Round after `REPEAT`.
-
-Stop when focused STT qualification, static consistency checks, and the full repository suite pass.
-
-Do not restore, adapt, or depend on archived Target Task behavior.
+Implementation must stop when the canonical qualification catalog passes, repository regression passes, and every production mechanism maps to a current architecture decision. It must not restore archived Target Task behavior or add speculative compatibility.
 
 ---
 
-## 2. Starting conditions
+## 2. Entry gate
 
-Before implementation:
+Do not begin production code until all are true:
 
-1. verify the branch contains the final architecture and implementation documents;
-2. record both plan SHA-256 values;
-3. inspect repository test conventions and only direct integration files;
-4. preserve unrelated work;
-5. leave `archive/` unchanged;
-6. do not copy archived Target Task implementation wholesale;
-7. implement from the current architecture, not conversation history;
-8. fail if either plan still contains superseded lifecycle contracts.
+1. the architecture status is explicitly implementation-ready under architecture §31, which requires a complete feasible design path but not preexisting runtime qualification results;
+2. its lineage matrix is complete;
+3. WELL review and RunSkeptic gates have passed on the unchanged document pair;
+4. the exact architecture and implementation SHA-256 values are recorded;
+5. the implementation branch starts from the exact accepted document-pair commit rather than the historical reconstruction base;
+6. unrelated work is preserved;
+7. the scope is limited to active STT code, STT-private contracts, CLI integration, and focused tests.
+
+Failure of any condition is `CONFLICT`, not permission to implement an assumed design.
 
 ---
 
-## 3. Build strategy
+## 3. Build discipline
 
-Build vertical behavior slices.
+Build vertical, reversible slices because cross-cutting framework scaffolding can conceal missing behavior.
 
 Each slice must:
 
-- implement one coherent runtime capability;
-- include focused deterministic tests;
-- preserve prior passing behavior;
-- use the smallest sufficient abstraction;
-- end in a reviewable commit;
-- prove its declared invariant;
-- remove mechanism not required by an architecture invariant.
+- implement one coherent responsibility boundary;
+- introduce only abstractions required by current decisions;
+- include its canonical qualification scenarios;
+- demonstrate at least one known-bad case when practical;
+- preserve all earlier passing scenarios;
+- end in a reviewable commit whose subject names the behavior proved;
+- leave no partial alternate lifecycle.
 
-Do not pre-create a large framework skeleton. Consolidate modules when simpler.
+Module and commit boundaries may change when a smaller shape preserves responsibility and proof. The following are prohibited unless architecture changes first:
 
----
-
-## 4. Recommended commit sequence
-
-1. `stt: add canonical state artifact and ledger core`
-2. `stt: add frozen runtime and bootstrap handoff`
-3. `stt: add task round and planning contracts`
-4. `stt: add call boundary and provider adapters`
-5. `stt: add live worker and command steps`
-6. `stt: add mechanical lead and distinct child tasks`
-7. `stt: add validator finish and repeat`
-8. `stt: add prior evidence cli and diagnostics`
-9. `stt: qualify round and repeat mvp`
-
-A commit may be split only when review clarity improves.
+- generic workflow or state-machine framework;
+- plugin system beyond named provider/command profiles;
+- automatic operation retry or replay;
+- semantic progress scoring;
+- mutable cursor or scheduler;
+- target sandbox or rollback claim;
+- archive runtime imports;
+- duplicate normative schemas or lifecycle rules.
 
 ---
 
-## 5. Target production shape
+## 4. Responsibility map
 
-```text
-concepts/stt/
-├── __init__.py
-├── bootstrap.py
-├── runtime.py
-├── run_lock.py
-├── lead.py
-├── task.py
-├── round.py
-├── ledger.py
-├── plan.py
-├── boundary.py
-├── launcher.py
-├── workspace.py
-├── command.py
-├── artifact.py
-├── receipt.py
-├── cli.py
-├── contracts/
-│   ├── planner.md
-│   ├── worker.md
-│   └── validator.md
-└── providers/
-    ├── __init__.py
-    ├── fake.py
-    ├── claude_code.py
-    └── codex.py
-```
+The implementation must provide these responsibilities; file names are suggested rather than normative.
 
-CLI entry:
+| Responsibility | Suggested primary area | Architecture |
+|---|---|---|
+| canonical JSON, hashes, create-only files, transition packages | `storage.py`, `transition.py` | `D7`, `D20` |
+| Task ledger and state derivation | `ledger.py`, `state.py` | `D3`, `D7`, `D20` |
+| supported-host probes and writer lock | `host.py`, `run_lock.py` | `D6` |
+| frozen runtime manifest and Bootstrap | `runtime.py`, `bootstrap.py` | `D1`, `D5`, `D6` |
+| RootTaskSpec, routing, TaskAuthority, path-free TaskAuthorityView, full profiles, and path-free CapabilityProfileView | `contracts.py`, `authority.py`, `routing.py` | `D1`, `D9`, `D10`, `D18` |
+| Task, Round, Plan, PlanInput, PlanInputResolution, EvidenceBinding, InputRef, OutputRequirement, ArtifactRef, StepResult, and role-result schemas | `task.py`, `round.py`, `plan.py`, `artifact.py` | `D2`, `D3`, `D12` |
+| workspace index and target observations | `workspace.py` | `D9`, `D13` |
+| exchange preparation and output import | `exchange.py` | `D5`, `D8` |
+| provider/command launch and call classification | `launcher.py`, `command.py`, `providers/` | `D13`, `D14`, `D15` |
+| mandatory Boundary façade | `boundary.py` | `D4` |
+| mechanical depth-first Lead | `lead.py` | `D3`, `D4`, `D17`, `D20` |
+| private role contracts | `contracts/planner.md`, `worker.md`, `validator.md` | `D10`, `D11`, `D16`, `D18` |
+| CLI, status, diagnosis, prior evidence, and call/cost visibility | `cli.py`, `scripts/stt.py` | `D1`, `D19`, `D20`, `D23` |
+| qualification catalog and static lineage checks | `tests/concepts/stt/`, document checks | `D21`, `D22`, `D23` |
 
-```text
-scripts/stt.py
-```
-
-Tests:
-
-```text
-tests/concepts/stt/
-```
-
-The exact module count may be reduced when consolidation is simpler. Do not add a generic plugin framework, scheduler, workflow engine, expression evaluator, recovery subsystem, or semantic progress engine.
-
-Active STT must not import archived Target Task modules.
+Consolidate files when ownership stays clear. Split them only when tests or coupling show a concrete need.
 
 ---
 
-## 6. Cross-cutting rules
+## 5. Cross-cutting implementation rules
 
-### 6.1 Standard library first
+### 5.1 Standard library first
 
-Prefer:
+Prefer Python standard-library primitives such as `dataclasses`, `pathlib`, `json`, `hashlib`, `subprocess`, `tempfile`, `os`, `shutil`, `stat`, and supported locking. Add no dependency unless it materially reduces a verified correctness risk and fits repository policy.
 
-- `dataclasses`;
-- `pathlib`;
-- `json`;
-- `hashlib`;
-- `subprocess`;
-- `tempfile`;
-- `os`;
-- `shutil`;
-- `stat`;
-- `time`;
-- `uuid`;
-- supported OS locking.
+### 5.2 One canonical serializer
 
-Add no dependency unless it materially simplifies correctness and fits repository policy.
-
-### 6.2 Canonical control data
-
-Control JSON uses:
+All control JSON uses one bounded canonical serializer and parser:
 
 - UTF-8;
 - sorted keys;
 - stable compact separators;
-- exactly one final LF;
+- one final LF;
 - no NaN or Infinity;
-- explicit schema identifiers;
-- bounded sizes.
+- explicit schema IDs;
+- duplicate-key rejection;
+- configured byte and nesting limits.
 
-Provide one canonical serializer/parser.
+Identity hashes are over exact canonical bytes, not reconstructed objects.
 
-### 6.3 Publication
+### 5.3 One schema source
 
-Immutable control files are create-only or atomically published through a same-directory temporary sibling, flushed, reread, and verified where supported.
+Implement architecture schemas once.
 
-Task and Round creation build complete same-parent temporary directories before final atomic publication.
+Provider adapters, CLI, Boundary, state derivation, and tests import the same schema definitions, because duplicate schema sources can disagree.
 
-Do not claim universal power-loss durability.
+Do not duplicate field vocabularies in prompts or adapters; generate role output schemas from the canonical contracts where practical.
 
-### 6.4 Small error hierarchy
+### 5.4 Error vocabulary
 
-Use a narrow typed hierarchy such as:
+Use a narrow typed error/blocker set that distinguishes at least:
 
 ```text
-STTError
-InvalidRun
+InvalidSpecification
+UnsupportedHost
 InvalidRuntime
 InvalidTarget
+InvalidAuthority
+InvalidRouting
 InvalidTask
 InvalidRound
-InvalidPlanningOutcome
 InvalidPlan
 InvalidLedger
+InvalidTransition
 ArtifactMismatch
-ProviderFailure
-NoAcceptedReturn
+ScopeViolation
+PrelaunchBlocked
+RejectedReturn
+NoReturn
 UnsettledOperation
 OperationallyBlocked
+OperationallyStopped
+RunBusy
 NonResumableRun
+InvalidRun
 ```
 
-Do not create a generalized state-machine exception hierarchy.
+Do not mirror every state transition with a new exception class.
 
-### 6.5 No hidden containment claim
+### 5.5 No hidden containment
 
-Path checks, scopes, reports, and ArtifactRefs are evidence and orchestration protections, not process containment.
+Path admission, profiles, exchange isolation, and effect reports are orchestration protections. Tests and user output must not call them a sandbox or complete effect boundary.
 
 ---
 
-# Slice 1 — Canonical state, ArtifactRef, ledger, and writer lock
+# Slice 1 — Canonical storage, transition packages, ledger, and host floor
 
-## 7. Goal
+## 6. Goal
+
+Implement the persistence and host primitives required by `D6`, `D7`, and `D20` before semantic behavior, because later slices depend on trustworthy commit and resume boundaries.
+
+## 7. Required behavior
 
 Implement:
 
-- canonical JSON;
-- ArtifactRef;
-- create-only and atomic publication helpers;
-- hash-chained Task ledger;
-- ledger validation;
+- canonical JSON and byte identities;
+- create-only regular-file publication;
+- same-parent temporary directories and atomic rename;
+- flush, reread, and verification helpers;
+- supported-host capability probe with recorded durability level;
+- exclusive Run writer lock and nonblocking read-only status strategy;
+- hash-chained Task ledger with exactly `TASK_CREATED | ROUND_CREATED | PLANNING_STARTED | PLANNING_FINISHED | STEP_STARTED | STEP_FINISHED | VALIDATION_STARTED | VALIDATION_RECORDED | ROUND_FINISHED | TASK_FINISHED` and the ordering defined by architecture §22;
+- phase-specific request commits before launch markers;
+- transition package containing payload manifest, expected ledger head, and exact pending event bytes;
+- narrow commit completion from architecture §22;
 - narrow torn-tail handling;
-- one exclusive writer lock per Run;
-- compact receipts.
+- pure derivation of `NEEDS_ROUND | NEEDS_PLANNING | NEEDS_STEP | NEEDS_VALIDATION | AWAITING_REPEAT | OPERATIONALLY_BLOCKED | OPERATIONALLY_STOPPED | NON_RESUMABLE | INVALID | TERMINAL` from committed facts, with transient `PRELAUNCH_BLOCKED` and `RUN_BUSY` kept outside persisted state.
 
-## 8. Production files
+A package without its event is not generally adopted. The implementation may append its precomputed event only through the exact eligibility predicate in architecture §22.
 
-Create or consolidate:
+## 8. Proof links
 
-```text
-concepts/stt/artifact.py
-concepts/stt/ledger.py
-concepts/stt/run_lock.py
-concepts/stt/receipt.py
-```
-
-## 9. ArtifactRef
-
-Schema:
-
-```text
-name
-location: TARGET | RUN
-relative_path
-sha256
-byte_size
-artifact_type
-normalized_mode
-producer_identity
-```
-
-Implement:
-
-- target containment with no symlink component;
-- regular-file requirement;
-- current size and SHA-256 verification;
-- normalized executable-mode verification where supported;
-- Boundary-owned create-only Run artifacts;
-- revalidation before every consumption boundary;
-- post-call revalidation for Run artifacts exposed to a Worker or command.
-
-Reject directories, symlinks, sockets, devices, and special files as named artifacts.
-
-Provide a Boundary helper that captures verified non-file observations—such as path absence, deletion, exit behavior, or target metadata—as canonical create-only Run ArtifactRefs. The observation may be prepared before Validator invocation or accepted from a bounded read-only Validator investigation, but it must exist and verify before `REPEAT` is accepted. Validator prose is never substituted for such evidence.
-
-## 10. Ledger
-
-Allowed events:
-
-```text
-TASK_CREATED
-ROUND_CREATED
-PLANNING_FINISHED
-STEP_STARTED
-STEP_FINISHED
-ROUND_FINISHED
-TASK_FINISHED
-```
-
-Each event includes canonical sequence, previous hash, and event hash.
-
-Reject:
-
-- missing or duplicate sequence;
-- unknown event;
-- invalid previous or event hash;
-- oversized line;
-- malformed interior JSON;
-- lifecycle-illegal event order.
-
-A single incomplete trailing fragment may be preserved for diagnosis and removed only under exclusive writer lock after validating the complete prefix.
-
-## 11. Writer lock
-
-All lifecycle-changing `start` and `run` behavior holds one OS-backed exclusive lock.
-
-Competing writers fail before lifecycle mutation.
-
-Read-only status and diagnosis use a nonblocking read strategy and return `RUN_BUSY` rather than reading changing state when a writer is active.
-
-Do not implement leases, stale-lock recovery, distributed locking, or concurrency.
-
-## 12. Tests
-
-Prove:
-
-- canonical round trip;
-- one-byte identity changes;
-- target ArtifactRef containment and symlink rejection;
-- Run artifact create-only publication;
-- artifact mutation detected before consumption;
-- valid ledger chain;
-- historical mutation, gaps, duplicates, and interior corruption fail;
-- one torn tail is handled narrowly;
-- first writer succeeds and competing writer fails;
-- compact receipt contains references rather than substantive bodies.
+Implement `Q01`–`Q03` from §39; `Q04` is completed by Slices 6 and 7.
 
 ---
 
-# Slice 2 — Frozen runtime, Bootstrap handoff, routing, and Run identity
+# Slice 2 — RootTaskSpec, supported Bootstrap, frozen runtime, and Run identity
 
-## 13. Goal
+## 9. Goal
 
-Implement:
+Implement `D1`, `D5`, `D6`, and the Run-level portions of `D9`, `D10`, and `D19`.
 
-- unique disjoint Run root;
-- owner-only permissions where supported;
-- minimal copied runtime;
-- runtime manifest;
-- source-change-during-copy detection;
-- immutable Bootstrap handoff;
-- frozen routing;
-- re-execution from copied runtime;
-- immutable `run.json`.
+## 10. Required behavior
 
-## 14. Production files
+Implement exact parsers and validators for:
 
-```text
-concepts/stt/runtime.py
-concepts/stt/bootstrap.py
-```
-
-## 15. Runtime copy
-
-Conceptual API:
-
-```python
-prepare_run_runtime(source_root, target_root, temp_root=None) -> RunRuntime
-```
-
-It must:
-
-1. canonicalize source and target;
-2. create `${TMPDIR}/stt/<run-id>/`;
-3. reject Run root inside source or target;
-4. copy only active STT runtime files;
-5. reject symlinks and special files;
-6. exclude `.git`, caches, bytecode, previous Run state, and temporary files;
-7. preserve regular-file bytes and normalized executable mode;
-8. record manifest path, size, SHA-256, and mode;
-9. verify copied files;
-10. re-observe source and reject mixed generations;
-11. re-execute from copied `scripts/stt.py`.
-
-Active-import tests reject archive and unrelated-package reachability.
-
-## 16. Bootstrap handoff
-
-Before re-execution publish:
-
-```text
-bootstrap/request.json
-bootstrap/submission.md
-bootstrap/routing.json
-```
-
-Bind:
-
-- frozen submission;
-- source and target identities;
-- routing identity;
+- `RootTaskSpec`, including RootAuthoritySpec, target-relative and task-spec-parent-relative initial selectors, prior selectors, exact count fields `maximum_task_depth | maximum_tasks_per_run | maximum_rounds_per_task | maximum_steps_per_round`, the complete byte/depth/entry fields of `capture_limits` including total per-call exchange-input bytes, the role-seconds and termination-grace fields of `wait_limits`, and `host_profile = LOCAL_MVP_V1`;
+- routing and named capability/command profiles;
+- prior-Run root plus exact selectors and create-only import of selected committed evidence into the new Run;
 - live-provider authorization;
-- optional prior Run;
-- runtime manifest.
+- finite depth/Round/capture/wait policy.
 
-The copied runtime never rereads original mutable submission or routing files.
+Bootstrap must:
 
-## 17. Routing
+1. resolve and verify the source root mechanically from the canonical active `scripts/stt.py` path and maintained runtime-manifest root, freeze exact task-spec and routing bytes, parse only the frozen copies, require `RootTaskSpec.routing_identity` to equal the frozen routing identity, require `host_profile = LOCAL_MVP_V1`, and then validate target, prior evidence, and every fixed host capability before lifecycle publication;
+2. permit source-equals-target for self-modification while creating authoritative Run and exchange locations disjoint from each other and from source/target;
+3. copy the maintained explicit runtime manifest;
+4. reject symlinks and special files;
+5. verify bytes and normalized executable mode;
+6. detect mixed-generation copying;
+7. re-execute from the copy;
+8. acquire the writer lock;
+9. publish `run.json`, then atomically publish the original root Task from frozen RootTaskSpec; on resume, a verified run with no canonical or conflicting root path may complete that exact root publication, while a conflicting or incomplete canonical root is invalid;
+10. resolve TARGET_PATH selectors under the admitted target and BOOTSTRAP_FILE selectors under the canonical task-spec parent with no absolute path, traversal, symlink, special-file, `.git`, or escape, then freeze each admitted input into a Boundary-owned current-Run ArtifactRef and create the root Task-scoped EvidenceBindings before root Task publication;
+11. require a prior Run root exactly when prior selectors are nonempty, reject an unused prior root, and copy each verified selected prior artifact into a Boundary-owned current-Run ArtifactRef with origin provenance before root Task publication;
+12. never reread mutable original spec, routing, initial selector source, or prior Run evidence after root Task publication;
+13. perform no model call, semantic defaulting, or mission completion during Bootstrap.
 
-`routing.json` binds:
+Publish `run.json` with every identity and observation required by architecture §9, including exact RootTaskSpec, source, target-root, runtime-manifest, routing, live authorization, finite policy, host profile/observations, structural call bounds, and optional prior-root identity.
 
-- one Planner route;
-- named allowed Worker routes;
-- one Validator route;
-- provider, model, effort, and adapter for each.
+Choose documented conservative hard ceilings for every count, byte, depth, entry, and duration field; reject nonpositive or above-ceiling values without changing architecture units.
 
-Changing routing creates a new Run.
+Compute conservative overflow-safe structural upper bounds for Planner, Validator, and total step-operation launches from the frozen Task/Round/step policy and bind them into `run.json`.
 
-Fake-provider tests do not require live authorization.
+Maintain one explicit runtime allowlist and tests for import/data closure. Do not derive the runtime only from observed imports.
 
-## 18. Tests
+## 11. Proof links
 
-Prove:
-
-- Run root outside source and target;
-- owner-only creation where supported;
-- runtime symlink and special-file rejection;
-- expected exclusions;
-- manifest byte and mode verification;
-- source copy race rejection;
-- imports resolve under copied runtime;
-- generation A survives target source edits/deletion;
-- generation B sees later source;
-- immutable Bootstrap handoff;
-- mutable original submission/routing are not reread;
-- no target `.stt` state.
+Implement `Q05`–`Q07`.
 
 ---
 
-# Slice 3 — Task, Round, workspace index, and planning contracts
+# Slice 3 — Authority, trust order, Task/Round, and canonical schemas
 
-## 19. Goal
+## 12. Goal
 
-Implement:
+Implement `D2`, `D3`, `D9`, `D10`, and `D12` as deterministic validation before any provider launch.
 
-- immutable Task identity and mission;
-- deterministic child binding;
-- immutable Round identity;
-- fresh bounded workspace index per Round;
-- durable Planner call outcome;
-- semantic `PLAN` and `DECLINE`;
-- `EXECUTE` and `INVESTIGATE`;
-- exactly three step kinds;
-- pure lifecycle derivation.
+## 13. Required behavior
 
-## 20. Production files
+Implement canonical types and identities for:
 
-```text
-concepts/stt/task.py
-concepts/stt/round.py
-concepts/stt/plan.py
-concepts/stt/workspace.py
-concepts/stt/contracts/planner.md
-```
+- RunPolicyView, RootAuthoritySpec, declarative ChildAuthoritySpec, resolved TaskAuthority, path-free TaskAuthorityView, full Worker/command profiles with canonical purpose and single route-to-profile binding, path-free WorkerRouteView and CapabilityProfileView, selectors, and effect classes;
+- Worker routes, and command profiles including closed executable resolution, reusable slot schemas, step-time single-token bindings, fixed environment, accepted exits, and slot-specific bounds;
+- Task, Round, and parent binding;
+- Plan identity header and exactly three fully specified step kinds, including route-derived Worker profile plus instructions, command profile/cwd/slot bindings, and child mission/relation/ChildAuthoritySpec/output fields;
+- declarative PlanInput, the complete closed Boundary-owned PlanInputResolution schema, EvidenceBinding, path-free EvidenceBindingView, and exact-consumer InputRef;
+- OutputRequirement;
+- ArtifactRef with closed provenance and canonical purpose, path-free ArtifactRefView, and bounded ArtifactView;
+- the closed StepOutcome vocabulary, including the TaskStep-only `OPERATIONAL_INDETERMINATE` case;
+- PlannerResult, WorkerResult, CommandResult, ValidatorResult, and the discriminated Boundary-owned StepResult for outer-operation and child-task completion;
+- role-request, call-outcome, StepResult, and role-result binding.
 
-## 21. Task creation
+Authority validation must use component-aware canonical target-relative paths and full ChildAuthoritySpec subset checks across paths, step kinds, routes, command profiles, environment names, and effect classes; Boundary constructs child TaskAuthority with the unchanged parent target identity. Every selected Worker route or command profile must also be a subset of the current TaskAuthority effect classes and inherited environment names, and each Worker route resolves to exactly one frozen capability profile.
 
-Conceptually:
+Task publication atomically includes task identity, exact mission, structured required outputs, Task-scoped EvidenceBindings, frozen role/routing references, predetermined create-only child locations, and the initial `TASK_CREATED` event. Root Task counts as task 1 at depth 0; Round 0 and every Plan element count toward their respective finite limits.
 
-```python
-create_task(
-    task_root,
-    run_identity,
-    mission_bytes,
-    authority,
-    role_bindings,
-    initial_evidence,
-    required_outputs,
-    parent_binding=None,
-)
-```
+A valid Task with no Round derives `NEEDS_ROUND`, because a pre-Round Task is a valid recoverable state.
 
-Validate all inputs, build complete initial Task in a temporary sibling, append `TASK_CREATED`, flush/reread/verify, atomically publish, then verify published identity.
+Round creation binds Task/mission/authority/output/runtime/routing/policy identities, contiguous number, fresh workspace-index identity, selected evidence, and exact predecessor Validator/report/repeat evidence where applicable. It enforces mission equality and every finite policy limit.
 
-Reject a child mission whose hash equals any ancestor mission.
+Implement one canonical output matcher that enforces satisfaction mode, producer constraint, write/read authority, requirement identity, exact artifact-type label equality, and exact purpose equality. Plan validation separately enforces the architecture’s structural `principal_consumer` compatibility rules without requiring an optional downstream use to occur. A Plan contains only declarative PlanInputs; Plan validation rejects fabricated ArtifactRefs/InputRefs and future step outputs. Boundary publishes immutable PlanInputResolutions when accepting the Plan, leaves prior-step outputs as requirement references until committed, reverifies resolved target/evidence identities before launch, returns transient `PRELAUNCH_BLOCKED` on named target-input mismatch, and only then creates the role/Task/Round/step-bound InputRef. Task and Round publication store EvidenceBindings rather than consumption references.
 
-## 22. Round creation
+Implement one deterministic ArtifactView builder for `FULL_BYTES | BOUNDED_TEXT | METADATA_ONLY`; every truncated or incomplete representation is labelled and cannot satisfy a completeness claim.
 
-Conceptually:
+Accepted Plans and all identity-bearing role results are create-only and immutable.
 
-```python
-create_round(
-    task_ref,
-    round_number,
-    selected_evidence,
-    predecessor_round=None,
-)
-```
+Planner and Validator request builders receive only RunPolicyView, TaskAuthorityView, admitted WorkerRouteView, CapabilityProfileView, EvidenceBindingView, authoritative reference hashes, path-free ArtifactRefView, and bounded ArtifactView; structured-field tests must fail if a canonical target path, device/inode observation, resolved executable path, inherited credential/environment name, full TaskAuthority, full profile, full InputRef, or full ArtifactRef serialization appears in either request. Admitted artifact/log bodies may contain path-like text and remain untrusted data rather than triggering an impossible universal scrub requirement. Private role prompts must encode the architecture trust order and label target/prior content as untrusted data.
 
-It must:
+## 14. Proof links
 
-- preserve exact Task mission;
-- bind current target identity;
-- build a fresh bounded workspace index;
-- bind predecessor Validator report as advisory evidence when repeating;
-- bind exact selected ArtifactRefs;
-- append `ROUND_CREATED`;
-- publish atomically;
-- prevent gaps and duplicates;
-- permit Round 0 for newly created Tasks;
-- permit at most one Round numbered greater than zero from a pre-existing repeat transition per invocation.
-
-## 23. Workspace index
-
-Use deterministic `lstat` observations.
-
-Never follow symlinks.
-
-Record regular files, directories, and symlink metadata. Do not read bodies only to index. Emit deterministic overflow markers.
-
-## 24. Planner persistence
-
-Every Planner phase publishes:
-
-```text
-planning/request.json
-planning/launch.json
-planning/raw-return.txt
-planning/outcome.json
-```
-
-`outcome.json` records call state, returned result kind, settlement, logs, and evidence.
-
-Only an accepted `OK(PLAN|DECLINE)` creates `planning-result.json`.
-
-This prevents same-Run resume from calling Planner again after a durable settled call error or accepted semantic value.
-
-## 25. PLAN
-
-Schema includes:
-
-```text
-disposition = PLAN
-intent = EXECUTE | INVESTIGATE
-summary
-steps
-```
-
-`INVESTIGATE` additionally requires:
-
-```text
-decision_critical_unknown
-why_it_blocks_full_plan
-bounded_probe
-expected_evidence_outputs
-```
-
-A zero-step Plan is valid.
-
-## 26. DECLINE
-
-Requires:
-
-```text
-disposition = DECLINE
-reason
-blocking_facts
-missing_requirements
-why_execution_is_not_credible
-why_investigation_or_repeat_is_not_useful
-steps = []
-```
-
-## 27. Step schemas
-
-Exactly:
-
-```text
-WorkerStep
-CommandStep
-TaskStep
-```
-
-Common fields:
-
-```text
-id
-kind
-description
-inputs
-outputs
-```
-
-Worker fields:
-
-```text
-worker_route
-instructions
-responsibility_scope
-```
-
-Command fields:
-
-```text
-argv
-cwd
-accepted_exit_codes
-env_overrides
-inherited_env_names
-wait_policy
-inputs
-required_outputs
-```
-
-Task fields:
-
-```text
-mission
-authority
-inputs
-required_child_outputs
-allowed_child_worker_routes
-```
-
-No generic success expression.
-
-## 28. State derivation
-
-Implement a pure function deriving:
-
-```text
-NEEDS_ROUND
-NEEDS_PLANNING
-NEEDS_STEP
-NEEDS_VALIDATION
-AWAITING_REPEAT
-TERMINAL
-OPERATIONALLY_BLOCKED
-INVALID
-```
-
-Important rules:
-
-- no Round and Task active → `NEEDS_ROUND`;
-- durable Planner outcome without semantic Plan/Decline → `NEEDS_VALIDATION`;
-- first unfinished eligible step → `NEEDS_STEP`;
-- any non-satisfied step → `NEEDS_VALIDATION`;
-- accepted Validator `REPEAT` → `AWAITING_REPEAT`;
-- accepted Validator `FINISH` + Task result → `TERMINAL`;
-- Planner, Worker, or command has `UNSETTLED | UNKNOWN` settlement → `OPERATIONALLY_BLOCKED`;
-- Validator has no accepted semantic return → `OPERATIONALLY_BLOCKED`;
-- conflicting identity/publication → `INVALID`.
-
-`OPERATIONALLY_BLOCKED` and `INVALID` are same-Run stopping states. A later `stt run` reports the blocker and performs no semantic lifecycle action.
-
-There is no mutable cursor file.
-
-## 29. Tests
-
-Prove:
-
-- root and distinct child Task creation;
-- ancestor-equal child mission rejected;
-- Round 0 and later deterministic publication;
-- no Round gaps or duplicates;
-- fresh workspace index each Round;
-- valid EXECUTE, INVESTIGATE, Decline, zero-step Plan;
-- missing investigative rationale rejected;
-- unknown step kind and future reference rejected;
-- command generic success field rejected;
-- accepted planning result immutable;
-- durable Planner call error does not trigger automatic Planner reinvocation;
-- all derived states.
+Implement `Q08`–`Q10`, `Q12`, and `Q13`.
 
 ---
 
-# Slice 4 — Launcher, call mechanics, providers, and Boundary
+# Slice 4 — Exchange isolation, launcher, call algebra, providers, and command profiles
 
-## 30. Goal
+## 15. Goal
 
-Implement one mandatory Boundary façade and truthful common call mechanics.
+Implement `D8`, `D13`, `D14`, and `D15` through one mandatory launch boundary.
 
-## 31. Production files
+## 16. Exchange
 
-```text
-concepts/stt/launcher.py
-concepts/stt/boundary.py
-concepts/stt/providers/__init__.py
-concepts/stt/providers/fake.py
-concepts/stt/providers/claude_code.py
-concepts/stt/providers/codex.py
-```
+For each lower-trust call:
 
-## 32. Common call outcome
+- create a disposable owner-exclusive exchange root disjoint from authoritative Run and target;
+- copy only exact admitted input bytes and request material;
+- omit authoritative Run paths from prompt, argv, env, cwd, and supplied files;
+- invoke once;
+- revalidate runtime, Run, target-root, Task/Round/request identities, and the prelaunch ledger prefix before result acceptance;
+- import accepted outputs by bytes through Boundary;
+- verify and publish authoritative RUN ArtifactRefs;
+- clean exchange best-effort after evidence is secured.
 
-Record:
+Add inspection hooks in fake providers so tests can assert every exposed path and byte set.
 
-```text
-dispatch_identity
-role
-request_identity
-call_state: NOT_STARTED | RETURNED | NO_RETURN
-result_kind: OK | ERR | NONE
-settlement_state: SETTLED | UNSETTLED | UNKNOWN
-start/end timing
-native exit/provider status
-stdout/stderr/raw-return refs
-truncated flags
-adapter observations
-```
+## 17. Launcher and call outcome
 
-A completed error is `RETURNED + ERR`. Missing accepted return is `NO_RETURN`.
+Implement immutable `OperationRequest` plus one `AttemptEnvelope`; publish launch marker, captures, raw return, and call outcome only through predetermined create-only Attempt locations.
 
-Before launch, publish a create-only launch marker bound to request identity.
+Commit each `OperationRequest` through the phase-specific start event before publishing the launch marker immediately before the outer launch.
 
-## 33. Provider protocol
+After a launch marker exists, no path may launch that `OperationRequest` again.
 
-Use the smallest interface:
+Implement the exact return and local-settlement table from architecture §18.
 
-```python
-class Provider:
-    def invoke(self, request: ProviderRequest) -> ProviderCallOutcome:
-        ...
-```
+Reject every invalid return and local-settlement combination.
 
-Persist exact request, launch marker, raw return, logs, and outcome.
+`SETTLED` means local process-group and communication-channel settlement only.
 
-Only schema-valid accepted role values become Planner, Worker, or Validator semantic results.
+A prelaunch blocker creates no launch marker.
 
-Do not expose a generic orchestration retry machine.
+A later explicit invocation may reevaluate a prelaunch blocker because launch is mechanically disproved.
 
-## 34. Bounded capture
+A launch marker without a committed call outcome after interruption derives `NON_RESUMABLE`.
 
-Apply explicit byte limits to raw return, stdout, stderr, reports, and returned Run artifacts.
+## 18. Providers and commands
 
-On limit:
+Provide:
 
-- preserve prefix;
-- set `truncated = true`;
-- reject semantic return;
-- attempt bounded termination;
-- record settlement.
+- deterministic fake provider;
+- thin Claude Code and Codex adapters with fixed minimal inherited credential/environment-name allowlists whose values are never persisted;
+- exact argv construction without shell interpolation;
+- requested/observed routing recording, with omitted requested model/effort persisted as `UNSPECIFIED` and unobservable actual facts as `UNKNOWN`;
+- explicit live authorization;
+- bounded stdout/stderr/raw return;
+- process-group observation and termination;
+- no semantic interpretation, automatic route/model escalation, or fallback selection inside adapters.
 
-## 35. Fake provider
+Command execution uses only a named admitted command profile.
 
-Support deterministic fixtures for:
+Bootstrap resolves each command profile through `EXACT_PATH` or `PATH_LOOKUP_AT_BOOTSTRAP`, freezes the resolved executable identity, finite nonempty accepted-exit-code set, fixed bounded explicit environment overrides, cwd scopes, slot schemas, and wait/termination policy, and every launch reverifies the executable. Reject any command-profile wait or termination grace above the root command/grace limits. A CommandStep supplies one admitted target-relative cwd and binds each named slot exactly once: target path, unique PlanInput name, RUN/BOUNDARY_ASSIGNED OutputRequirement ID, enum, integer, or bounded text according to the profile kind. Boundary resolves exchange paths only after exact InputRefs and output locations exist. Plan data never supplies an arbitrary executable, free-form argv, extra token, inherited environment name, environment override, or multi-token slot expansion.
 
-- Planner EXECUTE;
-- Planner INVESTIGATE;
-- Planner Decline;
-- Planner `ERR`;
-- Planner `NO_RETURN`;
-- Worker satisfied/not-satisfied/indeterminate;
-- Validator all valid judgment/disposition pairs;
-- invalid `SATISFIED + REPEAT`;
-- repeat without artifacts;
-- far failure finishing;
-- hard blocker finishing;
-- Validator `ERR` and `NO_RETURN`;
-- dispatch mismatch;
-- oversized/truncated return.
+Fixed explicit environment values carry a caller/host non-secret assertion; enforce field placement, bounds, and known prohibited credential fields without claiming semantic secret detection. Model-supplied bounded text has no trusted non-secret status. Inherited environment values are supplied by admitted name and are never persisted or hashed.
 
-## 36. Live adapters
+## 19. Proof links
 
-Claude Code and Codex adapters are thin translators.
-
-They must:
-
-- build exact argv without shell interpretation;
-- persist request and raw return;
-- truthfully record requested and observable actual routing;
-- use `UNKNOWN` when actual routing is unobservable;
-- require explicit live authorization;
-- enforce bounded output;
-- record call and settlement observations;
-- perform no semantic interpretation beyond host translation.
-
-Qualify with controlled fake executables. No paid call required.
-
-## 37. Boundary API
-
-Conceptually:
-
-```text
-create_round(task_ref)
-finish_planning(round_ref)
-execute_worker_step(round_ref, step_ref)
-execute_command_step(round_ref, step_ref)
-create_child_task(round_ref, step_ref)
-finish_task_step_from_child(round_ref, step_ref, child_ref)
-validate_round(round_ref)
-finish_task(task_ref, round_ref)
-```
-
-Lead calls no provider, launcher, workspace, or persistence helper directly.
-
-## 38. Tests
-
-Prove:
-
-- unique dispatch identity;
-- request-return binding;
-- launch marker precedes call;
-- mismatched dispatch rejected;
-- completed error differs from no return;
-- malformed/oversized return becomes no accepted return;
-- settlement recorded;
-- live authorization enforced;
-- controlled adapters pass;
-- compact receipts contain references only.
+Implement `Q11`, `Q15`, `Q16`, and the launcher portions of `Q32` and `Q33`.
 
 ---
 
-# Slice 5 — Live Worker and command steps
+# Slice 5 — Planner, live Worker/command steps, output matching, and planning stop
 
-## 39. Goal
+## 20. Goal
 
-Implement live target execution without claiming containment or complete effect detection.
+Implement `D11`, `D12`, and `D13` without adding retry or a second success language.
 
-## 40. Production files
+## 21. Planner
 
-```text
-concepts/stt/command.py
-concepts/stt/contracts/worker.md
-```
+Construct a closed Planner request from exact persisted context using only RunPolicyView, path-free EvidenceBindingViews, admitted reference identities, path-free ArtifactRefViews, bounded ArtifactViews, TaskAuthorityView, WorkerRouteViews, and CapabilityProfileViews.
 
-Extend workspace and Boundary modules as needed.
+The Planner request contains no canonical target root, authoritative RUN path, full InputRef/ArtifactRef serialization, provider launch metadata, or interactive tool capability.
 
-## 41. Worker invocation
+Accept only a correctly bound `PLAN` or `DECLINE`.
 
-Boundary supplies:
+PLAN validation uses the shared schemas and authority/profile checks, publishes the complete immutable PlanInputResolution set in the same `PLANNING_FINISHED` transition package, and classifies a missing or unresolvable current input as a rejected return rather than a partial Plan. DECLINE creates no steps; state derivation reads the accepted Decline directly and permits validation but no REPEAT, so no duplicate mutable or persisted repeat-forbidden flag exists.
 
-- one step;
-- target root;
-- exact verified inputs;
-- scope and responsibility;
-- allowed route;
-- required outputs;
-- fixed Worker contract;
-- bounded report schema.
+Any launched Planner operation has one Attempt only. A settled non-OK outcome also proceeds to validation with no Plan; unsettled/unknown blocks.
 
-Valid Worker value contains:
+## 22. Worker
 
-```text
-judgment
-summary
-named ArtifactRefs
-best-effort created/changed/deleted paths
-verification
-warnings
-unknowns
-```
+Resolve the WorkerStep’s PlanInputs into exact InputRefs, then construct one Worker request with accepted step, admitted target root, exchange inputs, responsibility scopes, output requirements, and route profile. Persist one bounded result and best-effort effect report. Provider-internal Worker tools remain inside that one opaque outer operation and never create nested STT steps or Boundary transitions.
 
-Boundary verifies named outputs. It does not prove changed-path reporting exhaustive.
+Boundary must:
 
-## 42. Command runner
+- reject returned artifacts outside admitted requirement/path/type;
+- classify a reported scope violation as `NOT_SATISFIED`, except that authoritative-state mutation makes the Run `INVALID` and unresolved local activity makes it `OPERATIONALLY_BLOCKED`;
+- import RUN artifacts from exchange rather than trusting exchange paths;
+- reverify TARGET artifacts before use;
+- commit a Boundary-owned StepResult for every Worker or command completion; map a settled non-OK call to `INDETERMINATE` unless accepted role-specific facts conclusively establish `NOT_SATISFIED`, retain no fabricated role result, and never fabricate `SATISFIED`;
+- stop later steps after any non-satisfied local outcome.
 
-The command runner must:
+## 23. Command
 
-1. validate explicit argv and cwd;
-2. reject shell interpretation by default;
-3. resolve executable observation where supported;
-4. construct minimal environment from explicit values and inherited names;
-5. persist request and launch marker;
-6. stream bounded stdout/stderr to Run artifacts;
-7. apply bounded wait and termination policy;
-8. record call, settlement, exit, timing, and truncation;
-9. verify declared outputs;
-10. never automatically repeat a command that may have launched.
+Resolve the CommandStep’s PlanInputs into exact InputRefs, validate its target-relative cwd, bind input/output exchange slots to exact InputRefs and OutputRequirements, validate scalar slot values, apply the profile’s frozen environment and accepted-exit-code policy, render and run the exact argv template, apply the architecture command judgment, and produce deterministic observation artifacts. Do not implement generic expressions or stdout-regex success.
 
-Local command judgment:
+## 24. Proof links
 
-```text
-accepted exit code + required outputs verify
-→ SATISFIED
-
-returned unaccepted exit code
-or required output conclusively missing/mismatched
-→ NOT_SATISFIED
-
-no accepted return
-or output identity cannot be observed stably
-→ INDETERMINATE
-```
-
-## 43. Environment
-
-Implement:
-
-```text
-env_overrides
-inherited_env_names
-```
-
-Do not persist inherited values.
-
-Reject credentials in explicit persisted environment or routing fixtures.
-
-Document that arbitrary commands may still disclose secrets.
-
-## 44. Tests
-
-Prove:
-
-- Worker creates/edits/moves/deletes target files;
-- named outputs verified;
-- changed-path report persisted as evidence;
-- accepted nonzero command exit may satisfy;
-- unaccepted exit is not satisfied;
-- target changes are not automatic failure;
-- bounded stdout/stderr;
-- truncation prevents semantic acceptance;
-- settled no-return stops later steps and reaches Validator;
-- unsettled or unknown operation becomes operationally blocked before Validator;
-- no automatic command replay;
-- plain and Git directory targets;
-- no target `.stt` state.
+Implement `Q14`, `Q17`, `Q18`, and the role-context portions of `Q31`.
 
 ---
 
-# Slice 6 — Mechanical Lead and distinct child Tasks
+# Slice 6 — Mechanical Lead, child Tasks, and deterministic finalization
 
-## 45. Goal
+## 25. Goal
 
-Implement deterministic depth-first execution with one-new-Round-per-invocation discipline.
+Implement `D3`, `D4`, `D17`, and the deterministic portions of `D20`.
 
-## 46. Production file
+## 26. Lead algorithm
 
-```text
-concepts/stt/lead.py
-```
+At invocation start:
 
-## 47. Invocation token
+1. validate that exactly one nonterminal root-to-leaf frontier exists, reject multiple incomparable active Tasks as `INVALID`, and then validate that root-to-deepest path, ledgers, packages, and identities;
+2. record the deepest Task that was already `AWAITING_REPEAT`;
+3. permit at most one consumption of that pre-existing transition;
+4. repeatedly derive one mechanical next action until the invocation must stop.
 
-At the start of each `start` or `run`, validate the root Task tree and identify the deepest active Task.
+The loop may advance within one current Round, but it stops when any Round newly returns `REPEAT`.
 
-Capture whether that Task already had state `AWAITING_REPEAT`.
+Lead uses only Boundary entry points and compact receipts. Add a test hook that fails when Lead imports provider, launcher, storage mutation, or broad workspace helpers directly.
 
-Only that pre-existing deepest-Task state may authorize creation of one repeated Round numbered greater than zero. The repeat allowance is global to the CLI invocation, not one allowance per Task.
+## 27. Child behavior
 
-Creation of Round 0 for a newly created root or child Task is allowed and does not consume the repeat allowance.
+Create child identity only from one accepted TaskStep. Resolve its PlanInputs into parent TaskStep InputRefs, validate the declarative ChildAuthoritySpec as a full subset, construct child TaskAuthority with the unchanged target identity, create new child-scoped EvidenceBindings, and enforce mission relation floor, depth, and output contract.
 
-A `REPEAT` produced by any root or child Task during the current invocation stops the entire invocation and cannot be consumed immediately.
+Implement the mapping in architecture §20 exactly, including:
 
-## 48. Lead algorithm
+- terminal child semantic mapping;
+- child `OPERATIONALLY_STOPPED` after settled failure, then a Boundary-owned `OPERATIONAL_INDETERMINATE` parent StepResult without fabricating a child judgment;
+- whole-Run `OPERATIONALLY_BLOCKED` for unsettled/unknown child work;
+- whole-Run invalidity for conflicting child identity.
 
-Conceptually:
+Implement deterministic child-to-parent finalization when child evidence is committed but parent `STEP_FINISHED` is absent.
 
-```text
-advance(root_task, invocation_context):
-    validate root-to-deepest Task path and ledgers
-    task = deepest active Task
+## 28. Proof links
 
-    if task was AWAITING_REPEAT at invocation start
-       and invocation has not consumed a repeat transition:
-        Boundary.create_repeated_round(task)
-        mark invocation consumed one repeat transition globally
-
-    state = derive_task_state(task)
-
-    if state == NEEDS_ROUND:
-        Boundary.create_initial_round(task)
-        return
-
-    if state == NEEDS_PLANNING:
-        Boundary.finish_planning(current_round)
-        return
-
-    if state == NEEDS_STEP:
-        step = first eligible unfinished step
-
-        if task step:
-            create or verify distinct child
-            descend until child usable result
-            bind parent step
-            return
-
-        if worker:
-            execute once
-            return
-
-        if command:
-            execute once
-            return
-
-    if state == NEEDS_VALIDATION:
-        Boundary.validate_round(current_round)
-        return
-
-    if state == AWAITING_REPEAT:
-        stop current invocation
-        return
-
-    if state == TERMINAL | OPERATIONALLY_BLOCKED | INVALID:
-        stop
-```
-
-The outer mechanical loop may continue within the current Round until the Round finishes, but it must not cross a newly produced `REPEAT`.
-
-## 49. Child behavior
-
-Prove:
-
-```text
-parent step started, child absent
-→ create deterministic distinct child
-
-child active
-→ resume child depth-first
-
-child SATISFIED / NOT_SATISFIED / INDETERMINATE
-→ map directly to parent local judgment
-
-child Validator fails after all child operations settled
-→ parent local judgment INDETERMINATE with child evidence
-→ parent Validator may audit
-
-child has UNSETTLED or UNKNOWN operation
-→ entire Run OPERATIONALLY_BLOCKED
-
-conflicting child identity
-→ INVALID
-```
-
-Same-ancestor mission is rejected.
-
-No scheduler or mutable stack file.
-
-## 50. Tests
-
-Prove:
-
-- root step order;
-- child and grandchild depth-first order;
-- deterministic child path;
-- exact ancestor-mission child rejection;
-- distinct narrower child accepted;
-- later parent steps wait for child satisfaction;
-- child negative/indeterminate result invokes parent Validator;
-- settled child Validator failure yields an indeterminate parent step without fabricating child terminal judgment;
-- unsettled child operation blocks the whole Run before ancestor validation;
-- one invocation consumes no more than one pre-existing repeat transition across the root Task tree;
-- newly created child Tasks may each create Round 0 without consuming that repeat allowance;
-- a newly produced root or child repeat stops the entire invocation;
-- a pre-existing deepest child awaiting-repeat may create exactly one child Round;
-- pre-existing root awaiting-repeat creates exactly one root Round;
-- no scheduler or stack file.
+Implement the child/Lead portions of `Q04`, `Q19`–`Q21`, and `Q26`.
 
 ---
 
-# Slice 7 — Validator, FINISH, and exceptional REPEAT
+# Slice 7 — Validator, evidence novelty, FINISH, and finite REPEAT
 
-## 51. Goal
+## 29. Goal
 
-Implement independent fact-based validation, explicit finishing, and tightly guarded Task repetition.
+Implement `D16`, the Validator portion of `D18`, and Round/Task finalization from `D20`.
 
-## 52. Production files
+## 30. Validator request
 
-```text
-concepts/stt/contracts/validator.md
-```
+Boundary first performs only the deterministic pre-Validator observations admitted by architecture §24, including required exact target outputs and already declared current-Round outputs, then builds one bounded Validator evidence index.
 
-Extend `boundary.py`, `task.py`, and `round.py`.
+The Validator request contains RunPolicyView with remaining Round capacity, admitted reference identities, path-free ArtifactRefViews, and bounded ArtifactViews; it contains no canonical target root, authoritative RUN path, full InputRef/ArtifactRef serialization, interactive tools, or command callback. When capacity is zero, the exact request output schema permits only `FINISH`, while the frozen private contract states why.
 
-## 53. Validator evidence index
+The fake provider must expose the exact Validator request for context assertions.
 
-Boundary creates a bounded index referencing:
+## 31. Evidence eligibility
 
-- Task mission;
-- Round identity;
-- Planner call outcome;
-- Plan or Decline;
-- every step result;
-- Worker reports;
-- command logs;
-- child results;
-- current target observations;
-- required outputs;
-- selected prior evidence;
-- active/unsettled facts.
+Implement the architecture §19 predicate as a deterministic mechanical floor:
 
-Do not inline complete logs, child ledgers, or broad target bodies.
+- current non-Decline Round producer;
+- eligible producer kind;
+- imported frozen RUN ArtifactRef, including a Boundary-frozen copy of a declared current-Round TARGET output when that exact output is selected;
+- admitted requirement/observation binding;
+- novelty identity absent from selected Round inputs, binding content SHA-256, artifact type, purpose, and originating requirement or observation method, so copy/rename/rewrap cannot create novelty;
+- exact current-Round provenance;
+- explicit Validator selection.
 
-## 54. Validator semantic return
+Materiality remains semantic and is qualified through adversarial fixtures rather than a scoring engine.
 
-Require:
+## 32. Publication
 
-```text
-judgment: SATISFIED | NOT_SATISFIED | INDETERMINATE
-disposition: FINISH | REPEAT
-reason
-material_findings
-unknowns
-named_terminal_outputs
-validation_report
-```
+For every completed Validator call, validate binding, schema, judgment/disposition combination, remaining-capacity rule, terminal outputs, mechanically eligible repeat evidence, and every deterministic floor before classifying a ValidatorResult as accepted. Then publish/commit `VALIDATION_RECORDED` with the call outcome and an accepted ValidatorResult only when all floors pass. A returned result that violates a floor is `RETURNED + REJECTED`, commits no accepted ValidatorResult, and yields settled `OPERATIONALLY_STOPPED` without semantic coercion. On accepted ValidatorResult:
 
-For `REPEAT`, additionally require:
+- publish/commit Round result;
+- if REPEAT, derive `AWAITING_REPEAT` and stop invocation;
+- if FINISH, deterministically publish/commit Task result.
 
-```text
-verified_progress
-remaining_gap
-selected_repeat_artifact_refs
-why_fresh_planning_has_better_basis
-known_hard_blockers = []
-```
+Implement safe Round finalization when `VALIDATION_RECORDED` contains an accepted result but `ROUND_FINISHED` is absent, and safe Task finalization when `ROUND_FINISHED + FINISH` exists but `TASK_FINISHED` is absent.
 
-## 55. REPEAT mechanical floors
+A Validator with unsettled/unknown local work blocks the Run. A settled Validator launch without accepted OK result makes the Task `OPERATIONALLY_STOPPED` and never fabricates a judgment.
 
-Boundary does not launch semantic validation while a relevant outer operation is unsettled or has unknown settlement. That state is operationally blocked.
+## 33. Proof links
 
-For a semantically processable settled Round, Boundary rejects repeat unless:
-
-- judgment is not satisfied;
-- all relevant operations are settled;
-- orchestration state is valid;
-- at least one selected new `RUN` ArtifactRef was produced in this Round;
-- referenced artifacts verify;
-- required fields are nonempty;
-- Planner/Validator prose is not the only evidence;
-- prior Plan or operation is not requested for replay;
-- no declared hard blocker remains.
-
-Boundary does not implement a semantic novelty algorithm.
-
-## 56. Semantic qualification behavior
-
-Fake-provider and end-to-end fixtures must prove the intended distinction:
-
-```text
-materially closer + credible better Planner basis
-→ REPEAT
-
-far from mission
-→ FINISH + NOT_SATISFIED
-
-hard authority/dependency blocker
-→ FINISH + NOT_SATISFIED
-
-uncertainty not credibly resolvable by another Round
-→ FINISH + INDETERMINATE
-```
-
-`REPEAT` remains exceptional.
-
-## 57. Validator operational failure
-
-If Validator call returns `ERR`, `NO_RETURN`, or `NOT_STARTED`:
-
-- preserve all evidence;
-- do not append `ROUND_FINISHED`;
-- do not append `TASK_FINISHED`;
-- do not fabricate repeat;
-- derive `OPERATIONALLY_BLOCKED`.
-
-## 58. Round and Task publication
-
-On accepted Validator return:
-
-- publish immutable Round `result.json`;
-- append `ROUND_FINISHED`.
-
-If disposition is `REPEAT`:
-
-- verify selected repeat artifacts;
-- do not append `TASK_FINISHED`;
-- derive `AWAITING_REPEAT`;
-- return a compact caller action.
-
-If disposition is `FINISH`:
-
-- verify terminal outputs;
-- publish Task `result.json`;
-- append `TASK_FINISHED`;
-- derive `TERMINAL`.
-
-## 59. Tests
-
-Prove:
-
-- all valid judgment/disposition pairs;
-- `SATISFIED + REPEAT` rejected;
-- repeat with no new artifact rejected;
-- repeat with unsettled operation rejected;
-- repeat with prior artifact but no current-Round producer rejected;
-- repeat selecting a live TARGET ArtifactRef instead of a frozen RUN ArtifactRef rejected;
-- far failure finishes;
-- hard blocker finishes;
-- investigate may incidentally finish satisfied;
-- execute may partially progress and repeat;
-- Planner Decline may finish;
-- Planner call error proceeds to Validator;
-- Validator operational failure blocks without semantic fabrication;
-- terminal outputs verified;
-- only frozen current-Round `RUN` repeat artifacts are supplied to the next Planner;
-- live target reality is supplied separately by the fresh workspace index;
-- next Planner may Decline.
+Implement the validation portions of `Q04`, `Q22`–`Q26`, and `Q33`.
 
 ---
 
-# Slice 8 — Prior evidence, CLI, status, diagnosis, and crash handling
+# Slice 8 — CLI, status, diagnosis, prior evidence, and integration
 
-## 60. Goal
+## 34. Goal
 
-Expose the lifecycle and preserve honest resume boundaries.
+Expose the accepted architecture without adding alternate flags or hidden policy.
 
-## 61. Production files
+## 35. CLI
 
-```text
-concepts/stt/cli.py
-scripts/stt.py
-```
-
-## 62. Start
+Implement exactly:
 
 ```text
-stt start \
-  --workspace <target> \
-  --submission <file> \
-  --routing-file <file> \
-  [--prior-run <run-root>] \
-  [--allow-live-provider]
-```
-
-Behavior:
-
-1. validate source, target, submission, routing, prior Run;
-2. prepare copied runtime and Bootstrap handoff;
-3. re-execute from copy;
-4. acquire writer lock;
-5. publish `run.json` and root Task;
-6. create Round 0;
-7. execute until Round FINISH, Round REPEAT, operational block, or invalid state;
-8. print compact result, Run root, and exact next caller command.
-
-## 63. Run
-
-```text
+stt start --workspace <target> --task-spec <file> --routing-file <file>
+          [--prior-run <run-root>] [--allow-live-provider]
 stt run --run-root <run-root>
+stt status --run-root <run-root>
+stt diagnose --run-root <run-root>
 ```
 
-Behavior:
+`start` validates and freezes all inputs, prepares runtime, publishes the Run and root Task, and advances until semantic finish, newly produced repeat, transient prelaunch block, operational stop/block, non-resumability, or invalidity.
 
-- execute from copied runtime;
-- acquire writer lock;
-- validate identities and ledgers;
-- capture the invocation-start deepest active Task and state;
-- resume unfinished current-Round work when safe;
-- otherwise create exactly one repeated Round for the pre-existing deepest `AWAITING_REPEAT` Task;
-- allow initial Round 0 creation for newly created Tasks without counting it as repetition;
-- never replan an accepted current Round;
-- never replay possibly launched work;
-- stop at newly produced repeat, terminal, operational block, or invalid state;
-- refuse further lifecycle action when the invocation begins operationally blocked or invalid.
+`run` changes no immutable field. It reports `OPERATIONALLY_BLOCKED`, `OPERATIONALLY_STOPPED`, `NON_RESUMABLE`, or `INVALID` without launching a settlement probe or semantic operation. When an exact request is committed with no marker, `run` reevaluates current launch prerequisites and may return transient `PRELAUNCH_BLOCKED`; it does not persist that outcome as lifecycle state.
 
-## 64. Status
+`status` and `diagnose` are read-only, attempt the Run lock nonblocking, return `RUN_BUSY` without reading lifecycle files while a writer holds the lock, and otherwise report exact state, blocker, result references, permitted caller action, actual role/route/model/effort OperationRequest and launch counts, and Run-root retention warnings. For `OPERATIONALLY_BLOCKED` or `NON_RESUMABLE`, the permitted action is operator intervention to establish quiescence or choose an isolated replacement target before any new Run; the CLI must not present immediate restart on the same target as safe. Terminal receipts report the same call/launch visibility.
 
-Read-only. Report:
+Do not retain competing mission/provider/model/effort/attempt flags from superseded plans. The core performs no automatic polling; any automated host wrapper must require a finite caller-owned invocation budget and surface exhaustion explicitly. The core never prunes a Run root automatically.
 
-- Run/runtime/target identity;
-- root and deepest active Task;
-- current Round;
-- state;
-- next action;
-- repeat count;
-- blocker;
-- semantic result reference;
-- exact command the caller may run.
+## 36. Prior evidence
 
-Do not infer readiness from repeat count.
+Validate only selectors supplied in RootTaskSpec against the optional prior root. Accept only prior RUN artifacts/reports/logs with exact bytes under the prior root, or a prior Boundary-frozen RUN copy of target bytes; reject direct live TARGET references. Before root Task publication, copy every accepted selected artifact into a create-only current-Run ArtifactRef that preserves prior origin and committed-event provenance. After publication, never reread the prior root. Never choose evidence semantically, merge lifecycle state, or accept uncommitted prior files as outputs or progress.
 
-## 65. Diagnose
+## 37. Public exit and query outcomes
 
-Read-only. Report:
-
-- missing Run root;
-- runtime corruption;
-- target mismatch;
-- ledger corruption;
-- conflicting publication;
-- ambiguous launch marker;
-- unsettled operation;
-- Planner or Validator call failure;
-- artifact mismatch;
-- operationally blocked or non-resumable state.
-
-Never repair automatically.
-
-## 66. Process crash
-
-Before each outer launch, persist marker.
-
-On restart:
+Use a small stable public mapping for semantic judgments, lifecycle states, and transient query/invocation outcomes:
 
 ```text
-no marker
-→ safe to resume before launch
-
-marker + committed accepted outcome
-→ safe to resume after outcome
-
-marker without committed outcome
-→ non-resumable Run
-
-result file without committing ledger event
-→ conflicting publication and non-resumable
+SATISFIED
+NOT_SATISFIED
+INDETERMINATE
+AWAITING_REPEAT
+PRELAUNCH_BLOCKED
+OPERATIONALLY_BLOCKED
+OPERATIONALLY_STOPPED
+RUN_BUSY
+NON_RESUMABLE
+INVALID
+USAGE_OR_SPECIFICATION_ERROR
 ```
 
-A committed repeat remains safely resumable as `AWAITING_REPEAT`.
+Internal exceptions do not each receive a public exit code.
 
-Recovery from non-resumable state is a new Run with current target reality and optional verified prior evidence.
+## 38. Proof links
 
-## 67. Prior Run
-
-`--prior-run` validates and selects exact evidence references.
-
-Never merge ledgers, Rounds, cursors, or lifecycle state.
-
-Uncommitted files may be diagnostic evidence only.
-
-## 68. Exit codes
-
-Use a small stable set, for example:
-
-```text
-0  SATISFIED or successful read-only query
-2  NOT_SATISFIED
-3  INDETERMINATE
-4  AWAITING_REPEAT
-5  OPERATIONALLY_BLOCKED
-6  INVALID_OR_NONRESUMABLE_RUN
-7  USAGE_ERROR
-```
-
-Do not expose every internal exception.
-
-## 69. Tests
-
-Prove:
-
-- start executes Round 0;
-- repeat returns dedicated public state;
-- later run creates exactly one Round;
-- a new repeat does not loop;
-- status prints exact caller action;
-- crash before marker resumable;
-- crash after marker non-resumable;
-- crash after committed repeat resumable;
-- new Run consumes selected prior evidence without state merge;
-- missing Run root honest;
-- read-only commands never mutate.
+Implement `Q27`–`Q30`; final integration completes `Q31`–`Q36`.
 
 ---
 
-# Slice 9 — Qualification, consistency, and cleanup
+## 39. Canonical qualification scenario catalog
 
-## 70. Qualification scenarios
+This is the only numbered scenario catalog. Each scenario is parameterized over its listed positive and known-bad cases, because separate IDs for every malformed field would repeat the same invariant rather than improve proof.
 
-Compose focused helpers rather than duplicate assertions.
+### Persistence and resume
 
-Prove at least the architecture's 40 scenarios, including:
+- `Q01` **Canonical control data and ledger:** canonical UTF-8/sorted-key/compact/LF bytes, duplicate-key and nonfinite-number rejection, one-byte identity changes, bounded parsing, exact event vocabulary/order, exact lifecycle-state derivation, transient-outcome exclusion, valid chains, duplicate/gap/history mutation rejection, and narrow torn-tail handling.
+- `Q02` **Supported-host admission:** only `LOCAL_MVP_V1` is accepted; required lock, create-only publication, atomic rename, directory sync and honest durability observations, `lstat`, hashing, local-filesystem behavior, and process observation pass or fail before Run publication; weaker or unknown profiles reject.
+- `Q03` **Transition-package and request commit:** valid package/event commit, phase-start request event before marker, narrow package-without-event completion, stale head, competing package, and event/package mismatch.
+- `Q04` **Lifecycle crash windows:** verified run without root Task, conflicting/incomplete canonical root publication, pre-Round Task, prelaunch request, complete call package before event, ambiguous launched call, child-to-parent finalization, Validator-record-to-Round finalization, FINISH Round-to-Task finalization, committed REPEAT resume, and operator-quiescence/isolated-target requirements before recovery from ambiguous launch.
 
-- direct execute;
-- zero-step validation;
-- investigate and repeat;
-- repeat caller boundary;
-- next Planner Decline;
-- far failure finishing;
-- hard blocker finishing;
-- command nonzero accepted success;
-- call error versus no return;
-- Validator blocker;
-- distinct child Tasks;
-- artifact mutation;
-- runtime copy safety;
-- crash boundaries;
-- prior Run evidence;
-- full repository suite.
+### Root, runtime, and identity
 
-## 71. Static consistency checks
+- `Q05` **RootTaskSpec:** exact task-spec/routing bytes freeze before parsing and RootTaskSpec routing identity must match; complete specification starts; root Task is count 1 at depth 0 and Round 0/Plan elements count toward their limits; `host_profile` is exactly `LOCAL_MVP_V1`; every named count/capture/wait field exists with fixed byte/second units, finite positive values, and conservative ceiling rejection; structured required_outputs always governs artifact matching while mission prose is never parsed as an output contract; selector purpose and type are explicit; TARGET_PATH resolves only under target; BOOTSTRAP_FILE resolves only under the canonical task-spec parent and rejects absolute/traversal/symlink/special/`.git`/escape cases; prior selectors require exactly one prior root and an unused prior root rejects; missing, structurally inconsistent, mutable, or unresolved fields reject without claiming semantic prose-conflict detection.
+- `Q06` **Frozen runtime:** source root resolves uniquely from the active entry point and manifest root; explicit manifest closure, bytes/mode, symlink/special-file, mixed-generation, target self-update, dynamic data/import, and archive reachability cases.
+- `Q07` **Location, retention, target identity, and external-evidence independence:** source may equal target or otherwise be mutually non-containing; Run and exchange remain disjoint; same-path target replacement is detected or the host is rejected; selected prior evidence is imported before Task publication; deletion or mutation of the prior root after publication does not change current evidence; no automatic pruning occurs and deletion warnings are explicit.
 
-Fail qualification when either plan or active production contains obsolete concepts:
+### Authority, trust, and schemas
 
-- `GAVE_UP` as lifecycle disposition;
-- step or Task status `COMPLETE`, `FAILED`, `BLOCKED_UNKNOWN`;
-- same-mission child delegation;
-- generic command `success` or `expected_result`;
-- competing `--provider`, `--model`, `--effort` CLI flags;
-- automatic repeat loop;
-- automatic operation replay;
-- target-only ArtifactRef model;
-- unlimited complete capture claim;
-- archive runtime import.
+- `Q08` **Path and child authority:** component-aware containment plus absolute, traversal, symlink, special, `.git`, Run path, and every child-expansion case.
+- `Q09` **Capability and secret admission:** unique Worker-route-to-profile binding; command `EXACT_PATH` and `PATH_LOOKUP_AT_BOOTSTRAP` resolution; executable identity revalidation; finite accepted exits; fixed explicit environment overrides; target-relative cwd; reusable slot schemas plus step-time target-path/PlanInput/OutputRequirement/enum/integer/bounded-text bindings; effect classes; inherited environment names; fixed provider credential-name allowlists; declared-nonsecret fixed-field placement and known-prohibited-field rejection without treating model-supplied text as proven non-secret; and reported out-of-scope effects.
+- `Q10` **Instruction trust and private contracts:** target/prior injection cannot alter mission, authority, routing, policy, schema, or role contract; Planner/Validator receive path-free TaskAuthorityView, WorkerRouteView, and CapabilityProfileView rather than canonical target, executable, adapter, or credential-launch metadata; general repository contracts do not govern STT runtime.
+- `Q11` **Exchange and post-call integrity:** exchange roots are owner-exclusive and disjoint; no authoritative Run path is exposed; only admitted bytes cross; outputs remain non-authoritative until import; post-call runtime/target/Run/ledger mutation invalidates before acceptance.
+- `Q12` **Input/output/artifact binding:** PlanInputs remain declarative and cannot contain authoritative ArtifactRefs or InputRefs; Boundary-owned immutable PlanInputResolutions bind current evidence/target identities and defer prior-step requirements; initial, prior, child, and repeat EvidenceBindings remain availability records rather than consumption authority and expose only path-free EvidenceBindingViews to Planner; every use reverifies the resolution and creates a complete role/Task/Round/step-bound InputRef; named target mutation yields transient prelaunch mismatch rather than rebinding; discriminated provenance covers Bootstrap/prior/existing-target/step/child/command/Boundary origins; `EXISTING_ALLOWED` versus produced-output authority, closed producer constraints, exact purpose, structural principal-consumer compatibility without mandatory downstream consumption, canonical OutputRequirement matching, discriminated Boundary-owned StepResult binding without fabricated role/child results, exact artifact-type label equality without plugin semantics, mode/path, mutation-before-use, and special-file rejection all qualify.
+- `Q13` **Plan schema and limits:** identity header; exact common and kind-specific fields; route-derived Worker profile without a second profile field; command cwd and slot bindings; declarative ChildAuthoritySpec without resolved target identity or duplicate route/profile fields; exact StepOutcome vocabulary; TaskStep-only `OPERATIONAL_INDETERMINATE`; complete PlanInputResolution variants; accepted-Plan and resolution immutability; declarative EVIDENCE_BINDING/TARGET_PATH/STEP_OUTPUT PlanInputs; future/cross-Task references; fabricated authoritative references; duplicate step/input/output IDs or names; unknown profiles; generic success expression; and per-Round step cap.
 
-Allow ordinary English uses only when not naming lifecycle contracts; prefer avoiding them in active STT docs and code.
+### Semantic roles and operations
 
-## 72. Context tests
+- `Q14` **Planner:** exact RunPolicyView and remaining Task/depth/Round/step capacity, EXECUTE, INVESTIGATE, zero-step, DECLINE, complete PlanInputResolution publication with the accepted Plan, missing/unresolvable input rejection, settled non-OK, rejected return, and unsettled block; Decline never creates steps or REPEAT.
+- `Q15` **Call and local-settlement algebra:** every valid and invalid post-launch return/result/settlement combination, no persisted call outcome before a marker, Worker/command role-result versus Boundary-owned StepResult separation, settled non-OK mapping to `INDETERMINATE` unless accepted facts establish `NOT_SATISFIED`, no fabricated success, bounded capture, truthful local-only settlement, accepted structured binding, and same-Run stopping on unsettled or unknown work without a settlement-probe transition.
+- `Q16` **Exactly one launch:** marker ordering, no second launch for any role, transient non-persisted `PRELAUNCH_BLOCKED` on current prerequisite failure, explicit prelaunch reevaluation while no marker exists, and non-resumable ambiguous launch.
+- `Q17` **Worker:** satisfied/not-satisfied/indeterminate outcomes, live target create/edit/move/delete, admitted output import, opaque provider-internal tools, effect-report limits, and exact scope-violation classification into `NOT_SATISFIED`, `INVALID`, or `OPERATIONALLY_BLOCKED`.
+- `Q18` **Command:** named reusable profile, admitted target-relative cwd, step-time unique-input and RUN/BOUNDARY_ASSIGNED output slot bindings, single-token scalar validation, exact rendered argv, no shell by default, fixed explicit environment and finite accepted exits, profile wait/grace bounded by root policy, accepted nonzero exit, failed/unstable output, bounded logs, admitted target change, inherited environment handling, no replay, and representative build, test, and file-transformation profile usability.
 
-Instrument fake provider requests and assert:
+### Lead, child, and validation
 
-- Lead receipts compact;
-- Planner receives bounded current Round inputs;
-- repeat Validator report is advisory;
-- only selected ArtifactRefs cross to next Round;
-- Worker receives one step;
-- Validator receives bounded evidence index;
-- child and prior histories are referenced;
-- logs remain file-backed;
-- byte limits enforced.
+- `Q19` **Mechanical Lead:** exactly one nonterminal root-to-leaf frontier, multiple active-branch rejection, ordered depth-first execution, compact receipts, no direct provider/storage mutation dependency, no scheduler/cursor, and newly produced REPEAT stop.
+- `Q20` **Child identity and limits:** deterministic path, distinct/narrower mission floor, relation reason, declarative ChildAuthoritySpec, Boundary construction with unchanged target identity, full authority/profile subset, depth, total-Task budget, and later-step waiting.
+- `Q21` **Child failure propagation:** semantic mapping, settled child `OPERATIONALLY_STOPPED` to parent `OPERATIONAL_INDETERMINATE` StepResult and parent audit, unsettled/unknown whole-Run block, and invalid child.
+- `Q22` **Validator context and independence:** RunPolicyView plus bounded evidence index with authoritative reference hashes, path-free ArtifactRefViews, and ArtifactViews, no canonical target/authoritative Run path or interactive tools, separate invocation, truthful `UNKNOWN` isolation, and explicit `INDETERMINATE + FINISH` when omitted evidence cannot be gathered safely.
+- `Q23` **Terminal judgment and outputs:** all Validator mechanical floors execute before accepted-result classification, `VALIDATION_RECORDED` records every call outcome, floor-violating returns become rejected and settled `OPERATIONALLY_STOPPED` without judgment, accepted-result Round finalization, all valid FINISH judgments, required-output floor, wrong terminal selection, and Validator unsettled operational block as a same-Run stop.
+- `Q24` **REPEAT evidence:** current PLAN Round producer, frozen RUN import including a declared current-Round TARGET output copied deterministically by Boundary, mechanical novelty by exact file content/type or canonical observation identity, and rejection of prose, prior evidence, byte-identical copy/rename, repeated observations, arbitrary freezes, and no-Plan/Decline cases; representative changed-byte wrappers are challenged semantically without a universal wrapper-detection claim.
+- `Q25` **REPEAT semantic boundary:** Validator-policy rejection of semantically unchanged wrappers, restatement, cosmetic activity, far failure, hard blocker, and circular replay; positive material leverage, incidentally satisfied investigation, partial execution progress, and next-Planner independence; Boundary performs no semantic replay-wording detector.
+- `Q26` **Finite continuation:** identical mission/fresh Plan, contiguous Rounds, Round/step/Task/depth limits, RunPolicyView remaining-capacity input to Planner/Validator, FINISH-only schema at zero capacity, violating REPEAT classified rejected without coercion, one pre-existing repeat consumption per invocation, and child Round 0 exemption.
 
-## 73. Full repository checks
+### Prior evidence, CLI, and repository integration
 
-Run:
+- `Q27` **Prior evidence:** caller-selected committed compatible prior RUN artifacts/reports/logs, including Boundary-frozen RUN copies of target bytes, are copied into current-Run ArtifactRefs before Task publication and remain advisory; direct live TARGET references reject; prior-root deletion after publication does not affect current evidence; unselected, uncommitted, incompatible, injected, externally rebound, or lifecycle-merging material rejects.
+- `Q28` **CLI immutability:** task-spec/routing entry, prior-root/selector consistency, no superseded semantic flags, resume cannot change policy/routing/auth, `RUN_BUSY` query behavior, and exact exit-state mapping.
+- `Q29` **Status and diagnosis:** nonblocking read-only locking with `RUN_BUSY`, exact state/blocker/next action, OperationRequest and launch counts, terminal receipt visibility, retention warning, same-Run operational-stop reporting, no unsafe immediate-restart advice after unknown settlement or ambiguous launch, missing root, and no automatic repair.
+- `Q30` **Plain and Git targets:** both work without Git lifecycle authority, no target `.stt`, and target concurrency yields visible identity conflict rather than rebinding.
+- `Q31` **Bounded context:** the canonical ArtifactRefView/ArtifactView builder emits path-free metadata plus full, bounded-text, or metadata-only content through deterministic range/truncation/metadata policy and no Boundary-generated semantic summary; Planner receives EvidenceBindingView and Planner/Validator receive RunPolicyView, TaskAuthorityView, WorkerRouteView, CapabilityProfileView, and authoritative reference hashes but never full InputRef/ArtifactRef, canonical target, authoritative RUN path, device/inode, executable, adapter, credential, or launch metadata, while path-like strings inside admitted untrusted bodies remain data; Planner/Worker/Validator receive only role-specific admitted views; truncation is visible and cannot masquerade as complete evidence; Lead carries references only.
+- `Q32` **Provider adapters and routing truth:** fake and controlled Claude/Codex launchers, explicit live authorization, requested versus observed routing including `UNSPECIFIED` requested fields and truthful `UNKNOWN` observations, fixed inherited credential-name allowlists, secret-value non-persistence, no automatic model/route escalation, and no semantic adapter logic.
+- `Q33` **Resource, capture, and call visibility:** finite Task/Round/step budgets, complete fixed-unit capture/wait schemas including structured-request and total exchange-input separation, conservative hard-ceiling rejection, byte/time/entry enforcement, deterministic overflow, structural semantic-call bounds, actual role/route/model/effort OperationRequest and launch counts, terminal receipt visibility, a separately persisted finite automated-host polling budget when such a host exists, retention warnings, and honest stop at policy boundaries.
+- `Q34` **Static superseded-concept rejection:** §40 patterns fail active docs/code while ordinary non-contract English is tolerated narrowly.
+- `Q35` **Repository regression:** focused STT, compile, formatting/lint, shell fixtures, `git diff --check`, runtime closure, and full repository suite.
+- `Q36` **Design lineage and promotion:** decision/subdecision disposition, architecture-to-implementation and decision-to-Q links, no dependency on unavailable external audits, accepted document-pair commit recorded externally as implementation base without changing accepted file bytes, WELL review, RunSkeptic receipts, and no readiness status with unresolved blocker.
 
-- focused STT suite;
-- full repository suite;
+---
+
+## 40. Static design-consistency checks
+
+Fail qualification when active STT documents or code contain:
+
+- free-form root submission as the source of mission/authority/outputs;
+- runtime parsing of mission prose as an artifact-output contract or semantic contradiction detector;
+- unresolved RootTaskSpec selectors or a pre-Bootstrap TaskAuthority that pretends target identity is already known;
+- `maximum_attempts`, a call-visibility disable switch, or automatic post-launch retry;
+- launch marker without a ledger-committed phase-specific OperationRequest;
+- persisted `PRELAUNCH_BLOCKED` lifecycle state or event;
+- same-mission child continuation;
+- multiple incomparable nonterminal Task frontiers;
+- mutation or replacement of an accepted Plan;
+- automatic provider/model escalation or fallback;
+- Validator interactive tool or command callback;
+- lower-trust authoritative Run-root path exposure;
+- duplicate Worker route/profile selection, resolved child TaskAuthority in Plan output, duplicate child route/profile fields, or a command profile that binds runtime InputRef identities before a step exists;
+- arbitrary command executable, free-form argv, untyped argument slot, model-supplied environment override, or inherited environment selection;
+- generic command success expressions;
+- Decline followed by REPEAT;
+- Validator prose, byte-identical copy/rename, repeated canonical observation, or other mechanically non-novel identity as repeat evidence;
+- unbounded per-Task Round count;
+- whole-Run blocking for a child `OPERATIONALLY_STOPPED` state without the parent-audit rule;
+- competing architecture semantics in the implementation plan;
+- concurrency, parallel Task execution, a second active frontier, or target-wide writer exclusion;
+- automatic Git commit, staging, push, merge, rebase, or publication;
+- automatic rollback, target restoration, or multi-resource transaction;
+- RunSkeptic or archived Target Task execution inside the STT runtime;
+- target `.stt` authority;
+- archive runtime import;
+- sandbox, rollback, complete-effect, actual-routing, or actual-isolation overclaim.
+
+Allow ordinary English uses only when they do not name active lifecycle contracts.
+
+---
+
+## 41. Invariant-to-proof map
+
+| Decisions | Scenarios |
+|---|---|
+| `D1` | `Q05`, `Q28` |
+| `D2`–`D3` | `Q04`, `Q13`, `Q19`, `Q20`, `Q26`, `Q33` |
+| `D4` | `Q19` |
+| `D5`–`D6` | `Q02`, `Q06`, `Q07`, `Q11`, `Q30` |
+| `D7` | `Q01`, `Q03`, `Q04` |
+| `D8` | `Q11` |
+| `D9`–`D10` | `Q08`–`Q10`, `Q31`, `Q32` |
+| `D11` | `Q14` |
+| `D12` | `Q12`–`Q14` |
+| `D13` | `Q17`, `Q18`, `Q30` |
+| `D14`–`D15` | `Q15`, `Q16`, `Q32` |
+| `D16` | `Q22`–`Q26` |
+| `D17` | `Q20`, `Q21` |
+| `D18` | `Q10`, `Q22`, `Q31`, `Q32` |
+| `D19` | `Q27` |
+| `D20` | `Q03`, `Q04`, `Q21`, `Q29` |
+| `D21`–`D22` | `Q34`–`Q36` |
+| `D23` | `Q33`, `Q36` |
+
+Every production mechanism must map to at least one decision and one scenario. An unmapped mechanism is removed or the architecture is amended before acceptance.
+
+---
+
+## 42. Full verification
+
+Run, in repository-native form:
+
+- canonical STT qualification suite;
 - Python compile checks;
-- existing formatting/lint checks;
-- shell syntax checks;
-- `git diff --check`.
+- existing formatting and lint checks;
+- shell syntax checks for launch fixtures;
+- `git diff --check`;
+- full repository suite;
+- static design-consistency checks;
+- import/runtime-manifest closure checks;
+- no-archive and no-target-state checks.
 
-Do not add tools solely for this implementation.
+Tests must use controlled fake providers and executables for call, path, effect, settlement, and routing observations. Paid live calls are not required for qualification.
 
-## 74. Complexity review
+---
 
-Before acceptance inspect and remove:
+## 43. Complexity review
 
-- duplicated schema logic;
-- duplicated state derivation;
-- duplicated path/identity handling;
-- unnecessary provider abstractions;
-- semantic progress scoring;
-- hidden automatic repeat or replay;
-- mutable cursors;
-- hidden target containment claims;
+Before each commit and final acceptance, remove:
+
+- duplicate schema or state derivation;
+- duplicate path or identity logic;
+- speculative provider abstraction;
+- semantic progress score;
+- hidden retry/replay path;
+- mutable cursor, scheduler, or task registry;
+- broad exception catch that erases the blocker;
+- broad Run or target context passed to a model;
+- hidden Git assumption;
 - dead compatibility code;
-- broad exception catches;
-- unbounded model context;
-- hidden Git assumptions;
-- unused modules.
+- module whose only role is forwarding without a boundary or proof benefit.
+
+Retained complexity must point to the specific decision and failure mode it protects.
 
 ---
 
-## 75. Invariant-to-code map
+## 44. Definition of implementation done
 
-| Architecture invariant | Primary code | Primary tests |
-|---|---|---|
-| immutable Task mission | `task.py` | Task identity tests |
-| sequential immutable Rounds | `round.py`, `lead.py` | Round lifecycle tests |
-| one repeated Round per consumed repeat transition | `lead.py`, `cli.py` | repeat boundary tests |
-| Planner PLAN/DECLINE | `plan.py`, `boundary.py` | planning tests |
-| EXECUTE/INVESTIGATE | `plan.py`, Planner contract | intent tests |
-| durable Planner outcome | `boundary.py`, `round.py` | resume tests |
-| call OK/ERR/no-return split | `launcher.py` | provider/command tests |
-| exact command result | `command.py` | command tests |
-| ArtifactRef at target and Run | `artifact.py` | artifact tests |
-| exceptional REPEAT threshold | Validator contract, Boundary | validation tests |
-| far failure finishes | Validator fixtures | repeat-decision tests |
-| no automatic repeat loop | `lead.py`, `cli.py` | invocation tests |
-| distinct child missions only | `task.py`, `lead.py` | recursion tests |
-| copied runtime | `runtime.py`, `bootstrap.py` | self-update tests |
-| Bootstrap immutable handoff | `bootstrap.py` | mutation tests |
-| Task-local ledger | `ledger.py` | ledger tests |
-| one writer | `run_lock.py` | lock tests |
-| prior Run evidence only | Bootstrap/Boundary | prior evidence tests |
-| no archive reachability | imports | static test |
+The STT MVP is done only when:
 
----
+1. the accepted architecture and this plan have unchanged recorded hashes and their containing repository commit is the recorded implementation base;
+2. every scenario `Q01`–`Q36` passes;
+3. full repository verification passes;
+4. every production mechanism maps to a decision and scenario;
+5. no static superseded concept remains;
+6. no lower-trust process receives authoritative Run-state paths;
+7. no OperationRequest launches twice after a marker;
+8. RootTaskSpec is the only source of root semantics;
+9. finite Task depth and Round limits are enforced;
+10. settled `OPERATIONALLY_STOPPED` versus unsettled `OPERATIONALLY_BLOCKED` child failure follows architecture exactly;
+11. prior evidence is selected, verified, advisory, and non-merged;
+12. status and diagnosis report uncertainty, `RUN_BUSY`, OperationRequest/launch counts, terminal receipt visibility, and retention risk without repair or semantic fabrication;
+13. implementation contains no archive dependency, target `.stt` authority, sandbox claim, or automatic publication;
+14. final WELL and RunSkeptic review finds no unresolved promotion blocker, and any status-line change has restarted and completed those reviews on the final unchanged bytes;
+15. implementation stops.
 
-## 76. Definition of done
-
-The STT MVP is done when:
-
-1. architecture and implementation match exactly;
-2. every production module is necessary;
-3. focused qualification passes;
-4. full repository suite passes;
-5. copied-runtime self-update and copy-race proofs pass;
-6. Task mission remains immutable across Rounds;
-7. one invocation consumes at most one pre-existing repeat transition;
-8. initial Round 0 for new child Tasks remains allowed;
-9. newly produced repeat always stops that invocation;
-10. repeat requires material verified progress and credible better planning basis;
-11. far failure and hard blockers finish rather than repeat;
-12. Planner may Decline after repeat;
-13. same-mission child Task is rejected;
-14. command returned error and no return remain distinct;
-15. same-Run resume never replans an accepted Round or replays possibly launched work;
-16. ambiguous active-call crash is non-resumable;
-17. prior Run evidence starts a distinct lifecycle;
-18. no authoritative state is written under target;
-19. active STT imports no archived Target Task code;
-20. no sandbox, rollback, complete-effect-detection, or automatic publication claim is made;
-21. final diff contains no unexplained mechanism;
-22. implementation stops.
-
----
-
-## 77. Final execution instruction
-
-```text
-Implement only plans/stt-mvp-architecture-plan.md.
-
-Use this implementation plan as the ordered build map.
-
-Build small vertical slices with deterministic tests. Preserve prior passing
-behavior. Remove unnecessary machinery before each commit.
-
-Do not restore archived Target Task behavior. Do not add concurrency, rollback,
-a scheduler, a workflow language, dynamic Plan editing, semantic progress
-scoring, automatic provider retry, automatic operation replay, automatic model
-escalation, automatic repeat loops, or target sandboxing.
-
-Treat REPEAT as exceptional: use it only when the Task is not yet good enough,
-this Round produced material verified leverage, and a fresh Planner has a
-credible better basis. Far failure, hard blockers, and progress without leverage
-finish rather than repeat.
-
-Stop when focused qualification and the full repository suite pass.
-```
+The implementation-done definition is executable acceptance rather than proof that every provider or arbitrary process behaves honestly.
