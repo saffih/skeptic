@@ -51,15 +51,11 @@ The authoritative Run history is persisted as ordinary readable files plus appen
 
 ### `semantic-continuation` — Semantic continuation
 
-Architecture defines no independent count cap on child Tasks, Task depth, or Rounds, because arbitrary lifecycle counts would override Planner and Validator judgment while finite record, operation, and host limits may still reject an individually oversized Plan or operation.
+Architecture defines no independent fixed total within a Run for Task count, Task depth, Plan steps, Rounds, or semantic calls, because arbitrary lifecycle or reasoning counts would override Planner and Validator judgment while finite per-operation representation, transport, capture, wait, and host limits remain legitimate implementation safeguards.
 
 ### `interrupted-effects` — Interrupted effects
 
 STT does not automatically relaunch an operation when committed history shows that it started or leaves its launch uncertain, because the operation may already have affected the live target even though the Run is single-threaded.
-
-### `external-provider-trust` — External-provider trust
-
-Any external provider permitted for a Run is inside the trust boundary accepted for that Run, and STT adds no content-classification, redaction, or per-file approval system, because permitting the provider is the explicit trust decision and arbitrary retained bytes cannot be classified reliably by the orchestration layer.
 
 ### `canonical-naming` — Canonical naming
 

@@ -103,8 +103,6 @@ Planner and Validator operate at or above their configured trusted minimum capab
 
 Mission and Run policy may constrain permitted providers, capability levels, cost preference, or quality preference, because `mission-routing-constraints` bounds Planner freedom without prescribing every route.
 
-Selecting a permitted external provider accepts that provider as a Run dependency without adding an STT content-classification or redaction layer, because `external-provider-trust` makes provider selection the trust decision while `boundary-mediated-transitions` still controls launch and result binding.
-
 Boundary rejects an unpermitted route and never silently substitutes another route, because `boundary-mediated-transitions` owns admission while Planner owns the choice made under `simplest-adequate-execution`.
 
 The architecture defines no provider names, tier labels, prices, token thresholds, or route-selection algorithm, because those volatile choices belong to the Software Design Description under the variation allowed by `execution-economy`, `planning-and-validation-capability`, and `mission-routing-constraints`.
@@ -155,7 +153,9 @@ A child Task semantic outcome becomes its parent step result, because child judg
 
 A settled child stop without semantic judgment becomes parent operational evidence and stops later parent steps while still permitting parent validation after settlement, because `honest-outcomes` must preserve operational absence of judgment without fabricating a child outcome.
 
-An unsettled, unknown, non-resumable, or invalid child state blocks or invalidates the enclosing Run before ancestor validation, because `one-active-frontier`, `authoritative-committed-history`, and `honest-outcomes` require child state to propagate without invention.
+An unsettled child state, or one whose activity or local settlement is unknown, blocks the enclosing Run before ancestor validation, because `one-active-frontier` and `honest-outcomes` forbid ancestor judgment while the child frontier may still change.
+
+An invalid child state invalidates the enclosing Run before ancestor validation, because `authoritative-committed-history` and `honest-outcomes` forbid deriving ancestor state from untrustworthy child history.
 
 No Validator launches while relevant work may still be active or its local settlement is unknown, because `one-active-frontier` forbids concurrent frontiers and `honest-outcomes` forbids judgment against changing effects.
 
@@ -163,9 +163,9 @@ No Validator launches while relevant work may still be active or its local settl
 
 Resume advances only from committed facts, may launch an operation only when history establishes that no prior launch occurred, and may otherwise complete only uniquely implied non-effectful transitions, because `authoritative-committed-history`, `interrupted-effects`, and `honest-outcomes` forbid guessing whether an effect already occurred.
 
-Relevant unsettled or unknown work blocks later steps and validation, because `one-active-frontier` must not advance while the active frontier may still be changing state.
+Relevant work whose activity or local settlement remains unsettled or unknown blocks later steps and validation, because `one-active-frontier` must not advance while the active frontier may still be changing state.
 
-An interruption that leaves an effectful result unknowable makes the Run non-resumable, and any replacement Run requires operator-established quiescence or an isolated replacement target, because STT cannot infer external facts excluded by `non-goals`.
+After relevant work is established settled, recovery may continue through fresh planning from committed facts without relaunching an operation whose prior launch occurred or remains uncertain, because `interrupted-effects` forbids blind effect replay without making semantic continuation itself non-resumable.
 
 Corrupt, conflicting, or mutated authoritative history invalidates the Run, because `authoritative-committed-history` can no longer support deterministic derivation or trustworthy evidence.
 
