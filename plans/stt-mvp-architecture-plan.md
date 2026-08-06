@@ -1,9 +1,9 @@
 # STT MVP Architecture Plan
 
-**Status:** Architecture candidate — implementation-plan conformance update waits for architecture convergence, and implementation remains prohibited until the unchanged pair passes WELL, RunSkeptic, and promotion review
+**Status:** Canonical pair candidate — implementation remains prohibited until the unchanged architecture and implementation plan pass WELL, RunSkeptic, and promotion review
 **Repository:** `saffih/skeptic`
 **Historical reconstruction base:** `74c4f6a2c34da501101141525c8a34d691c384a1`
-**Companion implementation plan:** `plans/stt-mvp-implementation-plan.md` — pending conformance update after architecture convergence
+**Companion implementation plan:** `plans/stt-mvp-implementation-plan.md` — conformance candidate reviewed only as part of the unchanged pair
 **Document profile:** `docs/well.md`
 **Scope:** STT MVP runtime architecture
 
@@ -35,7 +35,7 @@ The following rules dominate narrower text, because one general rule should repl
 
 | Rule | Decision | Warrant |
 |---|---|---|
-| Immutable root semantics | Bootstrap freezes mission, operational authority, required outputs, routing, policy, selected initial inputs, and selected prior-Run evidence before semantic execution | same-Run execution needs one accountable semantic base |
+| Immutable root semantics | Bootstrap freezes mission, operational authority, required outputs, routing, policy, target workspace, store root, selected initial inputs, and selected prior-Run evidence before semantic execution | same-Run execution needs one accountable semantic and location base |
 | Trusted thinking, mechanical control | Planner and Validator own semantic judgment while Lead and Boundary enforce lifecycle integrity and operational admission | mechanical code cannot replace contextual reasoning safely |
 | Free persisted context | the authoritative STT filesystem is the history interface, Planner and Validator may read the complete current STT tree, and Planner may delegate that read ability to any planned entity | runtime-selected context can omit information needed for correct reasoning |
 | No semantic recursion limits | Planner may create any child-Task structure, including byte-identical parent missions, and Validator may repeat the same Task for as many useful Rounds as it judges necessary | arbitrary count limits would override the thinking roles’ mandates |
@@ -54,7 +54,7 @@ A narrower rule may specialize these rules but may not contradict them, because 
 
 ### 3.1 RootTaskSpec
 
-A new Run begins from one immutable `RootTaskSpec`, because root semantics need one accountable owner before any semantic execution:
+A new Run begins from one immutable `RootTaskSpec` plus caller-selected target workspace and store root, because root semantics and authoritative locations need one accountable base before any semantic execution:
 
 ```text
 schema
@@ -73,7 +73,7 @@ Structured `required_outputs` are the only artifact-output contract, because art
 
 Bootstrap validates and freezes supplied semantics but does not invent or complete them, because deterministic startup must not become an undeclared Planner.
 
-Changing mission, authority, outputs, routing, or policy requires a new Run, because same-Run resume must preserve the exact root contract.
+Changing mission, authority, outputs, routing, policy, target workspace, or store root requires a new Run, because same-Run resume must preserve the exact root contract and authoritative locations.
 
 `run_policy` contains operational safeguards such as capture limits, wait and termination limits, and host profile but does not cap Plan steps, Task depth, total Tasks, or Rounds, because resource mechanics may protect the host without replacing trusted semantic judgment.
 
@@ -83,7 +83,7 @@ A Plan remains finite because its persisted return is finite, while provider and
 
 The runtime uses distinct identities, because mission continuation, delegation, and one transport launch have different replay and lineage meanings:
 
-- **Run** — one frozen root specification, target identity, runtime, routing, policy, and optional imported prior evidence;
+- **Run** — one frozen root specification, target identity, store-root identity, runtime, routing, policy, and optional imported prior evidence;
 - **Task** — one immutable mission, authority, required outputs, lineage, and append-only ledger;
 - **Round** — one fresh plan–execute–validate cycle of the same Task;
 - **OperationRequest** — one exact Planner, Worker, command, or Validator request;
@@ -140,7 +140,7 @@ Continuation is a recommended pattern rather than a restricted protocol form, be
 
 A typical continuation investigates unknowns, persists the resulting information, and creates a same-mission child Task, because the child can reason from a different accumulated STT history even when mission bytes are identical.
 
-Planner returns an immutable `PLAN` or `DECLINE`, because execution and validation need one persisted planning decision.
+Planner returns an immutable nonempty `PLAN` or `DECLINE`, because execution requires at least one admitted step while a Planner that proposes no execution must state `DECLINE`.
 
 Plan validation checks schema, identity, ordering, and operational admission only, because Boundary must not replace Planner judgment with semantic heuristics.
 
@@ -204,7 +204,7 @@ Planner owns the semantic consequences of delegated visibility, because STT cann
 
 Roles may use read-only equivalents of listing, tree navigation, finding, file reading, ranged reading, text search, structured JSON querying, and tail inspection, because direct filesystem navigation is simpler and more flexible than a curated history package.
 
-Read-tool calls remain part of the entity’s one outer operation and persist the request, exact source identities or ranges, and generated search results without becoming separate lifecycle steps, because immutable source files need not be copied again merely to reconstruct what was read.
+Read-tool use remains part of the entity’s one outer operation and does not become separate lifecycle steps, while the implementation plan owns the exact transcript convention, because contextual navigation must remain reconstructible without expanding lifecycle vocabulary.
 
 STT does not curate the only visible history, require prior declaration of contextual reads, hide records behind summaries, create a cumulative history package, log every individual read as a lifecycle transition, or impose a semantic reading budget, because those mechanisms add cost and can conceal information needed for correct reasoning.
 
@@ -338,6 +338,8 @@ Before launch intent is persisted, launch is mechanically disproved and a later 
 
 After launch intent is persisted, another Attempt for the same OperationRequest is permitted only when the adapter positively proves that it created no process and sent no provider request, because proven absence of launch means no operation occurred.
 
+Positive proof of non-launch returns `PRELAUNCH_BLOCKED` for the current invocation and creates neither role failure nor Validator evidence, because reevaluation may occur later but must not become an automatic transport retry loop.
+
 Actual launch or uncertainty about whether launch occurred permanently forbids another launch of the same OperationRequest in the Run, because a second launch could replay hidden effects.
 
 Interruption after launch intent without either complete proof of non-launch or a uniquely recoverable call outcome makes the Run `NON_RESUMABLE`, because STT cannot infer whether the operation occurred.
@@ -375,13 +377,17 @@ child SATISFIED       → parent step SATISFIED
 child NOT_SATISFIED   → parent step NOT_SATISFIED
 child INDETERMINATE   → parent step INDETERMINATE
 
-settled child OPERATIONALLY_STOPPED
+settled child OPERATIONALLY_STOPPED not caused by Run-wide operator cancellation
 → parent step OPERATIONAL_INDETERMINATE
 → later parent steps stop
 → parent Validator may judge the parent mission
 
 child UNSETTLED or UNKNOWN
 → entire Run OPERATIONALLY_BLOCKED
+→ no ancestor Validator launches
+
+child NON_RESUMABLE
+→ entire Run NON_RESUMABLE
 → no ancestor Validator launches
 
 child INVALID
@@ -427,7 +433,7 @@ Admitted resume actions include the following transitions, because each can be p
 
 - publish a uniquely prepared root Task;
 - create Round 0 for a committed Task;
-- launch a committed request only when no marker exists;
+- launch a committed request before launch intent or create a fresh Attempt only after committed positive proof that the preceding Attempt did not launch;
 - commit a complete uniquely eligible non-effectful transition package;
 - map a committed child result into its parent;
 - finalize an accepted Validator result into a Round;
@@ -444,11 +450,13 @@ Interior ledger corruption, identity mismatch, conflicting packages, or mutation
 
 ## 11. Locations, runtime, and host floor
 
-STT separates source repository, live target workspace, authoritative Run root, and per-call exchange or adapter workspace when needed, because controller state and effectful work require distinct trust locations.
+STT separates source repository, live target workspace, caller-selected store root, authoritative Run root, and per-call exchange or adapter workspace when needed, because controller state and effectful work require distinct trust locations.
 
 Source and target may be identical for self-modification but otherwise neither may contain the other, because partial overlap makes frozen-runtime and target-mutation boundaries ambiguous.
 
-The authoritative Run root is disjoint from source and target and authoritative state never lives under `<target>/.stt/`, because target work must not rewrite lifecycle evidence.
+The caller-selected store root is resolved and frozen before Run publication, and the authoritative Run root is created beneath it while remaining disjoint from source and target, because task evidence must live where the caller authorized without target work rewriting lifecycle state.
+
+Authoritative state never lives under `<target>/.stt/`, because a target-local default would defeat caller-selected storage and expose lifecycle evidence to target mutation.
 
 Bootstrap freezes a detectable target-root identity and Boundary reverifies it before effectful operations, because same-path replacement must not silently redirect admitted authority.
 
@@ -499,15 +507,16 @@ NOT_SATISFIED
 INDETERMINATE
 ```
 
-Public operational outcomes are defined as follows, because operators need stable names for conditions that prevent or end advancement without fabricating mission meaning:
+Public nonsemantic outcomes are defined as follows, because operators need stable names for conditions that prevent or end advancement without fabricating mission meaning:
 
 ```text
 OPERATIONALLY_BLOCKED
 OPERATIONALLY_STOPPED
 NON_RESUMABLE
 INVALID
-TERMINAL
 ```
+
+A semantically finished Run reports its accepted Task judgment directly rather than a second `TERMINAL` meaning, because duplicate terminal vocabularies would obscure whether the mission was satisfied, not satisfied, or indeterminate.
 
 Lead derives the unique next lifecycle action from committed history without a mutable cursor, while exact internal derivation labels and precedence belong to the implementation plan, because orchestration mechanics must be deterministic without becoming architecture vocabulary.
 
@@ -518,7 +527,7 @@ An accepted `REPEAT` starts the next contiguous Round automatically without `AWA
 Public operations are defined as follows, because startup, advancement, observation, and diagnosis need separate interfaces:
 
 ```text
-stt start --workspace <target> --task-spec <spec> --routing-file <routing> [--prior-run <run-root>] [--allow-live-provider]
+stt start --workspace <target> --store-root <store-root> --task-spec <spec> --routing-file <routing> [--prior-run <run-root>] [--allow-live-provider]
 stt run --run-root <run-root>
 stt status --run-root <run-root>
 stt diagnose --run-root <run-root>
@@ -528,6 +537,10 @@ stt stop --run-root <run-root>
 `start` and `run` advance through deterministic transitions, child Tasks, and Validator-requested Rounds until terminal, blocked, stopped, non-resumable, invalid, or prelaunch-blocked, because ordinary continuation should not require repeated caller approval.
 
 `stop` records an operator cancellation without creating a mission judgment, because operational control must remain available without overriding Planner or Validator semantics.
+
+Cancellation is Run-wide even when a child Task is active, because an operator stop must prevent new child, parent, or ancestor semantic calls rather than masquerade as an ordinary child failure.
+
+Cancellation forbids new semantic launches but does not discard valid results or uniquely implied non-effectful transitions from operations launched earlier, because operator control must stop future work without rewriting facts already produced.
 
 Cancellation between outer operations derives `OPERATIONALLY_STOPPED`, while cancellation during possibly active work follows the ordinary settlement rules and may derive `OPERATIONALLY_BLOCKED` or `NON_RESUMABLE`, because STT must not claim quiescence it cannot prove.
 
@@ -544,16 +557,18 @@ Implementation qualification proves the following mechanical claims, because eac
 - read-only complete-STT access for Planner and Validator;
 - Planner-delegated STT read access;
 - same-mission child acceptance;
-- automatic unbounded Round continuation;
+- automatic Round continuation without an architecture-defined count cap;
 - sequential depth-first execution;
 - stop-on-reported-scope-violation behavior;
 - exact output and result binding;
 - closed call and settlement algebra;
-- no second post-launch Attempt;
+- no second Attempt after actual or uncertain launch, with the positive non-launch exception;
 - settled-failure routing to Validator;
 - append-only ledger and explicit crash windows;
 - frozen runtime and host-floor rejection;
-- prior evidence import without state merge
+- prior evidence import without state merge;
+- caller-selected store-root isolation;
+- Run-wide operator cancellation and child non-resumable propagation
 
 Deterministic tests can prove contracts, supplied context, orchestration, and handling of semantic returns but cannot prove Planner or Validator reasoning correct, because semantic competence is not a deterministic runtime property.
 
