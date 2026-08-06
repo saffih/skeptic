@@ -81,7 +81,17 @@ Necessary reasoning, qualification, uncertainty, consequence, and verification m
 
 **Linked.** Relationships among propositions, grounds, qualifications, consequences, checks, and open items remain recoverable, because isolated sentences cannot form a maintainable design.
 
-No specific link format is mandatory, because prose references, identifiers, tables, and other unambiguous structures can preserve the same relationship.
+`stable-semantic-references` — A material proposition that is referenced outside its paragraph should use one unique lowercase kebab-case canonical name enclosed in backticks, because semantic names remain grep-friendly and stable when sections move.
+
+`name-only-when-useful` — A proposition should remain unnamed when no external reference or graph inspection needs a name, because naming every proposition would add ceremony contrary to Lean.
+
+A canonical name describes the proposition's meaning rather than its location and should not use numeric or positional identifiers when a stable semantic name is sufficient, because positional identifiers drift without conveying design meaning.
+
+Every canonical reference repeats the exact backticked name, because exact search should locate the definition and every dependent proposition.
+
+Renaming a canonical proposition is a material edit that updates every reference, because the name is the stable key in the document's reasoning graph.
+
+Another unambiguous representation may replace canonical names only when it provides equal or better stability, searchability, and graph inspection, because formatting serves design integrity rather than becoming an end in itself.
 
 ## Normative writing rules
 
@@ -92,6 +102,10 @@ Each material qualification and consequence remains attached to the proposition 
 Each checkable proposition identifies a verification or falsification path directly or through an explicit canonical link, because a design claim must be able to fail.
 
 Shared terms and reusable rationale have one canonical definition with explicit references from dependent propositions, because repeated definitions and reasons can diverge.
+
+`connected-reasoning-graph` — Every material proposition connects directly or transitively to an authoritative input, purpose, constraint, assumption, or explicit unknown and to a decision, consequence, check, or downstream obligation when applicable, because a design document should form one recoverable reasoning graph rather than disconnected assertions.
+
+`detached-graph-review` — A disconnected proposition or cluster remains review-required until it is linked, moved to the artifact that owns it, removed, or explicitly established as a separate design scope, because detachment usually reveals a missing relation, duplicate authority, or wrong document level.
 
 Enough reasoning remains local to make an extracted proposition coherent, because a reference cannot substitute for the proposition's immediate reason.
 
@@ -125,6 +139,10 @@ Blank lines should separate proposition paragraphs, because visible source bound
 
 One canonical term should name each material concept, because changing synonyms and unqualified pronouns can hide related propositions from search.
 
+Canonical proposition names should be introduced at their authoritative definitions rather than maintained in a separate registry, because a duplicate name index can get out of sync with the content it names.
+
+Cross-document references should qualify the owning artifact when the same canonical name could exist in more than one authority, because exact names must remain unambiguous across the design chain.
+
 Directional terms such as `depends on`, `constrains`, `supports`, `verifies`, `contradicts`, and `supersedes` should be explicit when material, because readers and tools need to recover change impact.
 
 Editor soft wrapping should be preferred over inserted hard line breaks inside one proposition, because visual readability need not fragment the searchable source unit.
@@ -143,9 +161,11 @@ A document must identify which artifact owns each normative meaning and which ar
 
 ## Conformance and verification
 
-A design document is WELL-conformant only when every complete prose sentence contains a substantive literal `because`, every material proposition is sufficiently warranted and qualified, reasoning links and checks are recoverable, duplicate authority and nonoperative prose are absent, and unresolved matters remain unresolved, because partial compliance cannot preserve the design chain.
+A design document is WELL-conformant only when every complete prose sentence contains a substantive literal `because`, every material proposition is sufficiently warranted and qualified, canonical references are exact and unique when used, no unexplained disconnected reasoning component remains, reasoning links and checks are recoverable, duplicate authority and nonoperative prose are absent, and unresolved matters remain unresolved, because partial compliance cannot preserve the design chain.
 
 A mechanical sentence checker is required as an aid, because a complete pass over a large document is easy to perform inconsistently by inspection alone.
+
+A mechanical link checker must verify canonical-name uniqueness, exact references, and missing targets when a document uses canonical names, because these properties are mechanically inspectable even though the adequacy of the reasoning graph still requires human review.
 
 The checker must ignore only genuine structural notation and subordinate fragments, because broad exemptions can hide independent propositions.
 
@@ -171,10 +191,13 @@ Apply WELL in this order, because early identification of proposition boundaries
 4. split propositions whose claims require different reasons
 5. expose assumptions, unknowns, conflicts, and authority boundaries
 6. consolidate repeated definitions and rationale behind canonical links
-7. convert only genuine subordinate enumerations into fragments under one warranted introduction
-8. remove nonoperative and duplicated prose
-9. run the sentence checker and inspect every exemption
-10. review the complete document for cross-section contradiction and semantic drift
+7. assign unique lowercase kebab-case canonical names only to propositions that need cross-reference or graph inspection
+8. repeat each canonical name exactly in backticks at every reference
+9. inspect the reasoning graph and resolve every unexplained disconnected component
+10. convert only genuine subordinate enumerations into fragments under one warranted introduction
+11. remove nonoperative and duplicated prose
+12. run the sentence and link checkers and inspect every exemption
+13. review the complete document for cross-section contradiction and semantic drift
 
 ## Examples
 
@@ -190,6 +213,10 @@ Repeating `because the controller must remain deterministic` after unrelated con
 
 A warranted introductory sentence may govern a list of subordinate fields, because the fields are structural components of the proposition rather than independent claims.
 
+`connected-reasoning-graph` illustrates a useful canonical name when other propositions reference that rule, because it remains meaningful after section movement and reveals what the dependency concerns.
+
+`A-17` is a poor canonical name when a stable semantic name is available, because insertion or reordering can make the identifier misleading while preserving no design meaning.
+
 ## Self-application
 
 Every complete prose sentence in this document contains a substantive literal `because`, because sentence-level local warrant is WELL's primary encapsulation mechanism.
@@ -197,3 +224,5 @@ Every complete prose sentence in this document contains a substantive literal `b
 Every structural exemption in this document is limited to headings or subordinate list fragments, because the standard must not evade its own rule through formatting.
 
 The document uses canonical terms and proposition-sized paragraphs, because self-application must demonstrate cohesive search, extraction, and modification units.
+
+The named propositions `stable-semantic-references`, `name-only-when-useful`, `connected-reasoning-graph`, and `detached-graph-review` demonstrate exact semantic cross-reference without naming every sentence, because WELL must demonstrate Linked and Lean together.
