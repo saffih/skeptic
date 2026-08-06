@@ -230,7 +230,9 @@ The implementation uses the following authoritative layout exactly, because tool
                     ├── results/<result-id>/...
                     └── control/
                         ├── operator-stop.json
-                        └── stop-prefixes/<prefix-id>.jsonl
+                        └── stop-prefixes/
+                            ├── request-start/<prefix-id>.jsonl
+                            └── commit-frontier/<prefix-id>.jsonl
 ```
 
 Bootstrap and Task-genesis files are authoritative at their fixed paths, while every later lifecycle record or artifact exists exactly once beneath the committing transition package’s `payload/`, because one byte location must own every accepted fact.
@@ -253,7 +255,7 @@ Each event kind uses the following required package-relative payload paths, beca
 | `STEP_FINISHED` | `steps/<step-id>/step-result.json` plus newly committed artifact and observation paths |
 | `VALIDATION_STARTED` | `rounds/<round-number>/validation-start.json`, `rounds/<round-number>/output-assessment.json`, applicable `rounds/<round-number>/target-revalidations/pre/<artifact-id>.json`, and any new Boundary-observed artifact or observation paths |
 | `VALIDATION_RECORDED` | `rounds/<round-number>/validator-result.json` or `rounds/<round-number>/validator-stop.json`; accepted `SATISFIED` also adds `rounds/<round-number>/output-assessment-post.json` plus applicable `rounds/<round-number>/target-revalidations/post/<artifact-id>.json` |
-| `OPERATOR_STOP_REQUESTED` | `control/operator-stop.json` and `control/stop-prefixes/<prefix-id>.jsonl` in the root Task |
+| `OPERATOR_STOP_REQUESTED` | `control/operator-stop.json`, `control/stop-prefixes/request-start/<prefix-id>.jsonl`, and `control/stop-prefixes/commit-frontier/<prefix-id>.jsonl` in the root Task |
 | `ROUND_FINISHED` | `rounds/<round-number>/round-result.json` |
 | `TASK_FINISHED` | `results/task-result.json` |
 
@@ -387,9 +389,9 @@ Lock paths contain no lifecycle data and are excluded from canonical hashes and 
 
 `stt stop` uses `writer.lock` and may coexist with the runner lease, because the operator must be able to record cancellation while one driver is active.
 
-`status` and `diagnose` acquire `writer.lock` only long enough to read and validate one committed snapshot and perform no publication or ledger append, because read-only observation needs stable heads without becoming lifecycle mutation.
+`status` and `diagnose` attempt `writer.lock` nonblockingly, read and validate one committed snapshot only after acquisition, release it immediately, and perform no publication or ledger append, because read-only observation needs stable heads without waiting behind an unbounded writer-held operation.
 
-A failed nonblocking runner acquisition returns `RUN_BUSY`, because overlapping advancement is transient rather than a persisted lifecycle state.
+A failed nonblocking acquisition of either `runner.lock` by `start` or `run` or `writer.lock` by `status` or `diagnose` returns `RUN_BUSY`, because temporary execution or publication ownership is transient rather than a persisted lifecycle state.
 
 ---
 
@@ -479,6 +481,8 @@ TASK_CREATED
 [TASK_FINISHED]
 ```
 
+`OPERATOR_STOP_REQUESTED` is an orthogonal one-time root-ledger overlay that may appear after any committed root event and may appear after `TASK_FINISHED` only under the narrow §12 rule, because cancellation orders later work without satisfying, reopening, or replacing any semantic grammar element.
+
 A semantic `planner-operation`, Worker or command `step-phase`, and `validator-operation` each use one `OPERATION_REQUESTED` followed by one or more Attempts, because every outer call needs one frozen request while positive non-launch may permit a later Attempt:
 
 ```text
@@ -511,9 +515,9 @@ A settled Validator failure commits `VALIDATION_RECORDED` with no semantic judgm
 
 `OPERATOR_STOP_REQUESTED` is committed at most once in the root Task ledger and is visible to every child through Run derivation, because cancellation is Run-wide rather than a child-local result.
 
-If the Run exists without a root Task, `stt stop` first publishes the uniquely implied root Task and then commits the stop request, because one canonical root ledger must own Run-wide cancellation without creating a second control log.
+If the Run exists without a root Task, `stt stop` may invoke `CREATE_ROOT_TASK` only when the exact root Task bytes are uniquely derivable from the frozen `RunRecord`, `RootTaskSpec`, root authority, and required outputs; it publishes those already-determined bytes before committing the stop request, while any missing or conflicting derivation is `INVALID`, because one canonical root ledger must own Run-wide cancellation without letting `stop` invent Task semantics.
 
-`OPERATOR_STOP_REQUESTED` binds a streamed stop-frontier manifest containing every validated Task head immediately before the stop event and uses the same `PrefixHeader`, sorted `PrefixTaskHead` JSONL format, and `prefix_id` derivation as `RunPrefixManifest`, because one root-ledger event cannot otherwise order later records in independent child ledgers and a second snapshot format would add avoidable authority.
+`OPERATOR_STOP_REQUESTED` binds one streamed request-start manifest containing every validated Task head when `stop` acquired the writer lock and one streamed commit-frontier manifest containing every validated Task head immediately before the stop event; both use the same `PrefixHeader`, sorted `PrefixTaskHead` JSONL format, and `prefix_id` derivation as `RunPrefixManifest`, because deterministic review must prove both that the request began before any closure-produced terminal and which later records are causally ordered before cancellation without inventing a second snapshot format.
 
 After `OPERATOR_STOP_REQUESTED`, no new OperationRequest, Attempt, child Task, or Round may be created, while an operation whose request and current Attempt existed at or below the bound stop frontier and every uniquely implied non-effectful transition caused by such pre-stop facts may still be recorded and finalized, because cancellation stops future work without discarding facts already produced.
 
@@ -551,6 +555,7 @@ DerivedState
   active_task_id | null
   active_round_id | null
   active_step_id | null
+  operator_stop_ref | null
   blocker_refs[]
   semantic_judgment | null
   public_outcome | null
@@ -564,13 +569,15 @@ RunView
   active_task_id | null
   active_round_number | null
   active_step_id | null
+  operator_stop_requested
+  operator_stop_ref | null
   semantic_judgment | null
   public_outcome | null
   transient_outcome: PRELAUNCH_BLOCKED | RUN_BUSY | null
   blocker_refs[]
 ```
 
-The public projection omits `next_action`, because internal derivation labels must not become architecture-owned outcomes or user-facing compatibility commitments.
+The public projection omits `next_action` but always projects a committed operator-stop record independently from semantic judgment and nonsemantic outcome, because internal derivation labels must not become public commitments while an operator action must not disappear when already-produced semantic facts finish afterward.
 
 The internal `NextAction` vocabulary is implementation-owned, because architecture requires deterministic next action without prescribing internal labels:
 
@@ -622,7 +629,7 @@ Derivation precedence is fixed as follows, because corruption, already-produced 
 
 Before deriving any post-stop action, `state.py` validates every Task ledger against the committed stop frontier and the closed causal whitelist, because a forbidden child-ledger event after cancellation must derive `INVALID` rather than appear as ordinary history.
 
-A stop request suppresses every action below precedence item 12 but not items 1–11, because cancellation forbids future semantic work while preserving integrity, settlement, and valid results already produced.
+A stop request suppresses every action below precedence item 12 but not items 1–11, and every resulting `RunView` preserves `operator_stop_requested: true` plus the exact stop reference even when `RETURN_JUDGMENT` wins, because cancellation forbids future semantic work while preserving both valid results already produced and the operator action that stopped later work.
 
 Any Boundary receipt returning `PRELAUNCH_BLOCKED` instructs Lead to end that current public invocation before deriving another action; a later invocation derives `CONTINUE_PRELAUNCH_ATTEMPT` when launch intent is absent or `START_NEXT_ATTEMPT` after committed `PROVEN_NOT_LAUNCHED`, because transient retry timing must not become an automatic loop or make pure state derivation depend on hidden mutable cursor state.
 
@@ -1654,6 +1661,7 @@ OperatorStopRequest
 OperatorStopRecord
   schema
   request
+  request_start_prefix_ref
   stop_prefix_ref
 ```
 
@@ -1676,13 +1684,17 @@ stt stop --run-root <run-root>
 
 `status` and `diagnose` never complete packages, append ledgers, or repair state, because read-only observation must not change the lifecycle being reported.
 
-`stop` acquires `writer.lock`, publishes the uniquely implied root Task when absent, and runs to a fixed point only the immediately available non-effectful actions `COMMIT_ELIGIBLE_PACKAGE`, `RECOVER_ATTEMPT_OUTCOME` from valid sealed completion, `OBSERVE_SETTLEMENT` from positive local evidence, `FINALIZE_OPERATION_PHASE`, `MAP_CHILD_RESULT`, `FINALIZE_ROUND`, and `FINALIZE_TASK`, because cancellation must preserve deterministic facts already produced without launching a role, creating a child, or creating a successor Round.
+`stop` acquires `writer.lock`, records whether the initial validated state is already semantically finished, `INVALID`, or `NON_RESUMABLE`, invokes `CREATE_ROOT_TASK` only through the exact frozen derivation when needed, and runs to a fixed point only the immediately available non-effectful actions `COMMIT_ELIGIBLE_PACKAGE`, `RECOVER_ATTEMPT_OUTCOME` from valid sealed completion, `OBSERVE_SETTLEMENT` from positive local evidence, `FINALIZE_OPERATION_PHASE`, `MAP_CHILD_RESULT`, `FINALIZE_ROUND`, and `FINALIZE_TASK`, because cancellation must preserve deterministic facts already produced without launching a role, creating a child, or creating a successor Round.
 
-If that closure produces a semantic terminal, `INVALID`, or `NON_RESUMABLE` outcome, `stop` returns it without appending cancellation; otherwise, while still holding `writer.lock`, Boundary streams and hashes the current validated Task heads into `control/stop-prefixes/<prefix-id>.jsonl`, places its same-package `PayloadRef` in `OperatorStopRecord`, and commits one `OPERATOR_STOP_REQUESTED` package in the root Task ledger before best-effort termination, because a completed or irrecoverable lifecycle must not be rewritten while an active lifecycle needs one canonical Run-wide stop overlay and durable cross-ledger frontier.
+A stop request whose initial validated state is already semantically finished, `INVALID`, or `NON_RESUMABLE` returns that state without appending cancellation, because an operator action requested after completion or irrecoverable corruption cannot change the accepted lifecycle.
+
+If deterministic closure newly derives `INVALID` or `NON_RESUMABLE`, `stop` returns that outcome without appending cancellation, because an untrustworthy or irrecoverable lifecycle cannot safely receive a later control overlay.
+
+When the initial validated state was nonterminal and the closure remains valid and resumable, Boundary stores the captured initial heads as `control/stop-prefixes/request-start/<prefix-id>.jsonl`, streams and hashes the current validated heads as `control/stop-prefixes/commit-frontier/<prefix-id>.jsonl`, binds both same-package `PayloadRef` values in `OperatorStopRecord`, and commits one `OPERATOR_STOP_REQUESTED` package in the root Task ledger even when the closure has just produced a semantic terminal, because the authoritative history must preserve both the operator request’s original position and every deterministic fact committed before cancellation became authoritative.
+
+`OPERATOR_STOP_REQUESTED` is the sole event permitted after root `TASK_FINISHED`, and only when its `request_start_prefix_ref` validates a nonterminal state while its `stop_prefix_ref` validates the closure-produced terminal immediately before the stop event, because this narrow mechanically provable overlay records operator intent without reopening or altering semantic completion.
 
 A repeated stop after the same committed request is idempotent while any conflicting cancellation record is `INVALID`, because cancellation must not create competing control facts.
-
-A stop request whose initial validated state is already semantically finished, `INVALID`, or `NON_RESUMABLE` follows the same no-append rule, because cancellation cannot change a completed or irrecoverable lifecycle.
 
 When no outer operation is active, Lead derives `OPERATIONALLY_STOPPED` without a mission judgment and creates no later OperationRequest, because operator control must not be misreported as mission failure.
 
@@ -1716,7 +1728,7 @@ Implement §10 and complete `Q26`–`Q29`, because semantic freedom must operate
 
 ### Slice 6 — Validator, Rounds, and stop
 
-Implement §§11–12 and complete `Q30`–`Q35`, because Task judgment, automatic continuation, crash closure, and operator control must coexist without hidden semantic caps.
+Implement §§11–12 and complete `Q30`–`Q33`, because Task judgment, automatic continuation, crash closure, and operator control must coexist without hidden semantic caps.
 
 ### Slice 7 — integration and promotion
 
@@ -1780,11 +1792,11 @@ Harness-budget exhaustion fails the test and does not create a production lifecy
 - `Q30` Validator independence, complete context, total Task-requirement-to-artifact assessment after execution or `DECLINE`, deterministic bounded candidate selection, Boundary observation under producer constraints, stable pre/post target-artifact revalidation, stale-output rejection, all legal judgment/disposition pairs, and no novelty gate
 - `Q31` automatic repeated Rounds beyond prior caps, contiguous identities, readable history, immediate continuation reason, and eventual `FINISH`
 - `Q32` settled Planner, Worker, command, and Validator failures plus unsettled and unknown propagation
-- `Q33` operator stop between operations, stop-versus-launch-handoff race, streamed all-Task stop frontier, legal and illegal post-stop child-ledger events, stop during local work, best-effort termination, blocked and non-resumable outcomes, idempotence, and no fabricated judgment
+- `Q33` operator stop between operations, exact root-Task derivation before stop, stop-versus-launch-handoff race, streamed request-start and commit-frontier manifests, legal and illegal post-stop child-ledger events, semantic completion during stop with the same durable stop overlay visible in `RunView`, stop during local work, best-effort termination, blocked and non-resumable outcomes, idempotence, and no fabricated judgment
 
 ### Integration and promotion
 
-- `Q34` caller-selected store root, CLI start/run/status/diagnose/stop, plain and Git targets, public outcomes, retention warnings, and no internal `NextAction` leakage
+- `Q34` caller-selected store root, CLI start/run/status/diagnose/stop, nonblocking `status` and `diagnose` with `RUN_BUSY` under temporary writer ownership, plain and Git targets, public outcomes, durable operator-stop visibility, and no internal `NextAction` leakage
 - `Q35` exhaustive crash-window and derivation-precedence matrix, including launch-intent/handoff interruption, atomic exchange completion recovery, absent or conflicting completion, delayed settlement observation, package closure, phase finalization, child mapping, cross-ledger stop ordering, accepted `REPEAT` plus stop, active cancellation, and every conflict-to-`INVALID` path
 - `Q36` architecture-to-plan and plan-to-architecture trace, superseded-concept rejection, focused and full regression, WELL, independent RunSkeptic convergence, and exact accepted-pair commit recording
 
