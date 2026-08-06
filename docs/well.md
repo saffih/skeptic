@@ -97,6 +97,24 @@ Enough reasoning remains local to make an extracted proposition coherent, becaus
 
 Nonoperative content and duplicate authority are removed, because WELL should improve understanding rather than create ceremonial documentation.
 
+## Misunderstanding resistance
+
+A proposition may be recoverable yet still need clarification when a competent reader can reasonably derive a materially different interpretation, because reliable design communication should not depend on reconstructing an unstated controlling contrast.
+
+When related concepts differ by timing, scope, authority, lifecycle position, or evidentiary role, their canonical definitions must state the controlling contrast explicitly, because separate names may not reveal which distinction governs later rules.
+
+A rejected review finding may still justify a narrow clarification when it exposes a plausible and materially consequential misunderstanding, because rejecting the finding establishes the stronger interpretation but does not prove that the document communicated that interpretation reliably.
+
+Adding such a clarification does not retroactively validate the rejected finding, because the clarification improves misunderstanding resistance rather than admitting that both interpretations were authorized.
+
+Clarification is required only when the alternative reading is plausible to a competent reader, would materially change implementation or verification, and can be eliminated through one small canonical distinction, because documenting remote or harmless misunderstandings would violate Lean.
+
+The clarification must be placed at the canonical definition or controlling rule rather than repeated at every dependent use, because one authoritative contrast prevents recurrence without creating duplicate authority or defensive prose.
+
+A named reusable schema, record, manifest, or structure must be introduced explicitly at its canonical definition before dependent propositions use that name, because recoverable fields do not by themselves establish the name's authoritative referent.
+
+A requirement whose satisfaction depends on the order of edits, reviews, approvals, or publications must identify the observable evidence that establishes that order, because a final snapshot proves resulting state but ordinarily cannot prove the sequence that produced it.
+
 ## Searchability and encapsulation
 
 One complete proposition per paragraph is preferred, because bounded source units are easier to search, compare, move, and review.
@@ -132,6 +150,10 @@ A mechanical sentence checker is required as an aid, because a complete pass ove
 The checker must ignore only genuine structural notation and subordinate fragments, because broad exemptions can hide independent propositions.
 
 Every mechanical exemption requires manual review, because Markdown classification cannot determine semantic independence reliably.
+
+A mechanical checker result must identify the exact reviewed artifact, the checker source or identity, the applied rules, and every exemption, because human review cannot reproduce or inspect a pass whose inputs or skipped content are hidden.
+
+Repository residence, ongoing maintenance, and CI integration are requirements only when the governing document states them explicitly, because reviewers must not strengthen a verification gate beyond the properties that the document actually protects.
 
 Human review remains required after a zero-violation checker result, because the presence of `because` does not prove that the warrant is relevant, sufficient, true, local, or non-circular.
 
