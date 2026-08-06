@@ -2,7 +2,7 @@
 
 **Status:** Canonical pair candidate conforming to the exact companion architecture
 **Architecture authority:** `plans/stt-mvp-architecture-plan.md`
-**Architecture SHA-256:** `454b88a7c6f8ad9731293e58cd55ae02615d4a426d42a5c3cce3ba47bcd545b3`
+**Architecture SHA-256:** `921ee38e92a1f1a9df7ac2a977fd46877ccdfde75965d274479d6f51432f079d`
 **Repository:** `saffih/skeptic`
 **Historical reconstruction base:** `74c4f6a2c34da501101141525c8a34d691c384a1`
 **Document profile:** `docs/well.md`
@@ -519,9 +519,9 @@ If the Run exists without a root Task, `stt stop` may invoke `CREATE_ROOT_TASK` 
 
 `OPERATOR_STOP_REQUESTED` binds one streamed request-start manifest containing every validated Task head when `stop` acquired the writer lock and one streamed commit-frontier manifest containing every validated Task head immediately before the stop event; both use the same `PrefixHeader`, sorted `PrefixTaskHead` JSONL format, and `prefix_id` derivation as `RunPrefixManifest`, because deterministic review must prove both that the request began before any closure-produced terminal and which later records are causally ordered before cancellation without inventing a second snapshot format.
 
-After `OPERATOR_STOP_REQUESTED`, no new OperationRequest, Attempt, child Task, or Round may be created, while an operation whose request and current Attempt existed at or below the bound stop frontier and every uniquely implied non-effectful transition caused by such pre-stop facts may still be recorded and finalized, because cancellation stops future work without discarding facts already produced.
+After `OPERATOR_STOP_REQUESTED`, no new OperationRequest, Attempt, child Task, or Round may be created, while an operation whose request and current Attempt existed at or below the commit frontier bound by `stop_prefix_ref` and every uniquely implied non-effectful transition caused by such pre-stop facts may still be recorded and finalized, because cancellation stops future work without discarding facts already produced.
 
-A post-stop event in any Task ledger is valid only when it is `ATTEMPT_FINISHED`, `SETTLEMENT_OBSERVED`, phase finalization, child-result mapping, Round finalization, or Task finalization causally rooted in an OperationRequest, Attempt, child, or Validator result present at the stop frontier; every other event beyond a captured Task head is `INVALID`, because the writer lock alone serializes publication but does not leave a durable cross-ledger order.
+A post-stop event in any Task ledger is valid only when it is `ATTEMPT_FINISHED`, `SETTLEMENT_OBSERVED`, phase finalization, child-result mapping, Round finalization, or Task finalization causally rooted in an OperationRequest, Attempt, child, or Validator result present at the commit frontier bound by `stop_prefix_ref`; every other event beyond a captured Task head is `INVALID`, because the writer lock alone serializes publication but does not leave a durable cross-ledger order.
 
 Every committed prefix ending at one of these event boundaries is legal only when pure state derivation names exactly one next action or public outcome, because interruption may leave an in-progress phase but may not create ambiguous authority.
 
@@ -627,7 +627,7 @@ Derivation precedence is fixed as follows, because corruption, already-produced 
 19. Task without Round → `CREATE_ROUND`
 20. Run without root Task → `CREATE_ROOT_TASK`
 
-Before deriving any post-stop action, `state.py` validates every Task ledger against the committed stop frontier and the closed causal whitelist, because a forbidden child-ledger event after cancellation must derive `INVALID` rather than appear as ordinary history.
+Before deriving any post-stop action, `state.py` validates every Task ledger against the commit frontier bound by `stop_prefix_ref` and the closed causal whitelist, because a forbidden child-ledger event after cancellation must derive `INVALID` rather than appear as ordinary history.
 
 A stop request suppresses every action below precedence item 12 but not items 1–11, and every resulting `RunView` preserves `operator_stop_requested: true` plus the exact stop reference even when `RETURN_JUDGMENT` wins, because cancellation forbids future semantic work while preserving both valid results already produced and the operator action that stopped later work.
 
@@ -1245,7 +1245,7 @@ SettlementObservation
 `PROVEN_NOT_LAUNCHED` requires `RETURNED + ERR + SETTLED` and a valid proof record, while `LAUNCHED` or `LAUNCH_UNKNOWN` permits only the architecture’s four valid call/result combinations with any truthfully observed settlement, because the non-launch exception must not use contradictory transport evidence.
 
 
-`committed_prefix_ref` is a same-package `PayloadRef` to canonical content-addressed `prefixes/<prefix-id>.jsonl`, because the request and each parsed control record must remain bounded without placing a not-yet-known transition identity inside the OperationRequest that the transition itself hashes:
+`RunPrefixManifest` is the canonical content-addressed JSONL structure stored at `prefixes/<prefix-id>.jsonl`, while `committed_prefix_ref` is its same-package `PayloadRef`, because the request and each parsed control record must remain bounded without placing a not-yet-known transition identity inside the OperationRequest that the transition itself hashes:
 
 ```text
 line 0: PrefixHeader
@@ -1665,6 +1665,8 @@ OperatorStopRecord
   stop_prefix_ref
 ```
 
+In this plan, `stop frontier` means only the commit-frontier manifest referenced by `stop_prefix_ref`, while `request_start_prefix_ref` records only the validated state from which the operator request began, because post-stop event admissibility must be evaluated against the final committed Task heads immediately before cancellation became authoritative.
+
 The public CLI implements the architecture commands exactly, because startup, advancement, observation, diagnosis, and cancellation have different authority:
 
 ```text
@@ -1848,7 +1850,7 @@ Internal `NextAction` names are permitted only inside implementation and tests a
 The implementation plan is ready to merge with the architecture only when all of the following document gates hold, because merge should preserve one internally consistent candidate pair:
 
 - exact architecture commit and SHA-256 match this header
-- mechanical WELL checker passes both documents
+- mechanical WELL checker passes both documents, with exact document identities, checker identity, applied rules, violations, and every exemption recorded
 - manual WELL review finds every material proposition warranted, explicit, lean, and linked
 - architecture-to-plan trace finds no architecture rule without one mechanism and proof path
 - plan-to-architecture trace finds no production mechanism that invents semantic meaning
