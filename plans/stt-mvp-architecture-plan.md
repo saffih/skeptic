@@ -538,9 +538,13 @@ stt stop --run-root <run-root>
 
 `stop` records an operator cancellation without creating a mission judgment, because operational control must remain available without overriding Planner or Validator semantics.
 
+When a Run has been authoritatively published but its uniquely determined root Task has not yet been published, `stop` may publish that exact root Task before recording cancellation, because completing a deterministic Bootstrap consequence does not create semantic work or grant `stop` authority to invent Task meaning.
+
 Cancellation is Run-wide even when a child Task is active, because an operator stop must prevent new child, parent, or ancestor semantic calls rather than masquerade as an ordinary child failure.
 
 Cancellation forbids new semantic launches but does not discard valid results or uniquely implied non-effectful transitions from operations launched earlier, because operator control must stop future work without rewriting facts already produced.
+
+A committed operator cancellation remains visible in the public Run view independently from any semantic judgment produced from facts that cancellation preserved, because reporting the judgment must not erase the operator action that prohibited later work.
 
 Cancellation between outer operations derives `OPERATIONALLY_STOPPED`, while cancellation during possibly active work follows the ordinary settlement rules and may derive `OPERATIONALLY_BLOCKED` or `NON_RESUMABLE`, because STT must not claim quiescence it cannot prove.
 
@@ -596,6 +600,8 @@ remaining unknowns
 Historical reconstruction is evidence rather than runtime authority and may live outside this normative document, because historical detail must remain available without making the architecture needlessly large.
 
 After any architecture edit, reviewers repair this document first, run a Pareto/WELL review for necessity and dominance, run RunSkeptic to convergence on the unchanged architecture, update the implementation plan only to conform, and then review the unchanged pair, because architecture errors otherwise ripple into executable plans.
+
+Architecture-first convergence is evidenced by a RunSkeptic receipt bound to the exact unchanged architecture bytes and recorded before the implementation plan is updated to conform, because the accepted-pair commit proves final byte state but cannot by itself prove the required review order.
 
 The containing commit of the accepted unchanged pair is recorded externally as the implementation base, because inserting the commit identity into the accepted files would change the reviewed bytes.
 
