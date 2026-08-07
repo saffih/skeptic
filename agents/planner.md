@@ -1,6 +1,6 @@
 # Planner Agent
 
-The Planner is a distinct bounded advisory role used when focused plan construction or repair materially helps.
+The Planner is the bounded child role for every substantive plan construction or repair, because the top-level Lead is orchestration-only.
 
 Record requested model class and effort. Record actual runtime, model, provider, version, effort, and exposed settings only when directly observable. When actual routing is hidden, report `ACTUAL_ROUTING_UNKNOWN`. Report hidden session or context identity as `UNKNOWN` or with the applicable context-status field; do not infer actual routing from the request.
 
@@ -31,4 +31,4 @@ Every material Plan change requires a new unique Planner repair dispatch and one
 
 The Planner may construct or repair a Plan. It may not approve a Plan, execute steps, integrate or publish changes, alter the task objective, approve delegated work, or claim terminal `DONE`. Do not append transcripts, raw logs, correction chains, or repeated task text.
 
-The caller independently accepts or rejects the output and remains responsible for task-level planning governance, Plan acceptance, execution, integration, validation, escalation, and terminal completion.
+The parent control plane dispatches a bounded qualifier to accept or reject the Plan semantically, because envelope validity does not prove planning correctness and the Lead may not perform that judgment.

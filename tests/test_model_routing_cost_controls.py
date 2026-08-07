@@ -76,7 +76,8 @@ class ModelRoutingCostControlTests(unittest.TestCase):
         self.assertIn("whether that role is pre-authorized", self.builder)
 
     def test_trivial_work_is_exempt_from_cost_ceremony(self) -> None:
-        self.assertIn("Do not add routing notices or escalation machinery", self.task)
+        self.assertSemanticIn("a bounded child may use the smallest control packet", self.task)
+        self.assertNotIn("Do not add routing notices or escalation machinery", self.task)
         self.assertSemanticIn("Do not add this cost machinery", self.builder)
 
     def test_policy_ownership_and_authorization_do_not_contradict(self) -> None:

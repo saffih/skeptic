@@ -20,7 +20,7 @@ required_validation: focused tests
 BEGIN_AGENT_RETURN
 dispatch_id: AG-004-7K2P
 status: COMPLETE
-output: patch-inline
+output: artifact-ref
 validation: PASS
 blocker: NONE
 END_AGENT_RETURN
@@ -34,10 +34,10 @@ Allowed validation values: `PASS`, `FAIL`, `NOT_RUN`, `NOT_APPLICABLE`, `UNKNOWN
 
 Optional fields: `changed`, `check`, `next`.
 
-Keep the return compact. `output`, `changed`, or `check` may contain precise
-authorized artifact references instead of substantial inline content. Store raw
-work in the authorized task workspace when persistence or reuse materially helps;
-keep small decision-critical results inline when indirection would cost more.
+Keep the return compact. `output`, `changed`, and `check` contain precise
+authorized artifact references, hashes, statuses, or bounded control facts, because
+substantive bodies must remain in the run workspace rather than enter the Lead
+context.
 
 ## Mechanical result
 
@@ -58,4 +58,4 @@ A matching, structurally valid envelope is followed by role-specific acceptance:
 
 Treat missing or mismatched dispatch identity, duplicate fields, unsupported values, truncation, duplicate envelopes, empty required output, `COMPLETE` with a blocker, and `COMPLETE` with `validation: FAIL` as invalid.
 
-A deterministic tool may omit this model-agent envelope when the runtime already returns equivalent structured invocation identity, status, output, and error metadata. Record that exception.
+A bounded deterministic child may omit this model-agent envelope when its runtime already returns equivalent structured invocation identity, status, output, and error metadata. Record that exception; the top-level Lead may not use this exception to execute substantive work directly.

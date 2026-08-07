@@ -16,7 +16,7 @@ For substantive work:
 1. specify the starting model or model class and reasoning effort, work expected
    to remain there, and any likely premium roles;
 2. require the `EXECUTION_ROUTING_NOTICE` from `agents/model_routing_policy.md`;
-3. select deterministic work, direct work, delegation, model class, and reasoning effort proportionately.
+3. dispatch every substantive action to a bounded child and select its route, model class, and reasoning effort proportionately.
 
 ### Planning and execution path (mutually exclusive)
 
@@ -27,16 +27,16 @@ lifecycle in "## Target Tasks" below, ending in execution exactly once.
 
 #### Ordinary non-Target path
 
-4. make a concise plan;
-5. RunSkeptic on the plan once;
-6. validate the RunSkeptic receipt;
-7. resolve material findings;
-8. execute.
+4. dispatch a bounded Planner child to make a concise plan;
+5. dispatch a bounded Skeptic child to run RunSkeptic on the plan once;
+6. validate the returned receipt envelope;
+7. dispatch bounded children to resolve material findings;
+8. dispatch a bounded executor child.
 
 ### Common post-execution closeout
 
-9. validate delegated Agent Completion Envelopes and then independently accept or reject their work;
-10. run the smallest sufficient deterministic checks;
+9. validate Agent Completion Envelopes and dispatch bounded qualifiers for semantic acceptance;
+10. dispatch bounded deterministic children for the smallest sufficient checks;
 11. report the result, routing, validation, and blockers.
 
 ## Target Tasks
@@ -51,7 +51,7 @@ distinct bounded Planner dispatch
 -> complete Planner-produced plan
 -> RunSkeptic review and receipt validation
 -> Planner repair after every material plan change
--> independent Lead acceptance of the final unchanged plan
+-> bounded qualifier acceptance of the final unchanged plan
 -> execution exactly once
 ```
 
@@ -60,9 +60,9 @@ previously approved, planning-not-required, or role-name-only planning cannot
 satisfy the gate. Every executable plan version must be Planner-produced, and a
 material plan change requires a new Planner repair dispatch and fresh review.
 The bounded Planner does not recurse or authorize execution. If a mandatory
-route or receipt is unavailable, stop with `CONFLICT`. Ordinary non-Target work
-remains proportional and does not inherit this section merely because it is
-substantive.
+route or receipt is unavailable, stop with `CONFLICT`. Every substantive
+ordinary or Target action uses a bounded child, because no trivial-work
+exception is safe for cumulative session context.
 
 If premium work may be needed, state whether it is pre-authorized. Pre-authorization
 must identify the exact role, model or class, effort, bounded purpose, maximum
@@ -75,29 +75,34 @@ route after the bounded premium judgment.
 
 Repeat RunSkeptic only after a material plan change, unexpected serious risk, or insufficient validation. Repair a harmless receipt-format defect without rerunning the review.
 
-For trivial read-only work or one specified deterministic command, skip the formal plan and RunSkeptic unless risk or ambiguity justifies them.
-Do not add routing notices or escalation machinery to those trivial tasks.
+For trivial read-only work or one specified deterministic command, a bounded
+child may use the smallest control packet and omit unnecessary planning
+ceremony, but it still performs the substantive action outside the Lead context.
 
-Delegation is optional. Use it only when it clearly improves isolation, specialization, parallelism, protected context, or review.
+Delegation is mandatory for every substantive action, because bounded child
+context is the architecture invariant rather than an optimization selected by
+expected value.
 
-Boundary processing is also optional. Use `agents/boundary_agent.md` only when its
+Boundary processing is optional. Use `agents/boundary_agent.md` only when its
 expected context, exposure, integration, or error-risk reduction exceeds its own
-cost. Direct compact delegation remains valid.
+cost, because Boundary transformation is distinct from the mandatory bounded child.
 
 When delegating to a model agent, specify a unique dispatch ID; bounded objective, scope, authority, and prohibitions; requested model class and reasoning effort; expected output and acceptance checks; escalation condition; and the Agent Completion Envelope required by `agents/agent_return_contract.md`.
 
-A valid envelope confirms the return protocol, not the work. Apply role-specific acceptance before integration.
+A valid envelope confirms the return protocol, not the work. Dispatch a bounded
+role-specific qualifier before integration, because the Lead must not read the
+substantive return to accept or reject it.
 
 When recursive delegation is authorized, state that orchestration obligations are
 transitive and proportionate to each subtree: deterministic-first routing,
 smallest-reliable model and effort, bounded dispatch, conditional Boundary Agent
 selection, artifact-first handling, Agent Completion Envelope validation,
-independent work acceptance, compact upward reporting, and evidence-based
+bounded downstream work acceptance, compact upward reporting, and evidence-based
 escalation. A child orchestrator does not become the global Lead.
 
-Use artifact references for substantial or reusable context when the recipient can
-reliably access them; keep small decision-critical content inline. Do not require
-artifacts or persistence for trivial one-session work. Do not assume fresh context:
+Use exact file references for every substantive inter-agent input and output in the
+run-scoped orchestration workspace; keep only control metadata inline. Do not
+assume fresh context:
 use `FRESH_CONTEXT_CONFIRMED`, `PARENT_CONTEXT_INHERITED`, or
 `CONTEXT_ISOLATION_UNKNOWN` when observable, and minimize explicit context when
 inheritance is present or unknown.

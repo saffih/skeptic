@@ -8,9 +8,25 @@ This contract does not govern task ownership, final task completion, publication
 
 When Skeptic uses `context-safe-orchestration`, `skeptic.md` still governs Skeptic meanings, loop ownership, convergence, and Skeptic dispositions, because Skeptic-specific authority remains with Skeptic.
 
-When a non-Skeptic bounded orchestrator uses `context-safe-orchestration`, that orchestrator remains the loop owner and must define its own task-level meanings, because orchestration support does not create a hidden parent framework.
+When a non-Skeptic bounded orchestrator uses `context-safe-orchestration`, that orchestrator remains the control-plane loop owner and must define its own task-level meanings, because orchestration support does not create a hidden parent framework.
 
 ## Purpose and authority
+
+The top user-interactive Lead is an orchestration-only control plane, because an open-ended user session cannot provide a bounded cumulative context budget.
+
+Every substantive action uses one bounded child invocation, because even individually small actions can cumulatively exhaust the Lead context.
+
+Substantive action includes domain reading, analysis, decomposition, planning, routing judgment, editing, command execution, implementation, validation, review, RunSkeptic, integration, synthesis, and semantic acceptance, because each action can import or generate domain content.
+
+The Lead may create the run workspace, assign dispatch identities, validate envelope structure, track compact status, and select the next control transition, because those mechanics do not require domain content.
+
+There is no trivial-work or small-task exception, because context safety depends on the invariant rather than on a prediction about future session growth.
+
+One private run-scoped workspace exists before the first substantive action under `<host-temp>/skeptic/context-safe-orchestration/<run-id>/` or its host-equivalent, because the workspace must be the data plane from orchestration start.
+
+The exact user request is persisted in that workspace before substantive dispatch, because child inputs and later receipts must bind to the original bytes without importing them into the Lead context.
+
+All orchestration-generated substantive artifacts are written to that workspace unless the actual task explicitly authorizes repository writes, because runtime evidence must not silently modify the repository.
 
 `context-safe-orchestration` coordinates bounded side work through file-backed artifacts rather than retained coordinator memory, because substantive content must survive boundaries without silently expanding session context.
 
@@ -32,17 +48,19 @@ Missing, stale, mismatched, ambiguous, or unbound files block reuse, because an 
 
 ## Orchestration model
 
-The loop owner remains responsible for the complete recipe, final judgment, and any full-artifact reread that the host workflow requires, because bounded orchestration support does not transfer loop ownership.
+The Lead owns control-plane orchestration but not substantive task execution or semantic judgment, because those responsibilities must remain inside bounded child contexts.
 
-The coordinator selects bounded side work only when expected context, cost, or failure-risk savings exceed orchestration overhead, because unnecessary coordination adds files and receipts without evidence value.
+The Lead dispatches a bounded planner, router, reviewer, qualifier, worker, validator, integrator, or Skeptic child whenever the next control decision requires domain understanding, because routing and acceptance are substantive when they depend on task content.
 
 The coordinator should choose the orchestrator shape and the least expensive reliable subagent early, because early routing and decomposition avoid a late context spike in the user-interactive loop.
 
-The coordinator chooses the least expensive reliable subagent or route for the bounded outcome, because low-cost subagent selection is preferred when it preserves the required result.
+The coordinator applies deterministic routing policy for bounded child dispatch, because low-cost routing is preferred when it preserves the required result.
+
+When route selection requires domain understanding, a bounded router child makes that selection and returns only a compact route receipt, because the Lead must not inspect domain content to choose a route.
 
 A more expensive route is permitted only when the receipt records why a cheaper reliable route was insufficient, because cost expansion must remain inspectable.
 
-The coordinator decomposes context-heavy work into bounded fragments before substantive execution when one inline pass would be unbounded or likely to consume context materially, because bounded decomposition is safer than asking the loop owner to remember an expanding corpus.
+The coordinator dispatches bounded decomposition before substantive execution whenever decomposition requires domain understanding, because the Lead must not read domain content merely to decide how to split it.
 
 The coordinator may use a mini-orchestrator for a bounded subproblem only when the parent owner admits that layer explicitly, because hidden orchestration nesting weakens authority and traceability.
 
@@ -54,7 +72,7 @@ Skeptic-hosted use remains optional and subordinate to `skeptic.md`, because Ske
 
 The coordinator admits only the smallest control packet needed for one bounded step, because session context should contain routing, scope, and file identities rather than substantive document content.
 
-The user-interactive top-agent context differs from delegated bounded contexts, because the top loop must preserve room for orchestration judgment while delegated packets may carry only the exact local corpus needed for one step.
+The user-interactive top-agent context differs from delegated bounded contexts, because the top loop must preserve room for control-plane judgment while delegated packets may carry only the exact local corpus needed for one step.
 
 Substantive analyses, plans, findings, merges, and intermediate outputs are written to bounded files instead of retained in coordinator context, because durable file-backed transfer is safer than narrative memory carryover.
 
@@ -102,19 +120,31 @@ Missing, stale, or ambiguous `content_ref` targets block reuse and merge, becaus
 
 Delegation names one exact role, one exact corpus, one exact output target set, and one exact prohibition set, because a worker must not infer missing authority.
 
-Delegation is used only for bounded side work and never for loop ownership, because one accountable owner is required.
+Each bounded child packet also names one bounded objective, admitted input file or fragment references, requested route/model/effort, validation obligation, escalation condition, and the run-workspace reference, because a child must not receive unrelated conversation or reconstruct missing context.
 
-Delegation is mandatory when the work is unbounded or likely to consume the top agent's context materially, because the loop owner must externalize substantive work before inline context becomes unsafe.
+A child communicates substantive data by writing the admitted output files and returning only a compact receipt with status, hashes, and exact references, because the Lead must not shuttle a substantive body from one child to another.
 
-`context-safe-orchestration` does not use Luna and does not recursively substitute orchestration for owner judgment, because this contract itself is the bounded orchestration authority for the admitted work.
+The next child receives the prior child output reference directly and reads the authoritative file itself, because reference handoff preserves the data-plane boundary.
+
+Delegation is mandatory for every substantive action and never transfers control-plane ownership, because one Lead remains accountable while every domain action stays bounded.
+
+The Lead must not perform substantive work directly even when the work is small, deterministic-looking, or expected to fit inline, because cumulative session growth makes that exception unsafe.
+
+`context-safe-orchestration` does not use Luna and does not replace host task authority, because bounded child qualification supplies domain judgment while the Lead retains only control-plane ownership.
 
 When a bounded step is itself orchestration-shaped, the owner may admit one mini-orchestrator packet with tighter limits than the parent packet, because nested coordination should narrow rather than widen scope.
 
-Standalone Skeptic loops, mini-orchestrators, and other bounded orchestrators may all use this contract without changing loop ownership, because the contract distinguishes portable orchestration mechanics from the host workflow's terminal authority.
+Standalone Skeptic loops, mini-orchestrators, and other bounded orchestrators may all use this contract without changing control-plane ownership, because the contract distinguishes portable orchestration mechanics from the host workflow's terminal authority.
 
-The parent owner reevaluates every delegated result against current authoritative context before task-level action, because bounded correctness in one fragment does not prove downstream applicability.
+An independent bounded qualifier or reviewer reads authoritative result files and returns a compact bound decision receipt when semantic acceptance is required, because envelope validity proves structure and correlation but not correctness.
 
-When Skeptic hosts the work, reused orchestration artifacts support Find or Fix activity only as optional companion evidence, because Skeptic still owns recipe execution, convergence, reset criteria, and final dispositions.
+The Lead consumes only the qualifier receipt, artifact references, hashes, and status, because rereading substantive child output would restore the prohibited domain-data path into the control plane.
+
+The Boundary Agent remains an optional context-processing layer around a mandatory bounded child, because information reduction can add value without becoming a prerequisite for child isolation.
+
+Absence of a Boundary Agent never permits direct substantive Lead execution, because the mandatory child boundary and the optional trust-boundary transformation solve different problems.
+
+When Skeptic hosts the work, a bounded Skeptic child owns each complete Find or Fix invocation and returns only a compact bound receipt, because `skeptic.md` still owns recipe execution, convergence, reset criteria, and final dispositions.
 
 ## Freshness and independence
 
@@ -126,7 +156,7 @@ A schema-correction retry is not an independent semantic qualification pass, bec
 
 A reused orchestration artifact supports fresh review but never counts as that review, because evidence transport and source-fresh cognition are different properties.
 
-If the owner cannot freshly reread the governing sources required for its task-level decision, the orchestrated result remains support-only and cannot satisfy that owner's freshness gate, because file reuse cannot erase missing owner work.
+If a fresh substantive reread or review is required, a fresh bounded child performs it and returns only a bound receipt, because file reuse cannot authorize the Lead to reacquire domain content.
 
 ## Routing and route evidence
 
@@ -232,7 +262,7 @@ REUSE_BLOCKED_AMBIGUOUS
 
 `STRUCTURALLY_VALID` means deterministic validation passed, because the packet satisfied its structural checks.
 
-`QUALIFICATION_REQUIRED` means semantic downstream adequacy still needs owner or designated-qualifier judgment, because structural validity alone is insufficient.
+`QUALIFICATION_REQUIRED` means semantic downstream adequacy still needs a bounded designated-qualifier judgment, because structural validity alone is insufficient.
 
 `QUALIFIED_PASS` means the bounded result satisfied its declared qualification gate, because the orchestration artifact can support downstream use within its stated scope.
 

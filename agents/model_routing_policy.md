@@ -1,5 +1,11 @@
 # Model Routing
 
+The top-level Lead is orchestration-only, because every substantive role must execute in a bounded child context.
+
+Every substantive planning, routing judgment, implementation, command, validation, review, RunSkeptic, integration, or acceptance action is dispatched to a bounded child, because no small-task exception preserves cumulative session safety.
+
+The first control-plane action creates one private run-scoped workspace and persists the exact request there, because all substantive child inputs and outputs require an external data-plane location from orchestration start.
+
 Use the least expensive route reasonably expected to complete the bounded role reliably.
 
 For substantive Task Prompt execution, begin with a concise
@@ -50,7 +56,7 @@ Use the lowest effort likely to be reliable:
 
 ## Delegation
 
-Delegate only when isolation, specialization, parallelism, protected context, or independent review provides clear value.
+Dispatch every substantive role to a bounded child, because isolation is mandatory even when specialization, parallelism, protected context, or independent review adds no separate value.
 
 A delegated model role must state:
 
@@ -68,7 +74,7 @@ Delegated agents do not inherit the Lead model or effort automatically.
 ## Boundary routing
 
 Use `agents/boundary_agent.md` conditionally when context processing has material
-expected value. A compact direct delegation needs no Boundary Agent.
+expected value. A compact bounded-child dispatch needs no Boundary Agent.
 
 Route boundary work in this order:
 
