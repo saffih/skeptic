@@ -638,7 +638,11 @@ Provider or process exchange bytes live beneath `<store-root>/exchanges/<run-id>
 
 Bootstrap and Task-genesis files are authoritative at their fixed paths while every later accepted record exists exactly once at a package-relative payload path, because duplicate canonical copies would create competing history.
 
-`create-only-publication` — Every authoritative file is written completely to a same-parent temporary path, flushed, atomically installed without replacement, followed by destination-directory flush and no-follow reread verification, because visibility without durability and final identity verification is insufficient for crash-safe authority.
+`create-only-publication` — Every authoritative file other than a Task ledger is written completely to a same-parent temporary path, flushed, atomically installed without replacement, followed by destination-directory flush and no-follow reread verification, because visibility without durability and final identity verification is insufficient for crash-safe authority.
+
+`append-only-ledger` — Each `ledger.jsonl` is the one authoritative file excluded from `create-only-publication` and is extended only by durable append of one canonical line under `writer.lock`, because `transition-package` orders the package before its ledger line and rewriting the ledger through temporary-path installation would destroy the append durability that `host-capability-floor` requires.
+
+The two durability classes are exhaustive and disjoint over authoritative files, because recovery cannot decide whether a partially visible file is a failed create-only install or a torn append without knowing which protocol produced it.
 
 Bootstrap constructs a complete candidate Run, and Boundary validates and publishes it atomically before re-executing from the frozen runtime and publishing the uniquely derived root Task through Boundary, because controller identity must be fixed before semantic work while every authoritative publication retains one façade.
 
@@ -664,7 +668,7 @@ EventBody
   event_kind
   task_id
   ledger_sequence
-  previous_event_hash
+  previous_event_hash | null
   payload_refs[]: PayloadRef
 
 LedgerEvent
@@ -676,7 +680,11 @@ LedgerEvent
 
 The transition identity hashes the canonical manifest, and the ledger event hashes its schema, transition identity, event body, prior event hash, Task identity, and sequence without hashing its own `event_hash`, because package contents and event order need a non-cyclic integrity chain.
 
-`RunPrefixManifest` is canonical JSONL containing one `PrefixHeader` with the `RunRecord` reference followed by one `PrefixTaskHead` per Task in sorted Task-identity order, because semantic operations need a bounded immutable snapshot of every committed Task head.
+`previous_event_hash` is `null` in exactly the genesis `TASK_CREATED` event of each Task and non-null in every later event of that Task, because the chain root has no predecessor while `canonical-control-codec` forbids implicit optionality that independent writers would resolve differently.
+
+`RunPrefixManifest` is canonical JSONL containing one `PrefixHeader` with the `RunRecord` reference followed by one `PrefixTaskHead` per Task in sorted Task-identity order, because semantic operations need an immutable snapshot of every committed Task head that is finite at the instant it is produced.
+
+The manifest grows with the Task count of the Run rather than staying within a fixed size, because one head per Task is the minimum that lets a reader exclude records appended after the snapshot.
 
 Each `PrefixTaskHead` contains schema, Task identity, ledger sequence, event hash, and ledger byte size, while the manifest identity hashes its exact bytes including the terminal LF, because readers must exclude records appended after the operation snapshot.
 
@@ -893,4 +901,34 @@ A proposed change to a shared schema, path convention, event grammar, publicatio
 
 A proposed change to lifecycle semantics, role authority, system boundary, outcome meaning, or product constraint returns to the Architecture Description or Governing Inputs as applicable, because this document cannot acquire upstream authority.
 
-There are no known unresolved shared design decisions in this SDD, because the accepted Architecture permits one coherent realization using the closed mechanisms defined above while later local choices remain replaceable.
+### Unresolved shared design decisions
+
+`open-items-block-planning` — Each unresolved matter below is an open item rather than a permitted local choice, and every one of them blocks a bounded Implementation Plan for the scope it touches, because the Design Authority Chain requires a newly discovered shared or durable realization decision to return here rather than appear implicitly in realization.
+
+The identity families listed in `domain-separated-identity` omit `input_id`, `requirement_id`, `authority_id`, `routing_identity`, `prefix_id`, and `result_id` while those identities already appear in accepted schemas and payload paths, because the block states the derivation boundaries independent writers and readers need and cannot serve that purpose while incomplete.
+
+The following declared fields cannot be constructed by an implementer, because each appears in an accepted schema while no proposition here defines its value space: `exit_code_outcomes`, `output_observations`, `argument_slots`, `cwd_policy`, `local_termination_policy`, `read_tool_transport`, `host_profile`, `producer_constraint`, `provenance`, `observation_kind`, `observed_identity`, `prelaunch_identity_snapshot`, `stt_read_grant`, `stt_starting_subtree`, and the selector grammar shared by `source_selector`, `initial_input_selectors`, and `prior_evidence_selectors`.
+
+`exit_code_outcomes` and the selector grammar are the largest of those gaps, because command outcome classification and input resolution are load-bearing for every `COMMAND` step and every dependency edge.
+
+`DerivedState` and `RunView` are named as structures and referenced by `derived-lifecycle-state` and by `status` without a field list, because the misunderstanding-resistance rules in `docs/well.md` require a named structure to be introduced at its canonical definition before dependent propositions use the name.
+
+`task-event-grammar` admits no position for `OPERATOR_STOP_REQUESTED` and leaves `planner-operation`, `validator-operation`, and `step-phase` undefined, so the grammar currently rejects a history that `operator-stop` requires Boundary to commit, because a closed event vocabulary and its grammar must accept exactly the histories the design produces.
+
+`create-only-publication` and `append-only-ledger` describe single-file protocols while the candidate Run at Bootstrap and the Task candidate each span several files, so the all-or-nothing visibility those propositions assert has no stated mechanism, because per-file atomic installation cannot make a multi-file basis appear at one instant.
+
+No proposition states the disposition of a transition package whose payloads are installed while its manifest is not, so recovery can neither commit it under `known-fact-recovery` nor remove it, and a rebuilt package would fail create-only installation against the surviving payload paths, because `create-only-publication` forbids replacement and no rule admits deletion of an incomplete package.
+
+No proposition states whether `ledger_sequence` and `previous_event_hash` are selected under `writer.lock`, so an operator stop committed while an advancing invocation waits on a provider can leave that invocation holding a package built for a sequence already taken, because `writer.lock` is released during external work and `transition-package` binds the sequence before the ledger line is appended.
+
+`RunPolicy` contains no field bounding one public invocation although Bootstrap is required to freeze that bound and `run` is required to return at it, because a safeguard named by two propositions must exist in the record that freezes it.
+
+`TaskOutputAssessment` carries no phase discriminator and no event kind records an assessment, so the two assessments that `required-output-assessment` requires are indistinguishable in committed history, because a requirement whose satisfaction depends on publication order must identify the observable evidence establishing that order.
+
+The exposure consequence of retained captures is unstated, because captured stdout, stderr, and raw provider returns are committed permanently as ordinary readable files under `filesystem-backed-context` while the only secret-aware rule in this document covers environment values, and an implementer cannot tell whether capture redaction is required, forbidden, or excluded.
+
+The rejection of `.git` as a target path component is a product constraint that no accepted Governing Input states, because deciding that STT will never accept a mission operating on repository metadata bounds the product rather than realizing `target-path-authority`, and the Design Authority Chain returns a newly discovered constraint to Governing Inputs before dependent work continues.
+
+Whether the public command surface `start`, `run`, `status`, `diagnose`, and `stop` is shared realization owned here or a product surface owned upstream is unconfirmed, because the Architecture Description is silent on commands and silence does not establish which link owns the meaning.
+
+`qualification-matrix` obliges a mechanical sentence checker, a canonical-name uniqueness and reference checker, and promotion evidence binding exact hashes, and none of those exists yet, because that obligation gates promotion rather than the start of implementation.
