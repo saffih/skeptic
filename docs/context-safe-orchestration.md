@@ -14,13 +14,19 @@ When a non-Skeptic bounded orchestrator uses `context-safe-orchestration`, that 
 
 `context-safe-orchestration` coordinates bounded side work through file-backed artifacts rather than retained coordinator memory, because substantive content must survive boundaries without silently expanding session context.
 
-The coordinator persists substantive outputs to exact admitted files and compact receipts, because later reuse is safe only when the next agent can inspect stable external artifacts instead of inferring hidden prior context.
+The top user-interactive agent must protect its own live context as a scarce control surface, because the loop owner loses reliability when it keeps large substantive work inline.
+
+The coordinator persists substantive outputs, partial work products, and delegated reports to exact admitted files and compact receipts, because later reuse is safe only when the next agent can inspect stable external artifacts instead of inferring hidden prior context.
 
 The coordinator keeps only the minimum control context needed to route and validate work, because retained summaries of substantive content weaken isolation and can drift from the bound files.
 
+The top user-interactive agent keeps compact receipts, indexes, file identities, and status facts rather than substantive delegated content, because later steps should reopen named artifacts instead of inheriting an expanded session narrative.
+
 Later agents read only the named fragments, content references, and receipts admitted for their step, because reuse remains safe only when each invocation has an explicit bounded corpus.
 
-Missing, stale, mismatched, or ambiguous files block reuse, because an orchestration result cannot remain trustworthy when its supporting artifacts are not exact and current.
+Later agents must read named files or exact fragments rather than rely on inherited session context, because delegated safety depends on explicit artifact re-admission instead of conversational carryover.
+
+Missing, stale, mismatched, ambiguous, or unbound files block reuse, because an orchestration result cannot remain trustworthy when its supporting artifacts are not exact, current, and explicitly admitted.
 
 `context-safe-orchestration` is report-and-receipt authority only, because a transportable result cannot authorize mutation, promotion, publication, delegation expansion, or terminal task success by itself.
 
@@ -30,9 +36,13 @@ The loop owner remains responsible for the complete recipe, final judgment, and 
 
 The coordinator selects bounded side work only when expected context, cost, or failure-risk savings exceed orchestration overhead, because unnecessary coordination adds files and receipts without evidence value.
 
+The coordinator should choose the orchestrator shape and the least expensive reliable subagent early, because early routing and decomposition avoid a late context spike in the user-interactive loop.
+
 The coordinator chooses the least expensive reliable subagent or route for the bounded outcome, because low-cost subagent selection is preferred when it preserves the required result.
 
 A more expensive route is permitted only when the receipt records why a cheaper reliable route was insufficient, because cost expansion must remain inspectable.
+
+The coordinator decomposes context-heavy work into bounded fragments before substantive execution when one inline pass would be unbounded or likely to consume context materially, because bounded decomposition is safer than asking the loop owner to remember an expanding corpus.
 
 The coordinator may use a mini-orchestrator for a bounded subproblem only when the parent owner admits that layer explicitly, because hidden orchestration nesting weakens authority and traceability.
 
@@ -44,13 +54,19 @@ Skeptic-hosted use remains optional and subordinate to `skeptic.md`, because Ske
 
 The coordinator admits only the smallest control packet needed for one bounded step, because session context should contain routing, scope, and file identities rather than substantive document content.
 
+The user-interactive top-agent context differs from delegated bounded contexts, because the top loop must preserve room for orchestration judgment while delegated packets may carry only the exact local corpus needed for one step.
+
 Substantive analyses, plans, findings, merges, and intermediate outputs are written to bounded files instead of retained in coordinator context, because durable file-backed transfer is safer than narrative memory carryover.
+
+The coordinator treats unbounded or unknown substantive work as unsafe to keep inline, because unknown growth in live context can collapse later routing, review, and failure handling.
 
 Coordinator context may retain exact file paths, hashes, fragment identifiers, route requests, prohibition sets, and status facts, because those control facts are needed to bind later reads without reloading full content.
 
 A later agent reads only the exact files or fragments named for its step and must not assume access to earlier full-session prose, because bounded orchestration depends on explicit re-admission rather than conversational residue.
 
 If a bounded step would require substantive content that is not present in admitted files or fragments, the coordinator must stop or create a new admitted artifact before reuse, because hidden context reconstruction is not authorized.
+
+If an artifact is missing, stale, ambiguous, or not yet bound to an admitted path and hash, the coordinator must stop, refresh, or rebind before delegation or reuse, because later steps must fail closed on artifact uncertainty.
 
 ## File-backed artifacts and exact binding
 
@@ -88,9 +104,13 @@ Delegation names one exact role, one exact corpus, one exact output target set, 
 
 Delegation is used only for bounded side work and never for loop ownership, because one accountable owner is required.
 
+Delegation is mandatory when the work is unbounded or likely to consume the top agent's context materially, because the loop owner must externalize substantive work before inline context becomes unsafe.
+
 `context-safe-orchestration` does not use Luna and does not recursively substitute orchestration for owner judgment, because this contract itself is the bounded orchestration authority for the admitted work.
 
 When a bounded step is itself orchestration-shaped, the owner may admit one mini-orchestrator packet with tighter limits than the parent packet, because nested coordination should narrow rather than widen scope.
+
+Standalone Skeptic loops, mini-orchestrators, and other bounded orchestrators may all use this contract without changing loop ownership, because the contract distinguishes portable orchestration mechanics from the host workflow's terminal authority.
 
 The parent owner reevaluates every delegated result against current authoritative context before task-level action, because bounded correctness in one fragment does not prove downstream applicability.
 
@@ -160,11 +180,11 @@ The default policy is zero semantic retries and at most one explicitly authorize
 
 A transport retry, if authorized, reuses the exact packet, prompt, and route request, because altered inputs create a new semantic event rather than a replay.
 
-Preparation rejects unknown schemas, missing hashes, unauthorized output paths, missing admitted files, stale admitted files, malformed coverage, and ambiguous `content_ref` bindings, because malformed packets cannot support trustworthy reuse.
+Preparation rejects unknown schemas, missing hashes, unauthorized output paths, missing admitted files, stale admitted files, malformed coverage, ambiguous `content_ref` bindings, and unbound artifacts, because malformed packets cannot support trustworthy reuse.
 
 Structural failure remains structural rather than becoming semantic disagreement, because each failure class needs different remediation.
 
-Semantic conflict remains unresolved when authority, routing, coverage, freshness, file identity, or owner decisions are insufficient, because safe progress cannot continue by convenience.
+Semantic conflict remains unresolved when authority, routing, coverage, freshness, file identity, artifact binding, or owner decisions are insufficient, because safe progress cannot continue by convenience.
 
 ## Orchestration-local statuses
 
