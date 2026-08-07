@@ -79,11 +79,9 @@ A RunSkeptic receipt indexes the review and its evidence; it is not independent 
 
 #### Artifact Relay
 
-`artifact-relay` — Before Find/Fix work likely to exhaust context or repeat substantial reads, use bounded delegation only when expected to reduce total context, cost, or failure risk after overhead. Delegate only bounded side work to fresh independent invocations, route each to the least expensive reliable role, and persist only validated, authorized artifacts or receipts with identity/hash.
+For Find or Fix work likely to exhaust context or repeat substantial reads, an invocation may optionally use the standalone companion contract in `docs/context-safe-orchestration.md`, because bounded orchestration can reduce context, cost, or failure risk without changing Skeptic authority.
 
-A separate companion contract may define additional Artifact Relay mechanics; it applies only when explicitly supplied or named for the invocation, and it adds relay-specific constraints without replacing or overriding Skeptic.
-
-One loop owner remains responsible for freshly reading the applicable Skeptic source and complete current artifact, executing the full recipe, reevaluating prior findings, preserving unresolved states, and enforcing convergence and reset criteria. Reused artifacts support work but never count as fresh evidence, complete loop coverage, or unchanged-candidate passes. Report unobserved freshness, routing, validity, or coverage as `UNKNOWN`; if complete coverage is infeasible, stop with `CONFLICT`.
+That companion is optional and cannot replace or override Skeptic meanings, loop ownership, convergence, reset criteria, or receipts, because `skeptic.md` remains the authority for Skeptic behavior.
 
 `RunSkeptic Find Loop` invokes repeated full read-only RunSkeptic reviews. Unless the explicit invocation sets another count, stop only after three consecutive runs produce no new meaningful finding and no material change to an existing finding.
 
