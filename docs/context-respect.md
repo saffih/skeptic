@@ -18,19 +18,40 @@ Every substantive action uses one bounded child invocation, because even individ
 
 Substantive action includes domain reading, analysis, decomposition, planning, routing judgment, editing, command execution, implementation, validation, review, RunSkeptic, integration, synthesis, and semantic acceptance, because each action can import or generate domain content.
 
-The Lead and every admitted mini-orchestrator are control-plane only and may create or manage the run workspace, persist exact user input, maintain deterministic manifests and state, validate schemas, hashes, references, and permission envelopes, dispatch an already-authorized packet, wait for the active child, mechanically follow a validated successor instruction, and relay an approved final artifact, because these mechanics do not require domain content.
+The Lead may create the run workspace, assign dispatch identities, validate envelope structure, track compact status, and follow an explicitly fixed deterministic control transition, because those mechanics do not require domain content.
 
-Orientation is substantive: the first substantive action is always a fresh bounded planner or router child that performs task understanding, discovery, repository and source inspection, applicability determination, and initial domain reading, then writes the first bounded work instruction, because meaning-dependent startup must cross the child boundary.
+The Lead must delegate any transition choice that depends on task meaning, evidence, quality, risk, readiness, priority, or route adequacy to a bounded decision child, because choosing what should happen next from substantive state is itself substantive work.
 
-The Lead and every mini-orchestrator must delegate task understanding, discovery, repository or source inspection, applicability determination, domain reading, analysis, planning, decomposition, routing judgment, editing, command execution, implementation, review, validation, integration, synthesis, acceptance, completion decisions, and every other meaning-dependent action or choice to a bounded child, because deterministic control-plane mechanics do not authorize semantic work.
-
-There is no trivial-work, small-task, startup, initialization, or convenience exception, because context safety depends on the invariant rather than on a prediction about future session growth.
+There is no trivial-work or small-task exception, because context safety depends on the invariant rather than on a prediction about future session growth.
 
 One private run-scoped workspace exists before the first substantive action under `<host-temp>/skeptic/context-safe-orchestration/<run-id>/` or its host-equivalent, because the workspace must be the data plane from orchestration start.
 
-The exact user request is persisted in that workspace before substantive dispatch, because child inputs and later receipts must bind to the original bytes without importing them into the Lead context.
+The exact user request is persisted as `<run-dir>/intent.md` before substantive dispatch, because child inputs and later receipts must bind to the original bytes without importing them into the Lead context.
 
-All orchestration-generated substantive artifacts are written to that workspace unless the actual task explicitly authorizes repository writes, because runtime evidence must not silently modify the repository.
+Each later material user instruction is persisted as a new versioned intent artifact before it changes execution, because updated intent must cross the same file boundary as the initial request.
+
+All orchestration-generated substantive inputs and outputs are written to that workspace unless they are already authoritative external files referenced by exact path and identity or the actual task explicitly authorizes repository writes, because runtime handoffs must stay file-backed without silently modifying or copying authoritative sources.
+
+A minimal run layout is:
+
+```text
+<run-dir>/
+  intent.md
+  control/
+    state.json
+    dispatches.jsonl
+  steps/
+    <sequence>-<dispatch-id>/
+      dispatch.json
+      receipt.json
+      output-ref.json
+      next.json
+  artifacts/
+  final/
+    response.md
+```
+
+The host chooses the authorized run root at orchestration start and keeps one immutable run-directory identity for the run, because all later children need one stable data-plane boundary.
 
 `context-safe-orchestration` coordinates bounded side work through file-backed artifacts rather than retained coordinator memory, because substantive content must survive boundaries without silently expanding session context.
 
@@ -56,7 +77,9 @@ The Lead owns control-plane orchestration but not substantive task execution or 
 
 The Lead dispatches a bounded planner, router, reviewer, qualifier, worker, validator, integrator, or Skeptic child whenever the next control decision requires domain understanding, because routing and acceptance are substantive when they depend on task content.
 
-The Lead may apply only an orchestration shape fixed deterministically by the host workflow; otherwise a bounded decision child chooses the shape and next transition from admitted files, because orchestration choices based on task meaning are substantive.
+The Lead may apply an orchestration shape only when the host workflow fixes that shape deterministically, because choosing a semantic workflow from task content would require prohibited Lead judgment.
+
+When the orchestration shape is not mechanically fixed, a bounded decision child chooses the next role and transition from admitted files and returns only a compact successor reference, because orchestration design based on task meaning belongs outside the Lead context.
 
 The coordinator applies deterministic routing policy for bounded child dispatch, because low-cost routing is preferred when it preserves the required result.
 
@@ -66,9 +89,11 @@ A more expensive route is permitted only when the receipt records why a cheaper 
 
 The coordinator dispatches bounded decomposition before substantive execution whenever decomposition requires domain understanding, because the Lead must not read domain content merely to decide how to split it.
 
-The coordinator may admit bounded sequential nesting only when the parent packet explicitly authorizes the mini-orchestrator role and its exact scope, because nesting must preserve one active model child and cannot widen authority.
+Exactly one model child may be active at a time within one orchestration run, because sequential succession prevents parallel context branches, conflicting writes, and hidden integration work in the Lead.
 
-A mini-orchestrator remains control-plane only and subject to the same file binding, freshness, routing, and failure gates as any other bounded delegate, because a smaller coordinator does not earn weaker controls or a semantic exception.
+A child must not delegate another model child under this contract, because true one-agent-at-a-time succession requires the current child to terminate before the Lead dispatches its successor.
+
+A child that needs another model role must write a continuation or decision request to its admitted step directory and terminate, because the Lead owns sequencing while the successor child owns the requested cognition.
 
 Skeptic-hosted use remains optional and subordinate to `skeptic.md`, because Skeptic may consume orchestration support without yielding its own meanings, convergence, or receipts.
 
@@ -76,13 +101,15 @@ Skeptic-hosted use remains optional and subordinate to `skeptic.md`, because Ske
 
 The coordinator admits only the smallest control packet needed for one bounded step, because session context should contain routing, scope, and file identities rather than substantive document content.
 
-The user-interactive top-agent context differs from delegated bounded contexts, because the top loop must preserve room for deterministic control-plane mechanics while delegated packets may carry only the exact local corpus needed for one step.
+The user-interactive top-agent context differs from delegated bounded contexts, because the top loop must preserve room for control-plane mechanics while delegated packets may carry only the exact local corpus needed for one step.
 
 Substantive analyses, plans, findings, merges, and intermediate outputs are written to bounded files instead of retained in coordinator context, because durable file-backed transfer is safer than narrative memory carryover.
 
 The coordinator treats unbounded or unknown substantive work as unsafe to keep inline, because unknown growth in live context can collapse later routing, review, and failure handling.
 
 Coordinator context may retain exact file paths, hashes, fragment identifiers, route requests, prohibition sets, and status facts, because those control facts are needed to bind later reads without reloading full content.
+
+The Lead treats substantive artifact references as opaque handles and does not open their bodies to choose, qualify, integrate, or summarize work, because opaque handling is the primary protection against cumulative domain context.
 
 A later agent reads only the exact files or fragments named for its step and must not assume access to earlier full-session prose, because bounded orchestration depends on explicit re-admission rather than conversational residue.
 
@@ -136,13 +163,21 @@ The Lead must not perform substantive work directly even when the work is small,
 
 `context-safe-orchestration` does not use Luna and does not replace host task authority, because bounded child qualification supplies domain judgment while the Lead retains only control-plane ownership.
 
-When a bounded step is itself orchestration-shaped, the owner may admit one mini-orchestrator packet with tighter limits than the parent packet; that mini-orchestrator must delegate all meaning-dependent work and may perform only deterministic mechanics, because bounded sequential nesting does not create a semantic exception.
+When a bounded step discovers that further orchestration is required, that child records the required successor role and admitted references and then terminates, because nested live model orchestration would violate the single-active-child invariant.
 
 Standalone Skeptic loops and other bounded host workflows may use this contract without changing control-plane ownership, because the contract distinguishes portable orchestration mechanics from the host workflow's terminal authority.
 
 An independent bounded qualifier or reviewer reads authoritative result files and returns a compact bound decision receipt when semantic acceptance is required, because envelope validity proves structure and correlation but not correctness.
 
 The Lead consumes only the qualifier receipt, artifact references, hashes, and status, because rereading substantive child output would restore the prohibited domain-data path into the control plane.
+
+Whenever a semantic result determines what happens next, a bounded decision or qualifier child writes a versioned `<step-dir>/next.json` successor record, because the Lead needs a machine-readable transition without reading the decision basis.
+
+A successor record states `CONTINUE`, `STOP`, `ESCALATE`, or `CONFLICT` plus the next role, objective reference, admitted input references, admitted output paths, requested route, and final-response or blocker reference when applicable, because the Lead must be able to dispatch or stop mechanically.
+
+The Lead validates a successor record only for schema, identity, permissions, admitted paths, hashes, and closed status values and must not inspect its substantive decision basis, because semantic acceptance of the decision would turn the Lead back into a worker.
+
+A finalizer child writes any substantive user-facing answer to `<run-dir>/final/response.md`, because the Lead should relay a bounded final artifact or reference rather than compose the answer from task knowledge.
 
 The Boundary Agent remains an optional context-processing layer around a mandatory bounded child, because information reduction can add value without becoming a prerequisite for child isolation.
 
@@ -183,6 +218,8 @@ Unobserved or mismatched routing blocks semantic qualification unless an owner-a
 Every admitted source unit appears exactly once as primary coverage or explicitly as non-propositional, because otherwise completeness cannot be verified.
 
 When the corpus exceeds the admitted semantic-byte ceiling, decomposition proceeds by document, section, then source-unit boundary, because stable coarse-to-fine splitting limits semantic distortion.
+
+All decomposition, slice, merge, qualification, and successor-decision children execute serially with no overlap, because coverage machinery must not create an exception to the single-active-child invariant.
 
 Each decomposed result is `PROVISIONAL` until merge, because one slice cannot resolve whole-corpus contradictions or cross-slice dependencies.
 
@@ -366,6 +403,19 @@ ContextSafeSessionContext@1
   decomposition_depth
   prohibition_set[]
   notes[]
+
+ContextSafeNext@1
+  request_id
+  predecessor_dispatch_id
+  status: CONTINUE | STOP | ESCALATE | CONFLICT
+  next_role | null
+  objective_ref | null
+  input_refs[]
+  output_paths[]
+  route_requested {provider, model|null, effort|null}
+  final_response_ref | null
+  blocker_ref | null
+  decision_basis_ref
 
 ContextSafeValidationReport@1
   schema

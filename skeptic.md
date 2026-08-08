@@ -79,7 +79,7 @@ A RunSkeptic receipt indexes the review and its evidence; it is not independent 
 
 #### Artifact Relay
 
-For Find or Fix work likely to exhaust context or repeat substantial reads, an invocation may optionally use the standalone companion contract in `docs/context-safe-orchestration.md`, because bounded orchestration can reduce context, cost, or failure risk without changing Skeptic authority.
+For Find or Fix work likely to exhaust context or repeat substantial reads, an invocation may optionally use the standalone companion contract in `docs/context-respect.md`, because bounded orchestration can reduce context, cost, or failure risk without changing Skeptic authority.
 
 That companion is optional and cannot replace or override Skeptic meanings, loop ownership, convergence, reset criteria, or receipts, because `skeptic.md` remains the authority for Skeptic behavior.
 
