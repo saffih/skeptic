@@ -73,7 +73,7 @@ premium execution or retry. Require minimum-context escalation, no repetition
 of completed economical work, and return to LOW or the least expensive reliable
 route after the bounded premium judgment.
 
-Repeat RunSkeptic only after a material plan change, unexpected serious risk, or insufficient validation. Repair a harmless receipt-format defect without rerunning the review.
+This ordinary repetition rule applies outside an explicit RunSkeptic Find Loop or Fix Loop; when a Task Prompt explicitly invokes one, `skeptic.md` alone governs that loop's invocation repetition, convergence, reset, stopping, and receipt rules, because a workflow contract must not override the framework's own loop authority. Repeat RunSkeptic only after a material plan change, unexpected serious risk, or insufficient validation. Repair a harmless receipt-format defect without rerunning the review.
 
 For trivial read-only work or one specified deterministic command, a bounded
 child may use the smallest control packet and omit unnecessary planning

@@ -49,7 +49,9 @@ call, review, and omission cost. Prefer a deterministic boundary implementation.
 
 RunSkeptic is a bounded child-owned substantive review, because the Lead must not execute or semantically summarize it.
 
-The bounded Skeptic child runs it whenever the governing task requires it, and repeats it only when:
+These repetition conditions govern ordinary, non-loop RunSkeptic invocation. When the governing task explicitly invokes `RunSkeptic Find Loop` or `RunSkeptic Fix Loop`, `skeptic.md` alone governs that loop's invocation repetition, convergence, reset, stopping, and receipt rules, and the bounded Skeptic child follows its exact current recipe instead of the conditions below, because `skeptic.md` alone owns Skeptic loop authority and a delegation contract must not override the framework it serves.
+
+The bounded Skeptic child runs ordinary RunSkeptic whenever the governing task requires it, and repeats it only when:
 
 - the plan changes materially;
 - an unexpected high-impact risk appears;
@@ -70,7 +72,7 @@ Whenever RunSkeptic is invoked, dispatch a bounded child that:
 5. dispatch a bounded child to repair a harmless receipt-format defect without rerunning the review;
 6. returns only a compact source-bound receipt and exact artifact references to the Lead.
 
-Do not repeat receipt checks on unchanged content merely to accumulate PASS results.
+Outside an explicit Find/Fix Loop, do not repeat receipt checks on unchanged content merely to accumulate PASS results.
 
 ## Execution and delegation
 
@@ -141,7 +143,7 @@ Use the smallest validation set sufficient for the task.
 
 Run broader checks when the change can affect broader behavior.
 
-Do not require repeated identical PASS results on an unchanged candidate unless the task explicitly justifies them.
+Do not require repeated identical PASS results on an unchanged candidate unless the task explicitly justifies them or an explicit RunSkeptic Find/Fix Loop requires them.
 
 ## Reporting
 
