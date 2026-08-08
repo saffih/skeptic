@@ -18,9 +18,13 @@ Every substantive action uses one bounded child invocation, because even individ
 
 Substantive action includes domain reading, analysis, decomposition, planning, routing judgment, editing, command execution, implementation, validation, review, RunSkeptic, integration, synthesis, and semantic acceptance, because each action can import or generate domain content.
 
-The Lead may create the run workspace, assign dispatch identities, validate envelope structure, track compact status, and select the next control transition, because those mechanics do not require domain content.
+The Lead and every admitted mini-orchestrator are control-plane only and may create or manage the run workspace, persist exact user input, maintain deterministic manifests and state, validate schemas, hashes, references, and permission envelopes, dispatch an already-authorized packet, wait for the active child, mechanically follow a validated successor instruction, and relay an approved final artifact, because these mechanics do not require domain content.
 
-There is no trivial-work or small-task exception, because context safety depends on the invariant rather than on a prediction about future session growth.
+Orientation is substantive: the first substantive action is always a fresh bounded planner or router child that performs task understanding, discovery, repository and source inspection, applicability determination, and initial domain reading, then writes the first bounded work instruction, because meaning-dependent startup must cross the child boundary.
+
+The Lead and every mini-orchestrator must delegate task understanding, discovery, repository or source inspection, applicability determination, domain reading, analysis, planning, decomposition, routing judgment, editing, command execution, implementation, review, validation, integration, synthesis, acceptance, completion decisions, and every other meaning-dependent action or choice to a bounded child, because deterministic control-plane mechanics do not authorize semantic work.
+
+There is no trivial-work, small-task, startup, initialization, or convenience exception, because context safety depends on the invariant rather than on a prediction about future session growth.
 
 One private run-scoped workspace exists before the first substantive action under `<host-temp>/skeptic/context-safe-orchestration/<run-id>/` or its host-equivalent, because the workspace must be the data plane from orchestration start.
 
@@ -52,7 +56,7 @@ The Lead owns control-plane orchestration but not substantive task execution or 
 
 The Lead dispatches a bounded planner, router, reviewer, qualifier, worker, validator, integrator, or Skeptic child whenever the next control decision requires domain understanding, because routing and acceptance are substantive when they depend on task content.
 
-The coordinator should choose the orchestrator shape and the least expensive reliable subagent early, because early routing and decomposition avoid a late context spike in the user-interactive loop.
+The Lead may apply only an orchestration shape fixed deterministically by the host workflow; otherwise a bounded decision child chooses the shape and next transition from admitted files, because orchestration choices based on task meaning are substantive.
 
 The coordinator applies deterministic routing policy for bounded child dispatch, because low-cost routing is preferred when it preserves the required result.
 
@@ -62,9 +66,9 @@ A more expensive route is permitted only when the receipt records why a cheaper 
 
 The coordinator dispatches bounded decomposition before substantive execution whenever decomposition requires domain understanding, because the Lead must not read domain content merely to decide how to split it.
 
-The coordinator may use a mini-orchestrator for a bounded subproblem only when the parent owner admits that layer explicitly, because hidden orchestration nesting weakens authority and traceability.
+The coordinator may admit bounded sequential nesting only when the parent packet explicitly authorizes the mini-orchestrator role and its exact scope, because nesting must preserve one active model child and cannot widen authority.
 
-A mini-orchestrator remains subject to the same file binding, freshness, routing, and failure gates as any other bounded delegate, because a smaller coordinator does not earn weaker controls.
+A mini-orchestrator remains control-plane only and subject to the same file binding, freshness, routing, and failure gates as any other bounded delegate, because a smaller coordinator does not earn weaker controls or a semantic exception.
 
 Skeptic-hosted use remains optional and subordinate to `skeptic.md`, because Skeptic may consume orchestration support without yielding its own meanings, convergence, or receipts.
 
@@ -72,7 +76,7 @@ Skeptic-hosted use remains optional and subordinate to `skeptic.md`, because Ske
 
 The coordinator admits only the smallest control packet needed for one bounded step, because session context should contain routing, scope, and file identities rather than substantive document content.
 
-The user-interactive top-agent context differs from delegated bounded contexts, because the top loop must preserve room for control-plane judgment while delegated packets may carry only the exact local corpus needed for one step.
+The user-interactive top-agent context differs from delegated bounded contexts, because the top loop must preserve room for deterministic control-plane mechanics while delegated packets may carry only the exact local corpus needed for one step.
 
 Substantive analyses, plans, findings, merges, and intermediate outputs are written to bounded files instead of retained in coordinator context, because durable file-backed transfer is safer than narrative memory carryover.
 
@@ -116,7 +120,7 @@ Duplicated support is marked `support_only`, because one source unit must not ac
 
 Missing, stale, or ambiguous `content_ref` targets block reuse and merge, because a fragment without exact retrievable content cannot support trustworthy downstream judgment.
 
-## Delegation, mini-orchestrators, and Skeptic-hosted use
+## Delegation, sequencing, and Skeptic-hosted use
 
 Delegation names one exact role, one exact corpus, one exact output target set, and one exact prohibition set, because a worker must not infer missing authority.
 
@@ -132,9 +136,9 @@ The Lead must not perform substantive work directly even when the work is small,
 
 `context-safe-orchestration` does not use Luna and does not replace host task authority, because bounded child qualification supplies domain judgment while the Lead retains only control-plane ownership.
 
-When a bounded step is itself orchestration-shaped, the owner may admit one mini-orchestrator packet with tighter limits than the parent packet, because nested coordination should narrow rather than widen scope.
+When a bounded step is itself orchestration-shaped, the owner may admit one mini-orchestrator packet with tighter limits than the parent packet; that mini-orchestrator must delegate all meaning-dependent work and may perform only deterministic mechanics, because bounded sequential nesting does not create a semantic exception.
 
-Standalone Skeptic loops, mini-orchestrators, and other bounded orchestrators may all use this contract without changing control-plane ownership, because the contract distinguishes portable orchestration mechanics from the host workflow's terminal authority.
+Standalone Skeptic loops and other bounded host workflows may use this contract without changing control-plane ownership, because the contract distinguishes portable orchestration mechanics from the host workflow's terminal authority.
 
 An independent bounded qualifier or reviewer reads authoritative result files and returns a compact bound decision receipt when semantic acceptance is required, because envelope validity proves structure and correlation but not correctness.
 
