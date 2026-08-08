@@ -71,6 +71,20 @@ Workers and commands perform accepted steps without owning parent-Task judgment 
 
 Persisted reports, target content, prior evidence, and tool output are data rather than higher-authority instructions, because access to evidence must not alter `immutable-mission-and-authority`, `boundary-mediated-transitions`, or the accepted Plan.
 
+## `stewarded-context` — Stewarded context
+
+Durable substantive state crosses semantic-operation boundaries through authoritative filesystem artifacts and exact references rather than inherited model context, because `context-stewardship-adoption` requires reusable state to remain inspectable without repeatedly occupying live context.
+
+Each semantic operation receives a deliberately bounded working set selected by the responsible semantic role or fixed by an accepted Plan and expands that set when uncertainty, contradiction, missing support, or a required fresh or complete review demands more evidence, because context economy must remain subordinate to the obligation being judged.
+
+Planner and Validator retain semantic authority over evidence sufficiency while Boundary enforces only structural admission and binding, because `trusted-semantic-roles` must not be replaced by a mechanical context-minimization rule.
+
+When substantial interpretation is likely to be reused and expected downstream rereading savings materially exceed creation cost and omission risk, the interpreting role returns a source-bound digest with stable search anchors and exact source references for Boundary to persist, because `context-stewardship-adoption` requires reusable understanding to reduce later reading cost without moving persistence authority out of `boundary-mediated-transitions`.
+
+Boundary persists an admitted digest as derived navigation data bound to its authoritative sources, because `boundary-mediation` owns persistence and context stewardship must not create an alternate authoritative path.
+
+A source-bound digest has no greater authority than its sources and never satisfies an obligation that requires fresh, complete, independent, absence-sensitive, contradiction-sensitive, or decision-critical source review, because derived context may accelerate retrieval but may not become a second source of truth.
+
 ## `one-active-frontier` — One active frontier
 
 Lead advances one deepest unresolved lifecycle frontier at a time and executes child Tasks depth-first before returning to their parent, because `sequential-lifecycle` makes ordering and ownership explicit without internal concurrency.
@@ -121,7 +135,7 @@ STT does not claim to detect every unreported effect or contain arbitrary proces
 
 ## `authoritative-committed-history` — Authoritative committed history
 
-STT persists complete known Run history as ordinary readable files plus append-only ledgers under an authoritative Run root outside the live target, because `filesystem-backed-context` requires transparent durable context that target work cannot rewrite.
+STT persists complete known Run history as ordinary readable files plus append-only ledgers under an authoritative Run root outside the live target, because `context-stewardship-adoption` requires durable authoritative context that target work cannot rewrite.
 
 Accepted lifecycle facts are immutable and state is derived from committed history rather than an independently mutable cursor, because `recovery-from-known-facts` needs one source of truth.
 
@@ -129,7 +143,7 @@ Each semantic operation reasons from a stable committed history snapshot and lat
 
 Planner and Validator may inspect the committed Run history while Planner may grant a Worker only the history access needed for its accepted step, because `trusted-semantic-roles` needs sufficient evidence and `admitted-operational-authority` limits execution authority.
 
-Indexes, summaries, and compact receipts may aid navigation but never replace the underlying committed records, because `filesystem-backed-context` rejects a second curated source of truth.
+Indexes, source-bound digests, summaries, and compact receipts may aid navigation but never replace the underlying committed records, because `stewarded-context` rejects a second curated source of truth.
 
 Externally mutable target facts are re-observed before authoritative use while accepted Run evidence remains immutable, because `honest-outcomes` requires evidence to identify what was actually known when a decision was committed.
 

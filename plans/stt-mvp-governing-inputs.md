@@ -45,9 +45,13 @@ The mission or Run policy may constrain permitted providers, capability levels, 
 
 Every lifecycle transition and every effectful operation passes through Boundary, because one mechanical authority must enforce identity, operational admission, persistence, launch, result binding, and failure visibility.
 
-### `filesystem-backed-context` — Filesystem-backed context
+### `context-stewardship-adoption` — Context stewardship adoption
 
-The authoritative Run history is persisted as ordinary readable files plus append-only ledgers and is read on demand, because retained data paths reduce repeated model context while preserving transparent evidence.
+STT adopts the portable `context-stewardship` contract in `docs/context-stewardship.md` as an accepted context-handling constraint subject to these Governing Inputs and STT authority, because one portable owner should define the generic rule while STT owns only the product decision to adopt it.
+
+STT keeps durable substantive state in authoritative readable files, exchanges stable artifact references rather than repeated bodies, and gives each semantic operation a bounded working set sufficient for its obligation that the responsible semantic role may expand when evidence requires it, because model context is scarce but context economy is subordinate to correct judgment.
+
+When substantial interpretation is likely to be reused and expected downstream savings materially exceed creation cost and omission risk, the interpreting role must leave a source-bound, grep-friendly digest; the digest remains derived, traceable to authoritative evidence, and insufficient wherever freshness, completeness, absence, contradiction, independence, or decision-critical support requires source review, because reusable understanding should reduce rereading without becoming a second source of truth.
 
 ### `semantic-continuation` — Semantic continuation
 

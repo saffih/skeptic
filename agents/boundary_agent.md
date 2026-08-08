@@ -63,7 +63,7 @@ the authoritative artifact directly without the Lead shuttling its body.
 Keep only control-plane instructions and compact receipts inline when file
 indirection costs more than it saves, because substantive bodies must remain in
 the run workspace. Use the run-scoped workspace defined by
-`docs/context-safe-orchestration.md`, because one shared data plane prevents
+`docs/context-stewardship.md`, because one shared data plane prevents
 inter-agent body transfer through the Lead.
 
 ## Context inheritance

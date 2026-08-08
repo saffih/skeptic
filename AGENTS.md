@@ -4,6 +4,7 @@ This repository is a portable prompt and review library. Its capabilities valida
 
 ## Entry map
 
+- Context crossing any model or delegation boundary: read `docs/context-stewardship.md` `## Core`; when acting as Lead or mini-orchestrator also read `## Orchestration`, because fixed section-scoped loading makes stewardship operative without making its own contract a repeated context tax.
 - Review an artifact, decision, or RunSkeptic: dispatch a bounded child to read `skeptic.md` and only explicitly applicable companions, because substantive review is not Lead work.
 - Write or review a design, architecture, or software design document (SDD): dispatch a bounded WELL child with `docs/well.md` and exact admitted inputs, because design reading and judgment are substantive.
 - Lead execution: read `agents/lead_agent.md`; add `agents/model_routing_policy.md` when routing is needed and `agents/agent_return_contract.md` for delegated returns. The Lead is orchestration-only, every substantive action uses a bounded child, and the run workspace is created before substantive dispatch.
