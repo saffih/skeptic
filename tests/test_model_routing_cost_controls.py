@@ -57,12 +57,13 @@ class ModelRoutingCostControlTests(unittest.TestCase):
         self.assertIn("stop for explicit owner authorization", self.routing)
         self.assertIn("silence is not authorization", self.routing)
 
-    def test_premium_retry_and_return_to_low_are_controlled(self) -> None:
+    def test_premium_retry_and_follow_on_routing_are_controlled(self) -> None:
         self.assertIn("one premium attempt by default", self.routing)
         self.assertIn("zero automatic premium retries", self.routing)
         self.assertSemanticIn("Do not repeat repository exploration", self.routing)
         self.assertIn("return integration", self.routing)
-        self.assertIn("to LOW or", self.routing)
+        self.assertSemanticIn("routed independently under this policy", self.routing)
+        self.assertSemanticIn("neither is LOW forced when", self.routing)
 
     def test_task_and_builder_require_cost_aware_launch_fields(self) -> None:
         self.assertSemanticIn("starting model or model class", self.task)

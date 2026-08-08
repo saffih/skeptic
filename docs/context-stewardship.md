@@ -1,134 +1,79 @@
 # Context Stewardship Contract
 
-`context-stewardship` treats model context as a scarce execution resource that must remain sufficient for the current obligation and useful to the next agent, because correctness suffers both when context is flooded and when necessary evidence is removed.
+`context-stewardship` treats model context as scarce reasoning capacity. Its purpose is to keep each recipient's working context sufficient for the current obligation without repeatedly carrying durable state that can be resolved when needed.
 
-This contract owns portable context-handling and bounded-orchestration rules only, because the host workflow must retain task authority, completion semantics, mutation authority, and any stricter review obligations.
-
-When a host adopts this contract, host-specific authority and required fresh or complete reads remain controlling, because context economy must never weaken evidence, permission, or completion rules.
+This contract governs context handling only. It neither grants nor reduces authority, and a host must not use context economy to weaken required evidence, freshness, completeness, independence, completion criteria, or access to source material already authorized for the obligation.
 
 ## Core
 
-### `filesystem-offload` — Filesystem offload
+### Context respect
 
-Durable substantive state belongs in authoritative readable files or explicitly authorized task artifacts rather than retained model context, because reusable state should survive invocation boundaries without being repeatedly copied through prompts.
+Model context is scarce reasoning capacity. Material belongs in the active context because it contributes to the recipient's current obligation, not merely because it exists or was present upstream. This is the root principle for external state, curation, bounded context, and succession.
 
-An agent retains only the substantive content needed for its current bounded reasoning and otherwise retains exact artifact references, because knowing where authoritative information is should normally cost less context than carrying the information itself.
+### Durable external state
 
-### `artifact-reference` — Artifact reference
+Persist task-local exact intent, raw substantive results, decisions, and other reusable state in durable host-authorized artifacts when they must survive an invocation boundary. Existing durable authoritative sources should remain in place and be referenced when they are receiver-accessible; do not copy existing source data merely for Stewardship. Keep raw or authoritative state available independently of any summary, because model context and derived artifacts are not durable sources of truth.
 
-Substantive inputs and outputs cross agent boundaries by exact artifact reference rather than body copying when a reference is sufficient, because reference handoff preserves one inspectable source while avoiding repeated context cost.
+Carry a substantive body in model context only while it contributes to the current reasoning. Otherwise carry a resolvable reference to its durable form.
 
-A reusable reference identifies an authorized artifact and, when economically observable, its content identity such as a hash or version; it may identify an exact fragment when only part of the artifact is admitted, because later consumers must detect stale, ambiguous, or changed evidence.
+Reusable artifacts should preserve stable identifiers and retrieval anchors, and should keep independent material propositions separately findable where practical, so later recipients can selectively retrieve authoritative detail.
 
-Missing, stale, ambiguous, changed, or unauthorized references block reuse until rebound, because context savings cannot justify guessing which evidence was intended.
+### Receiver-resolvable references
 
-### `bounded-working-set` — Bounded working set
+A reference crossing a context boundary must let its intended receiver locate and read the authorized artifact. It must identify the relevant whole or fragment and provide identity or freshness evidence proportionate to the risk when that evidence is observable.
 
-Each semantic invocation receives a deliberately bounded working set judged sufficient for its obligation by the responsible semantic role or fixed by an already-authorized host plan, because unrelated history wastes context while evidence sufficiency is a semantic judgment.
+A reference saves context only when the receiver can resolve it at the time of use. Missing, inaccessible, ambiguous, stale, or changed references cannot be guessed through; they must be rebound or exposed as a context blocker. When references are not resolvable or indirection would cost more context than it saves, bounded inline material is permitted.
 
-A semantic role expands its working set when uncertainty, contradiction, missing support, or a host-required fresh or complete review demands more evidence, because the smallest context is not better when it prevents the obligation from being discharged reliably.
+### Recipient-specific curation
 
-A control plane may enforce structural admission but must not decide semantic evidence sufficiency, because context isolation would be broken if routing mechanics interpreted domain evidence.
+Context curation is an obligation-driven, recipient-specific stewardship action. Curate when doing so materially improves the recipient's starting context. Direct references are sufficient when authoritative material is already appropriately focused and receiver-accessible; do not create derivatives merely to demonstrate Stewardship.
 
-### `source-bound-digest` — Source-bound digest
+Curation selects an economical starting context; it does not grant authority, certify correctness or isolation, define an exclusive evidence boundary, or restrict the recipient's access to any source the host has already authorized for the obligation.
 
-An agent that has already paid to understand substantial reusable material leaves one source-bound digest to an admitted output path in the same invocation when expected downstream rereading savings materially exceed the creation cost and omission risk, because reusable understanding should not be needlessly recomputed without widening write authority.
+The semantic recipient owns source selection and evidence sufficiency. It may independently resolve and load any already-authorized source needed to address uncertainty, contradiction, missing support, or a fresh, complete, or independent obligation. If needed evidence is unavailable or unauthorized, the recipient exposes that condition rather than silently omitting it.
 
-The digest is the smallest faithful downstream-useful derivative rather than a fixed-size summary, because compression should follow the likely reuse obligation rather than an arbitrary token target.
+### Source-bound derivatives
 
-The digest identifies its exact authoritative source references and preserves material conclusions, uncertainty, supporting and disconfirming evidence, and retrieval anchors, because downstream agents need a cheap path back to evidence that can confirm or refute it.
+A digest or other curated derivative may be created from authoritative sources when it materially reduces expected total context cost. Each derivative is the smallest faithful form sufficient for its expected downstream reuse, not a fixed-size summary. Use the smallest number of faithful derivatives needed for likely reuse, bind each derivative to resolvable source references, and preserve material conclusions, uncertainty, supporting and disconfirming evidence, and retrieval anchors relevant to that reuse.
 
-Store the digest adjacent to its authoritative result as `<source-name>.digest.md` when the host layout permits or link it through a deterministic artifact reference otherwise, because one predictable derivative name makes downstream discovery cheap without creating multiple compression levels.
+A derivative has no greater authority than its sources. It never substitutes for a source read required for freshness, completeness, absence, contradiction, independent review, or decision-critical support. Do not build authority through derivative chains; return to authoritative sources.
 
-A digest has no greater authority than its sources and never substitutes for a source read required for freshness, completeness, absence, contradiction, independent review, or decision-critical support, because derived context must not become a second source of truth.
+### Bounded working context
 
-Do not launch a separate compressor by default, derive a digest from another digest, or generate a digest for material that is already compact or unlikely to be reused, because context stewardship must reduce total cost rather than manufacture duplicate artifacts.
+Bound the recipient's working context to what is sufficient for its semantic obligation. Working context includes inherited runtime context, startup material, every source loaded afterward, intermediate reasoning state, and generated artifacts retained in context; a compact startup does not prove that this later working context fits.
 
-### `grep-friendly-artifact` — Grep-friendly artifact
+Account for known subsequent loading when defining an obligation. Where safe fit is not established, decompose into bounded semantic obligations that can continue through durable references. Decomposition must preserve the original obligation, authorized source access, and every required freshness, completeness, and independence property. If those properties cannot be preserved, expose a context blocker instead of omitting evidence.
 
-Reusable artifacts preserve stable canonical search tokens, exact identifiers, paths, symbols, finding IDs, and evidence anchors where practical, because downstream agents should be able to locate authoritative detail with cheap exact search before broad rereading.
+A control plane may enforce structural limits but cannot determine semantic sufficiency or choose decomposition boundaries from domain meaning. Those judgments belong to a semantic role.
 
-Use the host's canonical naming convention and prefer stable `kebab-case` semantic names when that convention applies, because grepability needs consistent tokens without imposing one serialization style on every artifact or machine field.
+### Admission and observability
 
-Important independent findings or propositions should remain separately searchable when practical, because one opaque prose blob makes selective retrieval unnecessarily expensive.
+Reference-first startup proves only that the bootstrap was admitted. It does not prove working-context fit, source loading, freshness, isolation, or semantic correctness.
+
+A context-window rejection or equivalent capacity failure is a context-admission failure, not evidence that the semantic role failed its obligation. Preserve completed durable artifacts, reduce the bootstrap, or have a semantic role decompose the obligation into genuinely smaller bounded work. Never move semantic work into an orchestrator to escape a context failure. If bounded semantic work still cannot be admitted without losing required properties, expose an explicit context blocker.
+
+Runtime inheritance, hidden loading, isolation, and fit are reported only when observable; otherwise they remain `UNKNOWN`.
 
 ## Orchestration
 
-### `control-plane-isolation` — Control-plane isolation
+### Domain-blind control plane
 
-The Lead and every admitted mini-orchestrator perform deterministic orchestration mechanics only, because accumulating domain understanding in an open-ended control context creates both context waste and hidden semantic authority.
+A Lead or mini-orchestrator is a domain-blind control plane. It may retain exact intent references, dispatch and artifact references, statuses, and other compact control metadata, and may perform deterministic mechanics such as persisting inputs, checking reference presence, and following a fixed transition.
 
-Orientation, task understanding, discovery, source selection, applicability, domain reading, analysis, planning, decomposition, routing judgment, editing, command execution, implementation, review, semantic validation, integration, synthesis, acceptance, and completion judgment are meaning-dependent work and therefore execute in bounded semantic children, because no substantive category receives an inline Lead exception.
+It must not read substantive bodies to understand the task or decide what happens next. Any action or choice whose correctness depends on domain meaning—including interpretation, discovery, source selection, applicability, planning, decomposition, implementation, review, evidence sufficiency, acceptance, readiness, blocker interpretation, or semantic continuation—belongs to a bounded semantic role.
 
-A host-fixed first role or transition may be dispatched directly without adding planning ceremony, but any choice that depends on task meaning, evidence, quality, risk, readiness, priority, or route adequacy must itself be delegated, because deterministic control should stay cheap while semantic control stays outside the orchestrator.
+A host-fixed first role or transition may be dispatched directly. Once continuation depends on meaning, the control plane delegates that judgment and follows the resulting durable successor reference without interpreting the underlying domain artifacts. Structural validity never proves semantic correctness or completion.
 
-There is no small-task exception to semantic child isolation, but deterministic mechanics need not be delegated merely to satisfy process form, because the invariant protects meaning-dependent context rather than maximizing agent count.
+### Reference-first startup
 
-### `sequential-delegation` — Sequential delegation
+Before semantic startup, persist the bounded obligation, governing intent and authority references, starting artifact references, and output destination in durable host-authorized state. When the recipient can resolve that state, the startup message contains only the minimum bootstrap needed to identify and load it.
 
-At most one substantive model reasoning invocation is active in an orchestration tree at a time, because sequential succession bounds live context and keeps control ownership inspectable.
+Prefer references when they are resolvable and context-cheaper. Bounded inline material is legitimate when it is the better faithful working context. Self-containment is not a reason to copy large bodies unnecessarily. After startup, the semantic recipient resolves its starting references and selectively expands to any other already-authorized source required by the obligation.
 
-A bounded child may act as a mini-orchestrator when its admitted task requires further decomposition or when semantic judgment determines that nesting will materially reduce total context, cost, exposure, integration load, or failure risk, because nesting is useful only when it offloads a real bounded process.
+### File-backed succession
 
-A mini-orchestrator inherits this contract, may have at most one active model child, and suspends while that child or deeper admitted subtree runs, because recursive offload must preserve the same sequential context boundary instead of creating parallel sibling contexts.
+Persist initial and superseding intent in identity-preserving durable records before it controls later semantic work. Persist substantive results outside the orchestrator's context and return compact control metadata with resolvable output references.
 
-Nested authority, disclosure, and write scope may only preserve or narrow the parent admission, because delegation must not manufacture capability.
+When the next action depends on meaning, a semantic role writes the successor instruction and any supporting reasoning to durable artifacts. The successor reference must identify the intent state it serves and must let the next recipient resolve its obligation, governing authority, starting sources, and output destination without conversation residue. Superseding intent requires semantic rebinding before an unexecuted successor tied to older intent may be used.
 
-### `file-backed-succession` — File-backed succession
-
-Before substantive orchestration, establish one host-authorized run-scoped workspace and persist the exact initial user or task input and every later user message there as immutable intent events before they can affect a later substantive dispatch, because one stable data plane keeps semantic state outside the control context and prevents the control plane from deciding which user input is material.
-
-Every semantic dispatch binds one bounded objective, current intent reference, inherited authority and prohibitions, admitted input references, authorized output paths, route request, validation obligation, and escalation condition, because a child must not reconstruct authority or missing context from conversation residue.
-
-Every child writes substantive work to admitted artifacts and returns only compact control metadata plus output references, because the parent should not absorb the child's domain body merely to continue orchestration.
-
-When the next transition depends on meaning, an authorized semantic child writes the successor instruction and its supporting reasoning to files; the orchestrator validates only the control envelope and follows the machine-readable transition, because substantive continuation must not require Lead interpretation.
-
-A later intent event invalidates unexecuted semantic continuation bound to an older intent state; completed artifacts remain evidence but must be explicitly readmitted by subsequent semantic judgment, because new intent should change future work without erasing history or letting stale plans proceed silently.
-
-A minimal interoperable control vocabulary is sufficient, because the contract needs machine-followable handoffs without owning a host serialization:
-
-```text
-Packet
-  dispatch-id
-  intent-ref
-  objective-ref
-  authority-ref
-  prohibition-refs[]
-  input-refs[]
-  output-paths[]
-  route-requested
-
-Receipt
-  dispatch-id
-  status: complete | partial | blocked | failed
-  output-refs[]
-  digest-refs[]
-  next-ref | null
-  blocker-ref | null
-
-Next
-  action: continue | stop | escalate | conflict
-  packet-ref | null
-  blocker-ref | null
-```
-
-The exact serialization belongs to the host unless separately governed, because this contract needs observable handoff semantics without owning implementation format.
-
-### `structural-and-semantic-gates` — Structural and semantic gates
-
-Deterministic checks may validate identities, schemas, hashes, admitted paths, inherited authority, preserved prohibitions, route authorization, closed statuses, and reference freshness, because those facts do not require domain interpretation.
-
-Structural success never proves semantic correctness, acceptance, evidence sufficiency, or completion, because semantic meaning remains owned by the authorized semantic role.
-
-Routing and context-isolation claims are recorded only when observable and remain unknown otherwise, because orchestration must not convert an unavailable runtime fact into a guarantee.
-
-Retries remain narrow and host-authorized; exact transport replay or harmless structural correction does not justify silently repeating semantic judgment, because repetition without new evidence can add cost while simulating confidence.
-
-Fail closed when required authority, intent binding, artifact identity, output admission, semantic continuation, or required evidence remains unresolved, because the orchestrator must not repair uncertainty by importing the underlying domain problem into its own context.
-
-## Host integration
-
-The host may add stricter requirements but must not cite this contract to weaken required authority, evidence, freshness, independence, or task-completion rules, because `context-stewardship` optimizes the path to reliable work rather than redefining what reliable work means.
-
-When Skeptic adopts this contract, `skeptic.md` remains authoritative for Skeptic invocation, ownership, source freshness, loop convergence, findings, and dispositions, because a context companion cannot override the framework it serves.
+Hosts own handoff serialization, scheduling, routing, review procedures, and terminal states. Every boundary in a delegated subtree nevertheless preserves this contract's durable-state, resolvability, source-access, non-substitution, bounded-context, and observability rules.

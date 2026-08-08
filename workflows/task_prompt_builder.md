@@ -8,7 +8,6 @@ Turn a user objective or an existing plan into one concise, execution-ready Task
 
 These forms are equivalent. The text after the alias is the objective:
 
-- `TP: <objective>`
 - `Create task prompt for: <objective>`
 - `Create a task prompt for: <objective>`
 - `Task prompt for: <objective>`

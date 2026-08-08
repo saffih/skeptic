@@ -1,140 +1,228 @@
-# Model Routing
+# Model Routing Policy
 
-The top-level Lead is orchestration-only, because every substantive role must execute in a bounded child context.
+This is the single canonical policy for route selection, model-class
+selection, reasoning-effort selection, escalation, premium authorization,
+route-related data disclosure, and requested-versus-actual routing
+observability. A control plane such as `agents/lead_agent.md` applies a route
+decision produced under this policy; it does not redefine routing meaning.
 
-Every substantive planning, routing judgment, implementation, command, validation, review, RunSkeptic, integration, or acceptance action is dispatched to a bounded child, because no small-task exception preserves cumulative session safety.
+This policy does not define Lead orchestration-only behavior, mandatory
+bounded-child delegation, run-workspace creation, Context Stewardship,
+working-context decomposition, dispatch-field schema, Agent Return fields,
+Boundary invocation criteria, workflow lifecycle, Task Prompt schema,
+RunSkeptic, WELL, semantic acceptance, candidate isolation, or task
+completion. Those belong to their own owning authorities.
 
-The first control-plane action creates one private run-scoped workspace and persists the exact request there, because all substantive child inputs and outputs require an external data-plane location from orchestration start.
+## Objective
 
-Use the least expensive route reasonably expected to complete the bounded role reliably.
+The routing objective is not "use the cheapest individual call." It is: use
+the least expensive authorized route reasonably expected to complete the
+bounded obligation reliably, accounting for expected retries, correction,
+review, context-transfer and integration overhead, and failure risk.
 
-For substantive Task Prompt execution, begin with a concise
-`EXECUTION_ROUTING_NOTICE` that states the exact requested starting model or
-model class and effort, the work expected to remain on that route, known
-potential premium stages, and that execution stops before any unapproved
-premium stage. Tell the owner that they may stop at that checkpoint without
-losing completed work. Do not require a response while economical work can
-safely begin, and do not claim that a named runtime or model exists unless it
-is observable.
+Do not pay for stronger capability without a reason. Do not choose a weaker
+route when the expected total completion cost or failure risk makes it a
+false economy. The cheapest individual call is not always the lowest-cost
+completion path.
 
-## Default order
+## Route classes
+
+### Default order
 
 1. Deterministic tool or script.
 2. Small model with low reasoning.
 3. Medium model with proportionate reasoning.
 4. Strongest model only when justified.
 
-The cheapest individual call is not always the lowest-cost completion path. Include likely retries, correction, review, context transfer, and integration burden.
+### Deterministic work
 
-## Deterministic work
+Prefer deterministic tools for exact mechanical work, including tests,
+linting, type checks, builds, repository-state checks, hashing, schema
+validation, exact comparison, receipt structure checks, fixed-envelope
+parsing, and report generation from verified structured data. Deterministic
+execution does not replace semantic judgment; use it only where the
+obligation is genuinely mechanical and exact.
 
-Prefer deterministic tools for exact mechanical work, including tests, linting, type checks, builds, repository-state checks, hashing, schema validation, exact comparison, receipt structure checks, fixed-envelope parsing, and report generation from verified structured data.
+### Model classes
 
-## Model classes
+Define model classes by required capability, not provider names.
 
-### Small
+#### Small
 
-Use for bounded, low-ambiguity work such as narrow extraction, formatting, classification, or a small mechanical repair.
+Use for bounded, low-ambiguity work such as narrow extraction, formatting,
+classification, or a small mechanical repair.
 
-### Medium
+#### Medium
 
-Use for ordinary implementation, multi-file edits, focused semantic review, and planning that requires judgment but not exceptional synthesis.
+Use for ordinary implementation, multi-file edits, focused semantic review,
+and planning that requires judgment across multiple interacting facts but not
+exceptional synthesis.
 
-### Strongest
+#### Strongest
 
-Use only for materially consequential architecture, high-risk ambiguity, conflicting evidence, difficult synthesis, or a demonstrated lower-class failure.
+Use only for materially consequential architecture, high-risk or conflicting
+evidence, difficult synthesis, or a demonstrated lower-class failure.
 
-"Best model", "Lead model", or "important task" is not sufficient justification.
+"Best model", "Lead model", or "important task" is not sufficient
+justification.
 
 ## Reasoning effort
 
-Use the lowest effort likely to be reliable:
+Reasoning effort is selected independently from model class. Use the lowest
+effort reasonably expected to be reliable:
 
-- low for mechanical bounded work;
-- medium for ordinary implementation and review;
-- high only for difficult ambiguity, architecture, or high-impact synthesis.
+- low for mechanical, low-ambiguity work;
+- medium for ordinary semantic implementation, review, and planning;
+- high only for difficult ambiguity, architecture, conflicting evidence, or
+  high-impact synthesis.
 
-## Delegation
+This policy does not define provider-specific effort levels beyond this
+generic vocabulary.
 
-Dispatch every substantive role to a bounded child, because isolation is mandatory even when specialization, parallelism, protected context, or independent review adds no separate value.
+## Selection
 
-A delegated model role must state:
+A route may be selected in one of three ways:
 
-- unique dispatch ID;
-- bounded objective and scope;
-- authority and prohibitions;
-- expected output;
-- requested model class and reasoning effort;
-- acceptance checks;
-- escalation condition;
-- required Agent Completion Envelope.
+- explicitly fixed by governing authority;
+- selected mechanically, when the selection criteria are deterministic;
+- selected by a semantic routing role, when applying the criteria requires
+  judgment.
 
-Delegated agents do not inherit the Lead model or effort automatically.
+A control plane consumes and applies that decision under its own contract; it
+does not itself make a semantic route judgment. No routing decision may
+silently widen permissions or data access beyond what was already authorized
+for the obligation.
 
-## Boundary routing
+When a Boundary role is invoked, its own obligation is routed under this same
+policy. The Boundary route does not automatically inherit the substantive
+worker's model class or effort.
 
-Use `agents/boundary_agent.md` conditionally when context processing has material
-expected value. A compact bounded-child dispatch needs no Boundary Agent.
-
-Route boundary work in this order:
-
-1. deterministic tool or script;
-2. free or local agent when available, exposed, and reliable;
-3. smallest low-effort model reasonably expected to perform the transformation;
-4. a stronger route only after observed insufficiency or when semantic omission
-   risk materially requires it.
-
-The boundary route does not inherit the substantive worker's model or effort.
-Do not claim that a free/local route exists unless the runtime exposes it.
-
-Routing and context discipline are transitive when a delegated orchestrator
-delegates further, proportionate to its subtree; this does not transfer global
-Lead ownership or task-level completion.
+A role that is itself authorized to dispatch further bounded work applies
+this routing policy independently to what it dispatches. It does not
+automatically inherit its own parent's model class or effort, and it cannot
+widen its parent's authorization. This does not transfer global Lead
+ownership to that role.
 
 ## Escalation
 
-Escalate only when observed evidence shows that the assigned route is insufficient. Record the failed route, the observed defect or uncertainty, why an unchanged retry is unlikely to help, and the expected benefit of escalation.
+Escalate to a stronger or more expensive route only on evidence:
 
-Before HIGH, XHIGH, MAX, a strongest-model route, an additional premium
-reviewer, or a retry of a failed premium attempt, preserve completed work and
-emit a `MODEL_ESCALATION_CHECKPOINT` containing:
+- observed insufficiency of the current route;
+- ambiguity or risk already evident before execution;
+- conflicting evidence requiring higher capability;
+- governing authority explicitly requires the stronger route.
 
-- completed durable work and checks passed;
-- the preserved artifact or commit location;
-- the exact remaining bounded stage and recommended model or class and effort;
-- why the current route is insufficient and the maximum calls or attempts;
-- the context-isolation requirement and minimum inputs;
-- work that must not be repeated;
-- the safe stopping result and exact resume instruction.
+A failed call by itself does not automatically justify a stronger model.
+Avoid an unchanged retry when evidence says it is unlikely to help.
 
-Include this meaning: “You may stop here to avoid additional usage. All
-completed work has been preserved.”
+A context-capacity failure — a context-window rejection or equivalent
+admission failure — is not evidence of insufficient semantic model
+capability. Context-capacity handling belongs to Context Stewardship, not to
+this policy; do not escalate model class or effort in response to it. A
+timeout or malformed return likewise does not by itself establish that a
+stronger semantic model is required.
+
+### Retries
+
+Allow one premium attempt by default and zero automatic premium retries.
+After a failed, timed-out, or malformed attempt, report the outcome,
+diagnose with deterministic tools, narrow the task, and obtain explicit
+authorization before another attempt unless the exact retries were
+pre-authorized. A timeout or malformed receipt alone does not justify a
+stronger or repeated call.
+
+Give a premium worker the exact bounded question, the required output
+schema, and durable references to already-completed exploration, tests, and
+resolved findings rather than retransmitting their bodies. Do not repeat
+repository exploration, implementation, completed tests, or resolved
+findings as retransmitted content where a reference is sufficient. This
+controls cost; it is not an evidence boundary — the premium recipient
+retains access to every source already authorized for its obligation under
+Context Stewardship, and may independently retrieve additional authorized
+source material when correctness, freshness, contradiction resolution,
+completeness, or evidence sufficiency requires it.
+
+Each follow-on bounded obligation — including return integration,
+documentation, and other work that follows a premium stage — is routed
+independently under this policy. It does not inherit the premium route
+merely because an upstream stage used one, but neither is LOW forced when
+the follow-on obligation genuinely requires greater capability or effort.
+Among authorized options, the least expensive reliable route remains the
+objective.
+
+## Authorization and disclosure
+
+### Execution routing notice
+
+This policy owns the meaning and required contents of
+`EXECUTION_ROUTING_NOTICE`; the governing workflow or control binding decides
+when that notice is required. When activated, the notice states the
+requested starting model or model class and effort, the work expected to
+remain on that route, known potential premium stages, and that execution
+stops before any unapproved premium stage. Tell the owner that they may stop
+at that checkpoint without losing completed work. Do not require a response
+while economical work can safely begin, and do not claim that a named
+runtime or model exists unless it is observable.
+
+### Premium and additional-usage authorization
+
+"Premium" is not tied to a particular provider; it names any route or stage
+that requires additional explicit authorization under the active task.
 
 Premium execution may proceed automatically only when the Task Prompt already
 authorizes the exact role, model or class, effort, bounded purpose, maximum
 calls or attempts, and necessary permission and data disclosure. Otherwise
 stop for explicit owner authorization; silence is not authorization.
+Pre-authorized premium execution is allowed only within the exact granted
+scope.
 
-Allow one premium attempt by default and zero automatic premium retries. After
-a failed, timed-out, or malformed attempt, report the outcome, diagnose with
-deterministic tools, narrow the task, and obtain explicit authorization before
-another attempt unless the exact retries were pre-authorized. A timeout or
-malformed receipt alone does not justify a stronger or repeated call.
+Before an unapproved premium or additional-usage stage — including a
+strongest-model route, HIGH effort when it requires additional
+authorization, any runtime-specific route or effort tier designated premium
+by the governing authorization, or an additional premium reviewer, call, or
+retry — preserve completed work and emit a `MODEL_ESCALATION_CHECKPOINT`
+containing:
 
-Give a premium worker only the exact bounded question, relevant frozen
-artifacts or excerpts, identities or hashes, compact evidence summary, rubric,
-output schema, and authority and prohibitions. Do not repeat repository
-exploration, implementation, completed tests, planning, or resolved findings
-at the premium route.
+- completed durable work and checks passed;
+- the preserved artifact or commit location;
+- the exact remaining bounded stage and recommended model or class and
+  effort;
+- why the current route is insufficient and the maximum calls or attempts;
+- the context-isolation requirement and minimum inputs;
+- work that must not be repeated;
+- the safe stopping result and exact resume instruction.
 
-After bounded premium judgment, return integration, deterministic checks,
-documentation, manifests, commits, publication, and final packaging to LOW or
-the least expensive reliable route.
+Include this meaning: "You may stop here to avoid additional usage. All
+completed work has been preserved."
 
-Do not change controlled model or generation settings in a frozen benchmark merely to reduce cost.
+### Data disclosure and egress
+
+Selecting a route does not authorize sending data to it. Before a route
+receives protected, private, or restricted data, the governing authorization
+must permit that disclosure. Supply only the material needed for the bounded
+obligation.
+
+If the needed route is available but the necessary disclosure is not
+authorized, report or return an authorization or data-egress blocker. Do not
+misclassify it as a context failure, a model failure, or a semantic failure.
+Routing cannot widen source permissions granted elsewhere, and this policy
+does not duplicate Context Stewardship's curation rules.
 
 ## Requested and actual routing
 
-Record requested model class and effort. Record actual runtime, model, version, effort, and exposed settings only when observable.
+Record requested route, model class, and effort. Record actual runtime,
+model, version, effort, and exposed settings only when observable.
 
-When actual routing is hidden, report `ACTUAL_ROUTING_UNKNOWN`. Do not claim verified routing.
+When actual routing is hidden, report `ACTUAL_ROUTING_UNKNOWN`. Do not claim
+verified routing, and do not claim that a free, local, or other route exists
+unless the runtime exposes it.
+
+If a required requested route is unavailable, expose `ROUTE_UNAVAILABLE`. Do
+not silently substitute a materially different route when the governing
+authorization requires the exact route or class. If a permitted equivalent
+substitution is mechanically authorized, record it.
+
+## Fixed routing constraints
+
+Routing and cost optimization must not alter model, generation, benchmark, or
+other settings fixed by governing authority merely to reduce cost.

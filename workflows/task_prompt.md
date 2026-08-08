@@ -1,5 +1,9 @@
 # Task Prompt
 
+## Invocation
+
+`TP: <task>` is the Task Prompt invocation syntax: the text after `TP:` is the governing user task input; it activates this workflow; execution is orchestrated by the Lead contract (`agents/lead_agent.md`).
+
 Include only what is needed to execute reliably:
 
 - objective;
