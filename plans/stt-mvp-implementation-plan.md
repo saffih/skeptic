@@ -1,12 +1,16 @@
 # STT MVP Implementation Plan
 
-**Status:** Canonical pair candidate conforming to the exact companion architecture
-**Architecture authority:** `plans/stt-mvp-architecture-plan.md`
-**Architecture SHA-256:** `921ee38e92a1f1a9df7ac2a977fd46877ccdfde75965d274479d6f51432f079d`
+**Status:** Retained historical evidence only; not a current Implementation Plan or implementation authority
+**Historical companion Architecture:** `plans/stt-mvp-architecture-plan.md`
+**Recorded historical Architecture SHA-256:** `921ee38e92a1f1a9df7ac2a977fd46877ccdfde75965d274479d6f51432f079d`
+**Current shared/durable realization authority:** `plans/stt-mvp-software-design-description.md`
+**Current Implementation Plan:** None exists yet
 **Repository:** `saffih/skeptic`
 **Historical reconstruction base:** `74c4f6a2c34da501101141525c8a34d691c384a1`
 **Document profile:** `docs/well.md`
 **Implementation scope:** STT MVP only
+
+Every following proposition is retained historical evidence from the prior canonical-pair candidate and is not current authority, instruction, start, completion, or merge authorization, because the accepted SDD now owns STT shared and durable realization decisions and no bounded current Implementation Plan has been created.
 
 This document owns the exact construction contract, including serialization, filesystem conventions, algorithms, state derivation, and executable proof, because implementers must not guess how to realize architecture-owned meaning.
 
@@ -144,6 +148,8 @@ plan_id             = H("stt-plan-v1" || planner_request_id || canonical_returne
 step_id             = H("stt-step-v1" || plan_id || uint64_be(step_ordinal) || canonical_returned_step_body_bytes)
 input_id            = H("stt-input-v1" || step_id || uint64_be(dependency_ordinal) || canonical_dependency_spec_bytes)
 requirement_id      = H("stt-requirement-v1" || step_id || uint64_be(requirement_ordinal) || canonical_requirement_spec_bytes)
+authority_id        = H("stt-authority-v1" || canonical_task_authority_bytes_excluding_authority_id)
+routing_identity    = H("stt-routing-v1" || canonical_routing_file_bytes_excluding_routing_identity)
 prefix_id           = H("stt-prefix-v1" || exact_committed_prefix_jsonl_bytes)
 operation_request_id= H("stt-operation-v1" || canonical_operation_request_body_bytes)
 attempt_id          = H("stt-attempt-v1" || operation_request_id || uint64_be(attempt_ordinal))
@@ -227,7 +233,7 @@ The implementation uses the following authoritative layout exactly, because tool
                     ├── steps/<step-id>/...
                     ├── artifacts/<artifact-id>/...
                     ├── observations/<observation-id>/...
-                    ├── results/<result-id>/...
+                    ├── results/task-result.json
                     └── control/
                         ├── operator-stop.json
                         └── stop-prefixes/

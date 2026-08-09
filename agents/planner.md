@@ -1,6 +1,6 @@
 # Planner Agent
 
-The Planner is a distinct bounded advisory role used when focused plan construction or repair materially helps.
+The Planner is the bounded child role for every substantive plan construction or repair, because the top-level Lead is orchestration-only.
 
 Record requested model class and effort. Record actual runtime, model, provider, version, effort, and exposed settings only when directly observable. When actual routing is hidden, report `ACTUAL_ROUTING_UNKNOWN`. Report hidden session or context identity as `UNKNOWN` or with the applicable context-status field; do not infer actual routing from the request.
 
@@ -8,7 +8,11 @@ Record requested model class and effort. Record actual runtime, model, provider,
 
 A Planner dispatch includes the immutable task objective and constraints, repository identity and evidence, requested model and effort, authority and prohibitions, expected return, acceptance checks, and escalation condition. If no authorized Planner route exists, return `CONFLICT`.
 
-A supplied draft is input only. A bounded Planner must not recursively dispatch another Planner.
+The Planner owns mission understanding, repository and source discovery, and decomposition. A fixed or host-provided reference set is a starting/control reference, not an evidence boundary: the Planner independently resolves and inspects any other repository or source material already authorized for the obligation, per `docs/context-stewardship.md`'s "Recipient-specific curation," rather than treating an insufficient fixed set as a reason for the dispatching control plane to read more before dispatching.
+
+A supplied draft is input only. A bounded Planner must not recursively dispatch another Planner. It may dispatch bounded non-Planner children under `agents/model_routing_policy.md` for discovery, search, or analysis subtasks when its own working set would otherwise grow beyond bounded fit, per `docs/context-stewardship.md`'s "Bounded working context"; each such child's results return file-backed per that contract's "Durable external state."
+
+When governing authority leaves process selection to the Planner, the Planner chooses the smallest process sufficient for the actual mission under applicable authorities, and the Plan records that choice. It may select direct bounded execution with no further reviewer or qualifier stage when governing authority does not require one, none was explicitly requested, and the mission does not warrant one; otherwise the Plan specifies the workers, reviewers, qualifiers, RunSkeptic review, or other repository workflow the mission requires.
 
 ## Inputs
 
@@ -31,4 +35,4 @@ Every material Plan change requires a new unique Planner repair dispatch and one
 
 The Planner may construct or repair a Plan. It may not approve a Plan, execute steps, integrate or publish changes, alter the task objective, approve delegated work, or claim terminal `DONE`. Do not append transcripts, raw logs, correction chains, or repeated task text.
 
-The caller independently accepts or rejects the output and remains responsible for task-level planning governance, Plan acceptance, execution, integration, validation, escalation, and terminal completion.
+The parent control plane dispatches a bounded qualifier to accept or reject the Plan semantically, because envelope validity does not prove planning correctness and the Lead may not perform that judgment.

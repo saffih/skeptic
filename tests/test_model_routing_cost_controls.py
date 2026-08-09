@@ -57,33 +57,59 @@ class ModelRoutingCostControlTests(unittest.TestCase):
         self.assertIn("stop for explicit owner authorization", self.routing)
         self.assertIn("silence is not authorization", self.routing)
 
-    def test_premium_retry_and_return_to_low_are_controlled(self) -> None:
+    def test_premium_retry_and_follow_on_routing_are_controlled(self) -> None:
         self.assertIn("one premium attempt by default", self.routing)
         self.assertIn("zero automatic premium retries", self.routing)
         self.assertSemanticIn("Do not repeat repository exploration", self.routing)
         self.assertIn("return integration", self.routing)
-        self.assertIn("to LOW or", self.routing)
+        self.assertSemanticIn("routed independently under this policy", self.routing)
+        self.assertSemanticIn("neither is LOW forced when", self.routing)
 
     def test_task_and_builder_require_cost_aware_launch_fields(self) -> None:
-        self.assertSemanticIn("starting model or model class", self.task)
-        self.assertIn("reasoning effort", self.task)
         self.assertIn("recommended starting model or class", self.builder)
         self.assertSemanticIn("recommended effort", self.builder)
-        for text in [self.task, self.builder]:
-            self.assertIn("EXECUTION_ROUTING_NOTICE", text)
-            self.assertIn("MODEL_ESCALATION_CHECKPOINT", text)
+        self.assertIn("EXECUTION_ROUTING_NOTICE", self.builder)
+        self.assertIn("MODEL_ESCALATION_CHECKPOINT", self.builder)
+        self.assertIn("route: LOW | MEDIUM | STRONG | NONE", self.task)
+        self.assertIn("LOW    = gpt-5.6-luna", self.task)
+        self.assertIn("MEDIUM = gpt-5.6-terra", self.task)
+        self.assertIn("STRONG = gpt-5.6-sol", self.task)
+        self.assertSemanticIn(
+            "must not name a requested model, model class, route token, or "
+            "reasoning effort",
+            self.task,
+        )
+        self.assertSemanticIn(
+            "`TP_RESULT.route` is the single route and model selection for that block",
+            self.task,
+        )
+        self.assertSemanticIn(
+            "TP fixes the requested effort at `medium` for every Brain and "
+            "work-block invocation",
+            self.task,
+        )
+        self.assertSemanticIn(
+            "controller records the requested route token, its mechanically "
+            "mapped model, and the workflow-fixed `medium` effort",
+            self.task,
+        )
+        self.assertIn("ACTUAL_ROUTING_UNKNOWN", self.task)
         self.assertIn("compact launch recommendation", self.builder)
         self.assertIn("whether that role is pre-authorized", self.builder)
 
     def test_trivial_work_is_exempt_from_cost_ceremony(self) -> None:
-        self.assertIn("Do not add routing notices or escalation machinery", self.task)
+        self.assertSemanticIn("a bounded child may use the smallest control packet", self.task)
+        self.assertNotIn("Do not add routing notices or escalation machinery", self.task)
         self.assertSemanticIn("Do not add this cost machinery", self.builder)
 
     def test_policy_ownership_and_authorization_do_not_contradict(self) -> None:
         self.assertEqual(self.lead.count("MODEL_ESCALATION_CHECKPOINT"), 1)
         self.assertIn("Follow `agents/model_routing_policy.md`.", self.lead)
-        for text in [self.routing, self.lead, self.task, self.builder]:
+        for text in [self.routing, self.lead, self.builder]:
             self.assertIn("explicit owner authorization", text)
+        self.assertSemanticIn(
+            "controller applies the returned route token mechanically", self.task
+        )
 
 
 if __name__ == "__main__":

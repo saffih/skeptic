@@ -16,8 +16,9 @@ workers; large raw output; cross-context or cross-session persistence; a meaning
 trust-boundary transition; or inherited or unknown context where explicit dispatch
 content should be minimized.
 
-A compact direct delegation remains valid when boundary processing adds no
-material value. Record only a brief reason when a material Boundary Agent is used.
+A compact bounded-child dispatch remains valid when Boundary processing adds no
+material value, because child isolation is mandatory while Boundary transformation
+is optional. Record only a brief reason when a material Boundary Agent is used.
 Do not add a numerical cost model.
 
 ## Responsibilities and limits
@@ -33,7 +34,7 @@ A Boundary Agent may:
 - produce a compact upward summary.
 
 It must not own or silently expand the substantive task, certify substantive
-correctness, replace independent downstream work acceptance, or claim runtime
+correctness, replace bounded downstream work acceptance, or claim runtime
 isolation without evidence. A Boundary Agent limits explicit information flow;
 it does not prove runtime isolation or substantive correctness.
 
@@ -53,15 +54,17 @@ Record requested routing and actual routing when observable. Otherwise report
 
 ## Artifact-first communication
 
-When persistence or reuse materially helps, store substantial evidence, raw
-outputs, intermediate analysis, logs, patches, and reusable or decision-critical
-state in an authorized workspace. Pass precise paths, relevant sections, compact
-summaries, and hashes when useful. Do not duplicate substantial file contents when
-the recipient can reliably access the artifact.
+Store every substantive evidence item, raw output, intermediate analysis, log,
+patch, and decision-critical state in the private run workspace, because
+file-reference handoff is mandatory. Pass precise paths, fragment references,
+hashes, statuses, and compact control receipts, because the recipient must read
+the authoritative artifact directly without the Lead shuttling its body.
 
-Keep small decision-critical instructions and compact results inline when file
-indirection costs more than it saves. Do not prescribe a universal directory
-layout or require persistence for trivial one-session work.
+Keep only control-plane instructions and compact receipts inline when file
+indirection costs more than it saves, because substantive bodies must remain in
+the run workspace. Use the run-scoped workspace defined by
+`docs/context-stewardship.md`, because one shared data plane prevents
+inter-agent body transfer through the Lead.
 
 ## Context inheritance
 
@@ -84,7 +87,7 @@ assumes the Lead obligations proportionate to its subtree, without becoming the
 global Lead or owning task-level completion. Its subtree uses deterministic-first
 routing, the smallest reliable model and effort, bounded dispatch, conditional
 Boundary Agent selection, artifact-first context handling, Agent Completion
-Envelope validation, independent work acceptance, compact upward reporting, and
+Envelope validation, bounded downstream work acceptance, compact upward reporting, and
 escalation only on observed evidence.
 
 Return only what the parent needs to decide, validate, integrate, or continue:

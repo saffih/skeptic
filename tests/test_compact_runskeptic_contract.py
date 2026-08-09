@@ -13,7 +13,7 @@ import context_compactness  # noqa: E402
 class CompactContractTests(unittest.TestCase):
     def test_planner_is_bounded(self) -> None:
         text = (ROOT / "agents/planner.md").read_text(encoding="utf-8")
-        for marker in ("one complete replacement Plan", "may not approve", "execute steps", "claim terminal `DONE`", "Lead independently"):
+        for marker in ("one complete replacement Plan", "may not approve", "execute steps", "claim terminal `DONE`", "parent control plane dispatches"):
             self.assertIn(marker, text)
 
     def test_benchmark_is_strictly_smaller_and_unknowns_are_explicit(self) -> None:
@@ -30,7 +30,7 @@ class CompactContractTests(unittest.TestCase):
 
     def test_planner_cannot_claim_execution_or_terminal_ownership(self) -> None:
         text = (ROOT / "agents/planner.md").read_text(encoding="utf-8")
-        for marker in ("may not approve", "execute steps", "may not", "Lead independently"):
+        for marker in ("may not approve", "execute steps", "may not", "parent control plane dispatches"):
             self.assertIn(marker, text)
 
     def test_body_packet_excludes_raw_reasoning_and_logs(self) -> None:

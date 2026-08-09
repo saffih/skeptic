@@ -8,33 +8,20 @@ Turn a user objective or an existing plan into one concise, execution-ready Task
 
 These forms are equivalent. The text after the alias is the objective:
 
-- `TP: <objective>`
 - `Create task prompt for: <objective>`
 - `Create a task prompt for: <objective>`
 - `Task prompt for: <objective>`
 
 ## Workflow
 
-1. Read the current `AGENTS.md`, `agents/lead_agent.md`, `workflows/task_prompt.md`, and only the additional evidence needed for the objective.
+1. Read the current `AGENTS.md`, `workflows/task_prompt.md`, and only the additional evidence needed for the objective.
 2. Identify the objective, scope, constraints, success criteria, permitted actions, and relevant prohibited actions.
 3. Ask for clarification only when a material ambiguity would make the result unsafe, unverifiable, or outside authority.
 4. Produce the smallest Task Prompt that preserves the required outcome, safety boundaries, and verification.
 5. Check the result for fidelity to the objective, internal contradictions, unnecessary process, and a realistic validation path.
 6. For substantive prompts, check routing and return conformance before describing the prompt as execution-ready.
 
-The conformance check asks whether deterministic work was identified where appropriate; delegation is justified and roles are bounded; requested model class and reasoning effort are proportionate; delegated roles do not inherit the Lead model implicitly; strongest-model use or escalation is justified; acceptance and deterministic validation are sufficient without duplication; every delegated model role has a dispatch ID and Agent Completion Envelope; envelope validation is followed by independent work acceptance; material Boundary Agent use is conditional and routed at the lowest reliable cost; substantial reusable context is artifact-backed when practical; context-isolation claims are evidence-based; recursive delegation carries transitive subtree obligations and compact upward reporting; every RunSkeptic invocation is followed by receipt validation; and frozen benchmark variables remain controlled.
-
-For a prompt that designates or executes a Target Task, conformance additionally
-requires the ordered lifecycle: distinct bounded Planner dispatch, envelope
-validation, complete Planner-produced plan, RunSkeptic review and receipt
-validation, Planner repair after every material plan change, final unchanged-plan
-Lead acceptance, and execution exactly once. supplied plans are Planner input only; Lead and
-same-runtime planning cannot substitute. The Planner cannot recurse or authorize
-execution. Missing the mandatory stage is `PROMPT_CONFORMANCE_ACTION_REQUIRED`
-or `PROMPT_CONFORMANCE_UNVERIFIABLE`, never ready. A Target Task prompt whose
-lifecycle omits execution exactly once is missing the mandatory stage and must
-not receive `PROMPT_CONFORMANCE_READY`. Ordinary non-Target work
-remains proportional.
+The conformance check asks whether deterministic work was identified where appropriate; delegation is justified and roles are bounded; requested model class and reasoning effort are proportionate; strongest-model use or escalation is justified; acceptance and deterministic validation are sufficient without duplication; substantial reusable context is artifact-backed when practical; context-isolation claims are evidence-based; and frozen benchmark variables remain controlled.
 
 For substantive prompts where model cost may be material, also check that the
 prompt selects the least expensive reliable starting route, requires the
@@ -45,7 +32,7 @@ pre-authorizes each premium stage with the exact bounded fields required by
 default, a minimum escalation package, no repetition of completed economical
 work, and return to an economical route after premium judgment.
 
-For a substantive build, use the proportional planning and RunSkeptic guidance in `workflows/task_prompt.md`. A materially changed plan is reviewed again; harmless wording changes are not.
+A built Task Prompt is executed under `workflows/task_prompt.md`, which selects its own process; the builder does not prescribe a planning or review stage for it. When a Task Prompt explicitly invokes a RunSkeptic Find Loop or Fix Loop, `skeptic.md` alone governs that loop's repetition, convergence, reset, stopping, and receipt rules.
 
 ## Output
 

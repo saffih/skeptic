@@ -1,17 +1,25 @@
+<!-- MUST READ FIRST -->
+Read `MUST_READ_FIRST.md` before routing or executing repository work.
+
 # Agent Instructions
+
+This file is a router. It names authorities and the actions that reach them; it
+does not implement any workflow.
 
 This repository is a portable prompt and review library. Its capabilities validate metadata-only Body state and related bounded receipts. Route only to the minimum named artifact required for the current action; never load directories recursively.
 
 ## Entry map
 
-- Review an artifact, decision, or RunSkeptic: read `skeptic.md` and only explicitly applicable companions.
-- Write or review a design, architecture, or software design document (SDD): read `docs/well.md`, because that file is the canonical WELL profile for design documentation.
-- Lead execution: read `agents/lead_agent.md`; add `agents/model_routing_policy.md` when routing is needed and `agents/agent_return_contract.md` for delegated returns.
-- Substantive bounded plan construction or repair for ordinary work: use the bounded Planner in `agents/planner.md` when focused construction materially helps; its output is not execution authority.
-- Define or execute a substantive workflow: read `workflows/task_prompt.md`.
-- Build a Task Prompt (`TP: <objective>`, `Create task prompt for: <objective>`, `Create a task prompt for: <objective>`, or `Task prompt for: <objective>`): first read `workflows/task_prompt_builder.md` before interpreting or responding, then process the complete user request according to it. If the file cannot be read, stop visibly with `TASK_PROMPT_BUILDER_UNAVAILABLE`. Do not route an alias directly to `workflows/task_prompt.md`.
+- Context crossing any model or delegation boundary: read `docs/context-stewardship.md` `## Core`; additionally read and apply `## Orchestration` when the invocation acts as a control plane or produces semantic continuation, successor, or orchestration handoff state, because fixed section-scoped loading makes stewardship operative without making its own contract a repeated context tax. This does not apply on the Task Prompt path, whose load set `workflows/task_prompt.md` closes.
+- Review an artifact, decision, or RunSkeptic: read and follow the actual current `skeptic.md`; formal RunSkeptic semantics are owned there.
+- A top-level user instruction beginning `WELL:` routes to `docs/well.md`, the canonical WELL authority. Generic design or architecture wording does not select WELL.
+- Lead execution: read `agents/lead_agent.md`. Routing uses `agents/model_routing_policy.md`; delegated returns use `agents/agent_return_contract.md`.
+- A top-level user instruction beginning `TP:` activates the Task Prompt workflow: read `workflows/task_prompt.md`, which is the complete and only TP authority, and follow it. That invocation acts as the Lead, and that file — not `agents/lead_agent.md` — is its contract.
+- A top-level user instruction beginning `STT:` enters the STT authority chain from its governing inputs and canonical STT entry point. STT remains separate from TP and generic agent roles and contracts.
+- Understand a Task Prompt mission, discover its sources, and decompose it into bounded work blocks: this is the TP Brain role, defined in `workflows/task_prompt.md`.
+- Build a Task Prompt: use `workflows/task_prompt_builder.md`.
 - Select model class -> `agents/model_routing_policy.md`
-- Boundary processing: read `agents/boundary_agent.md` only when a material context or trust-boundary reduction is needed.
+- Boundary processing: use `agents/boundary_agent.md` when required by governing control state.
 - Operate a capability: read only its contract, invoke its same-stem executable, and consume its bounded result. Do not read implementation source, tests, examples, sibling capabilities, or directories recursively.
 - Modify, debug, or review a capability: read its contract, same-stem implementation, mirrored test, and only required examples or direct dependencies.
 
@@ -21,7 +29,7 @@ This repository is a portable prompt and review library. Its capabilities valida
 - Workflows live under `workflows/` and are not agents.
 - Each deterministic capability owns one directory under `capabilities/`, with a same-stem `.md` contract and `.py` executable plus optional `examples/`.
 - Tests mirror ownership under `tests/capabilities/<capability>/`.
-- Runtime state, plans, checkpoints, logs, receipts, and validation evidence remain outside this repository.
+- Runtime artifacts are not tracked repository authority; authorized ignored repository-local storage is permitted, and hosts may place them where execution or receiver reachability requires.
 
 ## Selective loading
 
