@@ -43,6 +43,7 @@ Every accepted Architecture proposition has one primary realization location her
 | `simplest-adequate-execution` | authority and target admission; launch, adapters, and settlement |
 | `admitted-operational-authority` | authority and target admission |
 | `authoritative-committed-history` | persistence and publication; evidence and history access |
+| `context-handling` | component ownership; persistence and publication; evidence and history access |
 | `validator-owned-outcome` | lifecycle contracts; event grammar and state derivation |
 | `recovery-from-known-facts` | recovery and operator control |
 | `qualification-boundary` | qualification strategy |
@@ -934,7 +935,7 @@ No proposition states whether `ledger_sequence` and `previous_event_hash` are se
 
 `TaskOutputAssessment` carries no phase discriminator and no event kind records an assessment, so the two assessments that `required-output-assessment` requires are indistinguishable in committed history, because a requirement whose satisfaction depends on publication order must identify the observable evidence establishing that order.
 
-The exposure consequence of retained captures is unstated, because captured stdout, stderr, and raw provider returns are committed permanently as ordinary readable files under `context-stewardship-adoption` while the only secret-aware rule in this document covers environment values, and an implementer cannot tell whether capture redaction is required, forbidden, or excluded.
+The exposure consequence of retained captures is unstated, because captured stdout, stderr, and raw provider returns are committed permanently as ordinary readable files under `context-rules-adoption` while the only secret-aware rule in this document covers environment values, and an implementer cannot tell whether capture redaction is required, forbidden, or excluded.
 
 The rejection of `.git` as a target path component is a product constraint that no accepted Governing Input states, because deciding that STT will never accept a mission operating on repository metadata bounds the product rather than realizing `target-path-authority`, and the Design Authority Chain returns a newly discovered constraint to Governing Inputs before dependent work continues.
 
