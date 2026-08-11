@@ -45,9 +45,9 @@ The mission or Run policy may constrain permitted providers, capability levels, 
 
 Every lifecycle transition and every effectful operation passes through Boundary, because one mechanical authority must enforce identity, operational admission, persistence, launch, result binding, and failure visibility.
 
-### `context-stewardship-adoption` — Context stewardship adoption
+### `context-stewardship-adoption` — Context Rules adoption
 
-STT adopts the portable `context-stewardship` contract in `docs/context-stewardship.md` as an accepted context-handling constraint subject to these Governing Inputs and STT authority, because one portable owner should define the generic rule while STT owns only the product decision to adopt it.
+STT adopts the portable Context Rules contract in `docs/context-rules.md` as an accepted context-handling constraint subject to these Governing Inputs and STT authority, because one portable owner should define the generic rule while STT owns only the product decision to adopt it. The historical `docs/context-stewardship.md` contract is not an STT authority or retained exception.
 
 STT keeps durable substantive state in authoritative readable files, exchanges stable artifact references rather than repeated bodies, and gives each semantic operation a bounded working set sufficient for its obligation that the responsible semantic role may expand when evidence requires it, because model context is scarce but context economy is subordinate to correct judgment.
 
