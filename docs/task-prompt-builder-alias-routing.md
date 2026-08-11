@@ -26,7 +26,9 @@ For each remaining alias, the initiating agent must:
 
 ## Verification boundary
 
-`tests/test_task_prompt_builder_routing.py` proves that the builder contains
+The builder's routing behavior is covered by the remaining builder/routing
+checks where applicable; the former exact-wording test was removed when TP was
+simplified.
 the three remaining aliases and not `TP:`, that the builder preserves its
 create-but-do-not-execute boundary, that `AGENTS.md` binds `TP:` to direct
 Task Prompt execution as Lead, and that `TP:` appears in exactly one binding

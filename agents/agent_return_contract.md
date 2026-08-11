@@ -13,7 +13,7 @@ resolves by supplying `next`.
 
 It does not make the parent understand substantive work. Substantive bodies
 remain outside the parent's context and are referenced according to
-`docs/context-stewardship.md`. A structurally valid envelope is not semantic
+`docs/context-rules.md`. A structurally valid envelope is not semantic
 acceptance.
 
 ## Dispatch correlation
@@ -48,7 +48,7 @@ passed or failed.
 
 `output` is a receiver-resolvable reference to the durable artifact, control
 result, or bounded fact the invocation produced, per
-`docs/context-stewardship.md`. Use the explicit value `NONE` only when the
+`docs/context-rules.md`. Use the explicit value `NONE` only when the
 invocation legitimately produced no durable result; an absent or empty
 `output` is invalid rather than treated as "no output."
 
@@ -88,8 +88,8 @@ deterministic.
 
 When present, `next` is either compact machine-followable control state, or a
 receiver-resolvable reference to durable successor/control state that
-identifies the intent it serves, per the file-backed succession rules in
-`docs/context-stewardship.md`. A successor reference tied to intent that has
+identifies the intent it serves, per `durable-semantic-continuation` in
+`docs/context-rules.md`. A successor reference tied to intent that has
 since been superseded requires semantic rebinding before it may be used; this
 contract does not itself decide staleness, only that the reference must carry
 enough identity for that check to be made. `next` must not contain

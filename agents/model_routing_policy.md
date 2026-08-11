@@ -7,7 +7,7 @@ observability. A control plane such as `agents/lead_agent.md` applies a route
 decision produced under this policy; it does not redefine routing meaning.
 
 This policy does not define Lead orchestration-only behavior, mandatory
-bounded-child delegation, run-workspace creation, Context Stewardship,
+bounded-child delegation, run-workspace creation, Context Rules,
 working-context decomposition, dispatch-field schema, Agent Return fields,
 Boundary invocation criteria, workflow lifecycle, Task Prompt schema,
 RunSkeptic, WELL, semantic acceptance, candidate isolation, or task
@@ -117,7 +117,7 @@ Avoid an unchanged retry when evidence says it is unlikely to help.
 
 A context-capacity failure — a context-window rejection or equivalent
 admission failure — is not evidence of insufficient semantic model
-capability. Context-capacity handling belongs to Context Stewardship, not to
+capability. Context-capacity handling belongs to Context Rules, not to
 this policy; do not escalate model class or effort in response to it. A
 timeout or malformed return likewise does not by itself establish that a
 stronger semantic model is required.
@@ -138,7 +138,7 @@ repository exploration, implementation, completed tests, or resolved
 findings as retransmitted content where a reference is sufficient. This
 controls cost; it is not an evidence boundary — the premium recipient
 retains access to every source already authorized for its obligation under
-Context Stewardship, and may independently retrieve additional authorized
+Context Rules, and may independently retrieve additional authorized
 source material when correctness, freshness, contradiction resolution,
 completeness, or evidence sufficiency requires it.
 
@@ -206,7 +206,7 @@ If the needed route is available but the necessary disclosure is not
 authorized, report or return an authorization or data-egress blocker. Do not
 misclassify it as a context failure, a model failure, or a semantic failure.
 Routing cannot widen source permissions granted elsewhere, and this policy
-does not duplicate Context Stewardship's curation rules.
+does not duplicate Context Rules' curation rules.
 
 ## Requested and actual routing
 

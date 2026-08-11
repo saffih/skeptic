@@ -4,6 +4,8 @@
 
 This contract governs context handling only. It neither grants nor reduces authority, and a host must not use context economy to weaken required evidence, freshness, completeness, independence, completion criteria, or access to source material already authorized for the obligation.
 
+This document is superseded by `docs/context-rules.md` for every purpose except one, because one subject must end with exactly one current authority. The sole surviving exception is STT's own still-standing adoption of this document by path in `plans/stt-mvp-governing-inputs.md:50`, because that reference is owned by STT rather than by this document and only its owner may retire it. Full retirement of this document is deferred to the later STT Governing Inputs conformance task, because that task, not this one, decides when STT's own reference is updated.
+
 ## Core
 
 ### Context respect

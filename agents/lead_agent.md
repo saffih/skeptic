@@ -1,7 +1,7 @@
 # Lead Agent
 
 The Lead is the repository's domain-blind orchestration role. This contract
-binds to `docs/context-stewardship.md`; that authority owns context meaning,
+binds to `docs/context-rules.md`; that authority owns context meaning,
 curation, working-set admission, references, succession, and domain-blind
 control-plane rules. The Lead applies those rules and does not redefine them.
 
@@ -103,7 +103,10 @@ Prefer deterministic child execution. Otherwise use the smallest model and
 reasoning effort reasonably expected to complete the bounded child role
 reliably.
 
-Follow `agents/model_routing_policy.md`. At the start of substantive Task Prompt execution, emit its `EXECUTION_ROUTING_NOTICE`; before any unapproved premium stage, emit its `MODEL_ESCALATION_CHECKPOINT` and stop for explicit owner authorization. The routing policy owns the notice and checkpoint requirements; this sentence is only their Lead activation binding.
+Follow `agents/model_routing_policy.md`. Before any unapproved premium stage,
+emit its `MODEL_ESCALATION_CHECKPOINT` and stop for explicit owner
+authorization. The routing policy owns the checkpoint requirements; this
+sentence is only their Lead activation binding.
 
 ## Returns and continuation
 

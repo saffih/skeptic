@@ -10,7 +10,7 @@ This repository is a portable prompt and review library. Its capabilities valida
 
 ## Entry map
 
-- Context crossing any model or delegation boundary: read `docs/context-stewardship.md` `## Core`; additionally read and apply `## Orchestration` when the invocation acts as a control plane or produces semantic continuation, successor, or orchestration handoff state, because fixed section-scoped loading makes stewardship operative without making its own contract a repeated context tax. This does not apply on the Task Prompt path, whose load set `workflows/task_prompt.md` closes.
+- Context crossing any model or delegation boundary: read `docs/context-rules.md` `## Grounds`, `## Capacity and reachable depth`, `## Context Guide and Durable Store`, `## Retrieval`, `## Preparation and sizing`, `## Receiver authority`, `## Observability`, and `## Infeasibility`; additionally read and apply `## Semantic and control responsibility` when the invocation acts as a control plane or produces semantic continuation, successor, or orchestration handoff state, because fixed section-scoped loading makes the contract operative without making it a repeated context tax. This does not apply on the Task Prompt path, whose load set `workflows/task_prompt.md` closes.
 - Review an artifact, decision, or RunSkeptic: read and follow the actual current `skeptic.md`; formal RunSkeptic semantics are owned there.
 - A top-level user instruction beginning `WELL:` routes to `docs/well.md`, the canonical WELL authority. Generic design or architecture wording does not select WELL.
 - Lead execution: read `agents/lead_agent.md`. Routing uses `agents/model_routing_policy.md`; delegated returns use `agents/agent_return_contract.md`.
