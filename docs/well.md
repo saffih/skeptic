@@ -12,37 +12,39 @@ WELL does not govern prompts, source code, reviews, reports, status updates, tes
 
 Scope follows function rather than filename, because renaming an artifact must not silently extend or remove normative authority.
 
-WELL protects document integrity, because unsupported claims, detached reasons, hidden qualifications, duplicated rationale, and disconnected checks can cause a later edit to change the design unintentionally.
+WELL protects document integrity, because unsupported claims, detached reason representations, hidden declared qualifications, duplicated rationale, and disconnected checks can cause a later edit to change the represented design unintentionally.
 
 WELL governs design-writing structure rather than Skeptic review or executable qualification, because inspectable reasoning, adversarial criticism, and runtime proof are complementary authorities rather than substitutes.
 
 WELL is not a proof system, a demand for hidden reasoning, or proof that a design is correct, because explicit structure can expose an error without resolving it.
 
+WELL's normative PASS/FAIL obligations concern only represented and mechanically observable structure, because judgments about the represented meaning are assigned to the governing project's separate meaning-aware design review.
+
 ## Self-contained design propositions
 
-A design proposition is the smallest prose unit that independently asserts a design fact, definition, requirement, decision, qualification, consequence, check, assumption, unknown, or relationship, because independently changeable meaning needs an independently recoverable warrant.
+A design proposition is a prose unit that the author identifies as a design fact, definition, requirement, decision, qualification, consequence, check, assumption, unknown, or relationship, because the identified unit needs an independently recoverable warrant.
 
-A WELL-governed design document expresses each independent design proposition as a self-contained unit, because searching, quoting, moving, reviewing, or modifying the proposition must not separate its claim from its reason.
+A WELL-governed design document expresses each author-identified design proposition as a self-contained unit, because searching, quoting, moving, reviewing, or modifying the represented unit must not separate its claim from its stated reason.
 
-Every complete prose sentence must contain the literal word `because`, because the proposition and its warrant must remain recoverable when the sentence is read outside its surrounding prose.
+Every syntactically classified prose sentence must contain the literal word `because`, because the proposition and its warrant must remain recoverable when the sentence is read outside its surrounding prose.
 
-The `because` clause must state a concrete local reason, protection, consequence, dependency, or inclusion rationale, because ceremonial or circular wording cannot preserve design integrity.
+The `because` clause must be a syntactically distinct local reason, protection, consequence, dependency, or inclusion-rationale clause, because the claim and its stated warrant representation must remain mechanically recoverable together, because whether the clause is relevant, sufficient, non-circular, or persuasive is outside mechanical WELL conformance.
 
-A clause that merely cites the standard or labels the proposition important is nonconforming, because it does not explain why the proposition belongs in the design.
+A local-warrant representation requires the literal `because` token in the prescribed syntactic position, because whether the surrounding words cite the standard, label importance, or express a genuine reason is a meaning-aware review judgment.
 
-Headings, metadata fields, schemas, tables, code, formulas, diagrams, identifiers, state vocabularies, and genuine list fragments do not require their own `because`, because they are structural notation rather than independent prose propositions.
+ATX headings, YAML/front-matter metadata, fenced code blocks, table rows, block formulas, diagram blocks, bare identifiers, state-vocabulary items, and list items without sentence punctuation are structural syntax exempt from the sentence rule, because these categories are mechanically identifiable without interpreting design meaning.
 
-A list may inherit one explicit warrant from its introductory sentence only when every child item is a subordinate fragment, because an independently meaningful list sentence must preserve its own reason.
+A Markdown list may inherit one explicit warrant from its introductory sentence only when each child item is a mechanically identified fragment without sentence punctuation, because a complete prose sentence must preserve its own literal token.
 
-A complete prose sentence inside a list must contain its own literal `because`, because list formatting does not remove the sentence's independent meaning.
+A complete prose sentence inside a list must contain its own literal `because`, because list formatting does not remove the sentence syntax that the checker classifies.
 
-A quoted nonconforming sentence may omit `because` only when the surrounding warranted proposition identifies it explicitly as a failure example, because examples must be able to display the defect they explain.
+A quoted example sentence may omit `because` only inside a blockquote or fenced example explicitly marked as an example, because the checker must have a mechanical exemption boundary for displayed examples.
 
 WELL formation protects modification integrity, because cohesive and locally warranted propositions can be searched, extracted, moved, compared, replaced, and updated without silently losing the reasoning that constrains them.
 
 ## Proposition roles
 
-Every retained design proposition performs at least one necessary role, because nonoperative prose cannot justify maintenance:
+The following role vocabulary is authoring guidance, because WELL does not infer semantic roles or require an unprovided role-annotation syntax:
 
 - ground: objective, constraint, observation, authority, assumption, or unknown
 - definition: stable meaning needed by later reasoning
@@ -53,39 +55,39 @@ Every retained design proposition performs at least one necessary role, because 
 - open item: unresolved unknown, conflict, or decision
 - structure: explicit connection or navigation needed by the reasoning chain
 
-A proposition may combine roles when the roles share one reason, because forced separation can add noise without improving integrity.
+A proposition may combine roles when the document represents those roles together, because the role representation need not impose a one-role-per-proposition form.
 
-A proposition must be split when its independently changeable claims need different reasons, because one `because` clause must not conceal unrelated decisions.
+A proposition may be split when the author assigns different local warrants to separately represented claims, because one `because` clause must not conceal separately represented decisions, because whether claims should be split for semantic clarity is outside mechanical WELL conformance.
 
-A proposition with no necessary role must be removed, because unnecessary prose increases search noise and drift.
+Whether a proposition has a role, is operative, useful, or necessary belongs to authoring and meaning-aware review and does not determine mechanical WELL conformance, because those judgments are not mechanical representation tests.
 
 ## Warrant termination
 
 A support path may terminate at an objective, constraint, direct observation, authoritative input, stable definition, explicit assumption, or explicit unknown, because finite design documents need legitimate stopping points.
 
-A ground or definition still needs a local inclusion reason, because being foundational does not explain why that particular foundation is required here.
+Authors should give grounds and definitions local inclusion-reason representations, because the stated inclusion reason should be recoverable without requiring a checker to infer the role, and meaning-aware review decides whether the classification and reason are adequate.
 
-Assumptions and unknowns must remain labelled, because their presence in a design document does not make them true or resolved.
+Authors should explicitly identify assumptions and unknowns when they matter, because meaning-aware review decides whether uncertainty has been represented correctly and this guidance does not determine mechanical WELL conformance.
 
-Reasons do not require infinite recursive justification, because an explicit terminal ground is sufficient for a finite recoverable design chain.
+Reasons do not require infinite recursive justification, because an explicitly labelled terminal ground is an allowed endpoint for a finite recoverable design chain.
 
 ## WELL dimensions
 
-**Warranted.** A design claim, requirement, recommendation, or decision states sufficient relevant grounds, because an unsupported proposition cannot be assessed or safely preserved.
+**Warranted.** Authors should give design claims, requirements, recommendations, and decisions an explicit local stated warrant or terminal ground/reference, because the claim and its stated support should be mechanically recoverable together, while meaning-aware review decides whether the warrant actually supports, justifies, or is relevant to the proposition.
 
-**Explicit.** A proposition states every scope, condition, assumption, limit, exception, consequence, conflict, and unknown whose omission could change implementation or interpretation, because hidden qualifications create false certainty.
+**Explicit.** Authors should represent scope, conditions, assumptions, limits, exceptions, consequences, conflicts, and unknowns in an explicit structural form, because mechanically inspectable representation exposes what the document states, while meaning-aware review decides whether important qualifications have been discovered.
 
-**Lean.** A proposition uses the shortest form that preserves operative meaning and its reason, because excess text hides distinctions and creates duplicate places to update.
+**Lean.** Authors should follow bounded structural conventions for proposition separation, canonical naming, repeated definitions, and duplicate authority, because those conventions support inspectability, while meaning-aware review decides whether prose or an entity is substantively unnecessary.
 
-Necessary reasoning, qualification, uncertainty, consequence, and verification must not be removed for brevity, because compression without integrity creates false simplicity.
+Authors should not remove represented reasoning, qualification, uncertainty, consequence, or verification for brevity, because mechanical conformance preserves the elements present in the document while semantic adequacy remains reviewable.
 
-**Linked.** Relationships among propositions, grounds, qualifications, consequences, checks, and open items remain recoverable, because isolated sentences cannot form a maintainable design.
+**Linked.** Any canonical links and structural edges that appear in the document have explicit names, valid targets, and resolvable syntax, because the represented links must be mechanically traversable, while meaning-aware review decides whether relationships are complete or semantically valid.
 
-`stable-semantic-references` — A material proposition that is referenced outside its paragraph should use one unique lowercase kebab-case canonical name enclosed in backticks, because semantic names remain grep-friendly and stable when sections move.
+`stable-semantic-references` — Authors should use one unique lowercase kebab-case canonical name enclosed in backticks when an external reference is useful, because semantic names remain grep-friendly and stable when sections move.
 
-`name-only-when-useful` — A proposition should remain unnamed when no external reference or graph inspection needs a name, because naming every proposition would add ceremony contrary to Lean.
+`name-only-when-useful` — Authors may assign canonical names where external reference or graph inspection is useful, because whether a proposition should have a name is authoring and meaning-aware review guidance rather than a mechanical WELL condition.
 
-A canonical name describes the proposition's meaning rather than its location and should not use numeric or positional identifiers when a stable semantic name is sufficient, because positional identifiers drift without conveying design meaning.
+A canonical name should describe the represented meaning rather than its location and should not use numeric or positional identifiers, because positional identifiers drift without conveying design meaning, while naming adequacy remains outside mechanical WELL.
 
 Every canonical reference repeats the exact backticked name, because exact search should locate the definition and every dependent proposition.
 
@@ -95,37 +97,37 @@ Another unambiguous representation may replace canonical names only when it prov
 
 ## Normative writing rules
 
-Each material proposition states its concrete local warrant and explicit support terminus, because implementation must not depend on distant or guessed intent.
+Authors should give propositions local warrants and explicit support termini, because implementation should not depend on distant or guessed intent, while whether a proposition needs a warrant and whether its support is adequate remain outside WELL.
 
-Each material qualification and consequence remains attached to the proposition it constrains, because extraction or movement must not silently broaden the claim.
+Authors should attach each qualification and consequence to the proposition it constrains, because extraction or movement should not silently broaden the represented claim, while meaning-aware review decides what must be represented.
 
-Each checkable proposition identifies a verification or falsification path directly or through an explicit canonical link, because a design claim must be able to fail.
+Authors should provide verification or falsification paths where appropriate, because a check should be recoverable directly or through an explicit canonical link, while meaning-aware review and the Design Authority Chain decide whether a proposition needs one.
 
-Shared terms and reusable rationale have one canonical definition with explicit references from dependent propositions, because repeated definitions and reasons can diverge.
+Authors should consolidate reusable terms and rationale behind one canonical definition with explicit references, because repeated definitions and reasons can diverge, while semantic reuse decisions remain outside WELL conformance.
 
-`connected-reasoning-graph` — Every material proposition connects directly or transitively to an authoritative input, purpose, constraint, assumption, or explicit unknown and to a decision, consequence, check, or downstream obligation when applicable, because a design document should form one recoverable reasoning graph rather than disconnected assertions.
+`connected-reasoning-graph` — Canonical graph edges that appear in the document have explicit direct or transitive targets and resolvable syntax, because present structural edges must be recoverable, while whether connectivity is required and whether edges represent valid support or dependency belong to meaning-aware review.
 
-`detached-graph-review` — A disconnected proposition or cluster remains review-required until it is linked, moved to the artifact that owns it, removed, or explicitly established as a separate design scope, because detachment usually reveals a missing relation, duplicate authority, or wrong document level.
+`detached-graph-review` — A disconnected represented graph component is a meaning-aware review concern rather than a mechanical WELL violation, because WELL does not infer whether a missing semantic relationship should exist.
 
-Enough reasoning remains local to make an extracted proposition coherent, because a reference cannot substitute for the proposition's immediate reason.
+The required local warrant remains with an extracted proposition, because a reference cannot substitute for the proposition's immediate reason representation.
 
-Nonoperative content and duplicate authority are removed, because WELL should improve understanding rather than create ceremonial documentation.
+Authors should remove nonoperative content and duplicate authority, because mechanical checking can detect exact duplicate identifiers or definitions but cannot decide whether prose is substantively operative or necessary.
 
 ## Misunderstanding resistance
 
-A proposition may be recoverable yet still need clarification when a competent reader can reasonably derive a materially different interpretation, because reliable design communication should not depend on reconstructing an unstated controlling contrast.
+A proposition may require separate meaning-aware clarification when a reader could derive a materially different interpretation, because misunderstanding likelihood and consequence are semantic review judgments rather than mechanical WELL criteria.
 
-When related concepts differ by timing, scope, authority, lifecycle position, or evidentiary role, their canonical definitions must state the controlling contrast explicitly, because separate names may not reveal which distinction governs later rules.
+Authors should represent a controlling contrast explicitly in canonical definitions when related concepts differ by timing, scope, authority, lifecycle position, or evidentiary role, because the distinction should be recoverable while its need and correctness remain review judgments outside WELL.
 
-A rejected review finding may still justify a narrow clarification when it exposes a plausible and materially consequential misunderstanding, because rejecting the finding establishes the stronger interpretation but does not prove that the document communicated that interpretation reliably.
+A meaning-aware review finding may justify a narrow clarification when the reviewer identifies a plausible and materially consequential misunderstanding, because that judgment belongs to review rather than mechanical WELL conformance.
 
-Adding such a clarification does not retroactively validate the rejected finding, because the clarification improves misunderstanding resistance rather than admitting that both interpretations were authorized.
+Adding such a clarification does not retroactively validate the earlier finding, because the clarification changes the represented structure without making the earlier semantic judgment a WELL result.
 
-Clarification is required only when the alternative reading is plausible to a competent reader, would materially change implementation or verification, and can be eliminated through one small canonical distinction, because documenting remote or harmless misunderstandings would violate Lean.
+Authors should represent a controlling contrast explicitly in canonical definitions when they distinguish related concepts, because the contrast itself is mechanically inspectable while plausibility, consequence, and adequacy remain outside WELL.
 
-The clarification must be placed at the canonical definition or controlling rule rather than repeated at every dependent use, because one authoritative contrast prevents recurrence without creating duplicate authority or defensive prose.
+An explicitly required clarification must be placed at the canonical definition or controlling rule rather than repeated at every dependent use, because one represented authoritative contrast avoids duplicate structural definitions, because whether clarification is needed belongs to meaning-aware review.
 
-A named reusable schema, record, manifest, or structure must be introduced explicitly at its canonical definition before dependent propositions use that name, because recoverable fields do not by themselves establish the name's authoritative referent.
+A schema, record, manifest, or structure that the author declares reusable must be introduced explicitly at its canonical definition before dependent propositions use that name, because recoverable fields do not by themselves establish the name's authoritative referent.
 
 A requirement whose satisfaction depends on the order of edits, reviews, approvals, or publications must identify the observable evidence that establishes that order, because a final snapshot proves resulting state but ordinarily cannot prove the sequence that produced it.
 
@@ -133,17 +135,17 @@ A requirement whose satisfaction depends on the order of edits, reviews, approva
 
 One complete proposition per paragraph is preferred, because bounded source units are easier to search, compare, move, and review.
 
-A material proposition and its local `because` clause should remain on one physical source line when practical, because exact-text tools should retrieve the claim and warrant together.
+A proposition with a declared local warrant and its `because` clause should remain on one physical source line when practical, because exact-text tools should retrieve the claim and warrant together.
 
 Blank lines should separate proposition paragraphs, because visible source boundaries reduce accidental partial edits.
 
-One canonical term should name each material concept, because changing synonyms and unqualified pronouns can hide related propositions from search.
+One canonical term should name each concept that the author chooses to expose for cross-reference, because changing synonyms and unqualified pronouns can hide related propositions from search.
 
 Canonical proposition names should be introduced at their authoritative definitions rather than maintained in a separate registry, because a duplicate name index can get out of sync with the content it names.
 
 Cross-document references should qualify the owning artifact when the same canonical name could exist in more than one authority, because exact names must remain unambiguous across the design chain.
 
-Directional terms such as `depends on`, `constrains`, `supports`, `verifies`, `contradicts`, and `supersedes` should be explicit when material, because readers and tools need to recover change impact.
+Directional terms such as `depends on`, `constrains`, `supports`, `verifies`, `contradicts`, and `supersedes` should be explicit for represented relationships, because readers and tools need to recover change impact.
 
 Editor soft wrapping should be preferred over inserted hard line breaks inside one proposition, because visual readability need not fragment the searchable source unit.
 
@@ -151,65 +153,71 @@ A justified departure from the preferred physical form is allowed when the alter
 
 ## Document obligations
 
-A WELL-governed design document establishes its purpose, scope, authority, grounds, constraints, decisions, qualifications, consequences, checks, and unresolved matters when applicable, because those elements make the design chain inspectable.
+A WELL-governed design document should represent purpose, scope, authority, grounds, constraints, decisions, qualifications, consequences, checks, and unresolved matters, because those structural elements make the document inspectable, while meaning-aware review decides whether the represented design is complete.
 
 An inapplicable obligation may be omitted explicitly or by clear structure, because mandatory empty sections would violate Lean without preserving meaning.
 
-A document must distinguish current authority from historical evidence, because lineage must inform the design without competing with it.
+Meaning-aware design review should verify that current authority and historical evidence are clearly distinguished where relevant, because WELL does not define a marker syntax or decide the substantive classification.
 
-A document must identify which artifact owns each normative meaning and which artifact owns executable proof, because duplicated authority creates drift.
+Meaning-aware design review should verify ownership of normative meaning and executable proof, because WELL does not discover all normative meanings or determine whether ownership is complete or correct.
 
 ## Conformance and verification
 
-A design document is WELL-conformant only when every complete prose sentence contains a substantive literal `because`, every material proposition is sufficiently warranted and qualified, canonical references are exact and unique when used, no unexplained disconnected reasoning component remains, reasoning links and checks are recoverable, duplicate authority and nonoperative prose are absent, and unresolved matters remain unresolved, because partial compliance cannot preserve the design chain.
+A design document is WELL-conformant only when its mechanically checkable structure satisfies the unconditional WELL rules, because WELL conformance must be decidable from the exact document and mechanical checker observations alone.
+
+`mechanical-applicability` — A rule affects WELL PASS/FAIL only when both its applicability and satisfaction can be determined from exact document bytes using syntax defined by WELL, because semantic author intent cannot be an input to a deterministic conformance result.
+
+Those mechanical rules include the literal `because` in every syntactically classified prose sentence, valid canonical names for definitions that appear, canonical-name uniqueness, exact canonical references, missing-reference detection, mechanically identifiable layout rules, and mechanically detectable duplicate identifiers or malformed structural notation, because these properties can be checked without deciding whether the represented design meaning is good, true, sufficient, coherent, or correct.
 
 A mechanical sentence checker is required as an aid, because a complete pass over a large document is easy to perform inconsistently by inspection alone.
 
-A mechanical link checker must verify canonical-name uniqueness, exact references, and missing targets when a document uses canonical names, because these properties are mechanically inspectable even though the adequacy of the reasoning graph still requires human review.
+A mechanical link checker must verify canonical-name uniqueness, exact references, and missing targets for canonical names that appear, because these properties are mechanically inspectable without judging whether additional names or edges should exist.
 
-The checker must ignore only genuine structural notation and subordinate fragments, because broad exemptions can hide independent propositions.
+The checker may ignore only the mechanically defined syntax categories listed above and subordinate list items matching the stated punctuation rule, because broad semantic exemptions can hide prose sentences.
 
-Every mechanical exemption requires manual review, because Markdown classification cannot determine semantic independence reliably.
+The checker must deterministically report every skipped or exempted construct and the mechanical rule that excluded it, because an unreported exemption would make the mechanical result irreproducible.
 
-A mechanical checker result must identify the exact reviewed artifact, the checker source or identity, the applied rules, and every exemption, because human review cannot reproduce or inspect a pass whose inputs or skipped content are hidden.
+If the checker cannot mechanically determine whether a construct is exempt, it must report that unresolved mechanically undecidable case rather than silently count it as a passing exemption, because semantic review cannot convert an unknown mechanical classification into WELL conformance.
+
+A mechanical checker result must identify the exact artifact, checker source or identity, applied mechanical rules, skipped or exempted constructs, violations, and unresolved mechanically undecidable cases, because the mechanical result must be reproducible from explicit inputs and observations.
 
 Repository residence, ongoing maintenance, and CI integration are requirements only when the governing document states them explicitly, because reviewers must not strengthen a verification gate beyond the properties that the document actually protects.
 
-Human review remains required after a zero-violation checker result, because the presence of `because` does not prove that the warrant is relevant, sufficient, true, local, or non-circular.
+A zero-violation WELL result establishes only mechanical WELL conformance and does not establish design acceptance, because substantive design judgment belongs to a separate meaning-aware review under the governing project's acceptance process.
 
-WELL review can identify unsupported propositions, hidden assumptions, missing qualifications, broken links, repeated rationale, and removable prose, because those defects are structurally inspectable.
+Meaning-aware review considers whether warrants are relevant rather than ceremonial or circular, qualifications and assumptions are represented correctly, ownership and authority are correct, propositions cohere with their governing inputs, and material contradictions or unresolved design blockers remain, because design acceptance requires interpretation beyond document structure.
+
+The governing project determines who or what performs the meaning-aware review, the review method, and the acceptance or signing gate, because WELL defines the document-structure contract without prescribing a reviewer or duplicating another authority's methodology.
+
+Mechanical WELL conformance and a separate meaning-aware design review may both be required before the governing project accepts or signs the exact design artifact, because acceptance or signing is a project-governance decision rather than a WELL result.
+
+Acceptance or signing does not prove empirical claims true, the design optimal, the implementation correct, or future realization conformant, because implementation verification and qualification remain downstream activities governed through the Design Authority Chain.
+
+Mechanical WELL checking can identify malformed structure, broken canonical links, duplicate identifiers, and other mechanically detectable violations, because those properties are observable without substantive design judgment.
+
+Meaning-aware design review may inspect whether warrants actually support their propositions, whether assumptions and qualifications are represented correctly, whether authority and dependencies are coherent, whether contradictions or unresolved blockers remain, and whether the design meaning should be accepted, because those judgments belong to the governing project's separate acceptance process.
 
 WELL conformance cannot prove evidence true, inference valid, context complete, or a design correct or optimal, because inspectable reasoning is not the same as correct reasoning.
 
 ## Application
 
-Apply WELL in this order, because early identification of proposition boundaries prevents later ceremonial repair:
+Use WELL in three separate stages, because authoring guidance, mechanical checking, and project acceptance have different owners:
 
-1. establish document purpose and authority
-2. identify independently changeable propositions
-3. identify each proposition's concrete ground, qualification, consequence, and check
-4. split propositions whose claims require different reasons
-5. expose assumptions, unknowns, conflicts, and authority boundaries
-6. consolidate repeated definitions and rationale behind canonical links
-7. assign unique lowercase kebab-case canonical names only to propositions that need cross-reference or graph inspection
-8. repeat each canonical name exactly in backticks at every reference
-9. inspect the reasoning graph and resolve every unexplained disconnected component
-10. convert only genuine subordinate enumerations into fragments under one warranted introduction
-11. remove nonoperative and duplicated prose
-12. run the sentence and link checkers and inspect every exemption
-13. review the complete document for cross-section contradiction and semantic drift
+1. Authoring guidance: establish purpose and authority, choose proposition boundaries, expose assumptions and qualifications, consolidate rationale, and decide which canonical names, checks, and graph relationships make the design inspectable, because these semantic authoring acts do not determine WELL PASS/FAIL.
+2. Mechanical WELL checking: run the sentence and link checkers against the exact artifact, validate every syntax category and canonical reference that appears, and record every exemption and unresolved mechanically undecidable case, because only mechanically applicable rules determine WELL PASS/FAIL.
+3. Project review: provide the exact artifact and mechanical result to the separately governed meaning-aware design review when required, because project governance decides acceptance or signing and implementation qualification remains downstream.
 
 ## Examples
 
-`Use event sourcing` is nonconforming when asserted alone, because the sentence states a design choice without its design ground.
+`Use event sourcing` is a meaning-aware review concern when asserted alone, because the sentence has no represented local warrant even though a checker cannot decide whether a warrant is semantically needed.
 
-`Use event sourcing for the audit ledger, because immutable history is required for reconstruction` is locally warranted, because the sentence keeps the choice and the protected need in one proposition.
+`Use event sourcing for the audit ledger, because immutable history is required for reconstruction` has the required literal token, because the example represents a claim and a stated warrant in one proposition.
 
-`Boundary is the validation façade` is nonconforming when asserted alone, because the definition does not explain why the role is needed.
+`Boundary is the validation façade` is a meaning-aware review concern when asserted alone, because a checker cannot decide whether a definition needs a reason beyond the literal sentence structure.
 
 `Boundary means the validation façade, because later interface rules assign every trust transition to that role` is locally warranted, because the definition includes its architectural function.
 
-Repeating `because the controller must remain deterministic` after unrelated controller rules is nonconforming, because one reason cannot justify independently changeable claims merely by repetition.
+Repeating `because the controller must remain deterministic` after separately represented rules is a meaning-aware review concern when the author has not represented distinct warrants, because a checker cannot decide whether the rules are semantically unrelated.
 
 A warranted introductory sentence may govern a list of subordinate fields, because the fields are structural components of the proposition rather than independent claims.
 
@@ -219,10 +227,10 @@ A warranted introductory sentence may govern a list of subordinate fields, becau
 
 ## Self-application
 
-Every complete prose sentence in this document contains a substantive literal `because`, because sentence-level local warrant is WELL's primary encapsulation mechanism.
+Every syntactically classified prose sentence in this document contains the literal `because`, because sentence-level warrant representation is WELL's primary mechanical encapsulation rule.
 
-Every structural exemption in this document is limited to headings or subordinate list fragments, because the standard must not evade its own rule through formatting.
+Every sentence-rule exemption in this document is limited to the mechanically defined syntax categories and list-fragment punctuation rule, because the standard must not evade its own rule through an unclassified semantic exemption.
 
-The document uses canonical terms and proposition-sized paragraphs, because self-application must demonstrate cohesive search, extraction, and modification units.
+The document uses canonical definitions and paragraph-sized source units, because self-application must demonstrate exact search, extraction, and modification structure.
 
-The named propositions `stable-semantic-references`, `name-only-when-useful`, `connected-reasoning-graph`, and `detached-graph-review` demonstrate exact semantic cross-reference without naming every sentence, because WELL must demonstrate Linked and Lean together.
+The names `stable-semantic-references`, `name-only-when-useful`, `connected-reasoning-graph`, and `detached-graph-review` demonstrate exact canonical cross-reference without naming every sentence, because WELL must demonstrate mechanically resolvable links and bounded naming.
