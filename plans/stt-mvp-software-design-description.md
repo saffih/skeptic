@@ -2,7 +2,7 @@
 
 **Repository:** `saffih/skeptic`
 **Governing Inputs:** `plans/stt-mvp-governing-inputs.md`
-**Architecture Description:** `plans/stt-mvp-architecture-plan.md`
+**Architecture Description:** `plans/stt-mvp-architecture-description.md`
 **Authority chain:** `docs/design-authority-chain.md`
 **Document profile:** `docs/well.md`
 **Downstream owner:** a bounded current Implementation Plan

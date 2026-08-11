@@ -1,7 +1,7 @@
 # STT MVP Implementation Plan
 
 **Status:** Retained historical evidence only; not a current Implementation Plan or implementation authority
-**Historical companion Architecture:** `plans/stt-mvp-architecture-plan.md`
+**Historical companion Architecture:** `plans/stt-mvp-architecture-description.md`
 **Recorded historical Architecture SHA-256:** `921ee38e92a1f1a9df7ac2a977fd46877ccdfde75965d274479d6f51432f079d`
 **Current shared/durable realization authority:** `plans/stt-mvp-software-design-description.md`
 **Current Implementation Plan:** None exists yet
