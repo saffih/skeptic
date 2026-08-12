@@ -142,6 +142,13 @@ RecordRef
   payload_path
   size_bytes
   sha256
+
+PrefixRef
+  schema
+  prefix_id
+  run_id
+  manifest_path
+  sha256
 ```
 
 ## Lifecycle contracts
@@ -155,12 +162,12 @@ The canonical contracts are closed schemas with no implicit fields, because Boun
 | `RoundRecord` | Task identity, contiguous Round number, and prior committed-history head |
 | `Plan` | Planner operation identity, nonempty ordered steps, route choices, inputs, requirements, expected outputs, and authority requests |
 | `Step` | ordinal, kind, mission or command profile, bounded inputs, required outputs, route, and requested authority |
-| `OperationRequest` | role or mechanism, exact instruction/data envelope, route, authority grant, capture policy, wait policy, and committed prefix |
-| `AttemptRecord` | operation identity, ordinal, adapter, launch basis, and exchange location |
-| `AttemptOutcome` | launch state, transport state, local settlement, capture completeness, adapter evidence, and reported effects |
+| `OperationRequest` | role, exact instruction/data envelope, exact accepted contract and route/profile references, input/output bindings, and committed prefix; authority, capture, and wait meaning is obtained through those frozen references |
+| `AttemptRecord` | operation identity, ordinal, adapter, and launch basis; its exchange directory is deterministic from the admitted Attempt identity and authoritative layout |
+| `AttemptOutcome` | launch state, transport state, local settlement, complete-or-truncated capture references, and adapter/settlement evidence; WorkerResult and Command StepResult records own reported semantic effects |
 | `StepResult` | bound step, local semantic outcome when present, output-contract status, effect report, accepted artifacts, and operational evidence |
-| `ValidatorResult` | Task judgment, lifecycle disposition, grounds references, and unresolved requirements |
-| `TaskResult` | terminal Task judgment, final Round, required-output assessment, and evidence references |
+| `ValidatorResult` | Task judgment, lifecycle disposition, reason, findings, unknowns, and cited artifacts |
+| `TaskResult` | terminal Task judgment, final Round and Validator result, terminal required-output assessment, satisfied output bindings/artifacts, and terminal evidence references |
 
 The canonical wire schemas use the following exact field vocabulary, because component interoperability must not depend on a downstream plan inventing shared names:
 
@@ -281,6 +288,43 @@ CommandProfile
   effect_report_target_path | null
 ```
 
+The shared policy value spaces are closed records, because admission must reject values whose meaning is not defined here:
+
+```text
+exit_code_outcomes: map of canonical decimal nonnegative exit code to SATISFIED | UNSATISFIED | INDETERMINATE; an unmapped code is an operational command error, not a semantic outcome
+output_observations: map<string, CommandOutputObservation>
+CommandOutputObservation { required: boolean, source: STDOUT | STDERR | TARGET, max_bytes: positive integer, preserve_prefix: boolean, target: null for STDOUT or STDERR | { canonical_target_path: string, observation_kind: PATH_IDENTITY | FILE_BYTES | TREE_MANIFEST } for TARGET }
+argument_slots: map of slot name to ArgumentSlot
+ArgumentSlot: exactly one of { kind: STRING } | { kind: INTEGER, minimum: canonical decimal integer | null, maximum: canonical decimal integer | null } | { kind: BOOLEAN_FLAG, emitted_flag_token: nonempty string } | { kind: ENUM, allowed_values: nonempty array of distinct nonempty strings } | { kind: TARGET_PATH } | { kind: INPUT_PATH }; fields not belonging to the selected kind are forbidden. INTEGER renders as canonical base-10 decimal with no leading `+` or leading zero except `0`, and any present minimum is not greater than any present maximum. BOOLEAN_FLAG emits its exact frozen token only for true and omits it for false. TARGET_PATH resolves by ordinary admitted target-path resolution; INPUT_PATH binds only to a resolved admitted InputRef.
+cwd_policy: exactly one of { kind: STORE_ROOT } | { kind: TARGET_ROOT } | { kind: EXACT_ADMITTED_PATH, path: canonical admitted path }
+local_termination_policy: WAIT_FOR_EXIT | WAIT_FOR_SETTLEMENT | TERMINATE_AFTER_GRACE
+read_tool_transport: FILE_REFERENCE | BOUNDED_JSON_LINES
+host_profile: { filesystem_identity: string, process_identity: string, supports_no_follow: boolean, supports_atomic_same_parent_rename: boolean, supports_exclusive_create: boolean, supports_file_flush: boolean, supports_directory_flush: boolean, supports_append_durability: boolean, supports_advisory_lock: boolean, supports_exact_byte_io: boolean, supports_process_identity: boolean, supports_settlement_observation: boolean, supports_monotonic_time: boolean }
+producer_constraint: { kind: ANY_ADMITTED_PRODUCER } | { kind: STEP, step_id: string } | { kind: ROUTE, route_name: string } | { kind: OPERATION_ROLE, role: PLANNER | WORKER | COMMAND | VALIDATOR }
+provenance: exactly one of { kind: BOOTSTRAP_IMPORT, source_identity: string, committed_record_ref: RecordRef } | { kind: PRIOR_RUN_IMPORT, source_identity: string, committed_record_ref: RecordRef } | { kind: TARGET_OBSERVATION, source_identity: string, observation_ref: RecordRef } | { kind: WORKER_OUTPUT, operation_request_id: string, committed_record_ref: RecordRef } | { kind: COMMAND_OUTPUT, operation_request_id: string, committed_record_ref: RecordRef } | { kind: CHILD_TASK_OUTPUT, child_task_id: string, child_task_result_ref: RecordRef } | { kind: BOUNDARY_OBSERVATION, source_identity: string, committed_record_ref: RecordRef }; fields not belonging to the selected kind are forbidden
+observation_kind: PATH_IDENTITY | FILE_BYTES | TREE_MANIFEST | PROCESS | PROVIDER | TIMING | SETTLEMENT
+observed_identity: { kind: TARGET_OBJECT | EXECUTABLE | PROVIDER | PROCESS, identity: string, observed_at: RFC3339_UTC }
+prelaunch_identity_snapshot: { target_identity: string | null, executable_identity: string | null, admitted_execution_identity: { kind: PROVIDER_ROUTE, route_identity: string } | { kind: COMMAND_PROFILE, profile_name: string, profile_identity: string }, authority_identity: string, captured_at: RFC3339_UTC }
+stt_read_grant: { committed_prefix_ref: PrefixRef, allowed_record_kinds: nonempty array<CanonicalRecordKind>, max_bytes: positive integer, selectors: array<source_selector> }
+stt_starting_subtree: { run_root_relative_path: string, subtree_identity: string, manifest_ref: RecordRef }
+```
+
+`CanonicalRecordKind` is exactly one Contract Validator-accepted canonical schema identity from `RunRecord`, `TaskRecord`, `RoundRecord`, `Plan`, `OperationRequest`, `AttemptRecord`, `AttemptOutcome`, `CaptureRecord`, `PlannerResult`, `WorkerResult`, `StepResult`, `ValidatorResult`, `TaskResult`, `TaskOutputAssessment`, `ArtifactRef`, `InputRef`, `InputResolution`, `TransitionManifest`, `EventBody`, `LedgerEvent`, `RunPrefixManifest`, or `PrefixTaskHead`, and every `record_kind` and `allowed_record_kinds` field uses this closed set rather than an unknown string, because unknown arbitrary strings must not silently acquire shared record meaning.
+
+`source_selector` is one closed selector record with `kind`, `source_identity`, and kind-specific fields, because every selector must bind to an admitted source rather than to an ambient path:
+
+```text
+kind: RECORD | ARTIFACT | PATH | REQUIREMENT | PRIOR_RUN_RECORD
+source_identity: required string for every variant
+RECORD: record_kind: CanonicalRecordKind, record_id
+ARTIFACT: artifact_id
+PATH: relative_path, object_type
+REQUIREMENT: requirement_id, producer_constraint
+PRIOR_RUN_RECORD: source_run_id, record_kind: CanonicalRecordKind, record_id, import_hash
+```
+
+`initial_input_selectors` and `prior_evidence_selectors` use this grammar, because their different source sets do not justify different matching semantics. Boundary resolves within the named admitted source and exact identity binding, returns zero matches as `UNRESOLVED_INPUT`, rejects more than one match as `AMBIGUOUS_INPUT`, orders selectors by array position and records within one selector by `record_id`, and never applies semantic fallback, because deterministic resolution must expose stale, missing, and ambiguous sources rather than guess. A missing source, changed source identity, stale import hash, or failed object verification is `STALE_SOURCE` and blocks admission or producer completion as applicable, because an unverified substitute would cross an authority boundary.
+
 Bootstrap converts `RootAuthoritySpec` into the root `TaskAuthority` by binding the frozen target identity and derived authority identity, because caller-owned authority must cross one mechanical admission boundary before semantic execution.
 
 External effect classes are exactly `TARGET_READ`, `TARGET_WRITE`, `LOCAL_PROCESS`, `PROVIDER_CALL`, `NETWORK`, and `REMOTE_MUTATION`, because routes, profiles, Plans, and reported effects need one shared capability vocabulary.
@@ -313,6 +357,7 @@ RunPolicy
   validator_wait_seconds
   settlement_wait_seconds
   termination_grace_seconds
+  max_control_transitions_per_public_invocation
   host_profile
 
 RoutingFile
@@ -326,7 +371,7 @@ RoutingFile
 
 Every Run-policy limit is a positive finite integer with units fixed by its field name, because zero, infinity, or implicit units would create incompatible host behavior.
 
-`RunPolicy` contains no cumulative Task, depth, Round, Plan-step, or semantic-call limit, because Governing Input `semantic-continuation` assigns those totals to Planner and Validator judgment.
+`max_control_transitions_per_public_invocation` is a positive finite interruptibility bound frozen in `RunPolicy`, because one public invocation must have an explicit finite control safeguard without imposing a semantic lifecycle total. `RunPolicy` contains no cumulative Task, depth, Round, Plan-step, or semantic-call limit, because Governing Input `semantic-continuation` assigns those totals to Planner and Validator judgment.
 
 Planning records use the following exact shared fields, because Planner-local readable keys must become Boundary-derived lifecycle identities without changing the accepted Plan:
 
@@ -356,7 +401,7 @@ WorkerStep extends CommonStep
 CommandStep extends CommonStep
   command_profile
   arguments{}
-  output_source_bindings{}
+  output_source_bindings{}: map of requirement_id to profile_observation_name
 
 TaskStep extends CommonStep
   child_mission
@@ -439,6 +484,7 @@ TaskOutputAssessment
   schema
   task_id
   round_id
+  phase: PRE_VALIDATION | TERMINAL
   entries[]
   all_satisfied
 ```
@@ -447,7 +493,7 @@ TaskOutputAssessment
 
 `EXACT_SHA256` requires `expected_sha256` while the other satisfaction modes forbid it, because each mode needs one non-overlapping interpretation.
 
-Boundary selects at most one satisfying artifact per requirement using immutable Run artifacts before target observations and then lowest artifact identity, because deterministic bounded assessment must not depend on directory order or unbounded candidate lists.
+Boundary selects at most one satisfying artifact per requirement using immutable Run artifacts before target observations and then lowest artifact identity, because deterministic bounded assessment must not depend on directory order or unbounded candidate lists. Each assessment is committed by an event whose `event_kind` is `OUTPUT_ASSESSMENT_RECORDED` and whose phase matches the record, because committed history must distinguish the pre-validation assessment from the terminal assessment.
 
 Operations and outcomes use the following exact shared records, because replay, transport, settlement, semantic return, and Task judgment must remain distinct:
 
@@ -486,11 +532,20 @@ AttemptOutcome
   local_settlement: SETTLED | UNSETTLED | UNKNOWN
   requested_routing
   observed_routing
-  capture_refs[]
+  capture_refs[]: RecordRef<CaptureRecord>
   proof_of_non_launch | null
   error_ref | null
   process_observations[]
   timing_observations[]
+
+CaptureRecord
+  schema
+  source: STDOUT | STDERR | PROVIDER_RAW_RETURN | TOOL_TRANSCRIPT
+  completeness: COMPLETE | TRUNCATED | MISSING
+  captured_prefix_ref | null
+  original_size_bytes | null
+  truncation_marker: boolean
+  missing_evidence_reason | null
 
 PlannerResult
   schema
@@ -517,6 +572,7 @@ StepResult
   child_outcome_ref | null
   verified_artifacts[]
   observations[]
+  reported_effects[]
   local_outcome: SATISFIED | UNSATISFIED | INDETERMINATE | OPERATIONAL_INDETERMINATE
   output_contract_status: SATISFIED | UNSATISFIED | NOT_APPLICABLE
   unsatisfied_requirement_ids[]
@@ -536,9 +592,14 @@ TaskResult
   schema
   task_id
   judgment: SATISFIED | UNSATISFIED | INDETERMINATE
+  final_round_ref
   final_validator_result_ref
+  terminal_output_assessment_ref
   satisfied_outputs[]
+  terminal_evidence_refs[]
 ```
+
+Every `CommandStep.output_source_bindings` key is one of that step's output requirement identities, each value names one `CommandProfile.output_observations` entry whose source and object type are compatible with that requirement, and each required command-produced output has exactly one such binding, because command-output satisfaction must resolve to one named frozen observation. A `CaptureRecord` preserves whether each capture is complete, truncated, or missing, its retained prefix when any, original-size knowledge when available, and the truncation or missing-evidence marker, because an `AttemptOutcome` capture reference must not conceal incomplete evidence. `TaskResult.final_round_ref`, `final_validator_result_ref`, and `terminal_output_assessment_ref` bind the exact terminal history, while `satisfied_outputs[]` binds the selected `ArtifactRef` for every terminally satisfied required output and `terminal_evidence_refs[]` binds any other terminal evidence required by the accepted design, because a terminal result must prove the history and assessment that establish its output claim.
 
 Diagnostic reason strings and error messages are data rather than control signals while closed enums and validated references drive derivation, because arbitrary prose must not acquire lifecycle authority.
 
@@ -582,7 +643,7 @@ Command invocation uses direct argument vectors unless a specifically admitted p
 
 Canonical target-relative paths use `/` separators, exclude empty, `.`, and `..` components, exclude absolute and platform-prefixed forms, and use one normalized Unicode form frozen by policy, because equivalent textual paths must not identify different authority objects.
 
-Canonical target-relative paths reject `.git` as any component, NUL, symlinks, and non-regular or non-directory special objects, because the MVP must not convert ordinary target scope into repository-control or special-device authority.
+Canonical target-relative paths reject NUL, symlinks, and non-regular or non-directory special objects, because the intended object must be inside admitted scope and have a verifiable identity. `.git` is not rejected categorically, because repository metadata is not itself an upstream product prohibition; aliasing, traversal, unsupported objects, and unverifiable identity still fail closed through the ordinary target-admission mechanism.
 
 Every mutating target operation resolves each existing path component without following links outside the admitted target identity and revalidates the final parent immediately before mutation, because host state can change between planning and effect.
 
@@ -650,7 +711,9 @@ Bootstrap and Task-genesis files are authoritative at their fixed paths while ev
 
 The two durability classes are exhaustive and disjoint over authoritative files, because recovery cannot decide whether a partially visible file is a failed create-only install or a torn append without knowing which protocol produced it.
 
-Bootstrap constructs a complete candidate Run, and Boundary validates and publishes it atomically before re-executing from the frozen runtime and publishing the uniquely derived root Task through Boundary, because controller identity must be fixed before semantic work while every authoritative publication retains one façade.
+Bootstrap constructs a complete candidate Run in a private staging directory beside the final Run directory, installs all records and payloads there, flushes every file, flushes the staging directory, and atomically renames the staging directory to the final Run directory in the same parent, because same-parent rename is the host-capability-floor mechanism that publishes one complete immutable basis. Readers consider a Run committed only when the final Run directory exists and contains its complete fixed records, and ignore staging-directory names, because the rename itself is the sole publication point. Boundary uses the identical protocol for a candidate Task: it builds a private staging directory beside `tasks/<task-id>`, flushes files and directory, then atomically renames it to that final path, because Run and Task genesis must share one durability semantic.
+
+Before either rename, Boundary flushes each file, flushes all payload subdirectories, flushes the staging directory, performs the same-parent atomic rename without replacement, and flushes the containing parent directory, because readers and recovery need both complete visibility and durable name publication; a crash before rename leaves only private staging, commits nothing, and permits recovery to remove that confined uncommitted staging orphan, because no final name has been published; after rename but before the containing-parent flush, the rename is not necessarily durable and recovery may expose no final directory or the complete final directory, because the name durability barrier has not completed; if it is absent, publication did not survive and Boundary may recreate it from the unchanged deterministic basis, while if it is present Boundary validates the complete fixed basis and treats a partial final basis as `INVALID` without repair by choosing among files, because recovery may not invent a genesis basis; after the containing-parent flush the final name is durably published, and a name collision rejects publication without replacement, because no partial genesis is accepted; no semantic operation may launch from a newly published Run or Task until its containing-parent directory flush has succeeded, because no semantic effect may depend on a genesis name whose durability is not established.
 
 A Task candidate contains its fixed mission, authority, required outputs, Task record, and genesis ledger event, because readers must observe either no Task or one complete immutable Task basis.
 
@@ -702,7 +765,7 @@ The manifest grows with the Task count of the Run rather than staying within a f
 
 Each `PrefixTaskHead` contains schema, Task identity, ledger sequence, event hash, and ledger byte size, while the manifest identity hashes its exact bytes including the terminal LF, because readers must exclude records appended after the operation snapshot.
 
-Boundary holds `writer.lock` while installing a transition package and appending its one canonical ledger line but releases it before waiting for providers or processes, because authoritative publication must serialize while operator stop and settlement observation must remain possible during external work.
+External work occurs without `writer.lock`. Before publication Boundary acquires `writer.lock`, rereads the current committed Task head, and only then allocates the next `ledger_sequence` and `previous_event_hash`, because an invocation must not prepare a transition against a head consumed by operator stop. It installs the package and ledger line under the lock, revalidates the package binding immediately before append, and releases the lock after durable publication, because prepare/revalidate/commit makes stop and advancement serialize without holding a lock across provider or command waits. A changed head discards the uncommitted candidate and requires rederivation from the new committed facts, because stale transition identity cannot be repaired by reuse.
 
 Boundary holds `runner.lock` for one public Run-advancement invocation rather than the lifetime of external work, because one invocation must not race another driver while operator observation and later recovery remain available.
 
@@ -724,27 +787,42 @@ STEP_STARTED
 STEP_FINISHED
 VALIDATION_STARTED
 VALIDATION_RECORDED
+OUTPUT_ASSESSMENT_RECORDED
 OPERATOR_STOP_REQUESTED
 ROUND_FINISHED
 TASK_FINISHED
 ```
 
-`task-event-grammar` — A Task consists of genesis followed by zero or more contiguous Rounds and at most one terminal Task result, because `one-active-frontier` requires one legal sequential history:
+`task-event-grammar` — A Task consists of genesis followed by zero or more contiguous Rounds and at most one terminal Task finalization, because `one-active-frontier` requires one legal sequential history:
 
 ```text
 TASK_CREATED
-{
+{ round }*
+[ terminal-task-finalization ]
+
+round
   ROUND_CREATED
   PLANNING_STARTED
   planner-operation
   PLANNING_FINISHED
   { step-phase }*
-  [ VALIDATION_STARTED validator-operation VALIDATION_RECORDED ROUND_FINISHED ]
-}*
-[ TASK_FINISHED ]
+  OUTPUT_ASSESSMENT_RECORDED(PRE_VALIDATION)
+  validation-phase
+
+terminal-task-finalization
+  OUTPUT_ASSESSMENT_RECORDED(TERMINAL)
+  TASK_FINISHED
 ```
 
-One operation consists of `OPERATION_REQUESTED`, one or more Attempts permitted only by positive non-launch evidence, and one deterministic phase finalization after an accepted or settled failed Attempt, because launch uncertainty must never become blind replay.
+`planner-operation` and `validator-operation` are each `OPERATION_REQUESTED attempt-sequence`, Worker and Command step operations use that same form, `OperationRequest.role` is exactly `PLANNER`, `WORKER`, `COMMAND`, or `VALIDATOR` rather than `TASK`, one operation owns its one `OPERATION_REQUESTED` and one or more Attempts only under the positive-non-launch rule, an `attempt-sequence` may end at the legal interrupted prefix `ATTEMPT_STARTED` or continue through `LAUNCH_INTENT_RECORDED`, `ATTEMPT_FINISHED`, and settlement evidence, a later `ATTEMPT_STARTED` is legal only after the preceding Attempt has committed positive `NOT_LAUNCHED` evidence with no fixed Attempt count, and the enclosing grammar owns `PLANNING_FINISHED` and `VALIDATION_RECORDED` without duplicating either phase-finalization event in a subgrammar, because operation transport must represent legal interruption and retry without fabricating a second owner for lifecycle finalization.
+
+`PLANNING_FINISHED` binds either one accepted `PlannerResult` including `DECLINE` or one settled Planner operational failure with no fabricated semantic Plan, either settled path may proceed to validation when stop state permits, `validation-phase` is `VALIDATION_STARTED validator-operation VALIDATION_RECORDED` whose finalization binds either one accepted `ValidatorResult` or one settled Validator operational failure with no semantic judgment, only an accepted Validator result authorizes `ROUND_FINISHED`, `REPEAT` closes its Round and permits the next contiguous Round while `FINISH` closes the Round and may proceed to terminal-task-finalization, there is no fixed Round count, and a settled Validator operational failure stops semantic progression without fabricating a Round continuation or `TaskResult`, because planning and validation settlement must remain distinct from accepted semantic results.
+
+`terminal-task-finalization` is legal only after the final accepted Validator result has disposition `FINISH`; `TASK_FINISHED` binds the corresponding exact `TaskResult` and its terminal assessment and evidence references, because terminal output satisfaction cannot be asserted without the committed history that established it.
+
+`step-phase` is either `STEP_STARTED worker-operation STEP_FINISHED`, `STEP_STARTED command-operation STEP_FINISHED`, or `STEP_STARTED child-task-step STEP_FINISHED`, where `child-task-step` publishes the child Task through Boundary, runs its depth-first lifecycle in the child Task ledger, and binds the exact child `TaskResult` or OperationalStop before `STEP_FINISHED` without creating an `OperationRequest` or Attempt for the child lifecycle, because a Task step is not adapter transport; `OUTPUT_ASSESSMENT_RECORDED(PRE_VALIDATION)` occurs after all step phases and immediately before `VALIDATION_STARTED`, `OUTPUT_ASSESSMENT_RECORDED(TERMINAL)` occurs immediately before `TASK_FINISHED`, and every listed Task event is emitted only at one of these positions, because assessments must be ordered and the closed vocabulary must not duplicate lifecycle ownership.
+
+`root-stop-overlay` — `OPERATOR_STOP_REQUESTED` is Run-wide, committed only in the root Task ledger, occurs at most once, and is legal after any committed root frontier at which Boundary can serialize the request safely, because cancellation is a root-level control fact; if a Run was published but its root Task was not, Boundary first publishes the already-determined root Task only when the exact root Task basis is uniquely derivable from frozen Run facts and then commits the stop, while missing, conflicting, or non-unique basis derives `INVALID` and stop never invents semantic Task content, because cancellation cannot create an authority basis; after committed stop there is no new Round, Planner/Worker/Command/Validator `OperationRequest`, Attempt, child Task, `STEP_STARTED`, or `VALIDATION_STARTED`, while already-started work may publish only causally pre-stop `ATTEMPT_FINISHED`, `SETTLEMENT_OBSERVED`, already-determined phase finalization, child-result binding and `STEP_FINISHED`, permitted output assessment, `ROUND_FINISHED`, or terminal `TASK_FINISHED`, because cancellation preserves evidence without authorizing future work; every post-stop fact is causally rooted in work existing at the committed stop frontier and a child Task never owns a stop event, because root cancellation must not become child-owned lifecycle meaning.
 
 An accepted nonempty Plan executes in ordinal order until completion or the first operational failure, output-contract failure, authority violation, unresolved child, or unsettled operation, because later steps must not build on a failed or changing frontier.
 
@@ -755,6 +833,8 @@ A child Task is published only after its parent step starts and is run depth-fir
 `DerivedState` identifies the Run, root Task, active Task, active Round, active step, operator-stop reference, blockers, semantic judgment, public outcome, transient outcome, and exactly one next action, because deterministic orchestration must make ambiguity visible.
 
 `RunView` omits internal next-action vocabulary but preserves committed stop, judgment, outcome, active frontier, and blockers, because public status should expose durable meaning without making implementation labels normative.
+
+`DerivedState` has fields `run_id`, `root_task_id`, `active_task_id`, `active_round_id`, `active_step_id`, `operator_stop_ref`, `blockers[]`, `semantic_judgment`, `public_outcome`, `transient_outcome`, and `next_action`, because every derived value must have one named slot. `RunView` has fields `run_id`, `root_task_id`, `committed_prefix`, `active_frontier`, `operator_stop_ref`, `judgment`, `outcome`, and `blockers[]`, because status must expose the durable subset without exposing an internal action vocabulary.
 
 The next-action precedence is fixed by safety class, because corruption and already-produced facts must dominate future launches:
 
@@ -800,6 +880,8 @@ An adapter never retries, changes model, changes provider, repairs semantic outp
 Command adapters use the admitted executable and argument vector, sanitized allowlisted environment, admitted working directory, separate byte captures, process identity, exit status, signal status, and local settlement probe, because process return alone cannot prove effect completion or target compliance.
 
 Capture truncation preserves the captured prefix, original-size knowledge when available, truncation marker, and missing-evidence status, because bounded storage must not masquerade as complete evidence.
+
+Stdout, stderr, and raw provider returns are retained as bounded ordinary authoritative evidence with exact capture metadata and no automatic semantic redaction, because redaction could alter evidence. Structurally identifiable known secrets and forbidden persisted values are excluded at producer or admission boundaries before capture, while callers must treat Run storage according to its exposure class, because this rule limits accidental persistence without making a broader privacy promise.
 
 ## Evidence and history access
 
@@ -865,7 +947,7 @@ Operator stop never changes Task judgment and remains visible even when already-
 
 ## Public operations and receipts
 
-The public command surface is limited to `start`, `run`, `status`, `diagnose`, and `stop`, because the MVP needs one creation path, one advancement path, read-only observation, evidence diagnosis, and cancellation without exposing internal mutation primitives.
+The public command surface is exactly `start`, `run`, `status`, `diagnose`, and `stop`, because the SDD owns these shared names and their interface behavior for this realization. Architecture owns lifecycle capabilities and semantics, while a future change to product-visible required capabilities returns upstream, because implementation may not silently rename the shared surface.
 
 `start` returns the immutable Run identity, authoritative Run root, root Task identity when published, and one compact Bootstrap receipt, because callers need a durable handle without treating console prose as authority.
 
@@ -899,7 +981,7 @@ Real-model results record exact model and provider identity when observable, pol
 
 The qualification suite includes negative searches for direct ledger writers, direct adapter launches, mutable cursor state, silent route fallback, target-root store placement, automatic replay, duplicated accepted artifacts, and references that treat the stale Implementation Plan as current authority, because forbidden mechanisms can re-enter through otherwise passing local behavior.
 
-WELL qualification runs a mechanical sentence checker, canonical-name uniqueness and reference checker, and manual review of every structural exemption and reasoning component, because conformance requires both inspectable syntax and substantive warrants.
+WELL qualification runs a mechanical sentence and canonical-reference check, because WELL conformance is mechanical. Meaning-aware design review is separate, because mechanical conformance does not establish design acceptance. The SDD owns shared qualification strategy, while a future Implementation Plan owns exact verification procedures, commands, evidence outputs, and pass, stop, and escalation conditions, because Verification Evidence owns observations against those obligations.
 
 Promotion evidence binds exact hashes of the Governing Inputs, Architecture Description, this SDD, current bounded Implementation Plan, implementation candidate, test sources, host-probe output, deterministic results, and real-model results, because a passing observation applies only to the unchanged design and realization it exercised.
 
@@ -917,28 +999,4 @@ A proposed change to lifecycle semantics, role authority, system boundary, outco
 
 ### Unresolved shared design decisions
 
-`open-items-block-planning` — Each unresolved matter below is an open item rather than a permitted local choice, and every one of them blocks a bounded Implementation Plan for the scope it touches, because the Design Authority Chain requires a newly discovered shared or durable realization decision to return here rather than appear implicitly in realization.
-
-The following declared fields cannot be constructed by an implementer, because each appears in an accepted schema while no proposition here defines its value space: `exit_code_outcomes`, `output_observations`, `argument_slots`, `cwd_policy`, `local_termination_policy`, `read_tool_transport`, `host_profile`, `producer_constraint`, `provenance`, `observation_kind`, `observed_identity`, `prelaunch_identity_snapshot`, `stt_read_grant`, `stt_starting_subtree`, and the selector grammar shared by `source_selector`, `initial_input_selectors`, and `prior_evidence_selectors`.
-
-`exit_code_outcomes` and the selector grammar are the largest of those gaps, because command outcome classification and input resolution are load-bearing for every `COMMAND` step and every dependency edge.
-
-`DerivedState` and `RunView` are named as structures and referenced by `derived-lifecycle-state` and by `status` without a field list, because the misunderstanding-resistance rules in `docs/well.md` require a named structure to be introduced at its canonical definition before dependent propositions use the name.
-
-`task-event-grammar` admits no position for `OPERATOR_STOP_REQUESTED` and leaves `planner-operation`, `validator-operation`, and `step-phase` undefined, so the grammar currently rejects a history that `operator-stop` requires Boundary to commit, because a closed event vocabulary and its grammar must accept exactly the histories the design produces.
-
-`create-only-publication` and `append-only-ledger` describe single-file protocols while the candidate Run at Bootstrap and the Task candidate each span several files, so the all-or-nothing visibility those propositions assert has no stated mechanism, because per-file atomic installation cannot make a multi-file basis appear at one instant.
-
-No proposition states whether `ledger_sequence` and `previous_event_hash` are selected under `writer.lock`, so an operator stop committed while an advancing invocation waits on a provider can leave that invocation holding a package built for a sequence already taken, because `writer.lock` is released during external work and `transition-package` binds the sequence before the ledger line is appended.
-
-`RunPolicy` contains no field bounding one public invocation although Bootstrap is required to freeze that bound and `run` is required to return at it, because a safeguard named by two propositions must exist in the record that freezes it.
-
-`TaskOutputAssessment` carries no phase discriminator and no event kind records an assessment, so the two assessments that `required-output-assessment` requires are indistinguishable in committed history, because a requirement whose satisfaction depends on publication order must identify the observable evidence establishing that order.
-
-The exposure consequence of retained captures is unstated, because captured stdout, stderr, and raw provider returns are committed permanently as ordinary readable files under `context-rules-adoption` while the only secret-aware rule in this document covers environment values, and an implementer cannot tell whether capture redaction is required, forbidden, or excluded.
-
-The rejection of `.git` as a target path component is a product constraint that no accepted Governing Input states, because deciding that STT will never accept a mission operating on repository metadata bounds the product rather than realizing `target-path-authority`, and the Design Authority Chain returns a newly discovered constraint to Governing Inputs before dependent work continues.
-
-Whether the public command surface `start`, `run`, `status`, `diagnose`, and `stop` is shared realization owned here or a product surface owned upstream is unconfirmed, because the Architecture Description is silent on commands and silence does not establish which link owns the meaning.
-
-`qualification-matrix` obliges a mechanical sentence checker, a canonical-name uniqueness and reference checker, and promotion evidence binding exact hashes, and none of those exists yet, because that obligation gates promotion rather than the start of implementation.
+No SDD-owned shared or durable design decision is currently unresolved, because the value spaces, selector and event grammars, atomic publication, lock sequencing, invocation bound, output-assessment identity, capture policy, target admission, public commands, and qualification ownership are defined above. The next authority link is a new bounded current Implementation Plan, because implementation detail and exact verification procedure belong downstream under the unchanged Governing Inputs, Architecture, and this SDD.

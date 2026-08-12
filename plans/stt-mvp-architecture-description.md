@@ -135,7 +135,7 @@ STT does not claim to detect every unreported effect or contain arbitrary proces
 
 ## `authoritative-committed-history` — Authoritative committed history
 
-STT persists complete known Run history as ordinary readable files plus append-only ledgers under an authoritative Run root outside the live target, because `context-rules-adoption` requires durable authoritative context that target work cannot rewrite.
+STT persists complete known Run history in authoritative readable files at the Run's frozen store location outside the live target, because `context-rules-adoption` requires durable authoritative context that target work cannot rewrite.
 
 Accepted lifecycle facts are immutable and state is derived from committed history rather than an independently mutable cursor, because `recovery-from-known-facts` needs one source of truth.
 

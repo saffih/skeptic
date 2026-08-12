@@ -18,7 +18,7 @@ WELL governs design-writing structure rather than Skeptic review or executable q
 
 WELL is not a proof system, a demand for hidden reasoning, or proof that a design is correct, because explicit structure can expose an error without resolving it.
 
-WELL's normative PASS/FAIL obligations concern only represented and mechanically observable structure, because judgments about the represented meaning are assigned to the governing project's separate meaning-aware design review.
+WELL's normative PASS/FAIL obligations concern only represented and mechanically observable structure, while REVIEW reports a mechanically unresolved classification without treating it as a pass, because judgments about the represented meaning are assigned to the governing project's separate meaning-aware design review.
 
 ## Self-contained design propositions
 
@@ -32,7 +32,7 @@ The `because` clause must be a syntactically distinct local reason, protection, 
 
 A local-warrant representation requires the literal `because` token in the prescribed syntactic position, because whether the surrounding words cite the standard, label importance, or express a genuine reason is a meaning-aware review judgment.
 
-ATX headings, YAML/front-matter metadata, fenced code blocks, table rows, block formulas, diagram blocks, bare identifiers, state-vocabulary items, and list items without sentence punctuation are structural syntax exempt from the sentence rule, because these categories are mechanically identifiable without interpreting design meaning.
+ATX headings, YAML/front-matter metadata, fenced code blocks, table rows, block formulas, diagram blocks, bare identifiers, state-vocabulary items, and list items without sentence punctuation are structural syntax categories exempt from the sentence rule, because these are named structural roles rather than prose that must carry its own warrant.
 
 A Markdown list may inherit one explicit warrant from its introductory sentence only when each child item is a mechanically identified fragment without sentence punctuation, because a complete prose sentence must preserve its own literal token.
 
@@ -165,7 +165,13 @@ Meaning-aware design review should verify ownership of normative meaning and exe
 
 A design document is WELL-conformant only when its mechanically checkable structure satisfies the unconditional WELL rules, because WELL conformance must be decidable from the exact document and mechanical checker observations alone.
 
-`mechanical-applicability` — A rule affects WELL PASS/FAIL only when both its applicability and satisfaction can be determined from exact document bytes using syntax defined by WELL, because semantic author intent cannot be an input to a deterministic conformance result.
+`mechanical-applicability` — A rule affects WELL PASS/FAIL only when both its applicability and satisfaction can be determined from exact document bytes using syntax the canonical WELL checker deterministically recognizes, because semantic author intent cannot be an input to a deterministic conformance result.
+
+The canonical WELL checker is the executable specification for deterministic mechanical interpretation, because WELL prose fixes the checkable obligations and their semantic boundary while the checker's own deterministic implementation, not additional WELL prose, fixes exact parsing and classification detail.
+
+Ordinary Markdown remains the default document form, because WELL adds a sentence-level warrant obligation and canonical-naming discipline without replacing Markdown's own syntax.
+
+WELL should not gain new author-visible syntax merely to make mechanical classification easier, because only a demonstrated authoring ambiguity, not implementation convenience, justifies a new visible convention.
 
 Those mechanical rules include the literal `because` in every syntactically classified prose sentence, valid canonical names for definitions that appear, canonical-name uniqueness, exact canonical references, missing-reference detection, mechanically identifiable layout rules, and mechanically detectable duplicate identifiers or malformed structural notation, because these properties can be checked without deciding whether the represented design meaning is good, true, sufficient, coherent, or correct.
 
@@ -173,13 +179,15 @@ A mechanical sentence checker is required as an aid, because a complete pass ove
 
 A mechanical link checker must verify canonical-name uniqueness, exact references, and missing targets for canonical names that appear, because these properties are mechanically inspectable without judging whether additional names or edges should exist.
 
-The checker may ignore only the mechanically defined syntax categories listed above and subordinate list items matching the stated punctuation rule, because broad semantic exemptions can hide prose sentences.
+The checker may ignore only the structural syntax categories named above and subordinate list items matching the stated punctuation rule, because broad semantic exemptions can hide prose sentences.
+
+WELL names each structural syntax category and cross-document reference form without prescribing its parsing grammar, because the canonical WELL checker owns deterministic recognition and classification, and checker implementation details and Markdown/parser edge cases need not be duplicated normatively in WELL prose.
 
 The checker must deterministically report every skipped or exempted construct and the mechanical rule that excluded it, because an unreported exemption would make the mechanical result irreproducible.
 
-If the checker cannot mechanically determine whether a construct is exempt, it must report that unresolved mechanically undecidable case rather than silently count it as a passing exemption, because semantic review cannot convert an unknown mechanical classification into WELL conformance.
+If the checker cannot mechanically determine whether a construct is exempt, it must report that unresolved mechanically undecidable case as REVIEW rather than silently count it as a passing exemption, because semantic review cannot convert an unknown mechanical classification into WELL conformance.
 
-A mechanical checker result must identify the exact artifact, checker source or identity, applied mechanical rules, skipped or exempted constructs, violations, and unresolved mechanically undecidable cases, because the mechanical result must be reproducible from explicit inputs and observations.
+A mechanical checker result must identify the exact artifact, checker identity and version, applied mechanical rules, skipped or exempted constructs, violations, and unresolved mechanically undecidable cases, because the mechanical result must be reproducible from explicit inputs and observations.
 
 Repository residence, ongoing maintenance, and CI integration are requirements only when the governing document states them explicitly, because reviewers must not strengthen a verification gate beyond the properties that the document actually protects.
 
@@ -229,7 +237,7 @@ A warranted introductory sentence may govern a list of subordinate fields, becau
 
 Every syntactically classified prose sentence in this document contains the literal `because`, because sentence-level warrant representation is WELL's primary mechanical encapsulation rule.
 
-Every sentence-rule exemption in this document is limited to the mechanically defined syntax categories and list-fragment punctuation rule, because the standard must not evade its own rule through an unclassified semantic exemption.
+Every sentence-rule exemption in this document is limited to the structural syntax categories named above and the list-fragment punctuation rule, because the standard must not evade its own rule through an unclassified semantic exemption.
 
 The document uses canonical definitions and paragraph-sized source units, because self-application must demonstrate exact search, extraction, and modification structure.
 

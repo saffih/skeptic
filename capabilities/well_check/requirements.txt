@@ -1,0 +1,5 @@
+# Pinned parser required by the sole WELL Markdown AST/token pipeline.
+markdown-it-py==3.0.0
+mdit-py-plugins==0.4.2
+# Transitive dependency of markdown-it-py, pinned to keep parser resolution stable.
+mdurl==0.1.2
