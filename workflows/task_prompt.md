@@ -11,8 +11,9 @@ text received after `TP:`. The agent is responsible for understanding it; TP
 does not require a pre-model capture of chat bytes, a user-managed intent file,
 or a mandatory hash ceremony.
 
-The controller persists the mission immediately in `run/mission.md`, creates a
-run directory, writes `events.jsonl` and equivalent run-control bookkeeping,
+The controller persists the mission immediately in its host-owned external run
+root at `mission.md`, creates that run directory, writes `events.jsonl` and
+equivalent run-control bookkeeping,
 and then starts a fresh Brain on the normal capable route. Only the controller
 may write that bookkeeping. Brain and Blocks may write only their authorized
 result and artifact files; Brain may propose control decisions in `TP_RESULT`
@@ -43,12 +44,12 @@ TP, or grants itself authority.
 
 ## Durable run state
 
-The minimal durable layout is:
+The minimal durable layout is relative to that external run root (it is not a
+directory in the target repository):
 
-    run/
-      mission.md
-      events.jsonl
-      artifacts/
+    mission.md
+    events.jsonl
+    artifacts/
 
 Events should record at least run creation, dispatch admission, valid return,
 and terminal outcome. References in packets and results must be resolvable by
