@@ -1,13 +1,13 @@
 # Sequential Target Task MVP Software Design Description
 
-**Repository:** `saffih/skeptic`
-**Governing Inputs:** `plans/stt-mvp-governing-inputs.md`
-**Architecture Description:** `plans/stt-mvp-architecture-description.md`
-**Authority chain:** `docs/design-authority-chain.md`
-**Document profile:** `docs/well.md`
-**Downstream owner:** a bounded current Implementation Plan
-**Historical evidence:** `plans/stt-mvp-implementation-plan.md`
-**Scope:** shared and durable realization choices for the STT MVP
+**Repository:** `saffih/skeptic`, because this metadata identifies the repository that owns the design.
+**Governing Inputs:** Sequential Target Task MVP Governing Inputs, because that document owns accepted STT product constraints.
+**Architecture Description:** Sequential Target Task MVP Architecture Description, because that document owns STT system-wide meaning.
+**Authority chain:** Design Authority Chain, because that document assigns design-layer ownership.
+**Document profile:** WELL, because that document defines this artifact's mechanical design-document profile.
+**Downstream owner:** a bounded current Implementation Plan, because construction detail belongs below this shared design.
+**Historical evidence:** the prior STT MVP Implementation Plan, because retained historical material is not current authority.
+**Scope:** shared and durable realization choices for the STT MVP, because this SDD owns shared mechanisms rather than bounded construction.
 
 This document owns the architecture-permitted shared realization of STT, because components, contracts, schemas, persistence, lifecycle derivation, adapters, authority admission, recovery, evidence binding, host requirements, and qualification need one current owner before bounded implementation can begin.
 
@@ -180,6 +180,7 @@ RootTaskSpec
   initial_input_selectors[]
   prior_evidence_selectors[]
   run_policy
+  routing_constraints | null
   routing_identity
 
 RunRecord
@@ -256,11 +257,15 @@ ProviderRoute
   schema
   route_name
   adapter_kind: FAKE | CODEX | CLAUDE_CODE
+  provider_id
   executable_identity
   fixed_argv_prefix[]
   requested_provider
   requested_model
   requested_effort
+  capability_rank
+  cost_rank
+  quality_rank
   admitted_effect_classes[]
   admitted_inherited_env_names[]
   fixed_env{}
@@ -299,13 +304,17 @@ ArgumentSlot: exactly one of { kind: STRING } | { kind: INTEGER, minimum: canoni
 cwd_policy: exactly one of { kind: STORE_ROOT } | { kind: TARGET_ROOT } | { kind: EXACT_ADMITTED_PATH, path: canonical admitted path }
 local_termination_policy: WAIT_FOR_EXIT | WAIT_FOR_SETTLEMENT | TERMINATE_AFTER_GRACE
 read_tool_transport: FILE_REFERENCE | BOUNDED_JSON_LINES
+capability_rank: positive integer where a larger rank represents a route accepted as capable of every obligation accepted at a smaller rank
+cost_rank: positive integer where a smaller rank represents lower configured relative cost within the frozen RoutingFile
+quality_rank: positive integer where a larger rank represents higher configured relative quality within the frozen RoutingFile
+RoutingConstraints: { permitted_provider_ids[]: nonempty distinct strings | null, permitted_route_names[]: nonempty distinct strings | null, planner_minimum_capability_rank: positive integer | null, validator_minimum_capability_rank: positive integer | null, worker_minimum_capability_rank: positive integer | null, cost_preference: NONE | LOWEST_AVAILABLE | BALANCED, quality_preference: NONE | HIGHEST_AVAILABLE | BALANCED }; null permitted sets and minimums impose no additional constraint
 host_profile: { filesystem_identity: string, process_identity: string, supports_no_follow: boolean, supports_atomic_same_parent_rename: boolean, supports_exclusive_create: boolean, supports_file_flush: boolean, supports_directory_flush: boolean, supports_append_durability: boolean, supports_advisory_lock: boolean, supports_exact_byte_io: boolean, supports_process_identity: boolean, supports_settlement_observation: boolean, supports_monotonic_time: boolean }
 producer_constraint: { kind: ANY_ADMITTED_PRODUCER } | { kind: STEP, step_id: string } | { kind: ROUTE, route_name: string } | { kind: OPERATION_ROLE, role: PLANNER | WORKER | COMMAND | VALIDATOR }
 provenance: exactly one of { kind: BOOTSTRAP_IMPORT, source_identity: string, committed_record_ref: RecordRef } | { kind: PRIOR_RUN_IMPORT, source_identity: string, committed_record_ref: RecordRef } | { kind: TARGET_OBSERVATION, source_identity: string, observation_ref: RecordRef } | { kind: WORKER_OUTPUT, operation_request_id: string, committed_record_ref: RecordRef } | { kind: COMMAND_OUTPUT, operation_request_id: string, committed_record_ref: RecordRef } | { kind: CHILD_TASK_OUTPUT, child_task_id: string, child_task_result_ref: RecordRef } | { kind: BOUNDARY_OBSERVATION, source_identity: string, committed_record_ref: RecordRef }; fields not belonging to the selected kind are forbidden
 observation_kind: PATH_IDENTITY | FILE_BYTES | TREE_MANIFEST | PROCESS | PROVIDER | TIMING | SETTLEMENT
 observed_identity: { kind: TARGET_OBJECT | EXECUTABLE | PROVIDER | PROCESS, identity: string, observed_at: RFC3339_UTC }
 prelaunch_identity_snapshot: { target_identity: string | null, executable_identity: string | null, admitted_execution_identity: { kind: PROVIDER_ROUTE, route_identity: string } | { kind: COMMAND_PROFILE, profile_name: string, profile_identity: string }, authority_identity: string, captured_at: RFC3339_UTC }
-stt_read_grant: { committed_prefix_ref: PrefixRef, allowed_record_kinds: nonempty array<CanonicalRecordKind>, max_bytes: positive integer, selectors: array<source_selector> }
+stt_read_grant: { committed_prefix_ref: PrefixRef, allowed_record_kinds: nonempty array<CanonicalRecordKind>, max_bytes: positive integer, starting_selectors: array<source_selector> }
 stt_starting_subtree: { run_root_relative_path: string, subtree_identity: string, manifest_ref: RecordRef }
 ```
 
@@ -324,6 +333,10 @@ PRIOR_RUN_RECORD: source_run_id, record_kind: CanonicalRecordKind, record_id, im
 ```
 
 `initial_input_selectors` and `prior_evidence_selectors` use this grammar, because their different source sets do not justify different matching semantics. Boundary resolves within the named admitted source and exact identity binding, returns zero matches as `UNRESOLVED_INPUT`, rejects more than one match as `AMBIGUOUS_INPUT`, orders selectors by array position and records within one selector by `record_id`, and never applies semantic fallback, because deterministic resolution must expose stale, missing, and ambiguous sources rather than guess. A missing source, changed source identity, stale import hash, or failed object verification is `STALE_SOURCE` and blocks admission or producer completion as applicable, because an unverified substitute would cross an authority boundary.
+
+`stt_read_grant.committed_prefix_ref` and `allowed_record_kinds` are the complete mechanical authority ceiling for committed-history retrieval, while `starting_selectors` are a receiver-resolvable navigation entrance rather than an exhaustive evidence limit, because the adopted Context Rules reserve evidence sufficiency to the semantic receiver and deny a producer-selected starting context authority over later retrieval.
+
+A Planner, Worker, or Validator may request from History Reader any record or artifact reachable in its admitted committed prefix whose kind its `stt_read_grant` allows, when its obligation requires that evidence, because bounded context must not silently revoke already-admitted evidence authority. `max_bytes` limits one History Reader response rather than the receiver's total permissible retrieval; a response that cannot fit returns exact resolvable references and an explicit `HISTORY_RESPONSE_LIMIT` condition without truncation, substitution, or semantic conclusion, because an operation may make further bounded retrieval requests while unavailable or unauthorized required evidence must remain visible.
 
 Bootstrap converts `RootAuthoritySpec` into the root `TaskAuthority` by binding the frozen target identity and derived authority identity, because caller-owned authority must cross one mechanical admission boundary before semantic execution.
 
@@ -358,6 +371,7 @@ RunPolicy
   settlement_wait_seconds
   termination_grace_seconds
   max_control_transitions_per_public_invocation
+  routing_constraints: RoutingConstraints
   host_profile
 
 RoutingFile
@@ -373,45 +387,60 @@ Every Run-policy limit is a positive finite integer with units fixed by its fiel
 
 `max_control_transitions_per_public_invocation` is a positive finite interruptibility bound frozen in `RunPolicy`, because one public invocation must have an explicit finite control safeguard without imposing a semantic lifecycle total. `RunPolicy` contains no cumulative Task, depth, Round, Plan-step, or semantic-call limit, because Governing Input `semantic-continuation` assigns those totals to Planner and Validator judgment.
 
+Bootstrap derives effective routing constraints by intersecting every non-null permitted-provider and permitted-route set from the Root Task and Run policy and by taking the larger present minimum capability rank for each role, while rejecting an empty intersection or any fixed Planner or Validator route below its effective minimum, because `planning-and-validation-capability` requires a configured trusted floor and `mission-routing-constraints` permits either source to narrow execution without silently weakening the other.
+
+Boundary admits a Planner or Validator operation only when its fixed route is in the effective permitted provider and route sets and its capability rank meets the effective role minimum, and it admits a Worker route only when the same applicable Worker constraints hold, because requested provider, model, and effort identify an execution request but do not prove that its frozen route has the required configured capability.
+
+Planner chooses among Boundary-admissible routes and records the selected route and effective routing constraints in the accepted Plan, because the configured cost and quality preferences guide trusted adequacy judgment while Boundary must remain mechanical. Boundary rejects any Plan route that is unavailable, outside the effective constraints, or below the role minimum and never substitutes another route, because route preference cannot authorize a weaker or different execution than the accepted Plan.
+
 Planning records use the following exact shared fields, because Planner-local readable keys must become Boundary-derived lifecycle identities without changing the accepted Plan:
 
 ```text
 ReturnedPlan
-  schema
+  schema: ReturnedPlan@1
   planner_operation_request_id
   task_id
   round_id
   steps[1..]
 
 CommonStep
-  schema
-  step_key
+  step_key: nonempty string unique within ReturnedPlan.steps[]
   kind: WORKER | COMMAND | TASK
-  description
-  declared_read_scopes[]
-  declared_write_responsibility_scopes[]
-  dependency_specs[]
-  output_requirement_specs[]
+  description: nonempty string
+  declared_read_scopes[]: array of admitted authority read scopes in declared order
+  declared_write_responsibility_scopes[]: array of admitted authority write-responsibility scopes in declared order
+  dependency_specs[]: DependencySpec in dependency_key order
+  output_requirement_specs[]: OutputRequirementSpec in requirement_key order
 
 WorkerStep extends CommonStep
-  worker_route
-  instruction
-  stt_read_grant
+  worker_route: admitted ProviderRoute.route_name
+  instruction: nonempty string
+  stt_read_grant: stt_read_grant
 
 CommandStep extends CommonStep
-  command_profile
-  arguments{}
-  output_source_bindings{}: map of requirement_id to profile_observation_name
+  command_profile: admitted CommandProfile.profile_name
+  arguments{}: map of CommandProfile.argument_slots names to values valid for their slots; no other key
+  output_source_bindings{}: map of requirement_key to profile_observation_name
 
 TaskStep extends CommonStep
-  child_mission
-  child_authority
+  child_mission: nonempty string
+  child_authority: TaskAuthority that is a structural subset of the parent Task authority
   stt_starting_subtree | null
 ```
 
-Step, dependency, and requirement keys are unique within their owning Plan or step and dependency edges may point only to earlier steps, because readable Planner notation must not create identity ambiguity or cycles.
+`ReturnedPlan` contains exactly the fields above and one selected variant for every array member of `steps[]`; `CommonStep` is not itself a returned variant, and fields outside the selected `WorkerStep`, `CommandStep`, or `TaskStep` variant are forbidden, because a tagged returned step must have one complete and non-ambiguous semantic meaning.
 
-Boundary derives Plan, step, input, and requirement identities and publishes one canonical accepted Plan, because semantic roles choose meaning while Boundary owns lifecycle binding.
+`DependencySpec` and `OutputRequirementSpec` are Planner-return records rather than persisted identity-bearing records, because Boundary derives their durable identities. `DependencySpec` has exactly `dependency_key`, `kind`, `source_selector | null`, `producer_step_key | null`, `producer_requirement_key | null`, `purpose`, and `required_media_type`, because those fields are the complete returned dependency meaning. `OutputRequirementSpec` has exactly `requirement_key`, `purpose`, `object_type`, `media_type`, `location`, `path_policy`, `path | null`, `required_mode | null`, `satisfaction_mode`, `expected_sha256 | null`, and `producer_constraint`, because those fields are the complete returned output requirement meaning. `dependency_key` and `requirement_key` are nonempty strings unique in their owning step, because Boundary must be able to derive durable identities without treating a human-readable key as a durable identifier.
+
+Step, dependency, and requirement keys are unique within their owning Plan or step and dependency edges may point only to earlier steps, because readable Planner notation must not create identity ambiguity or cycles. `INITIAL_IMPORT`, `PRIOR_IMPORT`, `RUN_ARTIFACT`, and `TARGET_PATH` require `source_selector` and forbid both producer keys, because those sources are not produced by a prior step. `PREVIOUS_STEP_OUTPUT` and `CHILD_TASK_OUTPUT` require both producer keys and forbid `source_selector`, because their producer must be explicit. Every producer step key names an earlier returned step whose requirement key names one of that step's output requirements, because dependency provenance must not be missing or cyclic.
+
+The one persisted accepted `Plan` is `Plan@1` with exactly `schema`, `plan_id`, `planner_operation_request_id`, `task_id`, `round_id`, `effective_routing_constraints`, and `steps[1..]`, where `steps[]` is the nonempty ordered array of embedded canonical `Step@1` records, because there must be no duplicate persisted Plan form. A canonical `Step` has exactly `schema`, `step_id`, `step_ordinal`, `kind`, `description`, `declared_read_scopes[]`, `declared_write_responsibility_scopes[]`, `inputs[]`, `output_requirements[]`, and the fields of exactly one selected variant, because a persisted step must be complete and exclusive. `WORKER` has `worker_route`, `instruction`, and `stt_read_grant`, `COMMAND` has `command_profile`, `arguments{}`, and `output_source_bindings{}`, and `TASK` has `child_mission`, `child_authority`, and `stt_starting_subtree | null`, because the selected kind fixes the exact variant fields. `step_ordinal` is the zero-based `steps[]` position, `inputs[]` is the `InputRef@1` array in returned dependency order, and `output_requirements[]` is the `OutputRequirement@1` array in returned requirement order, because immutable embedded order is needed for execution and identity.
+
+Boundary accepts `ReturnedPlan@1` only when its planner operation, Task, and Round equal the admitted Planner `OperationRequest`, every selected route or profile is admitted, every declared scope and child authority is a subset of the immutable Task authority, and every returned value satisfies the closed grammar above, because Boundary must reject unadmitted durable meaning. Boundary derives `effective_routing_constraints` from the frozen Run and Task constraints, converts each returned dependency and requirement specification to its canonical `InputRef@1` and `OutputRequirement@1` form, replaces producer keys with their already-derived `step_id` and `requirement_id`, and publishes that one `Plan@1`, because semantic return requires Boundary lifecycle binding. It does not persist `ReturnedPlan`, `step_key`, `dependency_key`, or `requirement_key`, because Planner-return notation is semantic input while the accepted Plan is the Boundary-derived durable lifecycle record.
+
+For identity derivation, the `accepted Plan body` in `plan_id` is the canonical JSON object formed from the `Plan@1` field vocabulary excluding `plan_id`, all `step_id` fields, all `input_id` fields, and all `requirement_id` fields, because stored identities may not be cyclic. Its `steps[]` retain their order and use the returned semantic fields with producer keys resolved to their earlier ordinal and requirement position, because identity inputs must be reconstructible. The `accepted step body` in `step_id` is the corresponding canonical `Step@1` object excluding `step_id`, `inputs[]`, and `output_requirements[]`, because those fields are independently derived. `input_id` uses the canonical `DependencySpec` bytes at that dependency ordinal, and `requirement_id` uses the canonical `OutputRequirement` bytes at that requirement ordinal, because the existing identity family fixes those preimages. Boundary then writes each derived ID only in its owning canonical record, because these non-cyclic preimages make independently reconstructed Plan, Step, input, and requirement identities exact.
+
+The accepted Plan is persisted exactly once at `rounds/<round-number>/plan.json` in the `PLANNING_FINISHED` transition package together with its accepted `PlannerResult`, because History Reader and recovery need one committed source for the embedded canonical Steps. A Worker or Command `OperationRequest` has the exact accepted `plan_id` and `step_id` for its embedded Step, while a Planner or Validator request has null `plan_id` and null `step_id`; a child Task instead binds the parent `step_id` in its immutable `TaskRecord`, because every step-phase, result, child lineage, and later History Reader reference must resolve one unambiguous canonical Plan and Step without persisting another Step copy.
 
 Inputs and outputs use the following exact shared records, because substitution-sensitive consumption and mechanically verified production require canonical bindings:
 
@@ -426,7 +455,7 @@ DependencySpec
   required_media_type
 
 InputRef
-  schema
+  schema: InputRef@1
   input_id
   kind
   source_identity
@@ -445,7 +474,7 @@ InputResolution
   observed_path_identity | null
 
 OutputRequirement
-  schema
+  schema: OutputRequirement@1
   requirement_id
   purpose
   object_type: REGULAR_FILE | DIRECTORY_TREE
@@ -505,6 +534,7 @@ OperationRequest
   run_id
   task_id
   round_id
+  plan_id | null
   step_id | null
   exact_contract_ref
   exact_inputs[]
@@ -599,7 +629,7 @@ TaskResult
   terminal_evidence_refs[]
 ```
 
-Every `CommandStep.output_source_bindings` key is one of that step's output requirement identities, each value names one `CommandProfile.output_observations` entry whose source and object type are compatible with that requirement, and each required command-produced output has exactly one such binding, because command-output satisfaction must resolve to one named frozen observation. A `CaptureRecord` preserves whether each capture is complete, truncated, or missing, its retained prefix when any, original-size knowledge when available, and the truncation or missing-evidence marker, because an `AttemptOutcome` capture reference must not conceal incomplete evidence. `TaskResult.final_round_ref`, `final_validator_result_ref`, and `terminal_output_assessment_ref` bind the exact terminal history, while `satisfied_outputs[]` binds the selected `ArtifactRef` for every terminally satisfied required output and `terminal_evidence_refs[]` binds any other terminal evidence required by the accepted design, because a terminal result must prove the history and assessment that establish its output claim.
+Every returned `CommandStep.output_source_bindings` key is one of that step's returned requirement keys, because a command output must identify its planned requirement. Boundary converts each key to the matching canonical requirement identity, and each value names one `CommandProfile.output_observations` entry whose source and object type are compatible with that requirement, because the accepted Plan records canonical rather than Planner-local identifiers. Each required command-produced output has exactly one such binding, because command-output satisfaction must resolve to one named frozen observation. A `CaptureRecord` preserves whether each capture is complete, truncated, or missing, its retained prefix when any, original-size knowledge when available, and the truncation or missing-evidence marker, because an `AttemptOutcome` capture reference must not conceal incomplete evidence. `TaskResult.final_round_ref`, `final_validator_result_ref`, and `terminal_output_assessment_ref` bind the exact terminal history, while `satisfied_outputs[]` binds the selected `ArtifactRef` for every terminally satisfied required output and `terminal_evidence_refs[]` binds any other terminal evidence required by the accepted design, because a terminal result must prove the history and assessment that establish its output claim.
 
 Diagnostic reason strings and error messages are data rather than control signals while closed enums and validated references drive derivation, because arbitrary prose must not acquire lifecycle authority.
 
@@ -611,11 +641,11 @@ Timeout, response loss, connection reset after sending, unknown sent-byte count,
 
 `instruction-data-envelope` — Every semantic request separates authoritative instructions from untrusted evidence data and identifies each item by an immutable reference, because persisted reports and target content must not acquire control authority through prompt placement.
 
-Planner receives the immutable Task basis, current committed prefix, available bounded history tools, target observations, routing constraints, and output contract, because decomposition must use the complete admitted obligation without hidden host context.
+Planner receives the immutable Task basis, current committed prefix, its available bounded History Reader access, target observations, routing constraints, and output contract, because decomposition must use the complete admitted obligation without hidden host context.
 
-Worker receives only the accepted step, granted authority, required inputs, bounded history access, and output contract, because execution economy and least authority forbid inheriting the Planner's full capability implicitly.
+Worker receives only the accepted step, granted authority, required inputs, its bounded History Reader access, and output contract, because execution economy and least authority forbid inheriting the Planner's full capability implicitly.
 
-Validator receives the immutable Task basis and all committed admissible evidence through one stable prefix, because independent judgment must cover the Task obligation without observing a moving history.
+Validator receives the immutable Task basis and its bounded History Reader access to committed admissible evidence through one stable prefix, because independent judgment must cover the Task obligation without observing a moving history.
 
 Planner and Validator returns are accepted only when one complete schema-valid semantic result is bound to the exact OperationRequest, because free text or mismatched request identity cannot become lifecycle authority.
 
@@ -631,7 +661,7 @@ Validator return separates Task judgment `SATISFIED`, `UNSATISFIED`, or `INDETER
 
 A child authority grant must be a structural subset of its parent grant and every accepted Plan or step grant must be a subset of the immutable Task authority, because no downstream role may expand capability through interpretation.
 
-Planner may choose only routes and mechanisms present in both Run policy and Task authority, because `simplest-adequate-execution` permits semantic selection only within admitted constraints.
+Planner may choose only routes and mechanisms present in both Run policy and Task authority and satisfying effective routing constraints, because `simplest-adequate-execution` permits semantic selection only within admitted constraints.
 
 Boundary rejects an unavailable or forbidden route without substitution, because silent fallback would replace the Planner's accepted cost and capability judgment.
 
@@ -765,7 +795,7 @@ The manifest grows with the Task count of the Run rather than staying within a f
 
 Each `PrefixTaskHead` contains schema, Task identity, ledger sequence, event hash, and ledger byte size, while the manifest identity hashes its exact bytes including the terminal LF, because readers must exclude records appended after the operation snapshot.
 
-External work occurs without `writer.lock`. Before publication Boundary acquires `writer.lock`, rereads the current committed Task head, and only then allocates the next `ledger_sequence` and `previous_event_hash`, because an invocation must not prepare a transition against a head consumed by operator stop. It installs the package and ledger line under the lock, revalidates the package binding immediately before append, and releases the lock after durable publication, because prepare/revalidate/commit makes stop and advancement serialize without holding a lock across provider or command waits. A changed head discards the uncommitted candidate and requires rederivation from the new committed facts, because stale transition identity cannot be repaired by reuse.
+External work occurs without `writer.lock`, because a lock held across provider or command waits would prevent durable control progress. Before publication Boundary acquires `writer.lock`, rereads the current committed Task head, and only then allocates the next `ledger_sequence` and `previous_event_hash`, because an invocation must not prepare a transition against a head consumed by operator stop. It installs the package and ledger line under the lock, revalidates the package binding immediately before append, and releases the lock after durable publication, because prepare/revalidate/commit makes stop and advancement serialize without holding a lock across provider or command waits. A changed head discards the uncommitted candidate and requires rederivation from the new committed facts, because stale transition identity cannot be repaired by reuse.
 
 Boundary holds `runner.lock` for one public Run-advancement invocation rather than the lifetime of external work, because one invocation must not race another driver while operator observation and later recovery remain available.
 
@@ -897,7 +927,7 @@ Externally mutable target facts are re-observed immediately before authoritative
 
 A semantic result may cite only records available in its admitted committed prefix plus target observations created for that operation, because later history must not retroactively support an earlier decision.
 
-History Reader verifies ledger and reference integrity before returning exact bounded records, and every response identifies the committed prefix and omitted material, because on-demand context must not become a curated alternate truth.
+History Reader verifies ledger and reference integrity before returning exact bounded records, and every response identifies the committed prefix, requested source, returned references, and any omitted material or response-limit condition, because on-demand context must not become a curated alternate truth or silently narrow a receiver's evidence basis.
 
 Summaries and indexes are disposable navigation aids that cite underlying records and are never accepted as sole evidence, because `authoritative-committed-history` assigns authority to committed records rather than convenience views.
 
@@ -965,7 +995,7 @@ Every Boundary and public receipt identifies Run, Task, committed prefix, reques
 
 `qualification-matrix` — Qualification maps every mechanical design proposition to deterministic falsification and every semantic-role proposition to representative real-model evaluation, because schema tests cannot prove judgment and model demonstrations cannot prove persistence integrity.
 
-Deterministic unit tests cover canonical codec rejection, identity domain separation, schema closure, authority subset checks, route non-substitution, path traversal and link rejection, transition hashing, ledger grammar, state precedence, reference binding, and output assessment, because these properties are exact and mechanically falsifiable.
+Deterministic unit tests cover canonical codec rejection, identity domain separation, schema closure, authority subset checks, trusted-minimum capability admission, constraint intersection, route non-substitution, path traversal and link rejection, transition hashing, ledger grammar, state precedence, reference binding, History Reader access to an additional authorized source beyond `starting_selectors`, and output assessment, because these properties are exact and mechanically falsifiable.
 
 Fault-injection tests interrupt every durable publication boundary before and after file flush, directory flush, rename, package installation, ledger append, launch intent, adapter return, settlement observation, and phase finalization, because `known-fact-recovery` must be demonstrated at each crash-visible prefix.
 
@@ -975,7 +1005,7 @@ Adapter conformance tests use deterministic fake providers and processes to exer
 
 Integration tests exercise Planner decline, one-step success, multi-step stop, child depth-first completion, child operational stop, Validator repeat, Validator failure, operator stop at each frontier, target mutation between observations, and imported prior evidence, because the complete sequential loop must preserve component contracts across boundaries.
 
-Real-model evaluation uses frozen missions that challenge decomposition, cheapest-adequate route choice, authority narrowing, evidence use, continuation, stagnation, and independent validation across permitted providers and trusted minimum capabilities, because `trusted-semantic-roles` assigns those choices to model judgment.
+Real-model evaluation uses frozen missions that challenge decomposition, cheapest-adequate route choice within effective routing constraints, authority narrowing, evidence use, continuation, stagnation, and independent validation across permitted providers and trusted minimum capabilities, because `trusted-semantic-roles` assigns those choices to model judgment.
 
 Real-model results record exact model and provider identity when observable, policy, prompt contract, committed input prefix, returned bytes, tool transcript completeness, and human-scored criteria, because a pass without execution identity and evidence cannot qualify the configured route.
 
@@ -999,4 +1029,4 @@ A proposed change to lifecycle semantics, role authority, system boundary, outco
 
 ### Unresolved shared design decisions
 
-No SDD-owned shared or durable design decision is currently unresolved, because the value spaces, selector and event grammars, atomic publication, lock sequencing, invocation bound, output-assessment identity, capture policy, target admission, public commands, and qualification ownership are defined above. The next authority link is a new bounded current Implementation Plan, because implementation detail and exact verification procedure belong downstream under the unchanged Governing Inputs, Architecture, and this SDD.
+No SDD-owned shared or durable design decision is currently unresolved, because the value spaces, routing-constraint admission, selector and event grammars, atomic publication, lock sequencing, invocation bound, output-assessment identity, capture policy, target admission, public commands, and qualification ownership are defined above. The next authority link is a new bounded current Implementation Plan, because implementation detail and exact verification procedure belong downstream under the unchanged Governing Inputs, Architecture, and this SDD.

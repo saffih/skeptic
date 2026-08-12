@@ -1,9 +1,9 @@
 # Sequential Target Task MVP Governing Inputs
 
-**Accountable owner:** STT product owner
-**Applies to:** STT MVP Architecture Description and every dependent design or implementation artifact
-**Authority link:** Governing Inputs in `docs/design-authority-chain.md`
-**Document profile:** `docs/well.md`
+**Accountable owner:** STT product owner, because accepted product decisions need an accountable authority.
+**Applies to:** STT MVP Architecture Description and every dependent design or implementation artifact, because downstream work may interpret but not redefine these inputs.
+**Authority link:** Governing Inputs in the Design Authority Chain, because this document owns the chain's accepted product meaning.
+**Document profile:** WELL, because this document defines and justifies design inputs.
 
 This document owns the accepted objectives, constraints, and trade-offs that warrant the STT architecture, because architecture may interpret product decisions but may not silently create or redefine them.
 
@@ -47,7 +47,7 @@ Every lifecycle transition and every effectful operation passes through Boundary
 
 ### `context-rules-adoption` — Context Rules adoption
 
-STT adopts the portable Context Rules contract in `docs/context-rules.md` as an accepted context-handling constraint subject to these Governing Inputs and STT authority, because one portable owner should define the generic rule while STT owns only the product decision to adopt it. The historical `docs/context-stewardship.md` contract is not an STT authority or retained exception.
+STT adopts the portable Context Rules contract as an accepted context-handling constraint subject to these Governing Inputs and STT authority, because one portable owner should define the generic rule while STT owns only the product decision to adopt it. The historical Context Stewardship contract is not an STT authority or retained exception, because Context Rules supersedes it for this purpose.
 
 STT keeps durable substantive state in authoritative readable files, exchanges stable artifact references rather than repeated bodies, and gives each semantic operation a bounded working set sufficient for its obligation that the responsible semantic role may expand when evidence requires it, because model context is scarce but context economy is subordinate to correct judgment.
 

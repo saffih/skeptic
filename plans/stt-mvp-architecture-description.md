@@ -1,10 +1,10 @@
 # Sequential Target Task MVP Architecture Description
 
-**Repository:** `saffih/skeptic`
-**Governing Inputs:** `plans/stt-mvp-governing-inputs.md`
-**Downstream owner:** Software Design Description under `docs/design-authority-chain.md`
-**Document profile:** `docs/well.md`
-**Scope:** STT MVP system-wide semantics, boundaries, invariants, and architecturally significant decisions
+**Repository:** `saffih/skeptic`, because this document is maintained with the STT MVP sources.
+**Governing Inputs:** Sequential Target Task MVP Governing Inputs, because this Architecture refines their accepted product meaning.
+**Downstream owner:** Software Design Description under the Design Authority Chain, because shared realization belongs downstream of system-wide semantics.
+**Document profile:** WELL, because this document defines system-wide design meaning.
+**Scope:** STT MVP system-wide semantics, boundaries, invariants, and architecturally significant decisions, because shared realization mechanics remain outside this authority.
 
 This document owns only system-wide meaning that every conforming realization must preserve, because schemas, directories, algorithms, adapter protocols, command payloads, host probes, and test construction belong to the Software Design Description or a bounded Implementation Plan.
 
@@ -193,6 +193,6 @@ Representative real-model evaluation must challenge planning, route adequacy, va
 
 Real-model evaluation is evidence rather than a correctness guarantee, because finite cases cannot prove general reasoning reliability or universal minimum cost under `non-goals`.
 
-The Software Design Description must define the shared mechanisms needed to realize every architecture proposition without adding or changing architecture, because `docs/design-authority-chain.md` permits downstream refinement only inside the variation allowed here.
+The Software Design Description must define the shared mechanisms needed to realize every architecture proposition without adding or changing architecture, because the Design Authority Chain permits downstream refinement only inside the variation allowed here.
 
 A bounded Implementation Plan may begin only from unchanged accepted Governing Inputs, Architecture Description, and applicable Software Design Description, because realization must not invent missing system-wide or durable decisions.

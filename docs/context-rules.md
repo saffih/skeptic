@@ -20,15 +20,15 @@ Role names, lifecycle stages, routing decisions, record schemas, and digest proc
 
 ## Authority and conformance
 
-This document conforms to `docs/well.md` in full, because `docs/design-authority-chain.md` states that obligation unconditionally for any artifact that defines or justifies design, and this document defines a cross-cutting design constraint that other design artifacts are expected to adopt.
+This document conforms to WELL in full, because the Design Authority Chain states that obligation unconditionally for any artifact that defines or justifies design, and this document defines a cross-cutting design constraint that other design artifacts are expected to adopt.
 
-`docs/well.md` and `docs/design-authority-chain.md` own their own rules and are cited here by path rather than restated, because copying their text into this document would create the duplicate authority both of them exist to prevent.
+WELL and the Design Authority Chain own their own rules and are named here rather than restated, because copying their text into this document would create the duplicate authority both of them exist to prevent.
 
 This document owns normative meaning only and owns no executable proof, because each adopting system verifies these rules against its own observable behavior rather than against a check this document could run.
 
-`docs/context-stewardship.md` is the historical input from which this document was derived and which it is intended to replace, because one subject must end with exactly one current authority.
+Context Stewardship is the historical input from which this document was derived and which it is intended to replace, because one subject must end with exactly one current authority.
 
-That replacement is incomplete while other artifacts still name `docs/context-stewardship.md`, and retiring those inbound references is a separate change, because a document cannot retire references held by artifacts it does not own.
+That replacement is incomplete while other artifacts still name Context Stewardship, and retiring those inbound references is a separate change, because a document cannot retire references held by artifacts it does not own.
 
 ## Grounds
 
@@ -37,7 +37,7 @@ The rules below answer four observations about receivers, each of which independ
 - accessible information exceeding what one semantic invocation can productively consume;
 - startup material and irrelevant bulk displacing the capacity that later reasoning and evidence need;
 - relevance the producer already established, paid for a second time by a receiver forced to rediscover it;
-- over-curation that starves the receiver of needed material or biases it toward the producer's reading.
+- over-curation that starves the receiver of needed material or biases it toward the producer's reading, because curation must not make receiver authority merely nominal.
 
 `finite-reasoning-capacity` — Context is finite reasoning capacity rather than a container to be filled, because every unit of it spent on arrival material is unavailable to the inference the obligation exists to perform.
 
@@ -125,7 +125,7 @@ Conformance is observable at the points below, because a context contract whose 
 
 ## Unresolved matters
 
-One matter is unresolved here: the artifacts that still name `docs/context-stewardship.md` are not updated by this document, because changing them belongs to the artifacts' own owners and to a separate change.
+One matter is unresolved here: the artifacts that still name Context Stewardship are not updated by this document, because changing them belongs to the artifacts' own owners and to a separate change.
 
 ## Omitted obligations
 
