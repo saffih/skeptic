@@ -138,8 +138,9 @@ A worker must not leave transient processes it started running after return.
 Persistent or external processes require explicit mission authorization and
 must not be killed merely because TP observes them.
 
-Brain need not spawn subagents. For substantial exploration it should create a
-bounded discovery Block and regain semantic control through its result.
+For research, Brain authorizes a Scout Block with the question, source authority,
+and bounded return contract; Scout gathers and condenses only the requested
+evidence with resolvable references, and Brain decides from the result.
 
 ## Completion and publication
 
