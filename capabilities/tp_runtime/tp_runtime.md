@@ -7,9 +7,12 @@ mission and repository identity, appends controller events, validates compact
 
 It has no semantic authority.  The adapter supplies a fresh Brain or Block
 invocation; the runtime only follows a valid Brain sequence and binds each
-Block's returned `block_ref` to the exact reference it assigned.  A malformed
-return, an unresolvable result reference, an interrupted return, or an
-admission failure is retained as mechanical evidence and sent back to Brain.
+Block's returned `block_ref` to the exact reference it assigned.  Every
+cross-invocation semantic item is an existing file below `artifacts/`: Brain
+Block assignments, Block results, and terminal Brain reports.  The runtime
+resolves those references mechanically but never reads their contents.  A
+malformed return, an unresolvable result reference, an interrupted return, or
+an admission failure is retained as mechanical evidence and sent back to Brain.
 It never retries a Block, selects a successor, interprets an artifact, or
 declares completion.
 

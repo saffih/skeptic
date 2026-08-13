@@ -29,6 +29,7 @@ class DispatchOutcome:
 
 
 HostAdapter = Callable[[str, str, Mapping[str, str]], DispatchOutcome]
+MAX_CONTROL_REASON_LENGTH = 240
 
 
 def _fields(text: str, expected: set[str]) -> dict[str, str]:
@@ -48,8 +49,14 @@ def _fields(text: str, expected: set[str]) -> dict[str, str]:
     return values
 
 
-def parse_brain_result(text: str) -> dict[str, object]:
-    values = _fields(text, {"role", "status", "route", "next", "blocks", "reason"})
+def _compact_reason(values: Mapping[str, str]) -> None:
+    if len(values["reason"]) > MAX_CONTROL_REASON_LENGTH:
+        raise TPResultError("CONTROL_REASON_TOO_LONG")
+
+
+def parse_brain_result(text: str, *, run_root: Path) -> dict[str, object]:
+    values = _fields(text, {"role", "status", "route", "next", "blocks", "result_ref", "reason"})
+    _compact_reason(values)
     if values["role"] != "BRAIN" or values["status"] not in {"CONTINUE", "COMPLETE", "BLOCKED", "CONFLICT"}:
         raise TPResultError("BRAIN_ROLE_OR_STATUS")
     if values["status"] == "CONTINUE":
@@ -58,9 +65,15 @@ def parse_brain_result(text: str) -> dict[str, object]:
         blocks = tuple(part.strip() for part in values["blocks"].split(","))
         if not all(blocks) or len(set(blocks)) != len(blocks):
             raise TPResultError("BRAIN_BLOCKS")
+        if values["result_ref"] != "NONE":
+            raise TPResultError("BRAIN_CONTINUE_RESULT_REF")
+        for block_ref in blocks:
+            _resolve(run_root, block_ref)
     else:
         if values["route"] != "NONE" or values["next"] != "NONE" or values["blocks"] != "NONE":
             raise TPResultError("BRAIN_TERMINAL_SHAPE")
+        if values["result_ref"] != "NONE":
+            _resolve(run_root, values["result_ref"])
         blocks = ()
     return {**values, "blocks": blocks}
 
@@ -70,19 +83,19 @@ def _resolve(run_root: Path, reference: str) -> Path:
         raise TPResultError("RESULT_REF_NONE")
     candidate = (run_root / reference).resolve()
     artifacts = (run_root / "artifacts").resolve()
-    if os.path.commonpath((str(artifacts), str(candidate))) != str(artifacts) or not candidate.exists():
+    if os.path.commonpath((str(artifacts), str(candidate))) != str(artifacts) or not candidate.is_file():
         raise TPResultError("RESULT_REF_UNRESOLVABLE")
     return candidate
 
 
 def parse_block_result(text: str, *, assigned_block_ref: str, run_root: Path) -> dict[str, str]:
     values = _fields(text, {"role", "status", "block_ref", "result_ref", "reason"})
+    _compact_reason(values)
     if values["role"] != "BLOCK" or values["status"] not in {"DONE", "BLOCKED", "CONFLICT"}:
         raise TPResultError("BLOCK_ROLE_OR_STATUS")
     if values["block_ref"] != assigned_block_ref:
         raise TPResultError("BLOCK_REF_MISMATCH")
-    if values["result_ref"] != "NONE":
-        _resolve(run_root, values["result_ref"])
+    _resolve(run_root, values["result_ref"])
     return values
 
 
@@ -134,16 +147,16 @@ class TPRuntime:
                 self.event("BRAIN_CONTROL_UNAVAILABLE", condition=condition)
                 return "BRAIN_UNAVAILABLE"
             try:
-                decision = parse_brain_result(brain.result_text)
+                decision = parse_brain_result(brain.result_text, run_root=self.run_root)
             except TPResultError as exc:
                 self.event("BRAIN_RESULT_INVALID", error=str(exc))
                 return "BRAIN_REQUIRED"
-            self.event("BRAIN_RETURN_VALID", status=decision["status"])
+            self.event("BRAIN_RETURN_VALID", status=decision["status"], result_ref=decision["result_ref"])
             if decision["status"] != "CONTINUE":
                 self.event("TERMINAL_BRAIN_OUTCOME", status=decision["status"])
                 return str(decision["status"])
             for block_ref in decision["blocks"]:
-                block = self._dispatch("BLOCK", str(decision["route"]), self._packet(condition="BLOCK_ASSIGNED:" + str(block_ref)))
+                block = self._dispatch("BLOCK", str(decision["route"]), {**self._packet(condition="BLOCK_ASSIGNED"), "block_ref": str(block_ref)})
                 if not block.launched or not block.worker_started or block.result_text is None:
                     self.event("BLOCK_CONTROL_TO_BRAIN", block_ref=block_ref, condition="ADMISSION_OR_WORKER_FAILURE")
                     condition, route = "BLOCK_ADMISSION_OR_WORKER_FAILURE", "MEDIUM"
@@ -155,7 +168,7 @@ class TPRuntime:
                     self.event("BLOCK_CONTROL_TO_BRAIN", block_ref=block_ref, condition="INVALID_RETURN")
                     condition, route = "INVALID_BLOCK_RETURN", "MEDIUM"
                     break
-                self.event("BLOCK_RETURN_VALID", block_ref=block_ref, status=result["status"])
+                self.event("BLOCK_RETURN_VALID", block_ref=block_ref, status=result["status"], result_ref=result["result_ref"])
                 if result["status"] != "DONE":
                     self.event("BLOCK_CONTROL_TO_BRAIN", block_ref=block_ref, condition=result["status"])
                     condition, route = "BLOCK_" + result["status"], "MEDIUM"

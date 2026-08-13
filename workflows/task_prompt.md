@@ -71,20 +71,27 @@ Brain returns a compact control result containing:
     route: LOW | MEDIUM | STRONG | NONE
     next: SEQUENCE | NONE
     blocks: <finite non-empty ordered block references> | NONE
-    reason: <short explanation>
+    result_ref: <receiver-resolvable terminal report/result reference> | NONE
+    reason: <short control explanation, at most 240 characters>
 
 For `CONTINUE`, `route` is `LOW`, `MEDIUM`, or `STRONG`, `next` is `SEQUENCE`,
-and `blocks` is a finite non-empty ordered sequence authored by Brain. For
+and `blocks` is a finite non-empty ordered sequence of authorized durable
+Block-assignment artifact references authored by Brain; `result_ref` is
+`NONE`. Before dispatch the controller verifies each reference resolves below
+the external run root's `artifacts/` directory, without reading it. For
 `COMPLETE`, `BLOCKED`, or `CONFLICT`, `route` is `NONE`, `next` is `NONE`, and
-`blocks` is `NONE`; these are terminal outcomes for the current Brain result.
-`SEQUENCE` means the controller may mechanically dispatch those blocks in
+`blocks` is `NONE`; `result_ref` is a resolvable terminal report/result
+artifact reference when Brain has substantive terminal material to preserve,
+otherwise `NONE`. These are terminal outcomes for the current Brain result.
+`SEQUENCE` means the controller may mechanically dispatch those assignments in
 order; it does not mean the controller understood their content, and workers
 never choose successors. If the current Brain is insufficient, it returns
 `CONTINUE` with `route: STRONG`; the controller then makes the next Brain
 dispatch at `STRONG` without interpreting the mission. `COMPLETE` is allowed
 only when Brain has judged the mission and its acceptance obligation satisfied.
-`BLOCKED` or `CONFLICT` must identify the
-unresolved condition sufficiently for the next Brain to act.
+`BLOCKED` or `CONFLICT` puts any substantive explanation in its terminal
+artifact and keeps `reason` to a compact control summary sufficient for a
+subsequent dispatch (at most 240 characters).
 
 ## Block return
 
@@ -95,14 +102,18 @@ context, and its bounded acceptance obligation. It returns:
     role: BLOCK
     status: DONE | BLOCKED | CONFLICT
     block_ref: <its assigned reference>
-    result_ref: <receiver-resolvable result/artifact reference, or NONE>
-    reason: <short explanation>
+    result_ref: <receiver-resolvable result/artifact reference>
+    reason: <short control explanation, at most 240 characters>
 
 `DONE` means this Block satisfied the acceptance and validation obligation Brain
-assigned to it. It does not mean the whole mission is complete. A Block may
-write artifacts under `run/artifacts/`, but it cannot authorize another Block.
-Before recording a Block return as valid, the controller mechanically verifies
-that every non-`NONE` `result_ref` resolves to an existing authorized run artifact.
+assigned to it. It does not mean the whole mission is complete. A Block writes
+its report or work product under `artifacts/` and returns that reference; it
+does not create a second receipt about that work. `BLOCKED` and `CONFLICT` also
+return a report artifact so their substantive explanation and evidence survive
+the invocation. A Block cannot authorize another Block. Before recording a
+Block return as valid, the controller mechanically verifies that `result_ref`
+resolves to an existing authorized run artifact, then durably records only the
+assigned `block_ref`, status, and `result_ref`; it never reads the artifact.
 
 ## Bounded continuation
 
@@ -112,9 +123,11 @@ returns a valid `DONE`; it does not call Brain between successful Blocks.
 The controller alone records every admission and return in its bookkeeping.
 
 When a mission calls for repeated semantic passes over the same material,
-each pass runs in its own fresh Block; only compact durable findings or
-references carry forward between passes, not the accumulating context of
-prior passes.
+each pass runs in its own fresh Block and writes a distinct report artifact;
+only compact control and durable references carry forward, not the accumulating
+context of prior passes. Scout and RunSkeptic are ordinary Blocks under this
+same rule: their research or review work product is the result artifact, and
+their `TP_RESULT` carries status, reference, and compact control reason only.
 
 Return to Brain on `BLOCKED`, `CONFLICT`, a malformed or missing result, an
 unexpected condition, or sequence exhaustion. Sequence exhaustion is not
