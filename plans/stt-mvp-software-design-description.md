@@ -735,6 +735,8 @@ control/...
 
 Each logical path appears in exactly one transition package and later events refer to that committed location by `RecordRef`, because recreating a logical path would duplicate accepted authority.
 
+`payload_path` is a package-relative durable locator, not a host path: it is one or more nonempty UTF-8 components separated only by `/`, rooted at `<task-root>/transitions/<canonical-decimal-ledger-sequence>-<event_kind>/payload/`; it is relative (never absolute), contains no empty, `.`, or `..` component, backslash, NUL, platform prefix, Unicode normalization, case folding, or symlink interpretation, and uses the exact validated UTF-8 bytes as written; a package payload's complete logical path is `tasks/<task_id>/transitions/<canonical-decimal-ledger-sequence>-<event_kind>/payload/<payload_path>`, that complete logical path is the `logical path` input to `record_id`, and `PayloadRef.payload_path`, `RecordRef.payload_path`, and the manifest name use the exact package-relative form; thus a payload path is a semantic durable locator within its bound Task, sequence, event kind, and transition rather than an ambient filesystem location, and a reader resolves it only below the already-validated package payload directory with no-follow component checks while any alias, escape, missing path, non-regular object, link, duplicate path, or mismatch between the three exact forms is `INVALID`, because package identity and recovery must not depend on host path normalization.
+
 Provider or process exchange bytes live beneath `<store-root>/exchanges/<run-id>/` and are non-authoritative until Boundary imports and binds them into a committed transition package, because active external writers must not write inside authoritative history.
 
 Bootstrap and Task-genesis files are authoritative at their fixed paths while every later accepted record exists exactly once at a package-relative payload path, because duplicate canonical copies would create competing history.
@@ -789,11 +791,11 @@ LedgerEvent
   event_hash
 ```
 
-The transition identity hashes the canonical manifest, and the ledger event hashes its schema, transition identity, event body, prior event hash, Task identity, and sequence without hashing its own `event_hash`, because package contents and event order need a non-cyclic integrity chain.
+The transition identity hashes the canonical manifest, and the canonical committed-event preimage is the canonical UTF-8 `LedgerEvent@1` object with exactly `schema`, `transition_id`, and `event_body` in its ordinary sorted-key canonical JSON form including its one terminal LF and omitting only `event_hash`; `event_body` is the closed canonical `EventBody@1` object carrying `task_id`, `ledger_sequence`, and `previous_event_hash`; `event_hash` is therefore exactly `H("stt-event-v1", canonical committed-event preimage)`, rendered and stored as 64 lowercase hexadecimal ASCII characters; in a non-genesis body, `previous_event_hash` is that predecessor's 64-character lowercase-hex string and participates as those UTF-8 bytes inside the canonical `EventBody@1` bytes rather than as a raw digest or unframed string; in the sole genesis body it is JSON `null`; the terminal LF is included; no additional domain tag, delimiter, or hash input exists beyond `H`'s existing tag and uint64 length framing; and a validator rejects a wrong field set, noncanonical body bytes, wrong predecessor, non-lowercase rendering, wrong length, raw-digest substitution, or recomputed mismatch, because package contents and event order need one non-cyclic integrity chain.
 
 `previous_event_hash` is `null` in exactly the genesis `TASK_CREATED` event of each Task and non-null in every later event of that Task, because the chain root has no predecessor while `canonical-control-codec` forbids implicit optionality that independent writers would resolve differently.
 
-`RunPrefixManifest` is canonical JSONL containing one `PrefixHeader` with the `RunRecord` reference followed by one `PrefixTaskHead` per Task in sorted Task-identity order, because semantic operations need an immutable snapshot of every committed Task head that is finite at the instant it is produced.
+`RunPrefixManifest@1` is a persisted canonical JSONL value rather than a canonical JSON record; its first and only header line is the embedded closed `PrefixHeader@1` canonical JSON object with exactly `schema`, `run_id`, and `run_record_ref`, where `schema` is exactly `PrefixHeader@1`, `run_id` is the exact Run identity, and `run_record_ref` is exactly one valid `ContentRef` to that Run's fixed `run.json`, with no `prefix_id`, optional field, mutable checkpoint, or additional authority reference; every subsequent line is one embedded closed `PrefixTaskHead@1` canonical JSON object with exactly `schema`, `task_id`, `ledger_sequence`, `event_hash`, and `ledger_byte_size`, where `schema` is exactly `PrefixTaskHead@1`, `ledger_sequence` is uint64, `event_hash` is the exact 64-character lowercase-hex hash of that Task's stated ledger event, and `ledger_byte_size` is uint64; each line is canonical UTF-8 JSON with exactly one terminal LF, and the manifest bytes are the header line followed by exactly one head per committed Task in ascending raw UTF-8 byte order of `task_id` with no blank lines, duplicate Task, alternate header, or trailing bytes; `prefix_id` is not self-represented but is exactly `H("stt-prefix-v1", exact RunPrefixManifest JSONL bytes including terminal LF)`, and a `PrefixRef` binds that derived value, the header's equal `run_id`, `manifest_path` using the package-path rule, and the raw SHA-256 `sha256` of those same manifest bytes; a prefix binds the committed prefix only when every head refers to the exact Task ledger byte length and event hash visible at snapshot creation, while a header/reference mismatch, wrong fixed Run record, invalid line, out-of-order or incomplete head set, duplicate, byte/hash mismatch, or attempted mutable replacement is `INVALID`, because semantic operations need one immutable snapshot of every committed Task head that is finite at the instant it is produced.
 
 The manifest grows with the Task count of the Run rather than staying within a fixed size, because one head per Task is the minimum that lets a reader exclude records appended after the snapshot.
 
@@ -826,6 +828,30 @@ OPERATOR_STOP_REQUESTED
 ROUND_FINISHED
 TASK_FINISHED
 ```
+
+Every `LedgerEvent@1` has exactly one `EventBody@1` and uses this complete, case-sensitive, versioned event-to-record binding; the listed transition payload schemas are the complete `payload_refs[]` family for that event, except that the fixed genesis `TaskRecord@1` is bound from the Task's fixed content rather than a transition payload, and no other schema, family, inferred name, or fallback is valid because grammar validation must reject an unbound durable body:
+
+| `event_kind` | Exact payload schema and mapped `CanonicalRecordKind` |
+| --- | --- |
+| `TASK_CREATED` | fixed Task-genesis `TaskRecord@1` / `TaskRecord`; `payload_refs[]` is empty |
+| `ROUND_CREATED` | one `RoundRecord@1` / `RoundRecord` |
+| `PLANNING_STARTED` | none |
+| `OPERATION_REQUESTED` | one `RunPrefixManifest@1` / `RunPrefixManifest`, then one `OperationRequest@1` / `OperationRequest` |
+| `ATTEMPT_STARTED` | one `AttemptRecord@1` / `AttemptRecord` |
+| `LAUNCH_INTENT_RECORDED` | none |
+| `ATTEMPT_FINISHED` | one `AttemptOutcome@1` / `AttemptOutcome` and zero or more `CaptureRecord@1` / `CaptureRecord`, in `payload_refs[]` order after the outcome |
+| `SETTLEMENT_OBSERVED` | one `AttemptOutcome@1` / `AttemptOutcome` and zero or more `CaptureRecord@1` / `CaptureRecord`, in `payload_refs[]` order after the outcome |
+| `PLANNING_FINISHED` | one `PlannerResult@1` / `PlannerResult` |
+| `STEP_STARTED` | none |
+| `STEP_FINISHED` | one `StepResult@1` / `StepResult` |
+| `VALIDATION_STARTED` | none |
+| `VALIDATION_RECORDED` | one `ValidatorResult@1` / `ValidatorResult` |
+| `OUTPUT_ASSESSMENT_RECORDED` | one `TaskOutputAssessment@1` / `TaskOutputAssessment` |
+| `OPERATOR_STOP_REQUESTED` | none |
+| `ROUND_FINISHED` | none |
+| `TASK_FINISHED` | one `TaskResult@1` / `TaskResult` |
+
+For an event with `none`, `payload_refs[]` is exactly empty; for `TASK_CREATED`, the validator requires the one Task record at its fixed Task-genesis path and rejects every payload reference; for every listed transition payload, the reference's schema must be the stated exact version and its record kind must be the one-to-one `CanonicalRecordKind` mapping already defined above, while repeated payloads are permitted only where the row says zero or more and must occupy the stated order; for `OPERATION_REQUESTED`, the manifest must validate as the exact `committed_prefix` of the following request and must describe the state preceding that request's ledger event; the Contract Validator rejects any kind/schema mismatch, cardinality violation, unsupported version, duplicate or alternate family, unlisted payload, name-derived inference, empty fallback body, or unbound prefix before grammar derivation, because an event grammar is mechanically valid only when both its position and carried durable bytes are closed.
 
 `task-event-grammar` — A Task consists of genesis followed by zero or more contiguous Rounds and at most one terminal Task finalization, because `one-active-frontier` requires one legal sequential history:
 
