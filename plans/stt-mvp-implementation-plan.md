@@ -14,11 +14,9 @@ STT design is accepted, and this plan owns bounded construction only, because Go
 | --- | --- |
 | `plans/stt-mvp-governing-inputs.md` | `0533522cb66043d9113e6882b1c72baad6a19adb` |
 | `plans/stt-mvp-architecture-description.md` | `a39e0ef8d9f35fc2fd5eccdf1223edbf861e79a9` |
-| `plans/stt-mvp-software-design-description.md` | `83a3ab0306151ae5e9c9cc798f8efbd619e03328` |
+| `plans/stt-mvp-software-design-description.md` | `8e537dd2903a20b552cd1570271046ec86f0b932` |
 | `docs/context-rules.md` | `6f13884f6d22292ef924223fce41cc3231b5c76e` |
 | `docs/design-authority-chain.md` | `5b09ae10138901d959432477a4a6169fe2bf3330` |
-
-The preceding implementation-plan text is superseded historical evidence only, because it predates the accepted SDD and must not provide current sequencing, ownership, terms, tests, hashes, or assumptions.
 
 An implementation discovery that needs a product objective returns to Governing Inputs, one that needs system-wide meaning returns to Architecture, and one that needs a shared schema, durable algorithm, persistence rule, adapter rule, recovery rule, or qualification strategy returns to the SDD, because this plan may not silently resolve an upstream dependency.
 

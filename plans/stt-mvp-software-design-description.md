@@ -6,14 +6,14 @@
 **Authority chain:** Design Authority Chain, because that document assigns design-layer ownership.
 **Document profile:** WELL, because that document defines this artifact's mechanical design-document profile.
 **Downstream owner:** a bounded current Implementation Plan, because construction detail belongs below this shared design.
-**Historical evidence:** the prior STT MVP Implementation Plan, because retained historical material is not current authority.
+**Historical evidence:** only STT MVP Implementation Plan material that predates this accepted SDD, because retained pre-SDD material is not current authority.
 **Scope:** shared and durable realization choices for the STT MVP, because this SDD owns shared mechanisms rather than bounded construction.
 
 This document owns the architecture-permitted shared realization of STT, because components, contracts, schemas, persistence, lifecycle derivation, adapters, authority admission, recovery, evidence binding, host requirements, and qualification need one current owner before bounded implementation can begin.
 
 The accepted Governing Inputs and Architecture Description govern every proposition here, because the Software Design Description may refine their permitted variation but may not change product or system-wide meaning.
 
-The existing Implementation Plan is stale historical evidence rather than current authority, because it binds a superseded Architecture and previously owned shared decisions assigned here by the accepted Design Authority Chain.
+The current Implementation Plan is the downstream construction authority when it binds this accepted SDD, because its exact realization scope, verification, and stop conditions derive below the shared design without acquiring shared-design ownership.
 
 No implementation sequence, source-file allocation, or merge instruction is authoritative here, because a current bounded Implementation Plan must derive those realization details from unchanged accepted governing links.
 
