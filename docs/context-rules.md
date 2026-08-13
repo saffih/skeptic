@@ -73,6 +73,20 @@ A semantic producer whose output is expected to be reused prepares that output f
 
 Preparation is justified by expected reuse rather than performed by default, because material that no later invocation will read costs capacity to make and adds a second thing that must be kept true.
 
+`concise-completeness` — Preparation preserves full required meaning with minimum unnecessary expression: compress expression, not meaning, because a shorter handoff that omits what the receiver needs is incomplete rather than concise.
+
+Required meaning includes the facts, constraints, distinctions, uncertainty, exceptions, evidence, references, acceptance conditions, and failure conditions that let the receiver act correctly, because omission of any needed qualification transfers reconstruction or error risk downstream.
+
+Remove wording that adds no useful information and prefer precise terms that preserve meaning compactly, because a task-sized entrance protects reasoning capacity without thinning its authority.
+
+Repetition earns its space when it disambiguates, emphasizes a critical invariant, protects a boundary, aids navigation or retention, or prevents a credible failure mode; otherwise remove it, because restating an unchanged proposition without one of those effects adds no required meaning.
+
+Prefer direct positive formulations when they communicate the rule completely, while explicit negatives remain appropriate when they close a real ambiguity or forbid a distinct credible failure mode, because completeness sometimes requires a boundary to be stated rather than implied.
+
+Analogies may clarify or compress a difficult concept but do not replace the rule where precision matters, because explanatory resemblance is not normative meaning.
+
+As a guiding editorial test rather than a sentence-by-sentence procedure, remove a phrase when its absence loses no required meaning, boundary, evidence, emphasis, navigation value, or protection against likely misunderstanding, because only such loss justifies its space.
+
 ## Receiver authority
 
 `receiver-evidence-authority` — The receiver determines what evidence its obligation requires and may resolve and load any source already authorized for that obligation, because a starting context chosen by another party cannot be known in advance to be sufficient for the reasoning that follows.
@@ -88,6 +102,16 @@ A receiver whose required evidence is unavailable or unauthorized exposes that c
 `control-plane-meaning-independence` — A control plane acts only on facts that are independent of meaning, such as identities, references, statuses, and fixed transitions, because any content judgement it made would be `context-preparation-is-semantic-work` performed by a role that by construction cannot assess it.
 
 A control plane may enforce structural limits and check mechanical validity, and neither of those establishes semantic sufficiency, because a well-formed handoff can still carry the wrong material.
+
+`durable-data-plane-minimal-control-plane` — Durable data plane, minimal control plane, and references that connect them preserve substantive semantic content across real boundaries, because recovery and continuation must not depend on model memory, inherited conversation, or semantic reconstruction.
+
+Plans, findings, evidence, reports, decisions and their reasoning, research, work products, and implementation or verification outputs are substantive semantic data when a later invocation needs them, because their producing invocation may end before the receiver acts.
+
+Persist that data before it crosses an invocation, delegation, interruption, recovery, or independent-review boundary, and pass receiver-resolvable references rather than its body through a coordinator, because the receiver needs durable authority while the coordinator need only connect it.
+
+Control carries only the minimum coordination state—status, identity, routing, continuation, references, and small diagnostics—and control-plane roles do not absorb substantive content merely to coordinate it, because meaning remains with the semantic producer and receiver.
+
+Information that does not need to cross a real boundary need not be persisted merely for form, because indirection without a recovery or receiver need adds cost without protection.
 
 `durable-semantic-continuation` — Continuation across a boundary rests on durable state and resolvable references rather than on conversation residue, because the next invocation may be fresh, delayed, relocated, or restarted, and residue survives none of those.
 
