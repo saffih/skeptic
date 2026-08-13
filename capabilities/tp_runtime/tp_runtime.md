@@ -6,10 +6,12 @@ mission and repository identity, appends controller events, validates compact
 `TP_RESULT` envelopes, and calls an injected host adapter.
 
 It has no semantic authority.  The adapter supplies a fresh Brain or Block
-invocation; the runtime only follows a valid Brain sequence and binds each
+invocation; the runtime only follows a valid Brain sequence or Brain escalation
+and binds each
 Block's returned `block_ref` to the exact reference it assigned.  Every
 cross-invocation semantic item is an existing file below `artifacts/`: Brain
-Block assignments, Block results, and terminal Brain reports.  The runtime
+Block assignments, Block results, Brain-escalation handoffs, and terminal Brain
+reports.  The runtime
 resolves those references mechanically but never reads their contents.  A
 malformed return, an unresolvable result reference, an interrupted return, or
 an admission failure is retained as mechanical evidence and sent back to Brain.

@@ -60,15 +60,21 @@ def parse_brain_result(text: str, *, run_root: Path) -> dict[str, object]:
     if values["role"] != "BRAIN" or values["status"] not in {"CONTINUE", "COMPLETE", "BLOCKED", "CONFLICT"}:
         raise TPResultError("BRAIN_ROLE_OR_STATUS")
     if values["status"] == "CONTINUE":
-        if values["route"] not in {"LOW", "MEDIUM", "STRONG"} or values["next"] != "SEQUENCE" or values["blocks"] == "NONE":
+        if values["next"] == "SEQUENCE":
+            if values["route"] not in {"LOW", "MEDIUM", "STRONG"} or values["blocks"] == "NONE" or values["result_ref"] != "NONE":
+                raise TPResultError("BRAIN_SEQUENCE_SHAPE")
+            blocks = tuple(part.strip() for part in values["blocks"].split(","))
+            if not all(blocks) or len(set(blocks)) != len(blocks):
+                raise TPResultError("BRAIN_BLOCKS")
+            for block_ref in blocks:
+                _resolve(run_root, block_ref)
+        elif values["next"] == "BRAIN":
+            if values["route"] != "STRONG" or values["blocks"] != "NONE":
+                raise TPResultError("BRAIN_ESCALATION_SHAPE")
+            _resolve(run_root, values["result_ref"])
+            blocks = ()
+        else:
             raise TPResultError("BRAIN_CONTINUE_SHAPE")
-        blocks = tuple(part.strip() for part in values["blocks"].split(","))
-        if not all(blocks) or len(set(blocks)) != len(blocks):
-            raise TPResultError("BRAIN_BLOCKS")
-        if values["result_ref"] != "NONE":
-            raise TPResultError("BRAIN_CONTINUE_RESULT_REF")
-        for block_ref in blocks:
-            _resolve(run_root, block_ref)
     else:
         if values["route"] != "NONE" or values["next"] != "NONE" or values["blocks"] != "NONE":
             raise TPResultError("BRAIN_TERMINAL_SHAPE")
@@ -125,8 +131,11 @@ class TPRuntime:
         with (self.run_root / "events.jsonl").open("a", encoding="utf-8") as stream:
             stream.write(json.dumps({"event": event, **fields}, sort_keys=True) + "\n")
 
-    def _packet(self, *, condition: str = "NORMAL") -> dict[str, str]:
-        return {"run_ref": str(self.run_root), "mission_ref": str(self.run_root / "mission.md"), "condition": condition}
+    def _packet(self, *, condition: str = "NORMAL", result_ref: str | None = None) -> dict[str, str]:
+        packet = {"run_ref": str(self.run_root), "mission_ref": str(self.run_root / "mission.md"), "condition": condition}
+        if result_ref is not None:
+            packet["result_ref"] = result_ref
+        return packet
 
     def _dispatch(self, role: str, route: str, packet: Mapping[str, str]) -> DispatchOutcome:
         self.event("DISPATCH_ADMITTED", role=role, route=route)
@@ -140,9 +149,10 @@ class TPRuntime:
         return outcome
 
     def run(self) -> str:
-        condition, route = "NORMAL", "MEDIUM"
+        condition, route, handoff_result_ref = "NORMAL", "MEDIUM", None
         while True:
-            brain = self._dispatch("BRAIN", route, self._packet(condition=condition))
+            brain = self._dispatch("BRAIN", route, self._packet(condition=condition, result_ref=handoff_result_ref))
+            handoff_result_ref = None
             if not brain.launched or not brain.worker_started or brain.result_text is None:
                 self.event("BRAIN_CONTROL_UNAVAILABLE", condition=condition)
                 return "BRAIN_UNAVAILABLE"
@@ -155,6 +165,10 @@ class TPRuntime:
             if decision["status"] != "CONTINUE":
                 self.event("TERMINAL_BRAIN_OUTCOME", status=decision["status"])
                 return str(decision["status"])
+            if decision["next"] == "BRAIN":
+                self.event("BRAIN_ESCALATION", result_ref=decision["result_ref"])
+                condition, route, handoff_result_ref = "BRAIN_ESCALATION", str(decision["route"]), str(decision["result_ref"])
+                continue
             for block_ref in decision["blocks"]:
                 block = self._dispatch("BLOCK", str(decision["route"]), {**self._packet(condition="BLOCK_ASSIGNED"), "block_ref": str(block_ref)})
                 if not block.launched or not block.worker_started or block.result_text is None:

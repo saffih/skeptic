@@ -29,14 +29,13 @@ meaning, choose relevant sources, judge acceptance, or infer continuation from
 substantive output.
 
 Brain is the semantic authority. It understands the mission, retrieves and
-selects sources, decomposes work, chooses a route, judges completion, handles
-unexpected conditions, and authorizes the next control step. `LOW`, `MEDIUM`,
-and `STRONG` name the capability requested for the next semantic dispatch;
-`NONE` means that no further semantic dispatch is requested. Brain normally
-starts at `MEDIUM` and may request `STRONG` when the current capability is
-insufficient. The controller applies Brain's selected route mechanically and
-never decides semantic escalation itself. Provider/model mapping remains
-outside this authority, in the host or its routing policy.
+selects sources, decomposes work, chooses the next dispatch capability, judges
+completion, handles unexpected conditions, and authorizes the next control
+step. `route` names that capability; `next` names its dispatch kind. Brain
+normally starts at `MEDIUM` and may request a fresh `STRONG` Brain when the
+current capability is insufficient. The controller follows those selections
+mechanically and never decides semantic escalation itself. Provider/model
+mapping remains outside this authority, in the host or its routing policy.
 
 A Block is one bounded semantic assignment. Its worker performs that assignment
 and returns the bounded result. A worker never chooses continuation, spawns
@@ -69,26 +68,26 @@ Brain returns a compact control result containing:
     role: BRAIN
     status: CONTINUE | COMPLETE | BLOCKED | CONFLICT
     route: LOW | MEDIUM | STRONG | NONE
-    next: SEQUENCE | NONE
+    next: SEQUENCE | BRAIN | NONE
     blocks: <finite non-empty ordered block references> | NONE
-    result_ref: <receiver-resolvable terminal report/result reference> | NONE
+    result_ref: <receiver-resolvable report/result reference> | NONE
     reason: <short control explanation, at most 240 characters>
 
-For `CONTINUE`, `route` is `LOW`, `MEDIUM`, or `STRONG`, `next` is `SEQUENCE`,
-and `blocks` is a finite non-empty ordered sequence of authorized durable
-Block-assignment artifact references authored by Brain; `result_ref` is
-`NONE`. Before dispatch the controller verifies each reference resolves below
-the external run root's `artifacts/` directory, without reading it. For
-`COMPLETE`, `BLOCKED`, or `CONFLICT`, `route` is `NONE`, `next` is `NONE`, and
-`blocks` is `NONE`; `result_ref` is a resolvable terminal report/result
-artifact reference when Brain has substantive terminal material to preserve,
-otherwise `NONE`. These are terminal outcomes for the current Brain result.
-`SEQUENCE` means the controller may mechanically dispatch those assignments in
-order; it does not mean the controller understood their content, and workers
-never choose successors. If the current Brain is insufficient, it returns
-`CONTINUE` with `route: STRONG`; the controller then makes the next Brain
-dispatch at `STRONG` without interpreting the mission. `COMPLETE` is allowed
-only when Brain has judged the mission and its acceptance obligation satisfied.
+For `CONTINUE`, `next: SEQUENCE` requires a `LOW`, `MEDIUM`, or `STRONG`
+`route`, a finite non-empty ordered sequence of authorized durable
+Block-assignment artifact references, and `result_ref: NONE`. `next: BRAIN`
+requires `route: STRONG`, `blocks: NONE`, and a resolvable handoff `result_ref`.
+Before dispatch the controller verifies each reference resolves below the
+external run root's `artifacts/` directory, without reading it. For `COMPLETE`,
+`BLOCKED`, or `CONFLICT`, `route` and `next` are `NONE`, `blocks` is `NONE`, and
+`result_ref` is a resolvable terminal
+report/result artifact when Brain has substantive terminal material to
+preserve, otherwise `NONE`. These are terminal outcomes for the current Brain
+result. `SEQUENCE` dispatches its assignments in order; `BRAIN` dispatches one
+fresh `STRONG` Brain with the durable run, mission, and handoff-result
+references. Neither action requires the controller to interpret the mission or
+an artifact, and workers never choose successors. `COMPLETE` is allowed only
+when Brain has judged the mission and its acceptance obligation satisfied.
 `BLOCKED` or `CONFLICT` puts any substantive explanation in its terminal
 artifact and keeps `reason` to a compact control summary sufficient for a
 subsequent dispatch (at most 240 characters).
@@ -134,10 +133,10 @@ unexpected condition, or sequence exhaustion. Sequence exhaustion is not
 completion: Brain decides whether the mission is complete, needs another
 sequence, or is blocked. The controller never infers that decision.
 
-Brain may request a stronger Brain when the current Brain cannot safely decide.
-Escalation is a fresh invocation with the durable run and result references;
-the host maps `STRONG` as it can. A worker cannot request or perform semantic
-escalation on its own.
+Brain may request the `BRAIN` continuation when the current Brain cannot safely
+decide. Escalation is a fresh invocation with the durable run and handoff-result
+references; the host maps `STRONG` as it can. A worker cannot request or
+perform semantic escalation on its own.
 
 ## Context, process, and return safety
 

@@ -73,19 +73,9 @@ A semantic producer whose output is expected to be reused prepares that output f
 
 Preparation is justified by expected reuse rather than performed by default, because material that no later invocation will read costs capacity to make and adds a second thing that must be kept true.
 
-`concise-completeness` — Preparation preserves full required meaning with minimum unnecessary expression: compress expression, not meaning, because a shorter handoff that omits what the receiver needs is incomplete rather than concise.
+`concise-completeness` — Find the simplest clear rephrase of the whole relevant passage for which a competent independent receiver, using only the rephrase and its explicit references, can still correctly complete the same obligation under the same authority and evidence requirements without reconstructing omitted meaning; if that equivalence cannot be established, preserve the meaning or expose the conflict, because compression may reduce expression but not the receiver's obligation.
 
-Required meaning includes the facts, constraints, distinctions, uncertainty, exceptions, evidence, references, acceptance conditions, and failure conditions that let the receiver act correctly, because omission of any needed qualification transfers reconstruction or error risk downstream.
-
-Remove wording that adds no useful information and prefer precise terms that preserve meaning compactly, because a task-sized entrance protects reasoning capacity without thinning its authority.
-
-Repetition earns its space when it disambiguates, emphasizes a critical invariant, protects a boundary, aids navigation or retention, or prevents a credible failure mode; otherwise remove it, because restating an unchanged proposition without one of those effects adds no required meaning.
-
-Prefer direct positive formulations when they communicate the rule completely, while explicit negatives remain appropriate when they close a real ambiguity or forbid a distinct credible failure mode, because completeness sometimes requires a boundary to be stated rather than implied.
-
-Analogies may clarify or compress a difficult concept but do not replace the rule where precision matters, because explanatory resemblance is not normative meaning.
-
-As a guiding editorial test rather than a sentence-by-sentence procedure, remove a phrase when its absence loses no required meaning, boundary, evidence, emphasis, navigation value, or protection against likely misunderstanding, because only such loss justifies its space.
+A table, schema, grammar, or reference is a valid simpler rephrase when it preserves that equivalence, because form may reduce expression without reducing the receiver's obligation.
 
 ## Receiver authority
 
@@ -142,6 +132,7 @@ Conformance is observable at the points below, because a context contract whose 
 | `context-guide` and `durable-store` | the guide's pointers resolve, for the intended receiver, to the authoritative material they name |
 | `guide-is-navigation-not-authority` | a decision that conflicts with the source is traceable to the source rather than to the guide |
 | `task-sized-entrance` | the receiver reached its obligation without a rediscovery pass and without loading unrelated bulk |
+| `concise-completeness` | a materially compressed version leaves an independent receiver able to satisfy the same obligation from the compressed material and its explicit references, under the same authority and evidence requirements, without reconstructing omitted meaning |
 | `durable-semantic-continuation` | a fresh invocation given only the durable state and references continued the obligation |
 | `receiver-evidence-authority` | an additional already-authorized source the receiver requested was reachable to it |
 | `observable-context-claims` | each asserted inheritance, isolation, or fit claim cites its observation, or reads `UNKNOWN` |

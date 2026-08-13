@@ -40,8 +40,11 @@ class TPResultTests(unittest.TestCase):
             (root / "artifacts" / "brain-terminal.md").write_text("terminal report")
             for name in ("B1.md", "B2.md"):
                 (root / "artifacts" / "assignments" / name).write_text("bounded assignment")
+            (root / "artifacts" / "results").mkdir()
+            (root / "artifacts" / "results" / "escalation.md").write_text("durable handoff")
             refs = "artifacts/assignments/B1.md, artifacts/assignments/B2.md"
             self.assertEqual(parse_brain_result(brain("CONTINUE", route="LOW", next_step="SEQUENCE", blocks=refs), run_root=root)["blocks"], tuple(refs.split(", ")))
+            self.assertEqual(parse_brain_result(brain("CONTINUE", route="STRONG", next_step="BRAIN", result_ref="artifacts/results/escalation.md"), run_root=root)["next"], "BRAIN")
             for status in ("COMPLETE", "BLOCKED", "CONFLICT"):
                 self.assertEqual(parse_brain_result(brain(status), run_root=root)["status"], status)
             self.assertEqual(parse_brain_result(brain("COMPLETE", result_ref="NONE"), run_root=root)["result_ref"], "NONE")
@@ -51,6 +54,13 @@ class TPResultTests(unittest.TestCase):
             "TP_RESULT\nrole: BRAIN",
             brain("NOPE"),
             brain("CONTINUE", route="NONE", next_step="SEQUENCE", blocks="artifacts/assignment.md"),
+            "\n".join(line for line in brain("CONTINUE", route="LOW", next_step="SEQUENCE", blocks="artifacts/assignment.md").splitlines() if not line.startswith("route: ")),
+            brain("CONTINUE", route="LOW", next_step="BRAIN", result_ref="artifacts/brain-terminal.md"),
+            brain("CONTINUE", route="MEDIUM", next_step="BRAIN", result_ref="artifacts/brain-terminal.md"),
+            brain("CONTINUE", route="NONE", next_step="BRAIN", result_ref="artifacts/brain-terminal.md"),
+            brain("CONTINUE", route="STRONG", next_step="BRAIN"),
+            brain("CONTINUE", route="STRONG", next_step="BRAIN", result_ref="artifacts/results/missing.md"),
+            brain("CONTINUE", route="STRONG", next_step="BRAIN", blocks="artifacts/assignments/B1.md", result_ref="artifacts/brain-terminal.md"),
             brain("COMPLETE", blocks="B1"),
             "not an envelope",
         )
@@ -80,6 +90,7 @@ class TPResultTests(unittest.TestCase):
                 block("DONE", result_ref="artifacts/missing.md"),
                 block("DONE", result_ref="mission.md"),
                 block("DONE", result_ref="NONE"),
+                block("DONE") + "\nnext: BRAIN",
             )
             for value in cases:
                 with self.subTest(value=value), self.assertRaises(TPResultError):
@@ -129,6 +140,22 @@ class TPRuntimeTests(unittest.TestCase):
         self.assertEqual([call[2]["condition"] for call in adapter.calls], ["NORMAL", "BLOCK_ASSIGNED", "BLOCK_ASSIGNED", "SEQUENCE_EXHAUSTED"])
         self.assertEqual([call[2].get("block_ref") for call in adapter.calls], [None, b1, b2, None])
 
+    def test_strong_brain_escalation_is_fresh_and_does_not_route_a_block(self):
+        assignment, handoff = "artifacts/assignments/B1.md", "artifacts/results/escalation.md"
+        runtime, adapter, _ = self.make_runtime([
+            returned(brain("CONTINUE", route="STRONG", next_step="BRAIN", result_ref=handoff)),
+            returned(brain("CONTINUE", route="LOW", next_step="SEQUENCE", blocks=assignment)),
+            returned(block("DONE", assignment)), returned(brain("COMPLETE")),
+        ])
+        (runtime.run_root / handoff).write_text("durable handoff")
+        self.assertEqual(runtime.run(), "COMPLETE")
+        self.assertEqual([(call[0], call[1]) for call in adapter.calls], [("BRAIN", "MEDIUM"), ("BRAIN", "STRONG"), ("BLOCK", "LOW"), ("BRAIN", "MEDIUM")])
+        self.assertEqual(adapter.calls[1][2]["condition"], "BRAIN_ESCALATION")
+        self.assertEqual(adapter.calls[1][2]["result_ref"], handoff)
+        self.assertEqual(set(adapter.calls[1][2]), {"run_ref", "mission_ref", "condition", "result_ref"})
+        self.assertNotIn("block_ref", adapter.calls[1][2])
+        self.assertIn({"event": "BRAIN_ESCALATION", "result_ref": handoff}, self.events(runtime))
+
     def test_every_non_done_or_malformed_block_returns_to_brain(self):
         b1 = "artifacts/assignments/B1.md"
         cases = (returned(block("BLOCKED")), returned(block("CONFLICT")), returned("not an envelope"), DispatchOutcome(True, True, None, "interrupted"))
@@ -173,6 +200,16 @@ class TPRuntimeTests(unittest.TestCase):
     def test_invalid_brain_fails_closed(self):
         runtime, _, _ = self.make_runtime([returned("not an envelope")])
         self.assertEqual(runtime.run(), "BRAIN_REQUIRED")
+        self.assertIn("BRAIN_RESULT_INVALID", [event["event"] for event in self.events(runtime)])
+
+    def test_ambiguous_brain_escalation_fails_closed(self):
+        handoff = "artifacts/results/escalation.md"
+        runtime, adapter, _ = self.make_runtime([
+            returned(brain("CONTINUE", route="LOW", next_step="BRAIN", result_ref=handoff)),
+        ])
+        (runtime.run_root / handoff).write_text("durable handoff")
+        self.assertEqual(runtime.run(), "BRAIN_REQUIRED")
+        self.assertEqual([call[0] for call in adapter.calls], ["BRAIN"])
         self.assertIn("BRAIN_RESULT_INVALID", [event["event"] for event in self.events(runtime)])
 
     def test_missing_or_out_of_run_assignment_fails_before_block_dispatch(self):
