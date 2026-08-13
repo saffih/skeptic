@@ -101,6 +101,8 @@ context, and its bounded acceptance obligation. It returns:
 `DONE` means this Block satisfied the acceptance and validation obligation Brain
 assigned to it. It does not mean the whole mission is complete. A Block may
 write artifacts under `run/artifacts/`, but it cannot authorize another Block.
+Before recording a Block return as valid, the controller mechanically verifies
+that every non-`NONE` `result_ref` resolves to an existing authorized run artifact.
 
 ## Bounded continuation
 
