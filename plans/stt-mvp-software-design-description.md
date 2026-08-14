@@ -106,25 +106,25 @@ requirement_id       H("stt-requirement-v1", step id, uint64_be(requirement ordi
 authority_id         H("stt-authority-v1", canonical TaskAuthority bytes excluding authority_id)
 routing_identity     H("stt-routing-v1", canonical RoutingFile bytes excluding routing_identity)
 prefix_id            H("stt-prefix-v1", exact RunPrefixManifest JSONL bytes including terminal LF)
-operation_request_id H("stt-operation-v1", canonical OperationRequest body)
+operation_request_id H("stt-operation-v1", canonical OperationRequest body excluding operation_request_id)
 attempt_id           H("stt-attempt-v1", operation request id, attempt ordinal)
-artifact_id          H("stt-artifact-v1", canonical artifact identity body)
+artifact_id          H("stt-artifact-v1", canonical ArtifactRef identity body excluding artifact_id)
 record_id            H("stt-record-v1", record kind, logical path, size, content hash)
-observation_id       H("stt-observation-v1", canonical observation body)
-transition_id        H("stt-transition-v1", canonical TransitionManifest bytes)
+transition_id        H("stt-transition-v1", canonical TransitionManifest body excluding transition_id)
 event_hash           H("stt-event-v1", canonical committed event preimage)
 ```
 
 Ordinals and ledger sequence numbers are unsigned contiguous integers beginning at zero, because gaps or alternate starting conventions would make reconstruction ambiguous.
 
-`typed-reference-boundary` — Fixed genesis content uses `ContentRef`, content inside the same uncommitted transition package uses `PayloadRef`, content in a committed package uses `RecordRef`, and arbitrary evidence uses `ArtifactRef`, because publication phase and evidentiary meaning require distinct non-cyclic references.
+Every remaining identity preimage is reconstructible from its owning registry entry: `operation_request_id` excludes `operation_request_id`; `artifact_id` hashes the canonical `ArtifactRef` identity body excluding `artifact_id`; every `requirement_id` variant excludes `requirement_id`; `authority_id` excludes `authority_id`; `routing_identity` excludes `routing_identity`; `event_hash` excludes `event_hash`; and the Plan, Step, and Input identity exclusions remain exactly those stated in their canonical definitions, because callers may not substitute arbitrary caller-prepared bytes for an SDD-owned closed canonical preimage. The existing `H` framing rule is unchanged, because identity closure must not alter the established encoding.
+
+`typed-reference-boundary` — Fixed genesis content uses `ContentRef`, content inside the transition currently being built uses `PayloadRef`, content in an already committed transition uses `RecordRef`, immutable committed-history snapshots use `PrefixRef`, and evidence uses `ArtifactRef`, because publication phase and evidentiary meaning require distinct non-cyclic references.
 
 The reference records use the following exact fields, because a reference must identify both bytes and their authority context without phase-dependent inference:
 
 ```text
 ContentRef
   schema
-  record_id
   relative_path
   size_bytes
   sha256
@@ -154,6 +154,20 @@ PrefixRef
   manifest_path
   sha256
 ```
+
+`canonical-contract-registry` — The following closed registry is the one normative owner of every STT wire schema used by Slice A or referenced by it, because independent writers need one exact schema identifier and one authority boundary.
+
+| schema | canonical fields or variant owner | persisted kind |
+| --- | --- | --- |
+| `RootTaskSpec@1`, `RootAuthoritySpec@1`, `TaskAuthority@1`, `ProviderRoute@1`, `CommandProfile@1`, `RunPolicy@1`, `RoutingFile@1` | the closed fixed/embedded definitions in this section | embedded |
+| `ReturnedPlan@1`, `Step@1`, `InputRef@1`, `InputResolution@1`, `OutputRequirement@1`, `ArtifactRef@1`, `TaskOutputAssessment@1` | the closed planning, input/output, and assessment definitions below | embedded except `InputRef`, `InputResolution`, `ArtifactRef`, and `TaskOutputAssessment` |
+| `RunRecord@1`, `TaskRecord@1`, `RoundRecord@1`, `Plan@1`, `OperationRequest@1`, `AttemptRecord@1`, `AttemptOutcome@1`, `CaptureRecord@1`, `PlannerResult@1`, `WorkerResult@1`, `StepResult@1`, `ValidatorResult@1`, `TaskResult@1` | the closed persisted-record definitions below | same name |
+| `TransitionManifest@1`, `EventBody@1`, `LedgerEvent@1`, `PrefixHeader@1`, `PrefixTaskHead@1`, `RunPrefixManifest@1` | the closed transition and prefix definitions below | `TransitionManifest`, `EventBody`, `LedgerEvent`, `PrefixTaskHead`, `RunPrefixManifest`; `PrefixHeader` is embedded |
+| `ContentRef@1`, `PayloadRef@1`, `RecordRef@1`, `PrefixRef@1` | the closed reference definitions above | embedded |
+
+Every registry entry has exactly the listed `@1` identifier, the exact fields in its owning closed definition, no undeclared fields, and the nullability, arrays, maps, tagged variants, enums, and cross-field constraints stated with that definition, because a Contract Validator must not invent structural meaning. `PrefixRef` may bind the `RunPrefixManifest` carried in the same `OPERATION_REQUESTED` transition when its bytes describe the committed state immediately before that request, because that manifest is an immutable snapshot rather than ordinary new payload content.
+
+The persisted mapping is exactly the registry rows whose persisted kind is a name: `RunRecord`, `TaskRecord`, `RoundRecord`, `Plan`, `OperationRequest`, `AttemptRecord`, `AttemptOutcome`, `CaptureRecord`, `PlannerResult`, `WorkerResult`, `StepResult`, `ValidatorResult`, `TaskResult`, `InputRef`, `InputResolution`, `ArtifactRef`, `TaskOutputAssessment`, `TransitionManifest`, `EventBody`, `LedgerEvent`, `PrefixTaskHead`, and `RunPrefixManifest`, each from its same-named `@1` schema, because only genuinely persisted records may acquire history-selection authority. `RootTaskSpec`, `RootAuthoritySpec`, `TaskAuthority`, `ProviderRoute`, `CommandProfile`, `RunPolicy`, `RoutingFile`, `ReturnedPlan`, `Step`, `OutputRequirement`, `ContentRef`, `PayloadRef`, `RecordRef`, `PrefixRef`, and `PrefixHeader` are embedded-only and are excluded because embedded values must not acquire history-selection authority.
 
 ## Lifecycle contracts
 
@@ -322,7 +336,7 @@ stt_read_grant: { committed_prefix_ref: PrefixRef, allowed_record_kinds: nonempt
 stt_starting_subtree: { run_root_relative_path: string, subtree_identity: string, manifest_ref: RecordRef }
 ```
 
-`schema` is the case-sensitive versioned wire identifier `<name>@<positive-version>`, while `CanonicalRecordKind` is the distinct case-sensitive version-independent persisted-record family discriminator, because a schema version and a retrieval/selector family have different validation and authorization roles. The currently supported canonical persisted-record schemas and their only corresponding kinds are exactly the following closed mapping: `RunRecord@1` -> `RunRecord`; `TaskRecord@1` -> `TaskRecord`; `RoundRecord@1` -> `RoundRecord`; `Plan@1` -> `Plan`; `OperationRequest@1` -> `OperationRequest`; `AttemptRecord@1` -> `AttemptRecord`; `AttemptOutcome@1` -> `AttemptOutcome`; `CaptureRecord@1` -> `CaptureRecord`; `PlannerResult@1` -> `PlannerResult`; `WorkerResult@1` -> `WorkerResult`; `StepResult@1` -> `StepResult`; `ValidatorResult@1` -> `ValidatorResult`; `TaskResult@1` -> `TaskResult`; `TaskOutputAssessment@1` -> `TaskOutputAssessment`; `ArtifactRef@1` -> `ArtifactRef`; `InputRef@1` -> `InputRef`; `InputResolution@1` -> `InputResolution`; `TransitionManifest@1` -> `TransitionManifest`; `EventBody@1` -> `EventBody`; `LedgerEvent@1` -> `LedgerEvent`; `RunPrefixManifest@1` -> `RunPrefixManifest`; and `PrefixTaskHead@1` -> `PrefixTaskHead`, because the closed mapping is the only source of the corresponding persisted-record family. `Step@1`, `OutputRequirement@1`, and every other versioned closed wire schema used only as an embedded value or reference are not `CanonicalRecordKind` members unless this mapping expressly names their persisted-record schema, because an embedded schema must not silently acquire history-selection authority.
+`schema` is the case-sensitive versioned wire identifier `<name>@<positive-version>`, while `CanonicalRecordKind` is the distinct case-sensitive version-independent persisted-record family discriminator, because a schema version and a retrieval/selector family have different validation and authorization roles. The `canonical-contract-registry` is the only persisted-schema mapping, because a second list would create competing authority.
 
 The Contract Validator first validates that a record's exact `schema` is one supported versioned schema and then obtains its `CanonicalRecordKind` only by the closed mapping; it rejects an unsupported version, unknown name, missing mapping, a selector `record_kind` that differs from the mapped family, and every normalization, fallback, parsing-derived family, or inferred mapping, because schema validation must not turn a family authorization into acceptance of unknown bytes. Each canonical persisted record therefore has exactly one supported schema identifier and exactly one mapped record kind, because the closed mapping is one-to-one for every supported persisted record. `CanonicalRecordKind` is exactly one mapped bare family in the preceding table, and every `record_kind` and `allowed_record_kinds` field uses only that closed set, because unknown arbitrary strings must not silently acquire shared record meaning.
 
@@ -568,7 +582,7 @@ AttemptOutcome
   local_settlement: SETTLED | UNSETTLED | UNKNOWN
   requested_routing
   observed_routing
-  capture_refs[]: RecordRef<CaptureRecord>
+  capture_refs[]: PayloadRef<CaptureRecord>
   proof_of_non_launch | null
   error_ref | null
   process_observations[]
@@ -587,7 +601,7 @@ PlannerResult
   schema
   operation_request_id
   kind: PLAN | DECLINE
-  plan | null
+  plan: PayloadRef<Plan> | null
   reason
   findings[]
   unknowns[]
@@ -639,7 +653,9 @@ Every returned `CommandStep.output_source_bindings` key is one of that step's re
 
 Diagnostic reason strings and error messages are data rather than control signals while closed enums and validated references drive derivation, because arbitrary prose must not acquire lifecycle authority.
 
-`PlannerResult.kind: PLAN` requires one nonempty Plan while `DECLINE` requires a null Plan, because one tagged result must not contain contradictory planning decisions.
+`PlannerResult.kind: PLAN` requires a non-null `PayloadRef<Plan>` to the one Plan payload in the same `PLANNING_FINISHED` transition, while `DECLINE` requires null and a settled operational failure publishes no PlannerResult, because one tagged result must not contain contradictory planning decisions or fabricated semantic judgment.
+
+`RootTaskSpec.required_outputs[]` is pre-identity `OutputRequirementSpec` data, because the root Task identity must bind the original specifications without a cycle. After `root_task_id` is known, Boundary derives each root `OutputRequirement.requirement_id` as `H("stt-root-requirement-v1", root_task_id, uint64_be(requirement ordinal), canonical OutputRequirement body excluding requirement_id)`, where the ordinal is the zero-based array position and the body is the exact closed `OutputRequirement@1` value produced from that specification with no generated identity field, because independent writers need the same transformation. A child `TASK` step uses its accepted step output requirements as the child Task's immutable required-output contract, because child requirements must not acquire a second unrelated vocabulary. This transformation is deterministic because every input field, ordinal, and exclusion is fixed by the registry.
 
 `NOT_LAUNCHED` requires `RETURNED`, `ERR`, `SETTLED`, and one adapter proof code of `LOCAL_PROCESS_CREATE_FAILED_NO_PROCESS` or `PROVIDER_CONNECT_FAILED_ZERO_BYTES_SENT`, because only positive evidence that no local process or provider bytes began can permit another Attempt.
 
@@ -730,7 +746,7 @@ operations/<operation-request-id>/...
 attempts/<attempt-id>/...
 steps/<step-id>/...
 artifacts/<artifact-id>/...
-observations/<observation-id>.json
+typed observation and evidence records use their owning ordinary record or artifact identity and have no generic observation namespace
 results/task-result.json
 control/...
 ```
@@ -770,6 +786,7 @@ The transition and event records use the following exact fields, because package
 ```text
 TransitionManifest
   schema
+  transition_id
   task_id
   ledger_sequence
   event_body
@@ -830,7 +847,7 @@ ROUND_FINISHED
 TASK_FINISHED
 ```
 
-Every `LedgerEvent@1` has exactly one `EventBody@1` and uses this complete, case-sensitive, versioned event-to-record binding; the listed transition payload schemas are the complete `payload_refs[]` family for that event, except that the fixed genesis `TaskRecord@1` is bound from the Task's fixed content rather than a transition payload, and no other schema, family, inferred name, or fallback is valid because grammar validation must reject an unbound durable body:
+Every `LedgerEvent@1` has exactly one `TransitionManifest@1` and one `EventBody@1`, and every event has a mechanically defined `transition_id`, because the genesis transition is a real zero-payload transition rather than a special case. The lifecycle grammar owns event ordering, while this table is the one canonical event-binding owner for what each event carries, because payload cardinality must not be defined twice:
 
 | `event_kind` | Exact payload schema and mapped `CanonicalRecordKind` |
 | --- | --- |
@@ -842,16 +859,16 @@ Every `LedgerEvent@1` has exactly one `EventBody@1` and uses this complete, case
 | `LAUNCH_INTENT_RECORDED` | none |
 | `ATTEMPT_FINISHED` | one `AttemptOutcome@1` / `AttemptOutcome` and zero or more `CaptureRecord@1` / `CaptureRecord`, in `payload_refs[]` order after the outcome |
 | `SETTLEMENT_OBSERVED` | one `AttemptOutcome@1` / `AttemptOutcome` and zero or more `CaptureRecord@1` / `CaptureRecord`, in `payload_refs[]` order after the outcome |
-| `PLANNING_FINISHED` | one `PlannerResult@1` / `PlannerResult` |
+| `PLANNING_FINISHED` | accepted PLAN: one `PlannerResult@1` then one `Plan@1`; accepted DECLINE: one `PlannerResult@1`; settled Planner operational failure: no payload |
 | `STEP_STARTED` | none |
 | `STEP_FINISHED` | one `StepResult@1` / `StepResult` |
 | `VALIDATION_STARTED` | none |
-| `VALIDATION_RECORDED` | one `ValidatorResult@1` / `ValidatorResult` |
+| `VALIDATION_RECORDED` | accepted Validator semantic return: one `ValidatorResult@1`; settled Validator operational failure: no payload |
 | `OUTPUT_ASSESSMENT_RECORDED` | one `TaskOutputAssessment@1` / `TaskOutputAssessment` |
 | `ROUND_FINISHED` | none |
 | `TASK_FINISHED` | one `TaskResult@1` / `TaskResult` |
 
-For an event with `none`, `payload_refs[]` is exactly empty; for `TASK_CREATED`, the validator requires the one Task record at its fixed Task-genesis path and rejects every payload reference; for every listed transition payload, the reference's schema must be the stated exact version and its record kind must be the one-to-one `CanonicalRecordKind` mapping already defined above, while repeated payloads are permitted only where the row says zero or more and must occupy the stated order; for `OPERATION_REQUESTED`, the manifest must validate as the exact `committed_prefix` of the following request and must describe the state preceding that request's ledger event; the Contract Validator rejects any kind/schema mismatch, cardinality violation, unsupported version, duplicate or alternate family, unlisted payload, name-derived inference, empty fallback body, or unbound prefix before grammar derivation, because an event grammar is mechanically valid only when both its position and carried durable bytes are closed.
+For an event with `none`, `payload_refs[]` is exactly empty; for `TASK_CREATED`, `ledger_sequence` is zero, `previous_event_hash` is null, the fixed TaskRecord remains genesis content, and the TransitionManifest has zero transition payloads, because the manifest is constructed atomically with the Task candidate before Task publication. `ATTEMPT_FINISHED` and `SETTLEMENT_OBSERVED` carry one AttemptOutcome followed by zero or more CaptureRecord payloads, and that outcome's capture references are PayloadRef values to those same-transition captures; later records use RecordRef after commit, because publication phase is part of reference meaning. `PLANNING_FINISHED` requires `PlannerResult.plan` to be a non-null PayloadRef to the one same-transition Plan for PLAN and null for DECLINE, while operational failure publishes neither record, because semantic judgment must not be fabricated. `VALIDATION_RECORDED` carries exactly one accepted ValidatorResult or no record for operational failure, and only the accepted result authorizes ROUND_FINISHED, because settlement is not semantic validation. For every listed transition payload, the reference's schema must be the stated exact version and its mapped kind must be the registry mapping, because grammar validation must reject unbound durable meaning.
 
 `task-event-grammar` — A Task consists of genesis followed by zero or more contiguous Rounds and at most one terminal Task finalization, because `one-active-frontier` requires one legal sequential history:
 
