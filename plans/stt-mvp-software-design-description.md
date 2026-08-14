@@ -108,7 +108,7 @@ operation_request_id H("stt-operation-v1", canonical OperationRequest body exclu
 attempt_id           H("stt-attempt-v1", operation request id, attempt ordinal)
 artifact_id          H("stt-artifact-v1", canonical ArtifactRef identity body excluding artifact_id)
 record_id            H("stt-record-v1", record kind, logical path, size, content hash)
-transition_id        H("stt-transition-v1", canonical TransitionManifest body excluding transition_id)
+transition_id        H("stt-transition-v1", canonical TransitionManifest@1 bytes)
 event_hash           H("stt-event-v1", canonical committed event preimage)
 ```
 
@@ -118,54 +118,58 @@ Every remaining identity preimage is reconstructible from its owning registry en
 
 `typed-reference-boundary` — Fixed genesis content uses `ContentRef`, content inside the transition currently being built uses `PayloadRef`, content in an already committed transition uses `RecordRef`, immutable committed-history snapshots use `PrefixRef`, and evidence uses `ArtifactRef`, because publication phase and evidentiary meaning require distinct non-cyclic references.
 
+The compact contract notation uses `literal X` for an exact schema value, `T | null` for an explicitly nullable value, `array<T>` and `nonempty array<T>` for ordered containers, `map<string,T>` for keyed maps, and `ContentRef<T>`, `PayloadRef<T>`, `RecordRef<T>`, and `ArtifactRef<T>` for the existing reference wire shapes constrained to target schema `T`, because one notation makes field type, nullability, cardinality, and reference family explicit without adding wrapper schemas.
+
+`identity` is a validated lowercase hexadecimal identity string, `EventKind` is the closed event vocabulary below, `CanonicalRecordKind` is the closed persisted mapping above, `RFC3339_UTC` is canonical UTC whole-seconds time, and `TransitionPayloadBinding` is `{ payload_path: package-relative path string, sha256: lowercase SHA-256 hex, size_bytes: uint64 }`, because these shared primitives and embedded structures need one owner.
+
 The reference records use the following exact fields, because a reference must identify both bytes and their authority context without phase-dependent inference:
 
 ```text
 ContentRef
-  schema
-  relative_path
-  size_bytes
-  sha256
+  schema: ContentRef@1
+  relative_path: canonical relative path string
+  size_bytes: uint64
+  sha256: lowercase hex SHA-256 string
 
 PayloadRef
-  schema
-  record_id
-  payload_path
-  size_bytes
-  sha256
+  schema: PayloadRef@1
+  record_id: string
+  payload_path: package-relative path string
+  size_bytes: uint64
+  sha256: lowercase hex SHA-256 string
 
 RecordRef
-  schema
-  record_id
-  task_id
-  ledger_sequence
-  event_kind
-  transition_id
-  payload_path
-  size_bytes
-  sha256
+  schema: RecordRef@1
+  record_id: string
+  task_id: string
+  ledger_sequence: uint64
+  event_kind: EventKind
+  transition_id: string
+  payload_path: package-relative path string
+  size_bytes: uint64
+  sha256: lowercase hex SHA-256 string
 
 PrefixRef
-  schema
-  prefix_id
-  run_id
-  manifest_path
-  sha256
+  schema: PrefixRef@1
+  prefix_id: string
+  run_id: string
+  manifest_path: package-relative path string
+  sha256: lowercase hex SHA-256 string
 ```
 
 `canonical-contract-registry` — The following closed registry is the one normative owner of every STT wire schema used by Slice A or referenced by it, because independent writers need one exact schema identifier and one authority boundary.
 
 | schema | canonical fields or variant owner | persisted kind |
 | --- | --- | --- |
-| `RootTaskSpec@1`, `RootAuthoritySpec@1`, `TaskAuthority@1`, `ProviderRoute@1`, `CommandProfile@1`, `RunPolicy@1`, `RoutingFile@1` | the closed fixed/embedded definitions in this section | embedded |
-| `ReturnedPlan@1`, `Step@1`, `InputRef@1`, `InputResolution@1`, `OutputRequirement@1`, `ArtifactRef@1`, `TaskOutputAssessment@1` | the closed planning, input/output, and assessment definitions below | embedded except `InputRef`, `InputResolution`, `ArtifactRef`, and `TaskOutputAssessment` |
-| `RunRecord@1`, `TaskRecord@1`, `RoundRecord@1`, `Plan@1`, `OperationRequest@1`, `AttemptRecord@1`, `AttemptOutcome@1`, `CaptureRecord@1`, `PlannerResult@1`, `WorkerResult@1`, `StepResult@1`, `ValidatorResult@1`, `TaskResult@1` | the closed persisted-record definitions below | same name |
-| `TransitionManifest@1`, `EventBody@1`, `LedgerEvent@1`, `PrefixHeader@1`, `PrefixTaskHead@1`, `RunPrefixManifest@1` | the closed transition and prefix definitions below | `TransitionManifest`, `EventBody`, `LedgerEvent`, `PrefixTaskHead`, `RunPrefixManifest`; `PrefixHeader` is embedded |
-| `ContentRef@1`, `PayloadRef@1`, `RecordRef@1`, `PrefixRef@1` | the closed reference definitions above | embedded |
+| `RootTaskSpec@1`, `RootAuthoritySpec@1`, `TaskAuthority@1`, `ProviderRoute@1`, `CommandProfile@1`, `RunPolicy@1`, `RoutingFile@1` | the closed fixed/embedded definitions in this section | EMBEDDED_ONLY |
+| `ReturnedPlan@1`, `Step@1`, `InputRef@1`, `InputResolution@1`, `OutputRequirement@1`, `ArtifactRef@1`, `TaskOutputAssessment@1` | the closed planning, input/output, and assessment definitions below | EMBEDDED_ONLY except `InputRef`, `InputResolution`, `ArtifactRef`, and `TaskOutputAssessment` are PERSISTED |
+| `RunRecord@1`, `TaskRecord@1`, `RoundRecord@1`, `Plan@1`, `OperationRequest@1`, `AttemptRecord@1`, `AttemptOutcome@1`, `CaptureRecord@1`, `PlannerResult@1`, `WorkerResult@1`, `StepResult@1`, `ValidatorResult@1`, `TaskResult@1` | the closed persisted-record definitions below | PERSISTED; mapped one-to-one to the same bare kind |
+| `TransitionManifest@1`, `EventBody@1`, `LedgerEvent@1`, `PrefixHeader@1`, `PrefixTaskHead@1`, `RunPrefixManifest@1` | the closed transition and prefix definitions below | PERSISTED for `TransitionManifest`, `EventBody`, `LedgerEvent`, `PrefixTaskHead`, and `RunPrefixManifest`; EMBEDDED_ONLY for `PrefixHeader` |
+| `ContentRef@1`, `PayloadRef@1`, `RecordRef@1`, `PrefixRef@1` | the closed reference definitions above | EMBEDDED_ONLY |
 
 Every registry entry has exactly the listed `@1` identifier, the exact fields in its owning closed definition, no undeclared fields, and the nullability, arrays, maps, tagged variants, enums, and cross-field constraints stated with that definition, because a Contract Validator must not invent structural meaning. `PrefixRef` may bind the `RunPrefixManifest` carried in the same `OPERATION_REQUESTED` transition when its bytes describe the committed state immediately before that request, because that manifest is an immutable snapshot rather than ordinary new payload content.
 
-The persisted mapping is exactly the registry rows whose persisted kind is a name: `RunRecord`, `TaskRecord`, `RoundRecord`, `Plan`, `OperationRequest`, `AttemptRecord`, `AttemptOutcome`, `CaptureRecord`, `PlannerResult`, `WorkerResult`, `StepResult`, `ValidatorResult`, `TaskResult`, `InputRef`, `InputResolution`, `ArtifactRef`, `TaskOutputAssessment`, `TransitionManifest`, `EventBody`, `LedgerEvent`, `PrefixTaskHead`, and `RunPrefixManifest`, each from its same-named `@1` schema, because only genuinely persisted records may acquire history-selection authority. `RootTaskSpec`, `RootAuthoritySpec`, `TaskAuthority`, `ProviderRoute`, `CommandProfile`, `RunPolicy`, `RoutingFile`, `ReturnedPlan`, `Step`, `OutputRequirement`, `ContentRef`, `PayloadRef`, `RecordRef`, `PrefixRef`, and `PrefixHeader` are embedded-only and are excluded because embedded values must not acquire history-selection authority.
+The persisted mapping contains exactly 22 schemas: `RunRecord`, `TaskRecord`, `RoundRecord`, `Plan`, `OperationRequest`, `AttemptRecord`, `AttemptOutcome`, `CaptureRecord`, `PlannerResult`, `WorkerResult`, `StepResult`, `ValidatorResult`, `TaskResult`, `InputRef`, `InputResolution`, `ArtifactRef`, `TaskOutputAssessment`, `TransitionManifest`, `EventBody`, `LedgerEvent`, `PrefixTaskHead`, and `RunPrefixManifest`, each from its same-named `@1` schema, because only persisted records may acquire history-selection authority. The remaining 15 schemas are `EMBEDDED_ONLY`: `RootTaskSpec`, `RootAuthoritySpec`, `TaskAuthority`, `ProviderRoute`, `CommandProfile`, `RunPolicy`, `RoutingFile`, `ReturnedPlan`, `Step`, `OutputRequirement`, `ContentRef`, `PayloadRef`, `RecordRef`, `PrefixRef`, and `PrefixHeader`; no embedded schema has record-kind authority because the registry is the sole persisted-schema mapping.
 
 ## Lifecycle contracts
 
@@ -189,52 +193,52 @@ The canonical wire schemas use the following exact field vocabulary, because com
 
 ```text
 RootTaskSpec
-  schema
-  mission
-  root_authority_spec
-  required_outputs[]
-  initial_input_selectors[]
-  prior_evidence_selectors[]
-  run_policy
-  routing_constraints | null
-  routing_identity
+  schema: literal RootTaskSpec@1
+  mission: string
+  root_authority_spec: RootAuthoritySpec@1
+  required_outputs: array<OutputRequirementSpec>
+  initial_input_selectors: array<source_selector>
+  prior_evidence_selectors: array<source_selector>
+  run_policy: RunPolicy@1
+  routing_constraints: RoutingConstraints | null
+  routing_identity: identity
 
 RunRecord
-  schema
-  run_id
-  root_task_spec_ref
-  routing_ref
-  run_policy_ref
-  initial_import_refs[]
-  prior_import_refs[]
-  source_identity_ref
-  target_identity_ref
-  store_root_identity
-  run_root_relative_path
-  frozen_runtime_manifest_ref
-  exchange_root_identity
-  live_provider_authorized
-  created_at
+  schema: RunRecord@1
+  run_id: lowercase UUIDv4
+  root_task_spec_ref: ContentRef<RootTaskSpec>
+  routing_ref: ContentRef<RoutingFile>
+  run_policy_ref: ContentRef<RunPolicy>
+  initial_import_refs[]: nonempty array<ContentRef>
+  prior_import_refs[]: array<ContentRef>
+  source_identity_ref: ContentRef<SourceIdentity>
+  target_identity_ref: ContentRef<TargetIdentity>
+  store_root_identity: string
+  run_root_relative_path: canonical relative path string
+  frozen_runtime_manifest_ref: ContentRef<RuntimeManifest>
+  exchange_root_identity: string
+  live_provider_authorized: boolean
+  created_at: RFC3339_UTC
 
 TaskRecord
-  schema
-  task_id
-  run_id
-  parent_task_id | null
-  parent_round_number | null
-  parent_step_id | null
-  mission_ref
-  authority_ref
-  required_outputs_ref
-  created_from_ref
+  schema: TaskRecord@1
+  task_id: string
+  run_id: string
+  parent_task_id: string | null
+  parent_round_number: uint64 | null
+  parent_step_id: string | null
+  mission_ref: ContentRef<Mission>
+  authority_ref: ContentRef<TaskAuthority>
+  required_outputs_ref: ContentRef<OutputRequirement[]>
+  created_from_ref: ContentRef<TaskStep | RootTaskSpec>
 
 RoundRecord
-  schema
-  round_id
-  task_id
-  round_number
-  predecessor_round_id | null
-  continuation_validator_result_ref | null
+  schema: RoundRecord@1
+  round_id: string
+  task_id: string
+  round_number: uint64
+  predecessor_round_id: string | null
+  continuation_validator_result_ref: RecordRef<ValidatorResult> | null
 ```
 
 `created_at` uses canonical RFC 3339 UTC with whole seconds and a `Z` suffix but does not participate in a derived identity, because diagnostic time needs one representation without making wall-clock precision a lifecycle input.
@@ -243,70 +247,70 @@ Authority and routing use the following exact shared records, because admission 
 
 ```text
 PathScope
-  root
+  root: string
   kind: EXACT | SUBTREE
 
 RootAuthoritySpec
-  schema
+  schema: literal RootAuthoritySpec@1
   read_scopes[]: PathScope
   write_responsibility_scopes[]: PathScope
   allowed_step_kinds[]: WORKER | COMMAND | TASK
-  allowed_worker_routes[]
-  allowed_command_profiles[]
-  allowed_inherited_env_names[]
-  allowed_external_effect_classes[]
+  allowed_worker_routes: array<string>
+  allowed_command_profiles: array<string>
+  allowed_inherited_env_names: array<string>
+  allowed_external_effect_classes: array<string>
 
 TaskAuthority
-  schema
-  authority_id
-  target_identity_ref
+  schema: literal TaskAuthority@1
+  authority_id: identity
+  target_identity_ref: ContentRef<TargetIdentity>
   read_scopes[]: PathScope
   write_responsibility_scopes[]: PathScope
   allowed_step_kinds[]: WORKER | COMMAND | TASK
-  allowed_worker_routes[]
-  allowed_command_profiles[]
-  allowed_inherited_env_names[]
-  allowed_external_effect_classes[]
-  parent_authority_ref | null
+  allowed_worker_routes: array<string>
+  allowed_command_profiles: array<string>
+  allowed_inherited_env_names: array<string>
+  allowed_external_effect_classes: array<string>
+  parent_authority_ref: ContentRef<TaskAuthority> | null
 
 ProviderRoute
-  schema
-  route_name
+  schema: literal ProviderRoute@1
+  route_name: string
   adapter_kind: FAKE | CODEX | CLAUDE_CODE
-  provider_id
-  executable_identity
-  fixed_argv_prefix[]
-  requested_provider
-  requested_model
-  requested_effort
-  capability_rank
-  cost_rank
-  quality_rank
-  admitted_effect_classes[]
-  admitted_inherited_env_names[]
-  fixed_env{}
-  cwd_policy
-  wait_policy
-  capture_policy
-  local_termination_policy
-  read_tool_transport
+  provider_id: string
+  executable_identity: string
+  fixed_argv_prefix: array<string>
+  requested_provider: string
+  requested_model: string
+  requested_effort: string
+  capability_rank: positive integer
+  cost_rank: positive integer
+  quality_rank: positive integer
+  admitted_effect_classes: array<string>
+  admitted_inherited_env_names: array<string>
+  fixed_env: map<string,string>
+  cwd_policy: cwd_policy
+  wait_policy: wait_policy
+  capture_policy: capture_policy
+  local_termination_policy: local_termination_policy
+  read_tool_transport: read_tool_transport
 
 CommandProfile
-  schema
-  profile_name
-  executable_identity
-  argv_template[]
-  argument_slots{}
-  cwd_policy
-  fixed_env{}
-  admitted_inherited_env_names[]
-  admitted_effect_classes[]
-  exit_code_outcomes{}
-  wait_policy
-  capture_policy
-  local_termination_policy
-  output_observations{}
-  effect_report_target_path | null
+  schema: literal CommandProfile@1
+  profile_name: string
+  executable_identity: string
+  argv_template: array<string>
+  argument_slots: map<string,string>
+  cwd_policy: cwd_policy
+  fixed_env: map<string,string>
+  admitted_inherited_env_names: array<string>
+  admitted_effect_classes: array<string>
+  exit_code_outcomes: map<string,string>
+  wait_policy: wait_policy
+  capture_policy: capture_policy
+  local_termination_policy: local_termination_policy
+  output_observations: map<string,string>
+  effect_report_target_path: string | null
 ```
 
 The shared policy value spaces are closed records, because admission must reject values whose meaning is not defined here:
@@ -372,29 +376,29 @@ Policy and route registries use the following exact shared fields, because finit
 
 ```text
 RunPolicy
-  schema
-  max_control_record_bytes
-  max_control_nesting_depth
-  max_path_bytes
-  max_capture_bytes_per_stream
-  max_raw_return_bytes
-  max_input_bytes_per_operation
-  max_output_bytes_per_operation
-  max_tree_entries_per_object
-  max_history_response_bytes
-  planner_wait_seconds
-  worker_wait_seconds
-  command_wait_seconds
-  validator_wait_seconds
-  settlement_wait_seconds
-  termination_grace_seconds
-  max_control_transitions_per_public_invocation
+  schema: literal RunPolicy@1
+  max_control_record_bytes: uint64
+  max_control_nesting_depth: string
+  max_path_bytes: uint64
+  max_capture_bytes_per_stream: string
+  max_raw_return_bytes: uint64
+  max_input_bytes_per_operation: string
+  max_output_bytes_per_operation: string
+  max_tree_entries_per_object: string
+  max_history_response_bytes: uint64
+  planner_wait_seconds: uint64
+  worker_wait_seconds: uint64
+  command_wait_seconds: uint64
+  validator_wait_seconds: uint64
+  settlement_wait_seconds: uint64
+  termination_grace_seconds: uint64
+  max_control_transitions_per_public_invocation: string
   routing_constraints: RoutingConstraints
-  host_profile
+  host_profile: string
 
 RoutingFile
-  schema
-  routing_identity
+  schema: literal RoutingFile@1
+  routing_identity: string
   planner_route: ProviderRoute
   validator_route: ProviderRoute
   worker_routes{}: ProviderRoute
@@ -416,10 +420,10 @@ Planning records use the following exact shared fields, because Planner-local re
 ```text
 ReturnedPlan
   schema: ReturnedPlan@1
-  planner_operation_request_id
-  task_id
-  round_id
-  steps[1..]
+  planner_operation_request_id: string
+  task_id: string
+  round_id: string
+  steps[1..]: string
 
 CommonStep
   step_key: nonempty string unique within ReturnedPlan.steps[]
@@ -443,7 +447,7 @@ CommandStep extends CommonStep
 TaskStep extends CommonStep
   child_mission: nonempty string
   child_authority: TaskAuthority that is a structural subset of the parent Task authority
-  stt_starting_subtree | null
+  stt_starting_subtree: string | null
 ```
 
 `ReturnedPlan` contains exactly the fields above and one selected variant for every array member of `steps[]`; `CommonStep` is not itself a returned variant, and fields outside the selected `WorkerStep`, `CommandStep`, or `TaskStep` variant are forbidden, because a tagged returned step must have one complete and non-ambiguous semantic meaning.
@@ -464,76 +468,76 @@ Inputs and outputs use the following exact shared records, because substitution-
 
 ```text
 DependencySpec
-  dependency_key
+  dependency_key: string
   kind: INITIAL_IMPORT | PRIOR_IMPORT | RUN_ARTIFACT | TARGET_PATH | PREVIOUS_STEP_OUTPUT | CHILD_TASK_OUTPUT
-  source_selector | null
-  producer_step_key | null
-  producer_requirement_key | null
-  purpose
-  required_media_type
+  source_selector: string | null
+  producer_step_key: string | null
+  producer_requirement_key: string | null
+  purpose: string
+  required_media_type: string
 
 InputRef
   schema: InputRef@1
-  input_id
-  kind
-  source_identity
-  source_selector | null
-  intended_consumer_step_id
-  purpose
-  required_media_type
+  input_id: string
+  kind: string
+  source_identity: string
+  source_selector: string | null
+  intended_consumer_step_id: string
+  purpose: string
+  required_media_type: string
 
 InputResolution
-  schema
-  input_id
-  consumer_step_id
-  resolved_artifact_ref
+  schema: literal InputResolution@1
+  input_id: string
+  consumer_step_id: string
+  resolved_artifact_ref: RecordRef
   resolution_phase: PLAN_ACCEPTANCE | PRODUCER_COMPLETION
-  target_identity_ref | null
-  observed_path_identity | null
+  target_identity_ref: string | null
+  observed_path_identity: string | null
 
 OutputRequirement
   schema: OutputRequirement@1
-  requirement_id
-  purpose
+  requirement_id: string
+  purpose: string
   object_type: REGULAR_FILE | DIRECTORY_TREE
-  media_type
+  media_type: string
   location: RUN | TARGET
   path_policy: EXACT | BOUNDARY_ASSIGNED
-  path | null
-  required_mode | null
+  path: string | null
+  required_mode: string | null
   satisfaction_mode: PRESENT | NONEMPTY | EXACT_SHA256
-  expected_sha256 | null
-  producer_constraint
+  expected_sha256: string | null
+  producer_constraint: string
 
 ArtifactRef
-  schema
-  artifact_id
+  schema: literal ArtifactRef@1
+  artifact_id: string
   object_type: REGULAR_FILE | DIRECTORY_TREE
-  media_type
+  media_type: string
   location: RUN | TARGET
-  relative_path
-  sha256 | null
-  size_bytes | null
-  mode | null
-  provenance
-  requirement_id | null
-  purpose
-  observation_kind
-  observed_identity
+  relative_path: string
+  sha256: string | null
+  size_bytes: string | null
+  mode: string | null
+  provenance: string
+  requirement_id: string | null
+  purpose: string
+  observation_kind: string
+  observed_identity: string
 
 OutputAssessmentEntry
-  requirement_id
+  requirement_id: string
   status: SATISFIED | UNSATISFIED | UNREADABLE
-  selected_artifact_ref | null
-  reason_code | null
+  selected_artifact_ref: string | null
+  reason_code: string | null
 
 TaskOutputAssessment
-  schema
-  task_id
-  round_id
+  schema: literal TaskOutputAssessment@1
+  task_id: string
+  round_id: string
   phase: PRE_VALIDATION | TERMINAL
-  entries[]
-  all_satisfied
+  entries: array<string>
+  all_satisfied: boolean
 ```
 
 `BOUNDARY_ASSIGNED` is valid only for immutable Run artifacts while every target output uses one admitted exact target-relative path, because effectful work must know its live destination before launch and content-derived Run storage need not be selected by a Worker.
@@ -546,105 +550,105 @@ Operations and outcomes use the following exact shared records, because replay, 
 
 ```text
 OperationRequest
-  schema
-  operation_request_id
+  schema: literal OperationRequest@1
+  operation_request_id: string
   role: PLANNER | WORKER | COMMAND | VALIDATOR
-  run_id
-  task_id
-  round_id
-  plan_id | null
-  step_id | null
-  exact_contract_ref
-  exact_inputs[]
-  input_bindings[]
-  output_requirements[]
-  output_bindings[]
-  route_or_profile_ref
-  stt_read_grant
-  committed_prefix_ref
+  run_id: string
+  task_id: string
+  round_id: string
+  plan_id: string | null
+  step_id: string | null
+  exact_contract_ref: RecordRef
+  exact_inputs: array<string>
+  input_bindings: array<string>
+  output_requirements: array<string>
+  output_bindings: array<string>
+  route_or_profile_ref: RecordRef
+  stt_read_grant: string
+  committed_prefix_ref: PrefixRef
 
 AttemptRecord
-  schema
-  attempt_id
-  operation_request_id
-  attempt_ordinal
-  adapter_kind
-  requested_routing
-  prelaunch_identity_snapshot
+  schema: literal AttemptRecord@1
+  attempt_id: string
+  operation_request_id: string
+  attempt_ordinal: uint64
+  adapter_kind: string
+  requested_routing: string
+  prelaunch_identity_snapshot: string
 
 AttemptOutcome
-  schema
+  schema: literal AttemptOutcome@1
   launch_state: NOT_LAUNCHED | LAUNCHED | LAUNCH_UNCERTAIN
   transport_state: RETURNED | NO_RETURN
   result_kind: OK | ERR | REJECTED | NONE
   local_settlement: SETTLED | UNSETTLED | UNKNOWN
-  requested_routing
-  observed_routing
+  requested_routing: string
+  observed_routing: string
   capture_refs[]: PayloadRef<CaptureRecord>
-  proof_of_non_launch | null
-  error_ref | null
-  process_observations[]
-  timing_observations[]
+  proof_of_non_launch: string | null
+  error_ref: string | null
+  process_observations: array<string>
+  timing_observations: array<string>
 
 CaptureRecord
-  schema
+  schema: literal CaptureRecord@1
   source: STDOUT | STDERR | PROVIDER_RAW_RETURN | TOOL_TRANSCRIPT
   completeness: COMPLETE | TRUNCATED | MISSING
-  captured_prefix_ref | null
-  original_size_bytes | null
+  captured_prefix_ref: string | null
+  original_size_bytes: string | null
   truncation_marker: boolean
-  missing_evidence_reason | null
+  missing_evidence_reason: string | null
 
 PlannerResult
-  schema
-  operation_request_id
+  schema: literal PlannerResult@1
+  operation_request_id: string
   kind: PLAN | DECLINE
   plan: PayloadRef<Plan> | null
-  reason
-  findings[]
-  unknowns[]
+  reason: string
+  findings: array<string>
+  unknowns: array<string>
 
 WorkerResult
-  schema
-  operation_request_id
+  schema: literal WorkerResult@1
+  operation_request_id: string
   local_outcome: SATISFIED | UNSATISFIED | INDETERMINATE
-  reason
-  observations[]
-  claimed_outputs[]
-  reported_effects[]
+  reason: string
+  observations: array<string>
+  claimed_outputs: array<string>
+  reported_effects: array<string>
 
 StepResult
-  schema
-  step_id
-  source_result_ref | null
-  child_outcome_ref | null
-  verified_artifacts[]
-  observations[]
-  reported_effects[]
+  schema: literal StepResult@1
+  step_id: string
+  source_result_ref: string | null
+  child_outcome_ref: string | null
+  verified_artifacts: array<string>
+  observations: array<string>
+  reported_effects: array<string>
   local_outcome: SATISFIED | UNSATISFIED | INDETERMINATE | OPERATIONAL_INDETERMINATE
   output_contract_status: SATISFIED | UNSATISFIED | NOT_APPLICABLE
-  unsatisfied_requirement_ids[]
-  scope_violation_ref | null
+  unsatisfied_requirement_ids: array<string>
+  scope_violation_ref: string | null
 
 ValidatorResult
-  schema
-  operation_request_id
+  schema: literal ValidatorResult@1
+  operation_request_id: string
   judgment: SATISFIED | UNSATISFIED | INDETERMINATE
   disposition: FINISH | REPEAT
-  reason
-  findings[]
-  unknowns[]
-  cited_artifact_refs[]
+  reason: string
+  findings: array<string>
+  unknowns: array<string>
+  cited_artifact_refs: array<string>
 
 TaskResult
-  schema
-  task_id
+  schema: literal TaskResult@1
+  task_id: string
   judgment: SATISFIED | UNSATISFIED | INDETERMINATE
-  final_round_ref
-  final_validator_result_ref
-  terminal_output_assessment_ref
-  satisfied_outputs[]
-  terminal_evidence_refs[]
+  final_round_ref: RecordRef
+  final_validator_result_ref: RecordRef
+  terminal_output_assessment_ref: RecordRef
+  satisfied_outputs: array<string>
+  terminal_evidence_refs: array<string>
 ```
 
 Every returned `CommandStep.output_source_bindings` key is one of that step's returned requirement keys, because a command output must identify its planned requirement. Boundary converts each key to the matching canonical requirement identity, and each value names one `CommandProfile.output_observations` entry whose source and object type are compatible with that requirement, because the accepted Plan records canonical rather than Planner-local identifiers. Each required command-produced output has exactly one such binding, because command-output satisfaction must resolve to one named frozen observation. A `CaptureRecord` preserves whether each capture is complete, truncated, or missing, its retained prefix when any, original-size knowledge when available, and the truncation or missing-evidence marker, because an `AttemptOutcome` capture reference must not conceal incomplete evidence. `TaskResult.final_round_ref`, `final_validator_result_ref`, and `terminal_output_assessment_ref` bind the exact terminal history, while `satisfied_outputs[]` binds the selected `ArtifactRef` for every terminally satisfied required output and `terminal_evidence_refs[]` binds any other terminal evidence required by the accepted design, because a terminal result must prove the history and assessment that establish its output claim.
@@ -725,14 +729,14 @@ A reported out-of-authority effect commits a violation record, stops later Plan 
 │   ├── runner.lock
 │   └── writer.lock
 └── tasks/<task-id>/
-    ├── task.json
-    ├── mission.md
-    ├── authority.json
-    ├── required-outputs.json
-    ├── ledger.jsonl
-    └── transitions/<sequence>-<event-kind>/
-        ├── manifest.json
-        └── payload/
+    ├── task.json: string
+    ├── mission.md: string
+    ├── authority.json: string
+    ├── required-outputs.json: string
+    ├── ledger.jsonl: string
+    └── transitions/<sequence>-<event-kind>/: string
+        ├── manifest.json: string
+        └── payload/: string
 ```
 
 Transition payloads use one closed logical namespace, because independent producers, readers, and references must agree where each accepted fact resides:
@@ -767,9 +771,9 @@ Bootstrap constructs a complete candidate Run in a private staging directory bes
 
 Before either rename, Boundary flushes each file, flushes all payload subdirectories, flushes the staging directory, performs the same-parent atomic rename without replacement, and flushes the containing parent directory, because readers and recovery need both complete visibility and durable name publication; a crash before rename leaves only private staging, commits nothing, and permits recovery to remove that confined uncommitted staging orphan, because no final name has been published; after rename but before the containing-parent flush, the rename is not necessarily durable and recovery may expose no final directory or the complete final directory, because the name durability barrier has not completed; if it is absent, publication did not survive and Boundary may recreate it from the unchanged deterministic basis, while if it is present Boundary validates the complete fixed basis and treats a partial final basis as `INVALID` without repair by choosing among files, because recovery may not invent a genesis basis; after the containing-parent flush the final name is durably published, and a name collision rejects publication without replacement, because no partial genesis is accepted; no semantic operation may launch from a newly published Run or Task until its containing-parent directory flush has succeeded, because no semantic effect may depend on a genesis name whose durability is not established.
 
-A Task candidate contains its fixed mission, authority, required outputs, Task record, and genesis ledger event, because readers must observe either no Task or one complete immutable Task basis.
+ A Task candidate contains its fixed mission, authority, required outputs, Task record, and the canonical genesis manifest and ledger event, because readers must observe either no Task or one complete immutable Task basis. `TASK_CREATED` is sequence 0; its `EventBody@1` has `event_kind: TASK_CREATED`, the Task identity, `ledger_sequence: 0`, `previous_event_hash: null`, and `payload_refs[]: []`, because genesis has no predecessor or transition payload. Its `TransitionManifest@1` has the same Task and sequence, that event body, and `payloads[]: []`, because the manifest binds the zero-payload genesis event. The fixed TaskRecord remains at `tasks/<task-id>/task.json` and is not a transition payload, because it is fixed Task-genesis content.
 
-`transition-package` — Every post-genesis event is represented by one package manifest binding the exact next event body and every payload path, hash, and size before the ledger line is appended, because a crash must leave either no accepted transition or one uniquely completable package.
+`transition-package` — Every `LedgerEvent@1` has one canonical `TransitionManifest@1` binding its exact `EventBody@1` and every payload path, hash, and size, because every event needs one mechanically verifiable package binding. For `TASK_CREATED` sequence 0, the manifest is constructed and flushed inside the private Task candidate at `tasks/<task-id>/transitions/0-TASK_CREATED/manifest.json`, with `payloads[]` empty, before the Task directory is atomically published, because genesis publication must be atomic with the fixed Task basis; its initial ledger line binds the derived `transition_id`. Every post-genesis manifest/package uses the ordinary package-first publication protocol before its ledger line is appended, because genesis is the same transition-package contract published within atomic Task genesis rather than a second persistence mechanism.
 
 An incomplete transition package whose payloads were installed but whose manifest was not installed is an unaccepted orphan, because the ledger contains no committed event that can authorize those payloads.
 
@@ -783,32 +787,28 @@ The transition and event records use the following exact fields, because package
 
 ```text
 TransitionManifest
-  schema
-  transition_id
-  task_id
-  ledger_sequence
-  event_body
-  payloads[]
-    payload_path
-    sha256
-    size_bytes
+  schema: TransitionManifest@1
+  task_id: string
+  ledger_sequence: uint64
+  event_body: EventBody@1
+  payloads[]: array<{ payload_path: package-relative path string, sha256: lowercase hex SHA-256 string, size_bytes: uint64 }>
 
 EventBody
-  schema
-  event_kind
-  task_id
-  ledger_sequence
-  previous_event_hash | null
-  payload_refs[]: PayloadRef
+  schema: EventBody@1
+  event_kind: EventKind
+  task_id: string
+  ledger_sequence: uint64
+  previous_event_hash: lowercase hex event hash string | null
+  payload_refs[]: array<PayloadRef>
 
 LedgerEvent
-  schema
-  transition_id
-  event_body
-  event_hash
+  schema: LedgerEvent@1
+  transition_id: string
+  event_body: EventBody@1
+  event_hash: lowercase hex event hash string
 ```
 
-The transition identity hashes the canonical manifest, and the canonical committed-event preimage is the canonical UTF-8 `LedgerEvent@1` object with exactly `schema`, `transition_id`, and `event_body` in its ordinary sorted-key canonical JSON form including its one terminal LF and omitting only `event_hash`; `event_body` is the closed canonical `EventBody@1` object carrying `task_id`, `ledger_sequence`, and `previous_event_hash`; `event_hash` is therefore exactly `H("stt-event-v1", canonical committed-event preimage)`, rendered and stored as 64 lowercase hexadecimal ASCII characters; in a non-genesis body, `previous_event_hash` is that predecessor's 64-character lowercase-hex string and participates as those UTF-8 bytes inside the canonical `EventBody@1` bytes rather than as a raw digest or unframed string; in the sole genesis body it is JSON `null`; the terminal LF is included; no additional domain tag, delimiter, or hash input exists beyond `H`'s existing tag and uint64 length framing; and a validator rejects a wrong field set, noncanonical body bytes, wrong predecessor, non-lowercase rendering, wrong length, raw-digest substitution, or recomputed mismatch, because package contents and event order need one non-cyclic integrity chain.
+The transition identity is exactly `H("stt-transition-v1", canonical TransitionManifest@1 bytes including its one terminal LF)`, where the manifest contains exactly `schema`, `task_id`, `ledger_sequence`, `event_body`, and `payloads[]` and has no stored `transition_id` or self-field exclusion; the canonical committed-event preimage is the canonical UTF-8 `LedgerEvent@1` object with exactly `schema`, `transition_id`, and `event_body` in its ordinary sorted-key canonical JSON form including its one terminal LF and omitting only `event_hash`; `event_body` is the closed canonical `EventBody@1` object carrying `task_id`, `ledger_sequence`, and `previous_event_hash`; `event_hash` is therefore exactly `H("stt-event-v1", canonical committed-event preimage)`, rendered and stored as 64 lowercase hexadecimal ASCII characters; in a non-genesis body, `previous_event_hash` is that predecessor's 64-character lowercase-hex string and participates as those UTF-8 bytes inside the canonical `EventBody@1` bytes rather than as a raw digest or unframed string; in the sole genesis body it is JSON `null`; the terminal LF is included; no additional domain tag, delimiter, or hash input exists beyond `H`'s existing tag and uint64 length framing; and a validator rejects a wrong field set, noncanonical body bytes, wrong predecessor, non-lowercase rendering, wrong length, raw-digest substitution, or recomputed mismatch, because package contents and event order need one non-cyclic integrity chain.
 
 `previous_event_hash` is `null` in exactly the genesis `TASK_CREATED` event of each Task and non-null in every later event of that Task, because the chain root has no predecessor while `canonical-control-codec` forbids implicit optionality that independent writers would resolve differently.
 
@@ -876,17 +876,17 @@ TASK_CREATED
 [ terminal-task-finalization ]
 
 round
-  ROUND_CREATED
-  PLANNING_STARTED
-  planner-operation
-  PLANNING_FINISHED
+  ROUND_CREATED: string
+  PLANNING_STARTED: string
+  planner-operation: string
+  PLANNING_FINISHED: string
   { step-phase }*
-  OUTPUT_ASSESSMENT_RECORDED(PRE_VALIDATION)
-  validation-phase
+  OUTPUT_ASSESSMENT_RECORDED(PRE_VALIDATION): string
+  validation-phase: string
 
 terminal-task-finalization
-  OUTPUT_ASSESSMENT_RECORDED(TERMINAL)
-  TASK_FINISHED
+  OUTPUT_ASSESSMENT_RECORDED(TERMINAL): string
+  TASK_FINISHED: string
 ```
 
 `planner-operation` and `validator-operation` are each `OPERATION_REQUESTED attempt-sequence`, Worker and Command step operations use that same form, `OperationRequest.role` is exactly `PLANNER`, `WORKER`, `COMMAND`, or `VALIDATOR` rather than `TASK`, one operation owns its one `OPERATION_REQUESTED` and one or more Attempts only under the positive-non-launch rule, an `attempt-sequence` may end at the legal interrupted prefix `ATTEMPT_STARTED` or continue through `LAUNCH_INTENT_RECORDED`, `ATTEMPT_FINISHED`, and settlement evidence, a later `ATTEMPT_STARTED` is legal only after the preceding Attempt has committed positive `NOT_LAUNCHED` evidence with no fixed Attempt count, and the enclosing grammar owns `PLANNING_FINISHED` and `VALIDATION_RECORDED` without duplicating either phase-finalization event in a subgrammar, because operation transport must represent legal interruption and retry without fabricating a second owner for lifecycle finalization.
