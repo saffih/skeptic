@@ -33,6 +33,9 @@ incomplete durability confirmation. Unsupported directory fsync is the narrow
 successful `FILE_FSYNC_ONLY` fallback; unexpected directory I/O remains a
 failure.
 
+The stable validator identifier is a protocol identifier retained for
+checkpoint compatibility; it is not the current Python module path.
+
 The success receipt reports the observed atomic publication and durability
 mode. It makes no universal crash, power-loss, storage-device, or network
 filesystem durability claim. This slice creates and validates checkpoints

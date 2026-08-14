@@ -4,7 +4,7 @@ import unittest
 TEXT = Path("skeptic.md").read_text(encoding="utf-8")
 
 
-class AndreiABGuardrails(unittest.TestCase):
+class SkepticGuardrails(unittest.TestCase):
     def test_contract_preserved(self):
         for marker in [
             "`RunSkeptic` is the formal invocation string",

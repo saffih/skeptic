@@ -1,9 +1,13 @@
-# Skeptic consolidation backlog ledger
+# Historical Skeptic consolidation backlog snapshot (2026-07-27)
+
+This is a historical snapshot of the consolidation backlog as recorded on
+2026-07-27. It is not a current source of repository or unresolved-work
+authority; current authority is defined by the repository's governing files and
+current work artifacts. Historical entries are retained for reconstruction.
 
 Status vocabulary is closed: `COMPLETED`, `ACTIVE_NOW`, `PARKED`,
 `SUPERSEDED`, `REJECTED_WITH_REASON`, `NEEDS_OWNER_DECISION`, and
-`NEEDS_EVIDENCE`. This ledger is the current source for unresolved semantic
-work; historical plans remain evidence, not competing authority.
+`NEEDS_EVIDENCE`. Historical plans remain evidence, not competing authority.
 
 | Topic | State | Evidence / disposition |
 |---|---|---|

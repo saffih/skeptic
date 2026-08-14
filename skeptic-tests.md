@@ -1,6 +1,5 @@
 # Skeptic Tests - Governance
 
-made by AI
 
 Purpose:
 No change to `skeptic.md` is accepted unless it is justified, tested, and reviewed against the current framework.
@@ -146,4 +145,3 @@ Before merging a Skeptic change:
 3. Show git status.
 4. Show diff.
 5. Report unresolved conflicts and missing evidence.
-

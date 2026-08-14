@@ -16,8 +16,8 @@ from unittest import mock
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-HARNESS_DIR = REPO_ROOT / "harness"
-sys.path.insert(0, str(HARNESS_DIR))
+QUICKCOMPARE_DIR = REPO_ROOT / "quickcompare"
+sys.path.insert(0, str(QUICKCOMPARE_DIR))
 
 import quickcompare as qc  # noqa: E402
 
@@ -446,7 +446,7 @@ class BudgetTests(unittest.TestCase):
 
 class SchemaTests(unittest.TestCase):
     def setUp(self):
-        self.schema = qc.load_json(HARNESS_DIR / "quickcompare.schema.json")
+        self.schema = qc.load_json(QUICKCOMPARE_DIR / "quickcompare.schema.json")
 
     def test_valid_minimal_report_passes(self):
         report = _minimal_comparison()
@@ -506,7 +506,7 @@ class PilotTests(unittest.TestCase):
             self.assertNotIn(secret, comp_md)
 
             # comparison.json validates; comparison.md regenerates byte-identical.
-            schema = qc.load_json(HARNESS_DIR / "quickcompare.schema.json")
+            schema = qc.load_json(QUICKCOMPARE_DIR / "quickcompare.schema.json")
             self.assertEqual(qc.validate_against_schema(result, schema), [])
             regenerated = qc.render_markdown(qc.load_json(out / "comparison.json"))
             self.assertEqual(regenerated, comp_md)
@@ -650,8 +650,8 @@ def _write_pilot_config(tmp):
         "target_hypothesis": "candidate improves detection under smaller footprint",
         "baseline": {"id": "baseline", "path": str(tmp / "baseline.json"), "expected_hash": sha(base_text)},
         "candidate": {"id": "candidate", "path": str(tmp / "candidate.json"), "expected_hash": sha(cand_text)},
-        "manifest": str(HARNESS_DIR / "quick-v1-manifest.json"),
-        "schema_path": str(HARNESS_DIR / "quickcompare.schema.json"),
+        "manifest": str(QUICKCOMPARE_DIR / "quick-v1-manifest.json"),
+        "schema_path": str(QUICKCOMPARE_DIR / "quickcompare.schema.json"),
         "protected": {
             "protected_code_testing": {"path": str(prot_dir / "code.json"), "commitment": sha(prot_code)},
             "protected_agent_security_procedure": {"path": str(prot_dir / "sec.json"), "commitment": sha(prot_sec)},

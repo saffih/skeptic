@@ -10,7 +10,7 @@ framework, and no shell command; it calls generic generator and judge
 executables through an argument-vector subprocess protocol with JSON on
 stdin and one JSON object on stdout.
 
-See ``python3 harness/quickcompare.py --help`` for the invocation contract.
+See ``python3 quickcompare/quickcompare.py --help`` for the invocation contract.
 """
 
 from __future__ import annotations
@@ -926,7 +926,7 @@ def run_comparison(config, output_dir):
         protected_status, budget, gates, verdict, rule_path, leaks, cache)
 
     # Schema self-validation; a failure flips the schema gate and re-verdicts.
-    schema = load_json(config.get("schema_path", REPO_ROOT / "harness" / "quickcompare.schema.json"))
+    schema = load_json(config.get("schema_path", REPO_ROOT / "quickcompare" / "quickcompare.schema.json"))
     schema_errors = validate_against_schema(result, schema)
     if schema_errors:
         gates["schema"] = False
@@ -1258,7 +1258,7 @@ def cmd_run(args):
 
 def cmd_validate(args):
     report = load_json(args.report)
-    schema = load_json(args.schema or (REPO_ROOT / "harness" / "quickcompare.schema.json"))
+    schema = load_json(args.schema or (REPO_ROOT / "quickcompare" / "quickcompare.schema.json"))
     errors = validate_against_schema(report, schema)
     if errors:
         for err in errors:
