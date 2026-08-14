@@ -55,13 +55,13 @@ A Task preserves one immutable mission, authority, required outputs, and lineage
 
 Changing the root mission, authority, target workspace, store location, or governing policy creates a new Run, because same-Run continuation must preserve `immutable-mission-and-authority`.
 
-Controller semantics and runtime identity remain fixed for the Run, because target mutation or deployment drift must not replace the component enforcing `boundary-mediated-transitions` during the same lifecycle.
+The admitted controller semantics remain fixed for the Run across process invocations, while no particular process identity is required to persist, because recovery may replace a process but target mutation or deployment drift must not replace the rules enforcing `boundary-mediated-transitions` during the same lifecycle.
 
 A child Task may receive any mission selected by Planner, including the same mission as an ancestor, but may only preserve or narrow inherited operational authority, because semantic decomposition may vary while `admitted-operational-authority` may not expand implicitly.
 
 ## `trusted-semantic-roles` — Trusted semantic roles
 
-Lead advances the uniquely implied lifecycle action without inventing semantic work, because `one-active-frontier` needs deterministic orchestration while `trusted-thinking` assigns judgment elsewhere.
+Lead is domain-blind and advances only the uniquely implied lifecycle action without interpreting artifacts or inventing semantic work, because `one-active-frontier` needs deterministic orchestration while `trusted-thinking` and `control-plane-meaning-independence` assign judgment elsewhere.
 
 Planner interprets the current Task mission and committed history, creates a finite ordered Plan or declines when it sees no useful path, and may create child Tasks, because `trusted-thinking` assigns decomposition to trusted reasoning rather than mechanical novelty rules.
 
@@ -73,7 +73,7 @@ Persisted reports, target content, prior evidence, and tool output are data rath
 
 ## `context-handling` — Context handling
 
-Durable substantive state crosses semantic-operation boundaries through authoritative filesystem artifacts and exact references rather than inherited model context, because `context-rules-adoption` requires reusable state to remain inspectable without repeatedly occupying live context.
+Durable substantive state crosses semantic-operation boundaries through authoritative filesystem artifacts and exact references rather than inherited model context, because `context-rules-adoption` and `durable-semantic-continuation` require a fresh or recovering operation to continue from resolvable state rather than conversation residue.
 
 Each semantic operation receives a deliberately bounded working set selected by the responsible semantic role or fixed by an accepted Plan and expands that set when uncertainty, contradiction, missing support, or a required fresh or complete review demands more evidence, because context economy must remain subordinate to the obligation being judged.
 
@@ -147,7 +147,7 @@ Indexes, source-bound digests, summaries, and compact receipts may aid navigatio
 
 Externally mutable target facts are re-observed before authoritative use while accepted Run evidence remains immutable, because `honest-outcomes` requires evidence to identify what was actually known when a decision was committed.
 
-Selected prior-Run evidence may enter a new Run as immutable advisory data without merging lifecycle histories or changing current authority, because `immutable-mission-and-authority` requires one current Run basis while accumulated evidence may still inform `trusted-semantic-roles`.
+Selected prior-Run evidence may enter a new Run as immutable advisory data without merging lifecycle histories or changing current authority, because `immutable-mission-and-authority` requires one current Run basis while accumulated evidence may still inform `trusted-semantic-roles`. This is evidence carryover into a new Run rather than continuation of the prior Run, and it cannot satisfy a current-fact or freshness obligation without the re-observation or source review that obligation requires, because `honest-outcomes` and `receiver-evidence-authority` forbid stale advisory evidence from silently becoming the current basis.
 
 ## `validator-owned-outcome` — Validator-owned outcome
 
@@ -183,13 +183,11 @@ After relevant work is established settled, recovery may continue through fresh 
 
 Corrupt, conflicting, or mutated authoritative history invalidates the Run, because `authoritative-committed-history` can no longer support deterministic derivation or trustworthy evidence.
 
-Operator cancellation prevents new launches without rewriting already committed facts, because operational control must stop future work while preserving `authoritative-committed-history` and any valid evidence available to `validator-owned-outcome`.
-
 ## `qualification-boundary` — Qualification boundary
 
-Mechanical qualification must falsify identity immutability, sequential ordering, Boundary exclusivity, route permission and non-substitution, operational authority, committed-state derivation, outcome handling, and interruption recovery, because the mechanical parts of `immutable-mission-and-authority`, `one-active-frontier`, `boundary-mediated-transitions`, `simplest-adequate-execution`, `admitted-operational-authority`, `authoritative-committed-history`, `validator-owned-outcome`, and `recovery-from-known-facts` must fail visibly.
+Mechanical qualification must falsify mission and authority immutability, sequential ordering, Boundary exclusivity, route permission and non-substitution, target-effect authority, committed-state derivation, transport/settlement/judgment separation, and interrupted-effect recovery, because `product-objective`, `sequential-lifecycle`, `boundary-mediation`, `execution-economy`, `mission-routing-constraints`, `target-path-authority`, `honest-outcomes`, and `interrupted-effects` require those mechanically observable protections to fail visibly when violated.
 
-Representative real-model evaluation must challenge planning, route adequacy, validation, continuation, history use, and stagnation, because deterministic tests cannot prove the semantic competence assigned by `trusted-semantic-roles`.
+Representative real-model evaluation must challenge planning, route adequacy, validation, continuation, history use, and stagnation, because `trusted-thinking`, `execution-economy`, and `planning-and-validation-capability` assign those decisions to semantic competence that deterministic tests cannot prove.
 
 Real-model evaluation is evidence rather than a correctness guarantee, because finite cases cannot prove general reasoning reliability or universal minimum cost under `non-goals`.
 
