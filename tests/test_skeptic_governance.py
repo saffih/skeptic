@@ -80,6 +80,16 @@ class SkepticGovernanceTests(unittest.TestCase):
         self.assertIn("Prefer the smallest patch", self.governance)
         self.assertIn("Do not rewrite `skeptic.md`", self.governance)
 
+    def test_popper_coverage_gap_exists(self) -> None:
+        for marker in [
+            "`PO:CG` coverage gap",
+            "completeness, conformance, readiness, or full implementation",
+            "independently from the governing authority",
+            "could be absent while every current check still passes",
+            "blocks promotion",
+        ]:
+            self.assertIn(marker, self.skeptic)
+
     def test_test_before_merge_rule_exists(self) -> None:
         for marker in [
             "Run targeted tests",
