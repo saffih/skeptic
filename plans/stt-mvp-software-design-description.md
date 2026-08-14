@@ -45,7 +45,7 @@ Every accepted Architecture proposition has one primary realization location her
 | `authoritative-committed-history` | persistence and publication; evidence and history access |
 | `context-handling` | component ownership; persistence and publication; evidence and history access |
 | `validator-owned-outcome` | lifecycle contracts; event grammar and state derivation |
-| `recovery-from-known-facts` | recovery and operator control |
+| `recovery-from-known-facts` | recovery |
 | `qualification-boundary` | qualification strategy |
 
 ## Component ownership
@@ -56,7 +56,7 @@ The shared component graph has one canonical owner for each responsibility, beca
 |---|---|---|
 | Bootstrap | freeze Run basis, target identity, runtime, policy, routing, and imported prior evidence | semantic planning or lifecycle judgment |
 | Boundary | validate, admit, authorize and coordinate publication and launch, bind, and return bounded receipts | mission decomposition or Task sufficiency judgment |
-| Lead | derive and request the uniquely implied next action | direct state mutation or semantic invention |
+| Lead | derive and request the uniquely implied next action | direct state mutation, artifact or content interpretation, or semantic invention |
 | State Deriver | validate committed history and derive one current state and next action | persistence, launch, or repair by preference |
 | Ledger Store | canonical encoding, create-only byte installation, transition-package storage, and durable append under Boundary command | admission, lifecycle interpretation, or an independent caller surface |
 | Contract Validator | schema and cross-record validation | acceptance of semantically inadequate content |
@@ -159,7 +159,7 @@ The canonical contracts are closed schemas with no implicit fields, because Boun
 
 | Contract | Required meaning |
 |---|---|
-| `RunRecord` | Run identity, store root identity, target identity, frozen runtime identity, policy, routes, root Task inputs, and imported prior-evidence references |
+| `RunRecord` | Run identity, store root identity, target identity, frozen runtime manifest/reference, policy, routes, root Task inputs, and imported prior-evidence references |
 | `TaskRecord` | Task identity, parent lineage, immutable mission, authority, required outputs, and creation basis |
 | `RoundRecord` | Task identity, contiguous Round number, and prior committed-history head |
 | `Plan` | Planner operation identity, nonempty ordered steps, route choices, inputs, requirements, expected outputs, and authority requests |
@@ -801,9 +801,9 @@ The manifest grows with the Task count of the Run rather than staying within a f
 
 Each `PrefixTaskHead` contains schema, Task identity, ledger sequence, event hash, and ledger byte size, while the manifest identity hashes its exact bytes including the terminal LF, because readers must exclude records appended after the operation snapshot.
 
-External work occurs without `writer.lock`, because a lock held across provider or command waits would prevent durable control progress. Before publication Boundary acquires `writer.lock`, rereads the current committed Task head, and only then allocates the next `ledger_sequence` and `previous_event_hash`, because an invocation must not prepare a transition against a head consumed by operator stop. It installs the package and ledger line under the lock, revalidates the package binding immediately before append, and releases the lock after durable publication, because prepare/revalidate/commit makes stop and advancement serialize without holding a lock across provider or command waits. A changed head discards the uncommitted candidate and requires rederivation from the new committed facts, because stale transition identity cannot be repaired by reuse.
+External work occurs without `writer.lock`, because a lock held across provider or command waits would prevent durable control progress. Before publication Boundary acquires `writer.lock`, rereads the current committed Task head, and only then allocates the next `ledger_sequence` and `previous_event_hash`, because an invocation must not prepare a transition against a changed committed head. It installs the package and ledger line under the lock, revalidates the package binding immediately before append, and releases the lock after durable publication, because prepare/revalidate/commit prevents stale transition publication without holding a lock across provider or command waits. A changed head discards the uncommitted candidate and requires rederivation from the new committed facts, because stale transition identity cannot be repaired by reuse.
 
-Boundary holds `runner.lock` for one public Run-advancement invocation rather than the lifetime of external work, because one invocation must not race another driver while operator observation and later recovery remain available.
+Boundary holds `runner.lock` for one public Run-advancement invocation rather than the lifetime of external work, because one invocation must not race another driver while read-only observation and later recovery remain available.
 
 ## Event grammar and state derivation
 
@@ -824,7 +824,6 @@ STEP_FINISHED
 VALIDATION_STARTED
 VALIDATION_RECORDED
 OUTPUT_ASSESSMENT_RECORDED
-OPERATOR_STOP_REQUESTED
 ROUND_FINISHED
 TASK_FINISHED
 ```
@@ -847,7 +846,6 @@ Every `LedgerEvent@1` has exactly one `EventBody@1` and uses this complete, case
 | `VALIDATION_STARTED` | none |
 | `VALIDATION_RECORDED` | one `ValidatorResult@1` / `ValidatorResult` |
 | `OUTPUT_ASSESSMENT_RECORDED` | one `TaskOutputAssessment@1` / `TaskOutputAssessment` |
-| `OPERATOR_STOP_REQUESTED` | none |
 | `ROUND_FINISHED` | none |
 | `TASK_FINISHED` | one `TaskResult@1` / `TaskResult` |
 
@@ -882,19 +880,17 @@ terminal-task-finalization
 
 `step-phase` is either `STEP_STARTED worker-operation STEP_FINISHED`, `STEP_STARTED command-operation STEP_FINISHED`, or `STEP_STARTED child-task-step STEP_FINISHED`, where `child-task-step` publishes the child Task through Boundary, runs its depth-first lifecycle in the child Task ledger, and binds the exact child `TaskResult` or OperationalStop before `STEP_FINISHED` without creating an `OperationRequest` or Attempt for the child lifecycle, because a Task step is not adapter transport; `OUTPUT_ASSESSMENT_RECORDED(PRE_VALIDATION)` occurs after all step phases and immediately before `VALIDATION_STARTED`, `OUTPUT_ASSESSMENT_RECORDED(TERMINAL)` occurs immediately before `TASK_FINISHED`, and every listed Task event is emitted only at one of these positions, because assessments must be ordered and the closed vocabulary must not duplicate lifecycle ownership.
 
-`root-stop-overlay` — `OPERATOR_STOP_REQUESTED` is Run-wide, committed only in the root Task ledger, occurs at most once, and is legal after any committed root frontier at which Boundary can serialize the request safely, because cancellation is a root-level control fact; if a Run was published but its root Task was not, Boundary first publishes the already-determined root Task only when the exact root Task basis is uniquely derivable from frozen Run facts and then commits the stop, while missing, conflicting, or non-unique basis derives `INVALID` and stop never invents semantic Task content, because cancellation cannot create an authority basis; after committed stop there is no new Round, Planner/Worker/Command/Validator `OperationRequest`, Attempt, child Task, `STEP_STARTED`, or `VALIDATION_STARTED`, while already-started work may publish only causally pre-stop `ATTEMPT_FINISHED`, `SETTLEMENT_OBSERVED`, already-determined phase finalization, child-result binding and `STEP_FINISHED`, permitted output assessment, `ROUND_FINISHED`, or terminal `TASK_FINISHED`, because cancellation preserves evidence without authorizing future work; every post-stop fact is causally rooted in work existing at the committed stop frontier and a child Task never owns a stop event, because root cancellation must not become child-owned lifecycle meaning.
-
 An accepted nonempty Plan executes in ordinal order until completion or the first operational failure, output-contract failure, authority violation, unresolved child, or unsettled operation, because later steps must not build on a failed or changing frontier.
 
 A child Task is published only after its parent step starts and is run depth-first until a semantic outcome or blocking stop can be bound back to that step, because parent progression must wait for its deepest unresolved frontier.
 
 `derived-lifecycle-state` — The State Deriver validates every ledger and transition package, then returns one `DerivedState` and one public `RunView` from committed facts alone, because Lead and operators require stable views without an independently mutable cursor.
 
-`DerivedState` identifies the Run, root Task, active Task, active Round, active step, operator-stop reference, blockers, semantic judgment, public outcome, transient outcome, and exactly one next action, because deterministic orchestration must make ambiguity visible.
+`DerivedState` identifies the Run, root Task, active Task, active Round, active step, blockers, semantic judgment, public outcome, transient outcome, and exactly one next action, because deterministic orchestration must make ambiguity visible.
 
-`RunView` omits internal next-action vocabulary but preserves committed stop, judgment, outcome, active frontier, and blockers, because public status should expose durable meaning without making implementation labels normative.
+`RunView` omits internal next-action vocabulary but preserves judgment, outcome, active frontier, and blockers, because public status should expose durable meaning without making implementation labels normative.
 
-`DerivedState` has fields `run_id`, `root_task_id`, `active_task_id`, `active_round_id`, `active_step_id`, `operator_stop_ref`, `blockers[]`, `semantic_judgment`, `public_outcome`, `transient_outcome`, and `next_action`, because every derived value must have one named slot. `RunView` has fields `run_id`, `root_task_id`, `committed_prefix`, `active_frontier`, `operator_stop_ref`, `judgment`, `outcome`, and `blockers[]`, because status must expose the durable subset without exposing an internal action vocabulary.
+`DerivedState` has fields `run_id`, `root_task_id`, `active_task_id`, `active_round_id`, `active_step_id`, `blockers[]`, `semantic_judgment`, `public_outcome`, `transient_outcome`, and `next_action`, because every derived value must have one named slot. `RunView` has fields `run_id`, `root_task_id`, `committed_prefix`, `active_frontier`, `judgment`, `outcome`, and `blockers[]`, because status must expose the durable subset without exposing an internal action vocabulary.
 
 The next-action precedence is fixed by safety class, because corruption and already-produced facts must dominate future launches:
 
@@ -907,13 +903,12 @@ The next-action precedence is fixed by safety class, because corruption and alre
 7. bind one completed child outcome
 8. finalize one accepted Validator result, Round, or Task
 9. return one finished root judgment
-10. honor committed operator stop
-11. continue an unlaunched Attempt or start a later Attempt after proven non-launch
-12. create the next repeated Round
-13. execute the next accepted step
-14. call Validator after settled execution or Planner decline or failure
-15. call Planner for a new Round
-16. create a Round or the uniquely derived root Task
+10. continue an unlaunched Attempt or start a later Attempt after proven non-launch
+11. create the next repeated Round
+12. execute the next accepted step
+13. call Validator after settled execution or Planner decline or failure
+14. call Planner for a new Round
+15. create a Round or the uniquely derived root Task
 
 Any history that implies zero or multiple actions where one is required derives `INVALID`, because Lead must not repair authority ambiguity by preference.
 
@@ -961,7 +956,7 @@ History Reader verifies ledger and reference integrity before returning exact bo
 
 Summaries and indexes are disposable navigation aids that cite underlying records and are never accepted as sole evidence, because `authoritative-committed-history` assigns authority to committed records rather than convenience views.
 
-Imported prior-Run evidence is copied as immutable advisory input with source Run identity, source record references, import hashes, and current-Run selector, because useful history may inform reasoning without merging lifecycle authority.
+Imported prior-Run evidence is copied as immutable advisory input with source Run identity, source record references, import hashes, and current-Run selector, because useful history may inform reasoning without merging lifecycle authority. Imported prior-Run evidence cannot by itself satisfy a current-fact or freshness obligation, because the responsible semantic role must obtain the required current re-observation or source review.
 
 ## Bootstrap, frozen runtime, and host floor
 
@@ -969,7 +964,7 @@ Imported prior-Run evidence is copied as immutable advisory input with source Ru
 
 The frozen runtime manifest covers every controller, schema, role-contract, and adapter byte that can affect same-Run behavior plus interpreter and dependency identities, because source-tree drift must not replace controller semantics after Run publication.
 
-Same-Run commands re-execute from the frozen runtime and reject a runtime-manifest mismatch, because `immutable-mission-and-authority` fixes controller identity for the lifecycle.
+Same-Run commands re-execute from the frozen runtime and reject a runtime-manifest mismatch, because the frozen runtime manifest is the SDD mechanism ensuring the admitted controller semantics remain fixed across process invocations.
 
 `host-capability-floor` — Bootstrap requires one filesystem and process host that can provide no-follow metadata, canonical path inspection, exclusive create, same-directory atomic rename without replacement, file and directory flush, append durability, advisory locking, exact byte I/O, process identity, local settlement observation, and monotonic time, because the persistence and interrupted-effect mechanisms depend on those observable capabilities.
 
@@ -983,9 +978,9 @@ Run policy freezes maximum bytes per canonical record, capture, imported artifac
 
 Expired waits produce explicit unsettled or unknown evidence and never manufacture settlement, non-launch, or semantic failure, because time limits constrain observation rather than external reality.
 
-## Recovery and operator control
+## Recovery
 
-`known-fact-recovery` — Resume first validates Bootstrap, runtime identity, every Task ledger, every referenced package, and exchange closure before deriving an action, because recovery may advance only from committed or uniquely sealed facts.
+`known-fact-recovery` — Resume first validates Bootstrap, the frozen runtime manifest and its binding, every Task ledger, every referenced package, and exchange closure before deriving an action, because recovery may advance only from committed or uniquely sealed facts.
 
 A complete package with the exact next sequence and prior hash may be committed if no competing package exists, because package-first publication makes this one non-effectful completion uniquely implied.
 
@@ -999,15 +994,9 @@ An Attempt proven not launched may permit a later explicit Attempt while the cur
 
 Corrupt, missing, duplicated, conflicting, or mutated authoritative history derives `INVALID` and preserves all evidence for diagnosis, because deterministic recovery cannot choose among competing pasts.
 
-`operator-stop` — Operator stop commits one root-Task event binding the validated Task-head set observed at request start and immediately before stop commitment, because cross-Task cancellation order must be reconstructable from append-only history.
-
-After committed stop, Boundary permits only settlement, evidence import, and uniquely implied non-effectful finalization causally rooted in operations or child work already present at the committed frontier, because cancellation prevents new work without discarding already-produced facts.
-
-Operator stop never changes Task judgment and remains visible even when already-produced evidence later permits terminal finalization, because operational cancellation and semantic outcome are distinct facts.
-
 ## Public operations and receipts
 
-The public command surface is exactly `start`, `run`, `status`, `diagnose`, and `stop`, because the SDD owns these shared names and their interface behavior for this realization. Architecture owns lifecycle capabilities and semantics, while a future change to product-visible required capabilities returns upstream, because implementation may not silently rename the shared surface.
+The public command surface is exactly `start`, `run`, `status`, and `diagnose`, because the SDD owns these shared names and their interface behavior for this realization. Architecture owns lifecycle capabilities and semantics, while a future change to product-visible required capabilities returns upstream, because implementation may not silently rename the shared surface.
 
 `start` returns the immutable Run identity, authoritative Run root, root Task identity when published, and one compact Bootstrap receipt, because callers need a durable handle without treating console prose as authority.
 
@@ -1016,8 +1005,6 @@ The public command surface is exactly `start`, `run`, `status`, `diagnose`, and 
 `status` derives one read-only `RunView` from committed history, because observation must use the same validator as execution without advancing state.
 
 `diagnose` reports exact invalid records, missing references, unsettled Attempts, sealed exchanges, and next safe evidence requirement without repair, because operators need actionable facts without implicit history mutation.
-
-`stop` requests Run-wide cancellation through `operator-stop`, because cancellation is a committed control fact rather than deletion or fabricated failure.
 
 Every Boundary and public receipt identifies Run, Task, committed prefix, requested action, performed action, published records, observed route, launch and settlement status, blockers, and public outcome while marking unavailable facts `UNKNOWN`, because compact output must remain traceable and honest.
 
@@ -1033,7 +1020,7 @@ Host-contract tests run against the actual selected store and target filesystems
 
 Adapter conformance tests use deterministic fake providers and processes to exercise non-launch, uncertain launch, launched success, malformed return, truncated capture, continuing process, unknown settlement, route mismatch, tool-event incompleteness, and sealed-outcome recovery, because `operation-attempt-separation` depends on transport distinctions that happy-path tests omit.
 
-Integration tests exercise Planner decline, one-step success, multi-step stop, child depth-first completion, child operational stop, Validator repeat, Validator failure, operator stop at each frontier, target mutation between observations, and imported prior evidence, because the complete sequential loop must preserve component contracts across boundaries.
+Integration tests exercise Planner decline, one-step success, multi-step stop, child depth-first completion, child operational stop, Validator repeat, Validator failure, target mutation between observations, and imported prior evidence, because the complete sequential loop must preserve component contracts across boundaries.
 
 Real-model evaluation uses frozen missions that challenge decomposition, cheapest-adequate route choice within effective routing constraints, authority narrowing, evidence use, continuation, stagnation, and independent validation across permitted providers and trusted minimum capabilities, because `trusted-semantic-roles` assigns those choices to model judgment.
 
