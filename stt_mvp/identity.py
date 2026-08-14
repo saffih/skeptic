@@ -2,6 +2,7 @@
 import hashlib
 import re
 import uuid
+from .codec import canonical_json
 
 MAX_U64 = (1 << 64) - 1
 _HEX = re.compile(r"^[0-9a-f]{64}$")
@@ -53,9 +54,22 @@ def round_id(task_id, round_number): return H("stt-round-v1", text(task_id), uin
 def plan_id(request, body): return H("stt-plan-v1", request, body)
 def step_id(plan, ordinal, body): return H("stt-step-v1", text(plan), uint64_be(ordinal), body)
 def input_id(step, ordinal, dependency): return H("stt-input-v1", text(step), uint64_be(ordinal), dependency)
-def requirement_id(step, ordinal, requirement): return H("stt-requirement-v1", text(step), uint64_be(ordinal), requirement)
-def authority_id(body): return H("stt-authority-v1", body)
-def routing_identity(body): return H("stt-routing-v1", body)
+def _body_without(body, field):
+    if not isinstance(body, dict):
+        raise ValueError("expected canonical body mapping")
+    copy = dict(body)
+    copy.pop(field, None)
+    return canonical_json(copy)
+
+def requirement_id(step, ordinal, requirement):
+    body = _body_without(requirement, "requirement_id") if isinstance(requirement, dict) else requirement
+    return H("stt-requirement-v1", text(step), uint64_be(ordinal), body)
+def authority_id(body):
+    body = _body_without(body, "authority_id") if isinstance(body, dict) else body
+    return H("stt-authority-v1", body)
+def routing_identity(body):
+    body = _body_without(body, "routing_identity") if isinstance(body, dict) else body
+    return H("stt-routing-v1", body)
 def prefix_id(jsonl): return H("stt-prefix-v1", jsonl)
 def operation_request_id(body): return H("stt-operation-v1", body)
 def attempt_id(request, ordinal): return H("stt-attempt-v1", text(request), uint64_be(ordinal))
