@@ -13,9 +13,9 @@ STT design is accepted, and this plan owns bounded construction only, because Go
 | Accepted artifact | Exact Git blob |
 | --- | --- |
 | `plans/stt-mvp-governing-inputs.md` | `0533522cb66043d9113e6882b1c72baad6a19adb` |
-| `plans/stt-mvp-architecture-description.md` | `a39e0ef8d9f35fc2fd5eccdf1223edbf861e79a9` |
-| `plans/stt-mvp-software-design-description.md` | `7e0da4d9b5f38b90c17da175a8b3fec7aec80c48` |
-| `docs/context-rules.md` | `6f13884f6d22292ef924223fce41cc3231b5c76e` |
+| `plans/stt-mvp-architecture-description.md` | `595b00dcaa346122e59c14389194dc44603cdbbc` |
+| `plans/stt-mvp-software-design-description.md` | `464f4bfbf1f3c1d3c51efa56be3699735d091fb4` |
+| `docs/context-rules.md` | `a3b4e664cab4a6edcfe6f8c8af5148cccc58f8a8` |
 | `docs/design-authority-chain.md` | `5b09ae10138901d959432477a4a6169fe2bf3330` |
 
 An implementation discovery that needs a product objective returns to Governing Inputs, one that needs system-wide meaning returns to Architecture, and one that needs a shared schema, durable algorithm, persistence rule, adapter rule, recovery rule, or qualification strategy returns to the SDD, because this plan may not silently resolve an upstream dependency.
@@ -38,8 +38,8 @@ The package has one primary owner for each concern, because duplicate lifecycle 
 | Bounded verified committed-history expansion | History Reader: `stt_mvp/history.py` | ledger and prefix validator | `tests/stt_mvp/test_history.py` |
 | Semantic role wire contracts and result decoding | Planner, Worker, Validator adapters: `stt_mvp/roles.py` | contracts, history, launcher | `tests/stt_mvp/test_roles.py` |
 | Unique depth-first action request | Lead: `stt_mvp/lead.py` | State Deriver and Boundary | `tests/stt_mvp/test_lead.py` |
-| Known-fact recovery and committed operator stop | Recovery controller: `stt_mvp/recovery.py` | state, ledger, launcher | `tests/stt_mvp/test_recovery.py` |
-| `start`, `run`, `status`, `diagnose`, and `stop` | Public command adapter: `stt_mvp/cli.py` | Bootstrap, Lead, Recovery, Boundary | `tests/stt_mvp/test_cli.py` |
+| Known-fact recovery and operational failure/blocker handling | Recovery controller: `stt_mvp/recovery.py` | state, ledger, launcher | `tests/stt_mvp/test_recovery.py` |
+| `start`, `run`, `status`, and `diagnose` | Public command adapter: `stt_mvp/cli.py` | Bootstrap, Lead, Recovery, Boundary | `tests/stt_mvp/test_cli.py` |
 
 `stt_mvp/boundary.py` is the only production caller of ledger publication and Launcher launch methods, because the accepted `single-boundary-api` and `boundary-mediated-transitions` propositions forbid bypass paths.
 
@@ -83,11 +83,11 @@ Every slice must preserve all earlier passing tests and leave one reviewable cha
 
 **Prerequisites:** None exist, because this slice establishes the base contract.
 
-**Actions:** Implement strict codec decoding, exact closed-field validators, SDD enums, reference-family validation, and every SDD identity formula without self-hashed fields, because readers and writers must reject ambiguous bytes identically.
+**Actions:** Implement strict codec decoding, exact closed-field validators, SDD enums, reference-family validation, and every SDD identity formula without self-hashed fields, because readers and writers must reject ambiguous bytes identically. H is domain-separated with the literal accepted tag, uint64 big-endian length framing where specified, and exact ordered input bytes, because textual concatenation is not an identity encoding. Canonical JSON bodies use accepted canonical UTF-8 bytes, direct strings use exact UTF-8 bytes, direct numeric inputs use `uint64_be`, raw SHA-256 bytes are used only where the SDD says so, and absent or null inputs contribute no implicit bytes unless explicitly defined, because host serialization must not become shared meaning. Implement every SDD identity family with frozen ordering and representation, and exclude each self-derived field from its own preimage, including `requirement_id = H("stt-requirement-v1", step id, uint64_be(requirement ordinal), canonical OutputRequirement body excluding requirement_id)`, because cyclic or accidental preimages are nonconforming. Validate schema identity as `<name>@<positive-version>` separately from the distinct closed version-independent `CanonicalRecordKind`, use only the exact accepted schema-to-kind mapping, and reject unsupported versions, missing, mismatched, inferred, guessed, or embedded-only mappings, because schema identity must not acquire record-kind authority.
 
 **Tests and commands:** Run `python3 -m unittest tests.stt_mvp.test_codec tests.stt_mvp.test_identity tests.stt_mvp.test_schema`, because all Slice A behavior is deterministic and local.
 
-**Pass:** Known-good fixtures round trip to identical bytes and every malformed, duplicate-key, non-finite, unknown-field, noncanonical spelling, domain-collision, reference-binding, and schema-closure fixture is rejected, because acceptance must be falsifiable.
+**Pass:** Known-good fixtures round trip to identical bytes and every malformed, duplicate-key, non-finite, unknown-field, noncanonical spelling, domain-collision, reference-binding, self-field, preimage-encoding, unsupported-version, missing-mapping, mismatched-mapping, inferred-mapping, and embedded-schema record-kind fixture is rejected, because acceptance must be falsifiable.
 
 **Stop:** Stop if a required field, value space, identity input, or reference meaning is absent from the accepted SDD, because the plan cannot define shared contracts.
 
@@ -185,21 +185,21 @@ Slice C constructs and validates the complete unpublished Bootstrap candidate, w
 
 **Evidence:** Save role request and returned-byte hashes, committed prefix references, read-grant receipts, output assessments, and test output, because semantic evidence needs lineage.
 
-### Slice F — recovery, operator control, and public commands
+### Slice F — recovery and public commands
 
 **Objective:** Recover only from known facts, expose read-only diagnosis, and provide the exact public command surface, because an interrupted Run must remain honest without silently progressing.
 
-**Design propositions realized:** `known-fact-recovery`, `operator-stop`, public operations and receipts, and read-only `RunView` behavior are realized, because the SDD owns their shared meanings.
+**Design propositions realized:** `known-fact-recovery`, interrupted-effect non-replay, operational failure/blocker handling, public operations and receipts, and read-only `RunView` behavior are realized, because the SDD owns their shared meanings.
 
 **Files:** Add `recovery.py`, `cli.py`, `tests/stt_mvp/{test_recovery.py,test_cli.py}`, and `tests/stt_mvp/test_integration.py`, because recovery and public behavior require end-to-end verification after their underlying owners exist.
 
 **Prerequisites:** Slices A through E must pass, because recovery validates the complete persisted graph and public commands use Boundary only.
 
-**Actions:** Validate runtime, ledgers, packages, exchanges, and references before deriving recovery; permit only uniquely eligible package commit, settlement observation, sealed import, and explicitly permitted finalization; record operator-stop head checks; make `status` and `diagnose` read-only; and make `run` stop at policy invocation limit without inventing a lifecycle cap, because public control must not rewrite semantic state.
+**Actions:** Validate runtime, ledgers, packages, exchanges, and references before deriving recovery; never automatically replay an actual or uncertain launch; require explicit evidence for safe continuation; permit only uniquely eligible package commit, settlement observation, sealed import, and explicitly permitted finalization; make `status` and `diagnose` read-only; and make `run` stop at policy invocation limit or another authorized operational blocker without inventing a lifecycle cap or product-visible cancellation, because public control must not rewrite semantic state.
 
 **Tests and commands:** Run `python3 -m unittest tests.stt_mvp.test_recovery tests.stt_mvp.test_cli tests.stt_mvp.test_integration`, because the observable public and recovery paths require integration traces.
 
-**Pass:** Tests prove torn-final-line handling, corrupt-history `INVALID`, actual/uncertain non-replay, proven-nonlaunch later attempt only after return, operator stop at every frontier, status/diagnose nonmutation, recovery, one-step success, multi-step stop, child operational stop, Validator failure, and target mutation re-observation, because recovery cannot be accepted from a happy-path restart.
+**Pass:** Tests prove torn-final-line handling, corrupt-history `INVALID`, actual/uncertain non-replay, proven-nonlaunch later attempt only after return, status/diagnose nonmutation, recovery, one-step success, multi-step operational stop, child operational stop, Validator failure, target mutation re-observation, exact four-command dispatch, and absence of a public cancellation path, because recovery cannot be accepted from a happy-path restart.
 
 **Stop:** Stop when history has zero or multiple safe actions, a target fact changes, or a launch remains uncertain without sealed outcome or settlement, because the only honest result is blocker or operational stop.
 
@@ -238,7 +238,7 @@ Slice C constructs and validates the complete unpublished Bootstrap candidate, w
 | target object/path admission, authority subset, route constraints, trusted-minimum capability, and no silent route substitution | Slice C tests |
 | non-launch, uncertain launch, malformed/truncated provider return, process settlement, and attempt/outcome separation | Slice D tests |
 | History Reader expansion, response limits, required-output assessment, child depth-first behavior, Planner decline, and Validator repeat | Slice E tests |
-| operator stop, recovery, and read-only status/diagnose | Slice F tests |
+| recovery, operational stops, exact public commands, absence of cancellation, and read-only status/diagnose | Slice F tests |
 | integrated paths, forbidden searches, host probes, and real-model protocol binding | Slice G tests |
 
 Each test names the owning source module and the SDD proposition in its docstring or fixture label, because a failure must identify its mechanical owner without creating a parallel design registry.
@@ -286,6 +286,12 @@ git diff --check
 ```
 
 The implementation agent must replace `python3` with the repository's pinned project interpreter only when one is added by a separately accepted dependency change, because this plan may not prescribe an unaccepted environment mechanism.
+
+The public command adapter exposes exactly `start`, `run`, `status`, and `diagnose`, and no `stop` or cancellation command, because product-visible command meaning is fixed upstream. Lead remains domain-blind, derives or requests only the uniquely implied lifecycle action from admitted committed state, does not interpret substantive artifact or content meaning, does not invent semantic continuation, and never directly mutates lifecycle state, because orchestration must remain a mechanical control boundary.
+
+The frozen runtime manifest establishes admitted controller semantics across process invocations, while no particular controller OS or process identity is required to persist, because semantic continuity is a runtime-reference property rather than a persistent controller process. Process identity remains required where command launch and settlement observation need it, because effect observation is distinct from controller continuity. A runtime-manifest mismatch blocks execution because execution under different semantics would violate the admitted Run basis.
+
+Prior-Run evidence is imported only as immutable advisory current-Run input with source binding, and it never merges lifecycle histories, continues the prior Run, establishes current authority, or proves freshness, because current obligations require current observation or source review. History Reader treats `starting_selectors` as navigation, not evidence authority; allowed record kinds and prefixes are the mechanical ceiling; `max_bytes` applies per response; receivers may request additional already-authorized evidence; unavailable or unauthorized required evidence is explicit; and summaries or digests are not authority, because the semantic receiver determines required evidence.
 
 ## 9. Real-model evaluation
 
