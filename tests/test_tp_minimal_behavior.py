@@ -1,112 +1,76 @@
-import json
 import tempfile
 import unittest
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parents[1]
+class PingPong:
+    """A mechanical controller: only Brain scripts choose the next action."""
 
-
-class Controller:
-    """Mechanical sequence runner: it never chooses the next semantic step."""
-
-    def __init__(self, blocks):
-        self.blocks = iter(blocks)
+    def __init__(self, brains):
+        self.brains = iter(brains)
         self.events = []
+        self.admitted = set()
 
     def run(self):
-        self.events.append("BRAIN")
-        for block in self.blocks:
-            self.events.append("ADMITTED:" + block)
-            result = yield block
-            self.events.append("RETURNED:" + block + ":" + result)
-            if result != "DONE":
-                self.events.append("BRAIN")
-                return
-        self.events.append("BRAIN")
+        while True:
+            self.events.append("BRAIN")
+            decision = next(self.brains)
+            if decision[0] == "TERMINAL":
+                return decision[1]
+            execution = decision[1]
+            self.events.append("ADMIT:" + execution)
+            self.admitted.add(execution)
+            outcome = decision[2]
+            self.events.append("RETURN:" + execution + ":" + outcome)
 
 
-class MinimalTpBehaviorTests(unittest.TestCase):
-    def test_brain_establishes_semantic_fit_before_dispatch(self):
-        task_prompt = " ".join(
-            (ROOT / "workflows" / "task_prompt.md")
-            .read_text(encoding="utf-8")
-            .split()
-        )
-        for required in (
-            "Before Brain authorizes a Block",
-            "known subsequent source loading",
-            "genuinely bounded",
-            "Decomposition must not weaken required freshness, completeness, or",
-            "returns an explicit context blocker rather than narrowing the obligation",
-        ):
-            self.assertIn(required, task_prompt)
-        for overbuilt in (
-            "CHILD_CLEANUP_UNKNOWN",
-            "maximum turn/tool budget",
-            "measures referenced file bytes",
-        ):
-            self.assertNotIn(overbuilt, task_prompt)
+class TaskPromptBehaviorTests(unittest.TestCase):
+    def test_core_architecture_and_removed_complexity(self):
+        text = Path("workflows/task_prompt.md").read_text()
+        for phrase in ("fresh native\nBrain", "exactly one bounded assignment",
+                       "NOT_DONE | UNKNOWN", "UNKNOWN", "Before Brain returns",
+                       "publication evidence", "never replayed"):
+            self.assertIn(phrase, text)
+        for forbidden in ("SEQUENCE_EXHAUSTED", "Block queue", "TPRuntime"):
+            self.assertNotIn(forbidden, text)
+        self.assertFalse(Path("capabilities/tp_runtime").exists())
+        self.assertFalse(Path(".claude/agents/tp-native.md").exists())
 
-    def test_terminal_brain_validates_stopping_evidence_without_controller_semantics(self):
-        task_prompt = " ".join(
-            (ROOT / "workflows" / "task_prompt.md")
-            .read_text(encoding="utf-8")
-            .split()
-        )
-        for required in (
-            "Before returning `BLOCKED` or `CONFLICT`, Brain performs bounded terminal validation",
-            "exact stopping proposition",
-            "primary evidence sufficient to support it",
-            "material contradiction",
-            "failure to locate a rule",
-            "smallest reasonable owner-coverage or falsification check",
-            "must reconcile a contradiction",
-            "returns `CONTINUE` with that bounded retrieval",
-            "semantic Brain obligation, not a controller check",
-            "does not require a full RunSkeptic invocation",
-        ):
-            self.assertIn(required, task_prompt)
-        for forbidden in (
-            "another Validator role",
-            "TERMINAL_VALIDATION status",
-            "controller decides whether evidence",
-        ):
-            self.assertNotIn(forbidden, task_prompt)
-
-    def test_brain_authorized_sequence_returns_to_brain_after_three_done_blocks(self):
-        controller = Controller(["B1", "B2", "B3"])
-        run = controller.run()
-        self.assertEqual(next(run), "B1")
-        self.assertEqual(run.send("DONE"), "B2")
-        self.assertEqual(run.send("DONE"), "B3")
-        with self.assertRaises(StopIteration):
-            run.send("DONE")
-        self.assertEqual(controller.events, [
-            "BRAIN", "ADMITTED:B1", "RETURNED:B1:DONE",
-            "ADMITTED:B2", "RETURNED:B2:DONE",
-            "ADMITTED:B3", "RETURNED:B3:DONE", "BRAIN",
+    def test_brain_execution_brain_and_no_controller_queue(self):
+        run = PingPong([
+            ("EXECUTION", "E1", "DONE"),
+            ("EXECUTION", "E2", "DONE"),
+            ("TERMINAL", "COMPLETE"),
         ])
+        self.assertEqual(run.run(), "COMPLETE")
+        self.assertEqual(run.events, ["BRAIN", "ADMIT:E1", "RETURN:E1:DONE",
+                                      "BRAIN", "ADMIT:E2", "RETURN:E2:DONE",
+                                      "BRAIN"])
 
-    def test_non_done_returns_to_brain_without_replay(self):
-        controller = Controller(["B1", "B2"])
-        run = controller.run()
-        self.assertEqual(next(run), "B1")
-        with self.assertRaises(StopIteration):
-            run.send("BLOCKED")
-        self.assertEqual(controller.events, [
-            "BRAIN", "ADMITTED:B1", "RETURNED:B1:BLOCKED", "BRAIN",
+    def test_not_done_and_unknown_return_to_fresh_brain_without_replay(self):
+        run = PingPong([
+            ("EXECUTION", "E1", "NOT_DONE"),
+            ("EXECUTION", "E2", "UNKNOWN"),
+            ("TERMINAL", "BLOCKED"),
         ])
+        self.assertEqual(run.run(), "BLOCKED")
+        self.assertEqual(run.events.count("ADMIT:E1"), 1)
+        self.assertEqual(run.events.count("ADMIT:E2"), 1)
 
-    def test_minimal_durable_state_has_mission_events_and_artifacts(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
+    def test_durable_resume_records_admission_before_launch(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
             (root / "artifacts").mkdir()
-            (root / "mission.md").write_text("Fix the bounded issue\n")
-            (root / "events.jsonl").write_text(json.dumps({"event": "DISPATCH_ADMITTED"}) + "\n")
-            self.assertEqual((root / "mission.md").read_text(), "Fix the bounded issue\n")
-            self.assertTrue((root / "artifacts").is_dir())
+            (root / "mission.md").write_text("exact mission")
+            (root / "events.jsonl").write_text(
+                '{"event":"DISPATCH_ADMITTED","execution":"E1"}\n')
             self.assertIn("DISPATCH_ADMITTED", (root / "events.jsonl").read_text())
+            self.assertTrue((root / "artifacts").is_dir())
+
+    def test_controller_does_not_select_semantic_route_or_terminal_status(self):
+        run = PingPong([("TERMINAL", "CONFLICT")])
+        self.assertEqual(run.run(), "CONFLICT")
+        self.assertEqual(run.events, ["BRAIN"])
 
 
 if __name__ == "__main__":

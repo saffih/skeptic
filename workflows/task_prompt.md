@@ -1,211 +1,133 @@
 # Task Prompt (TP)
 
-This file is the canonical and complete authority for a normal Task Prompt.
-It is deliberately host-neutral. A host may provide transport and map the
-abstract routes below to available models, but may not add semantic TP rules.
+This is the complete and only authority for `TP: <mission>`. TP is a simple,
+host-neutral Brain/Execution ping-pong. The controller is mechanical and
+domain-blind; it never performs semantic work or chooses semantic
+continuation.
 
-## Invocation and mission
+## Roles and first action
 
-An agent receiving `TP: <mission>` activates this workflow. The mission is the
-text received after `TP:`. The agent is responsible for understanding it; TP
-does not require a pre-model capture of chat bytes, a user-managed intent file,
-or a mandatory hash ceremony.
+There are exactly two semantic roles: `BRAIN` and `EXECUTION`. The controller
+persists the verbatim mission, creates host-owned run storage containing
+`mission.md`, `events.jsonl`, and `artifacts/`, and launches one fresh native
+Brain before any task-specific discovery, reading, testing, or planning.
 
-The controller persists the mission immediately in its host-owned external run
-root at `mission.md`, creates that run directory, writes `events.jsonl` and
-equivalent run-control bookkeeping,
-and then starts a fresh Brain on the normal capable route. Only the controller
-may write that bookkeeping. Brain and Blocks may write only their authorized
-result and artifact files; Brain may propose control decisions in `TP_RESULT`
-but may not mutate controller-owned state. A host may keep an internal digest
-for identity or diagnostics, but it is not a semantic admission gate.
+The initial Brain uses the normal authorized starting route. Brain selects the
+route for each bounded Execution under `agents/model_routing_policy.md` and
+may request a stronger fresh Brain when its own capability is insufficient.
+The controller applies Brain-authored routing mechanically; it never chooses
+semantic escalation. Actual provider, model, authentication, session,
+networking, and process details are supplied by the host and remain `UNKNOWN`
+unless directly observable.
 
-## Roles and authority
+## Native transport and references
 
-The controller/Lead is domain-blind. It may create run state, dispatch fresh
-agents, follow valid Brain-authored control, perform already-authorized
-mechanical actions, and record outcomes. It must not interpret repository
-meaning, choose relevant sources, judge acceptance, or infer continuation from
-substantive output.
+TP specifies only:
 
-Brain is the semantic authority. It understands the mission, retrieves and
-selects sources, decomposes work, chooses the next dispatch capability, judges
-completion, handles unexpected conditions, and authorizes the next control
-step. `route` names that capability; `next` names its dispatch kind. Brain
-normally starts at `MEDIUM` and may request a fresh `STRONG` Brain when the
-current capability is insufficient. The controller follows those selections
-mechanically and never decides semantic escalation itself. Provider/model
-mapping remains outside this authority, in the host or its routing policy.
+    launch fresh native semantic invocation(role, route, references)
 
-Before accepting each materially new semantic judgment, including initial
-mission design where applicable, Brain performs Capability Admission under
-`agents/model_routing_policy.md`, because the current role must establish that
-it can safely own the next judgment.
+The controller passes receiver-resolvable references, not mission, authority,
+repository, or result bodies. TP does not own `codex exec`, `CODEX_HOME`,
+`auth.json`, MCP initialization, WebSockets, `--add-dir`, provider supervision,
+or provider networking. If the host cannot provide a fresh invocation, it
+reports host execution unavailability; TP does not redesign itself or fabricate
+a semantic terminal decision.
 
-Brain distinguishes insufficient current capability from authorized retrieval,
-safe decomposition, a missing-authority or feasibility blocker, or stronger
-downstream work, because those paths do not have the same remedy. Brain
-escalates itself only when the judgment Brain itself must own exceeds its
-current capability; stronger downstream work does not itself require stronger
-Brain capability.
+References identify authorized, resolvable artifacts. Equivalent relative and
+absolute spellings are equivalent after resolution; unresolved, unauthorized,
+escaping, or stale references are rejected mechanically.
 
-A Block is one bounded semantic assignment. Its worker performs that assignment
-and returns the bounded result. A worker never chooses continuation, spawns
-TP, or grants itself authority.
+## Brain result
 
-## Durable run state
-
-The minimal durable layout is relative to that external run root (it is not a
-directory in the target repository):
-
-    mission.md
-    events.jsonl
-    artifacts/
-
-Events should record at least run creation, dispatch admission, valid return,
-and terminal outcome. References in packets and results must be resolvable by
-the receiving agent. A dispatch is admitted before launch and marked returned
-only after a valid result is observed.
-
-If admission is recorded but no terminal result is known, do not blindly replay
-the dispatch. Return to Brain with the unresolved effect so it can decide a
-safe recovery. Malformed, missing, or otherwise unexpected state is likewise
-fail-closed to Brain (or `CONFLICT` when Brain cannot safely be reached).
-
-## Brain return
-
-Brain returns a compact control result containing:
+Brain writes substantive understanding, evidence, and the next assignment to a
+durable artifact, then returns compact control:
 
     TP_RESULT
     role: BRAIN
     status: CONTINUE | COMPLETE | BLOCKED | CONFLICT
     route: LOW | MEDIUM | STRONG | NONE
-    next: SEQUENCE | BRAIN | NONE
-    blocks: <finite non-empty ordered block references> | NONE
-    result_ref: <receiver-resolvable report/result reference> | NONE
-    reason: <short control explanation, at most 240 characters>
+    next: EXECUTION | BRAIN | NONE
+    execution_ref: <one durable assignment reference> | NONE
+    result_ref: <durable result reference> | NONE
+    reason: <compact control reason>
 
-For `CONTINUE`, `next: SEQUENCE` requires a `LOW`, `MEDIUM`, or `STRONG`
-`route`, a finite non-empty ordered sequence of authorized durable
-Block-assignment artifact references, and `result_ref: NONE`. `next: BRAIN`
-requires `route: STRONG`, `blocks: NONE`, and a resolvable handoff `result_ref`.
-Before dispatch the controller verifies each reference resolves below the
-external run root's `artifacts/` directory, without reading it. For `COMPLETE`,
-`BLOCKED`, or `CONFLICT`, `route` and `next` are `NONE`, `blocks` is `NONE`, and
-`result_ref` is a resolvable terminal
-report/result artifact when Brain has substantive terminal material to
-preserve, otherwise `NONE`. These are terminal outcomes for the current Brain
-result. `SEQUENCE` dispatches its assignments in order; `BRAIN` dispatches one
-fresh `STRONG` Brain with the durable run, mission, and handoff-result
-references. Neither action requires the controller to interpret the mission or
-an artifact, and workers never choose successors. `COMPLETE` is allowed only
-when Brain has judged the mission and its acceptance obligation satisfied. If
-the mission requires publication, that judgment must include the required
-publication evidence, including commit, push, and any required remote
-verification; local implementation or test success alone is not completion.
-A missing publication step is remaining authorized work unless the required
-external action has been attempted and is a genuine external blocker.
-`BLOCKED` is a terminal semantic decision, not a progress report. Brain may
-use it only when remaining authorized work cannot safely proceed now because
-required meaning or authority is unavailable or irreconcilably conflicting, a
-required capability is unavailable with no authorized substitute, or an
-authorized external action has failed after the required attempt. An expected
-starting defect, incomplete implementation, unrun in-scope check, or sequence
-exhaustion is not by itself a blocker; Brain returns `CONTINUE` with the next
-bounded work, or escalates to a fresh Brain when it cannot safely decide. The
-terminal artifact preserves the evidence supporting why continuation is
-unavailable. `BLOCKED` or `CONFLICT` keeps `reason` to a compact control
-summary sufficient for a subsequent dispatch (at most 240 characters).
+`CONTINUE + EXECUTION` names exactly one bounded assignment and a route;
+`result_ref` is `NONE`. `CONTINUE + BRAIN` names one fresh Brain escalation at
+`STRONG` with a resolvable handoff; `execution_ref` is `NONE`. Terminal Brain
+results use `route: NONE`, `next: NONE`, and `execution_ref: NONE`.
 
-Before returning `BLOCKED` or `CONFLICT`, Brain performs bounded terminal
-validation proportional to the proposed stopping reason. Brain identifies the
-exact stopping proposition, records primary evidence sufficient to support it,
-and checks durable evidence already returned in the run for a material
-contradiction. A Block's unsupported conclusion, or failure to locate a rule,
-is not by itself evidence that the rule or capability does not exist. For an
-absence claim, when the authoritative owner is available and the check is
-bounded, Brain retrieves or dispatches the smallest reasonable owner-coverage
-or falsification check that could disprove the claim. Brain must reconcile a
-contradiction through bounded evidence retrieval, decomposition, or the
-existing Brain capability/escalation path; it must not select one claim by
-preference. If evidence is insufficient but a safe evidence-gathering path
-exists, Brain returns `CONTINUE` with that bounded retrieval, contradiction
-resolution, decomposition, or escalation. Only an evidenced genuine blocker
-or irreconcilable conflict permits terminal `BLOCKED`/`CONFLICT`. This is a
-semantic Brain obligation, not a controller check, a new role or status, and
-does not require a full RunSkeptic invocation for every terminal decision.
+There is no Planner role or Validator role. Planning and validation belong to
+Brain, and the controller has no semantic plan or queue.
 
-## Block return
+Before Brain returns `BLOCKED` or `CONFLICT`, it identifies the exact stopping
+proposition, records primary supporting evidence, checks returned evidence for
+contradiction, and performs the smallest bounded owner/falsification check
+that could disprove an absence claim. “I did not find it” is not “it does not
+exist.” If safe evidence gathering remains, Brain returns `CONTINUE` with that
+work. Only a genuine evidenced blocker or irreconcilable conflict terminalizes.
 
-Each Block receives its own reference, the mission/run references needed for
-context, and its bounded acceptance obligation. It returns:
+If the mission requires commit, push, or remote verification, local
+implementation/test success is not completion; Brain must obtain the required
+publication evidence before `COMPLETE`.
+
+## Execution result
+
+The controller dispatches exactly one Brain-authored assignment:
 
     TP_RESULT
-    role: BLOCK
-    status: DONE | BLOCKED | CONFLICT
-    block_ref: <its assigned reference>
-    result_ref: <receiver-resolvable result/artifact reference>
-    reason: <short control explanation, at most 240 characters>
+    role: EXECUTION
+    status: DONE | NOT_DONE | UNKNOWN
+    execution_ref: <assigned reference>
+    result_ref: <durable evidence/result reference> | NONE
+    reason: <compact observed outcome>
 
-`DONE` means this Block satisfied the acceptance and validation obligation Brain
-assigned to it. It does not mean the whole mission is complete. A Block writes
-its report or work product under `artifacts/` and returns that reference; it
-does not create a second receipt about that work. `BLOCKED` and `CONFLICT` also
-return a report artifact so their substantive explanation and evidence survive
-the invocation. A Block cannot authorize another Block. Before recording a
-Block return as valid, the controller mechanically verifies that `result_ref`
-resolves to an existing authorized run artifact, then durably records only the
-assigned `block_ref`, status, and `result_ref`; it never reads the artifact.
+`DONE` means the bounded assignment was satisfied. `NOT_DONE` means its local
+acceptance condition was not satisfied and evidence explains why. `UNKNOWN`
+means the outcome or effect cannot safely be established. Execution never
+decides mission-level `COMPLETE`, `BLOCKED`, or `CONFLICT`; after every return
+Brain decides what happens next. Research and RunSkeptic are ordinary bounded
+Executions whose evidence Brain interprets.
 
-## Bounded continuation
+Malformed, missing, or mechanically unverifiable Execution returns become
+uncertain evidence and go to a fresh Brain. They do not become semantic
+blockers and are not silently treated as success.
 
-Brain authorizes a finite non-empty ordered sequence of one or more Blocks.
-The controller dispatches the next reference only after the current Block
-returns a valid `DONE`; it does not call Brain between successful Blocks.
-The controller alone records every admission and return in its bookkeeping.
+## Durable interruption and resume
 
-When a mission calls for repeated semantic passes over the same material,
-each pass runs in its own fresh Block and writes a distinct report artifact;
-only compact control and durable references carry forward, not the accumulating
-context of prior passes. Scout and RunSkeptic are ordinary Blocks under this
-same rule: their research or review work product is the result artifact, and
-their `TP_RESULT` carries status, reference, and compact control reason only.
+A dispatch admission is recorded before launch. A returned outcome is recorded
+when observed. The record contains only mechanical identity, route, references,
+admission state, and returned control; substantive content remains in artifacts.
 
-Return to Brain on `BLOCKED`, `CONFLICT`, a malformed or missing result, an
-unexpected condition, or sequence exhaustion. Sequence exhaustion is not
-completion: Brain decides whether the mission is complete, needs another
-sequence, or is blocked. The controller never infers that decision.
+On resume, a terminal Brain result remains terminal. A Brain-selected Execution
+that was never admitted may be admitted once. A returned Execution goes to a
+fresh Brain. An admitted Execution without a trustworthy return is not replayed:
+fresh Brain receives `UNKNOWN`/uncertain evidence and decides. The controller
+never reconstructs semantic state, guesses idempotence, or blindly replays
+uncertain side effects.
+An uncertain Execution is never replayed automatically.
 
-Brain may request the `BRAIN` continuation when the current Brain cannot safely
-decide. Escalation is a fresh invocation with the durable run and handoff-result
-references; the host maps `STRONG` as it can. A worker cannot request or
-perform semantic escalation on its own.
+## Controller boundary and lifecycle
 
-## Context, process, and return safety
+The controller may persist exact input, create run storage, mechanically
+validate identity/reference shape, record dispatch/return events, launch fresh
+native invocations, and report. It may not read substantive artifacts to choose
+continuation, discover task requirements, judge acceptance, infer absence,
+choose a route, or declare a terminal status.
 
-Before Brain authorizes a Block, it must establish that the Block's semantic
-obligation and expected working set are genuinely bounded, including known
-subsequent source loading. If fit is not established, Brain decomposes before
-dispatch into smaller semantic obligations carried by durable references.
-Decomposition must not weaken required freshness, completeness, or
-independence. If a required complete semantic obligation cannot fit, Brain
-returns an explicit context blocker rather than narrowing the obligation.
+The lifecycle is:
 
-A worker must not leave transient processes it started running after return.
-Persistent or external processes require explicit mission authorization and
-must not be killed merely because TP observes them.
+    fresh Brain -> one Execution -> fresh Brain -> ... -> terminal Brain
 
-For research, Brain authorizes a Scout Block with the question, source authority,
-and bounded return contract; Scout gathers and condenses only the requested
-evidence with resolvable references, and Brain decides from the result.
+After `NOT_DONE`, Brain may replan. After `UNKNOWN`, Brain may gather evidence,
+choose a safe new Execution, or terminalize if evidence supports it. Brain may
+escalate itself to a stronger fresh Brain. Context capacity is handled by
+bounded decomposition or research, not automatically treated as model
+incapability. A worker/local route failure is observable inability returned to
+Brain. A Brain launch failure is host unavailability, not semantic `BLOCKED`.
 
-## Completion and publication
+Semantic material crossing every fresh boundary is durable and passed by
+reference. Run artifacts use host scratch/run storage and do not contaminate
+tracked product state. No second runtime product, adapter, compatibility mode,
+legacy parser, protocol version, or provider workaround is part of TP.
 
-Only Brain may declare mission completion, after reviewing the returned evidence
-against the mission and acceptance obligation. Publication, commit, push, or
-other external effects require explicit authorization in the mission and the
-repository's governing rules. The controller remains domain-blind: it may
-validate mechanically supplied publication facts and references, but it does
-not decide semantic completion or whether a failure is mission-related. TP
-records the terminal result and stops. If completion cannot be established
-safely, the terminal result is `BLOCKED` or `CONFLICT`, not a guess.
+TP remains separate from STT and does not define or modify STT authority.
