@@ -14,7 +14,7 @@ STT design is accepted, and this plan owns bounded construction only, because Go
 | --- | --- |
 | `plans/stt-mvp-governing-inputs.md` | `0533522cb66043d9113e6882b1c72baad6a19adb` |
 | `plans/stt-mvp-architecture-description.md` | `595b00dcaa346122e59c14389194dc44603cdbbc` |
-| `plans/stt-mvp-software-design-description.md` | `464f4bfbf1f3c1d3c51efa56be3699735d091fb4` |
+| `plans/stt-mvp-software-design-description.md` | `9f3f1e15c5f6720015f341e062c7a41761c98850` |
 | `docs/context-rules.md` | `a3b4e664cab4a6edcfe6f8c8af5148cccc58f8a8` |
 | `docs/design-authority-chain.md` | `5b09ae10138901d959432477a4a6169fe2bf3330` |
 
