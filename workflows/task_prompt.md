@@ -99,10 +99,41 @@ result. `SEQUENCE` dispatches its assignments in order; `BRAIN` dispatches one
 fresh `STRONG` Brain with the durable run, mission, and handoff-result
 references. Neither action requires the controller to interpret the mission or
 an artifact, and workers never choose successors. `COMPLETE` is allowed only
-when Brain has judged the mission and its acceptance obligation satisfied.
-`BLOCKED` or `CONFLICT` puts any substantive explanation in its terminal
-artifact and keeps `reason` to a compact control summary sufficient for a
-subsequent dispatch (at most 240 characters).
+when Brain has judged the mission and its acceptance obligation satisfied. If
+the mission requires publication, that judgment must include the required
+publication evidence, including commit, push, and any required remote
+verification; local implementation or test success alone is not completion.
+A missing publication step is remaining authorized work unless the required
+external action has been attempted and is a genuine external blocker.
+`BLOCKED` is a terminal semantic decision, not a progress report. Brain may
+use it only when remaining authorized work cannot safely proceed now because
+required meaning or authority is unavailable or irreconcilably conflicting, a
+required capability is unavailable with no authorized substitute, or an
+authorized external action has failed after the required attempt. An expected
+starting defect, incomplete implementation, unrun in-scope check, or sequence
+exhaustion is not by itself a blocker; Brain returns `CONTINUE` with the next
+bounded work, or escalates to a fresh Brain when it cannot safely decide. The
+terminal artifact preserves the evidence supporting why continuation is
+unavailable. `BLOCKED` or `CONFLICT` keeps `reason` to a compact control
+summary sufficient for a subsequent dispatch (at most 240 characters).
+
+Before returning `BLOCKED` or `CONFLICT`, Brain performs bounded terminal
+validation proportional to the proposed stopping reason. Brain identifies the
+exact stopping proposition, records primary evidence sufficient to support it,
+and checks durable evidence already returned in the run for a material
+contradiction. A Block's unsupported conclusion, or failure to locate a rule,
+is not by itself evidence that the rule or capability does not exist. For an
+absence claim, when the authoritative owner is available and the check is
+bounded, Brain retrieves or dispatches the smallest reasonable owner-coverage
+or falsification check that could disprove the claim. Brain must reconcile a
+contradiction through bounded evidence retrieval, decomposition, or the
+existing Brain capability/escalation path; it must not select one claim by
+preference. If evidence is insufficient but a safe evidence-gathering path
+exists, Brain returns `CONTINUE` with that bounded retrieval, contradiction
+resolution, decomposition, or escalation. Only an evidenced genuine blocker
+or irreconcilable conflict permits terminal `BLOCKED`/`CONFLICT`. This is a
+semantic Brain obligation, not a controller check, a new role or status, and
+does not require a full RunSkeptic invocation for every terminal decision.
 
 ## Block return
 
@@ -173,6 +204,8 @@ evidence with resolvable references, and Brain decides from the result.
 Only Brain may declare mission completion, after reviewing the returned evidence
 against the mission and acceptance obligation. Publication, commit, push, or
 other external effects require explicit authorization in the mission and the
-repository's governing rules. TP records the terminal result and stops. If
-completion cannot be established safely, the terminal result is `BLOCKED` or
-`CONFLICT`, not a guess.
+repository's governing rules. The controller remains domain-blind: it may
+validate mechanically supplied publication facts and references, but it does
+not decide semantic completion or whether a failure is mission-related. TP
+records the terminal result and stops. If completion cannot be established
+safely, the terminal result is `BLOCKED` or `CONFLICT`, not a guess.

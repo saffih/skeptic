@@ -48,6 +48,32 @@ class MinimalTpBehaviorTests(unittest.TestCase):
         ):
             self.assertNotIn(overbuilt, task_prompt)
 
+    def test_terminal_brain_validates_stopping_evidence_without_controller_semantics(self):
+        task_prompt = " ".join(
+            (ROOT / "workflows" / "task_prompt.md")
+            .read_text(encoding="utf-8")
+            .split()
+        )
+        for required in (
+            "Before returning `BLOCKED` or `CONFLICT`, Brain performs bounded terminal validation",
+            "exact stopping proposition",
+            "primary evidence sufficient to support it",
+            "material contradiction",
+            "failure to locate a rule",
+            "smallest reasonable owner-coverage or falsification check",
+            "must reconcile a contradiction",
+            "returns `CONTINUE` with that bounded retrieval",
+            "semantic Brain obligation, not a controller check",
+            "does not require a full RunSkeptic invocation",
+        ):
+            self.assertIn(required, task_prompt)
+        for forbidden in (
+            "another Validator role",
+            "TERMINAL_VALIDATION status",
+            "controller decides whether evidence",
+        ):
+            self.assertNotIn(forbidden, task_prompt)
+
     def test_brain_authorized_sequence_returns_to_brain_after_three_done_blocks(self):
         controller = Controller(["B1", "B2", "B3"])
         run = controller.run()

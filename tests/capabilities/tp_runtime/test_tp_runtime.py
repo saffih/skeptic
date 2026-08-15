@@ -168,6 +168,18 @@ class TPRuntimeTests(unittest.TestCase):
                 self.assertEqual(adapter.calls[-1][0], "BRAIN")
                 self.assertEqual(len([event for event in self.events(runtime) if event["event"] == "BLOCK_CONTROL_TO_BRAIN"]), 1)
 
+    def test_worker_blocked_can_resume_authorized_work_after_brain_decision(self):
+        assignment = "artifacts/assignments/B1.md"
+        runtime, adapter, _ = self.make_runtime([
+            returned(brain("CONTINUE", route="LOW", next_step="SEQUENCE", blocks=assignment)),
+            returned(block("BLOCKED", assignment)),
+            returned(brain("CONTINUE", route="LOW", next_step="SEQUENCE", blocks=assignment)),
+            returned(block("DONE", assignment)),
+            returned(brain("COMPLETE")),
+        ])
+        self.assertEqual(runtime.run(), "COMPLETE")
+        self.assertEqual([call[0] for call in adapter.calls], ["BRAIN", "BLOCK", "BRAIN", "BLOCK", "BRAIN"])
+
     def test_artifact_is_preserved_but_malformed_control_is_not_interpreted(self):
         runtime, adapter, _ = self.make_runtime([])
         evidence = runtime.run_root / "artifacts" / "substantive.md"
