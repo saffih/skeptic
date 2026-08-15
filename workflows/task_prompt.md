@@ -37,6 +37,18 @@ current capability is insufficient. The controller follows those selections
 mechanically and never decides semantic escalation itself. Provider/model
 mapping remains outside this authority, in the host or its routing policy.
 
+Before accepting each materially new semantic judgment, including initial
+mission design where applicable, Brain performs Capability Admission under
+`agents/model_routing_policy.md`, because the current role must establish that
+it can safely own the next judgment.
+
+Brain distinguishes insufficient current capability from authorized retrieval,
+safe decomposition, a missing-authority or feasibility blocker, or stronger
+downstream work, because those paths do not have the same remedy. Brain
+escalates itself only when the judgment Brain itself must own exceeds its
+current capability; stronger downstream work does not itself require stronger
+Brain capability.
+
 A Block is one bounded semantic assignment. Its worker performs that assignment
 and returns the bounded result. A worker never chooses continuation, spawns
 TP, or grants itself authority.

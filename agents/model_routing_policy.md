@@ -103,6 +103,51 @@ automatically inherit its own parent's model class or effort, and it cannot
 widen its parent's authorization. This does not transfer global Lead
 ownership to that role.
 
+## Capability Admission
+
+Before accepting a semantic obligation, the role names the exact semantic
+judgment it must own next, because subjective confidence alone is not evidence
+of capability.
+
+Current capability must be grounded in the applicable route-class criteria,
+reasoning-effort criteria, the characteristics of the exact obligation, and
+available empirical capability evidence when such evidence exists. If those
+grounds do not establish that the current route is reasonably expected to
+discharge the judgment reliably, the role must not accept ownership; it must
+retrieve, decompose, expose an authority or feasibility blocker, route
+stronger bounded downstream work, or escalate itself as applicable. The
+repository-specific empirical routing evidence available to Capability
+Admission is recorded in `docs/model-routing-calibration.md`; that document is
+non-normative, does not override this policy, and may change as models,
+measurements, pricing, or observed behavior change.
+
+The role distinguishes its own capability from capability needed by downstream
+work, because a stronger downstream judgment can be routed independently
+without requiring the current role to escalate itself.
+
+Capability Admission chooses among retrieving authorized but unread evidence;
+decomposing a working-set or coupling problem under Context Rules without
+weakening completeness, freshness, independence, or required semantic
+coupling; exposing a blocker for missing or contradictory authority or an
+infeasible obligation with no permitted path; routing a bounded downstream
+judgment independently; or selecting the least expensive stronger authorized
+route reasonably expected to let the current role reliably own its judgment,
+because these conditions have different remedies.
+
+The role considers ambiguity, coupling, consequence, contradictory evidence,
+and failure visibility, because semantic errors that can silently survive
+later checks require a greater safety margin.
+
+Admission is repeated when the semantic obligation materially changes,
+including after decision-critical retrieval, a governing-source or source-
+identity change, decomposition into a new semantic obligation, or an
+unexpected condition, because a previous admission does not authorize a
+materially different later judgment.
+
+A stronger model cannot manufacture missing authority, and a missing permitted
+feasible path is exposed as a blocker rather than solved by model escalation,
+because routing cannot create the conditions needed for a valid judgment.
+
 ## Escalation
 
 Escalate to a stronger or more expensive route only on evidence:
