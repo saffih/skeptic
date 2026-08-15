@@ -98,6 +98,27 @@ bounded by the independent lease/deadline and by owned-child reconciliation on
 the next host start. Processes separately launched by an Execution are governed
 by the mission and are not killed merely because TP observes them.
 
+## Host observability
+
+`events.jsonl` is the primary durable mechanical lifecycle evidence. For every
+native Brain or Execution invocation, it records the role and invocation ID;
+requested route and host-supplied requested model/reasoning effort; actual
+runtime/model/effort only when directly observable (otherwise `UNKNOWN`);
+admission, start, finish, and return timing; finite deadline/lease; owned
+semantic-child and, when present, watchdog stable process identities; exit,
+deadline, cancellation, termination, returned TP status, references, and
+cleanup/reap state. At terminalization it also makes total elapsed time,
+semantic invocation count, role/route sequence, terminal result, and verified
+remaining TP-owned semantic-child/watchdog counts derivable.
+
+This telemetry is mechanical evidence only: it never controls continuation or
+terminal status, contains no secrets, auth material, environment dumps, or
+substantive mission/result bodies, and never guesses hidden provider facts.
+Hosts may materialize `diagnostics.jsonl` as a compact derived, non-authoritative
+debugging projection of `events.jsonl`; it is never controller input. A
+diagnostics-generation failure is reported separately and cannot rewrite an
+already established semantic result.
+
 ## Brain result
 
 Brain writes substantive understanding, evidence, and the next assignment to a

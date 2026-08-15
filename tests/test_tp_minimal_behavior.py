@@ -106,6 +106,27 @@ class TaskPromptBehaviorTests(unittest.TestCase):
         self.assertFalse(Path("capabilities/tp_runtime").exists())
         self.assertFalse(Path(".claude/agents/tp-native.md").exists())
 
+    def test_host_observability_is_mechanical_and_non_authoritative(self):
+        text = Path("workflows/task_prompt.md").read_text()
+        for phrase in (
+            "`events.jsonl` is the primary durable mechanical lifecycle evidence",
+            "otherwise `UNKNOWN`",
+            "watchdog stable process identities",
+            "diagnostics.jsonl",
+            "derived, non-authoritative",
+            "never controller input",
+            "contains no secrets, auth material, environment dumps, or",
+            "never controls continuation or",
+            "terminal status, contains no secrets",
+        ):
+            self.assertIn(phrase, text)
+        for forbidden in (
+            "TPRuntime",
+            "role: BLOCK",
+            "next: SEQUENCE",
+        ):
+            self.assertNotIn(forbidden, text)
+
     def test_brain_execution_brain_and_no_controller_queue(self):
         run = PingPong([
             ("EXECUTION", "E1", "DONE"),
