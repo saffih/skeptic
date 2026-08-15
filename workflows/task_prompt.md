@@ -8,9 +8,11 @@ continuation.
 ## Roles and first action
 
 There are exactly two semantic roles: `BRAIN` and `EXECUTION`. The controller
-persists the verbatim mission, creates host-owned run storage containing
-`mission.md`, `events.jsonl`, and `artifacts/`, and launches one fresh native
-Brain before any task-specific discovery, reading, testing, or planning.
+creates host-owned run storage containing `mission.md`, `tp-authority.md`,
+`events.jsonl`, and `artifacts/`, persists the verbatim mission, binds and
+snapshots the exact TP authority for the run as described below, and only then
+launches one fresh native Brain. These mechanical startup actions occur before
+any task-specific discovery, reading, testing, or planning.
 
 The initial Brain uses the normal authorized starting route. Brain selects the
 route for each bounded Execution under `agents/model_routing_policy.md` and
@@ -19,6 +21,35 @@ The controller applies Brain-authored routing mechanically; it never chooses
 semantic escalation. Actual provider, model, authentication, session,
 networking, and process details are supplied by the host and remain `UNKNOWN`
 unless directly observable.
+
+## Authority binding before semantic work
+
+The host selects the exact TP authority bytes before launching the first Brain
+and snapshots those bytes as `tp-authority.md` in the run root. It records the
+source identity when observable and the SHA-256 of the exact snapshot bytes in
+`events.jsonl`; every fresh Brain and Execution receives a resolvable
+`tp_authority_ref` to that same snapshot. Fresh semantic invocations use the
+snapshot and do not substitute a mutable repository copy.
+
+When the caller, transport, or repository policy supplies an immutable authority
+identity, such as a repository commit plus the expected `workflows/task_prompt.md`
+blob or content hash, the host validates that identity mechanically before
+creating any semantic dispatch. A mismatch, unavailable identity, or inability
+to materialize the exact authority bytes stops before Brain launch and is
+reported as host authority unavailability; it is never converted into semantic
+`BLOCKED` or `CONFLICT`.
+
+Authority needed to start TP is host input, not meaning that may be discovered
+from inside the mission after Brain launch. A mission may further constrain the
+target repository, but it cannot retroactively choose the TP authority that
+already governed its first Brain. A clean checkout is not proof that the
+checkout is the intended or current authority. An already-obsolete TP file
+cannot prove its own freshness; when freshness matters, the expected immutable
+authority identity must arrive from outside the semantic mission.
+
+Resume uses the same snapshotted authority bytes and recorded hash. If that
+snapshot is missing, altered, or no longer resolvable, the host fails closed
+before another semantic invocation rather than rereading a mutable checkout.
 
 ## Native transport and references
 
@@ -36,6 +67,36 @@ a semantic terminal decision.
 References identify authorized, resolvable artifacts. Equivalent relative and
 absolute spellings are equivalent after resolution; unresolved, unauthorized,
 escaping, or stale references are rejected mechanically.
+
+## Native invocation ownership and safety
+
+Every native Brain or Execution invocation launched for TP is host-owned by one
+run and has a recorded invocation identity plus a finite host-enforced lease or
+wall-clock deadline. The ownership record remains mechanically discoverable
+across controller restart until that invocation is observed exited or reaped. A
+run never has more than one live TP semantic invocation. The host never relies
+on the semantic worker to enforce its own deadline. If the host cannot retain
+mechanically discoverable ownership or enforce a finite deadline, it does not
+launch the TP semantic invocation and reports host safety unavailability.
+
+Before launching a TP invocation, the host reconciles TP-owned invocations it
+can identify. A still-live invocation belonging to the same active run prevents
+a duplicate launch. A TP-owned invocation whose controller is gone, whose run
+is terminal or abandoned, or whose deadline has expired is terminated and
+reaped before the host starts replacement work. An active invocation belonging
+to another live run may continue. The host never terminates a process whose TP
+ownership it cannot establish.
+
+When an Execution reaches its deadline or its return cannot be established, the
+host terminates and reaps that invocation and returns `UNKNOWN` evidence to a
+fresh Brain. When a Brain invocation reaches its deadline, the host terminates
+and reaps it and reports Brain/host execution unavailability without fabricating
+a semantic status. On observed TP cancellation, terminalization, controller failure, or orderly
+host shutdown, the host terminates and reaps every still-live semantic child it
+owns for that run and verifies that none remains. Abrupt controller loss is
+bounded by the independent lease/deadline and by owned-child reconciliation on
+the next host start. Processes separately launched by an Execution are governed
+by the mission and are not killed merely because TP observes them.
 
 ## Brain result
 
@@ -61,8 +122,8 @@ Brain, and the controller has no semantic plan or queue.
 
 Before Brain returns `BLOCKED` or `CONFLICT`, it identifies the exact stopping
 proposition, records primary supporting evidence, checks returned evidence for
-contradiction, and performs the smallest bounded owner/falsification check
-that could disprove an absence claim. “I did not find it” is not “it does not
+contradiction, and performs the smallest bounded owner/falsification check that
+could disprove an absence claim. “I did not find it” is not “it does not
 exist.” If safe evidence gathering remains, Brain returns `CONTINUE` with that
 work. Only a genuine evidenced blocker or irreconcilable conflict terminalizes.
 
@@ -108,15 +169,16 @@ An uncertain Execution is never replayed automatically.
 
 ## Controller boundary and lifecycle
 
-The controller may persist exact input, create run storage, mechanically
-validate identity/reference shape, record dispatch/return events, launch fresh
-native invocations, and report. It may not read substantive artifacts to choose
-continuation, discover task requirements, judge acceptance, infer absence,
-choose a route, or declare a terminal status.
+The controller may bind and snapshot exact TP authority, persist exact input,
+create run storage, mechanically validate identity/reference shape, record
+dispatch/return events, launch and clean up fresh native invocations, and
+report. It may not read substantive artifacts to choose continuation, discover
+task requirements, judge acceptance, infer absence, choose a route, or declare
+a terminal status.
 
 The lifecycle is:
 
-    fresh Brain -> one Execution -> fresh Brain -> ... -> terminal Brain
+    bind authority -> fresh Brain -> one Execution -> fresh Brain -> ... -> terminal Brain -> reap owned semantic children
 
 After `NOT_DONE`, Brain may replan. After `UNKNOWN`, Brain may gather evidence,
 choose a safe new Execution, or terminalize if evidence supports it. Brain may

@@ -10,13 +10,13 @@ This repository is a portable prompt and review library. Its capabilities valida
 
 ## Entry map
 
-- Context crossing any model or delegation boundary: read `docs/context-rules.md` `## Grounds`, `## Capacity and reachable depth`, `## Context Guide and Durable Store`, `## Retrieval`, `## Preparation and sizing`, `## Receiver authority`, `## Observability`, and `## Infeasibility`; additionally read and apply `## Semantic and control responsibility` when the invocation acts as a control plane or produces semantic continuation, successor, or orchestration handoff state, because fixed section-scoped loading makes the contract operative without making it a repeated context tax. This does not apply on the Task Prompt path, whose load set `workflows/task_prompt.md` closes.
+- Context crossing any model or delegation boundary: read `docs/context-rules.md` `## Grounds`, `## Capacity and reachable depth`, `## Context Guide and Durable Store`, `## Retrieval`, `## Preparation and sizing`, `## Receiver authority`, `## Observability`, and `## Infeasibility`; additionally read and apply `## Semantic and control responsibility` when the invocation acts as a control plane or produces semantic continuation, successor, or orchestration handoff state, because fixed section-scoped loading makes the contract operative without making it a repeated context tax. This does not apply on the Task Prompt path, whose load set is closed by the exact TP authority bound from `workflows/task_prompt.md`.
 - Review an artifact, decision, or RunSkeptic: read and follow the actual current `skeptic.md`; formal RunSkeptic semantics are owned there.
 - A top-level user instruction beginning `WELL:` routes to `docs/well.md`, the canonical WELL authority. Generic design or architecture wording does not select WELL.
 - Lead execution: read `agents/lead_agent.md`. Routing uses `agents/model_routing_policy.md`; delegated returns use `agents/agent_return_contract.md`.
-- A top-level user instruction beginning `TP:` activates the Task Prompt workflow: read `workflows/task_prompt.md`, which is the complete and only TP authority, and follow it. That invocation acts as the Lead, and that file — not `agents/lead_agent.md` — is its contract.
+- A top-level user instruction beginning `TP:` activates the Task Prompt workflow. Before any TP semantic invocation, the host binds the exact TP authority as `workflows/task_prompt.md` requires; active TP roles use the run's `tp_authority_ref` rather than substituting a mutable checkout copy. That invocation acts as the Lead, and TP — not `agents/lead_agent.md` — is its contract.
 - A top-level user instruction beginning `STT:` enters the STT authority chain from its governing inputs and canonical STT entry point. STT remains separate from TP and generic agent roles and contracts.
-- Understand a Task Prompt mission, discover its sources, and decompose it into bounded work blocks: this is the TP Brain role, defined in `workflows/task_prompt.md`.
+- Understand a Task Prompt mission, discover its sources, and choose its next bounded Execution: this is the TP Brain role, defined in `workflows/task_prompt.md`.
 - Build a Task Prompt: use `workflows/task_prompt_builder.md`.
 - Select model class -> `agents/model_routing_policy.md`
 - Boundary processing: use `agents/boundary_agent.md` when required by governing control state.
