@@ -31,6 +31,7 @@ class SafeHost:
         self.expected_commit = expected_commit
         self.expected_tp_blob = expected_tp_blob
         self.authority_bound = False
+        self.authority_snapshot = None
         self.active_child = None
         self.events = []
 
@@ -42,16 +43,14 @@ class SafeHost:
             self.events.append("AUTHORITY_REJECTED")
             return False
         self.authority_bound = True
+        self.authority_snapshot = observed_tp_blob
         self.events.append("AUTHORITY_BOUND")
         return True
 
-    def resume(self, observed_commit, observed_tp_blob):
+    def resume(self, observed_tp_snapshot):
         if not self.authority_bound:
             raise RuntimeError("AUTHORITY_NOT_BOUND")
-        if (observed_commit, observed_tp_blob) != (
-            self.expected_commit,
-            self.expected_tp_blob,
-        ):
+        if observed_tp_snapshot != self.authority_snapshot:
             raise RuntimeError("AUTHORITY_CHANGED")
         self.events.append("AUTHORITY_RESUME_OK")
 
@@ -250,10 +249,33 @@ class TaskPromptBehaviorTests(unittest.TestCase):
             "e9369228615cbe975edf3ff48d0ef4734eeb6067",
         )
         with self.assertRaisesRegex(RuntimeError, "AUTHORITY_CHANGED"):
-            host.resume(
-                "11edab8dd1a005852bb9d685a377f66b5403a8e9",
-                "28e3138454c043b3624d0309679d18f3ef6dacbd",
-            )
+            host.resume("28e3138454c043b3624d0309679d18f3ef6dacbd")
+
+    def test_resume_uses_bound_snapshot_not_mutable_target_head(self):
+        host = SafeHost(
+            "11edab8dd1a005852bb9d685a377f66b5403a8e9",
+            "e9369228615cbe975edf3ff48d0ef4734eeb6067",
+        )
+        host.bind_authority(
+            "11edab8dd1a005852bb9d685a377f66b5403a8e9",
+            "e9369228615cbe975edf3ff48d0ef4734eeb6067",
+        )
+        host.resume("e9369228615cbe975edf3ff48d0ef4734eeb6067")
+        self.assertIn("AUTHORITY_RESUME_OK", host.events)
+
+    def test_pragmatic_startup_visibility_and_cleanup_boundary_are_explicit(self):
+        text = Path("workflows/task_prompt.md").read_text()
+        for phrase in (
+            "`TP_ACTIVITY` notice",
+            "ownership-uncertain invocation",
+            "never guesses ownership or kills the unknown process",
+            "semantic fan-out",
+            "`RETURN_REJECTED` event",
+            "Successful terminalization verifies",
+            "whole machine is closed",
+            "same run blocks duplicate semantic launch",
+        ):
+            self.assertIn(phrase, text)
 
     def test_routing_stubs_do_not_reintroduce_block_sequence_model(self):
         agents = Path("AGENTS.md").read_text()

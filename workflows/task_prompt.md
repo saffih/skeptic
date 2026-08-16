@@ -70,35 +70,50 @@ escaping, or stale references are rejected mechanically.
 
 ## Native invocation ownership and safety
 
-Every native Brain or Execution invocation launched for TP is host-owned by one
-run and has a recorded invocation identity plus a finite host-enforced lease or
-wall-clock deadline. The ownership record remains mechanically discoverable
-across controller restart until that invocation is observed exited or reaped. A
-run never has more than one live TP semantic invocation. The host never relies
-on the semantic worker to enforce its own deadline. If the host cannot retain
-mechanically discoverable ownership or enforce a finite deadline, it does not
-launch the TP semantic invocation and reports host safety unavailability.
+Every native Brain or Execution invocation launched for TP is directly host-owned
+by one run and has a recorded invocation identity plus a finite host-enforced
+lease or wall-clock deadline. The host records its watchdog/lease identity
+before attempting semantic launch and records the direct semantic-child identity
+as soon as that identity is observable. A run never launches more than one live
+TP semantic invocation. The host never relies on the semantic worker to enforce
+its own deadline, and host launch configuration must not enable provider-level
+semantic fan-out outside that one TP invocation.
 
-Before launching a TP invocation, the host reconciles TP-owned invocations it
-can identify. A still-live invocation belonging to the same active run prevents
-a duplicate launch. A TP-owned invocation whose controller is gone, whose run
-is terminal or abandoned, or whose deadline has expired is terminated and
-reaped before the host starts replacement work. An active invocation belonging
-to another live run may continue. The host never terminates a process whose TP
-ownership it cannot establish.
+Before launching a TP invocation, the host reconciles prior TP activity it can
+identify from durable host state. A still-live or ownership-uncertain invocation
+belonging to the same run prevents a duplicate launch. An active invocation
+belonging to another live run may continue. Exact-known abandoned or expired
+direct TP-owned work is terminated and reaped. When prior ownership is
+uncertain, the host reports a compact `TP_ACTIVITY` notice to the caller and
+never guesses ownership or kills the unknown process. This visibility is
+mechanical status, not a semantic TP result.
 
 When an Execution reaches its deadline or its return cannot be established, the
-host terminates and reaps that invocation and returns `UNKNOWN` evidence to a
-fresh Brain. When a Brain invocation reaches its deadline, the host terminates
-and reaps it and reports Brain/host execution unavailability without fabricating
-a semantic status. On observed TP cancellation, terminalization, controller failure, or orderly
-host shutdown, the host terminates and reaps every still-live semantic child it
-owns for that run and verifies that none remains. Abrupt controller loss is
-bounded by the independent lease/deadline and by owned-child reconciliation on
-the next host start. Processes separately launched by an Execution are governed
-by the mission and are not killed merely because TP observes them.
+host terminates and reaps that direct invocation and returns `UNKNOWN` evidence
+to a fresh Brain. When a Brain invocation reaches its deadline, the host
+terminates and reaps it and reports Brain/host execution unavailability without
+fabricating a semantic status. On observed TP cancellation, terminalization,
+controller failure, or orderly host shutdown, the host cleans up every
+still-live direct semantic child and watchdog it can establish as owned by that
+run. Successful terminalization verifies that no such direct TP-owned process
+remains. TP does not claim that the outer caller, terminal application, or the
+whole machine is closed.
+
+Abrupt controller or watchdog loss is bounded by the independent lease/deadline
+when that lease remains alive and by exact-owned reconciliation on the next host
+start. If a crash interval leaves ownership uncertain, the next host start
+reports that uncertainty visibly; it is not converted into a false zero or an
+unsafe kill, and uncertainty for the same run blocks duplicate semantic launch.
+Processes separately launched by an Execution are governed by the mission and
+are not killed merely because TP observes them.
 
 ## Host observability
+
+Caller-visible `TP_ACTIVITY` notices report prior live, cleaned, or
+ownership-uncertain TP activity discovered during startup reconciliation. When a
+new or resumed run root is available, the host may also record the same bounded
+mechanical observation as `PRIOR_TP_ACTIVITY` in that run's `events.jsonl`.
+These notices never choose continuation or create a semantic TP status.
 
 `events.jsonl` is the primary durable mechanical lifecycle evidence. For every
 native Brain or Execution invocation, it records the role and invocation ID;
@@ -107,9 +122,12 @@ runtime/model/effort only when directly observable (otherwise `UNKNOWN`);
 admission, start, finish, and return timing; finite deadline/lease; owned
 semantic-child and, when present, watchdog stable process identities; exit,
 deadline, cancellation, termination, returned TP status, references, and
-cleanup/reap state. At terminalization it also makes total elapsed time,
-semantic invocation count, role/route sequence, terminal result, and verified
-remaining TP-owned semantic-child/watchdog counts derivable.
+cleanup/reap state. A mechanically rejected control return is recorded as a
+body-free `RETURN_REJECTED` event with a stable reason code; a rejected Brain
+return also records host failure rather than fabricating semantic status. At
+terminalization the event history also makes total elapsed time, semantic
+invocation count, role/route sequence, terminal result, and verified remaining
+TP-owned semantic-child/watchdog counts derivable.
 
 This telemetry is mechanical evidence only: it never controls continuation or
 terminal status, contains no secrets, auth material, environment dumps, or
