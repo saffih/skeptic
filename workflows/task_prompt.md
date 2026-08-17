@@ -1,5 +1,7 @@
 # Task Prompt (TP)
 
+- **Original author:** Saffi Hartal
+
 This is the complete and only authority for `TP: <mission>`. TP is a simple,
 host-neutral Brain/Execution ping-pong. The controller is mechanical and
 domain-blind; it never performs semantic work or chooses semantic

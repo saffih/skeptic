@@ -1,5 +1,7 @@
 # Sequential Target Task MVP Software Design Description
 
+- **Original author:** Saffi Hartal
+
 **Repository:** `saffih/skeptic`, because this metadata identifies the repository that owns the design.
 **Governing Inputs:** Sequential Target Task MVP Governing Inputs, because that document owns accepted STT product constraints.
 **Architecture Description:** Sequential Target Task MVP Architecture Description, because that document owns STT system-wide meaning.

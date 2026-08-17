@@ -1,5 +1,7 @@
 # WELL — Warranted, Explicit, Lean, Linked
 
+- **Original author:** Saffi Hartal
+
 WELL is the normative profile for architecture, software-design, architecture-decision, and equivalent design documents, because design meaning must remain inspectable and resistant to drift.
 
 WELL governs this document, because a design standard must demonstrate that its own requirements are usable.
