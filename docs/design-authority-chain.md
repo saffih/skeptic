@@ -1,5 +1,7 @@
 # Design Authority Chain
 
+- **Original author:** Saffi Hartal
+
 This document defines how planning and design authority flows from accepted needs into realization and evidence, because incremental work fails when required meaning is missing, duplicated, or introduced too late.
 
 Every planning or design artifact that defines or justifies design must conform to WELL, because its propositions must remain warranted, explicit, lean, and linked.

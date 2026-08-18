@@ -1,5 +1,7 @@
 # Sequential Target Task MVP Architecture Description
 
+- **Original author:** Saffi Hartal
+
 **Repository:** `saffih/skeptic`, because this document is maintained with the STT MVP sources.
 **Governing Inputs:** Sequential Target Task MVP Governing Inputs, because this Architecture refines their accepted product meaning.
 **Downstream owner:** Software Design Description under the Design Authority Chain, because shared realization belongs downstream of system-wide semantics.

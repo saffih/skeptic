@@ -1,5 +1,7 @@
 # Context Rules
 
+- **Original author:** Saffi Hartal
+
 Context Rules is the portable normative contract governing what enters, stays out of, and moves between semantic invocations, because a receiver's productive reasoning capacity is bounded while the durable material an obligation may legitimately draw on is not.
 
 ## Purpose

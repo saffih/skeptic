@@ -1,5 +1,7 @@
 # Task Prompt (TP)
 
+- **Original author:** Saffi Hartal
+
 This file is the canonical and complete authority for a normal Task Prompt.
 It is deliberately host-neutral. A host may provide transport and map the
 abstract routes below to available models, but may not add semantic TP rules.

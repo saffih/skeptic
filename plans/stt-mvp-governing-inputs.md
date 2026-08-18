@@ -1,5 +1,7 @@
 # Sequential Target Task MVP Governing Inputs
 
+- **Original author:** Saffi Hartal
+
 **Accountable owner:** STT product owner, because accepted product decisions need an accountable authority.
 **Applies to:** STT MVP Architecture Description and every dependent design or implementation artifact, because downstream work may interpret but not redefine these inputs.
 **Authority link:** Governing Inputs in the Design Authority Chain, because this document owns the chain's accepted product meaning.
