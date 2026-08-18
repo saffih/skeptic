@@ -10,7 +10,7 @@ class PromotionCheckTests(unittest.TestCase):
 
     def test_promotion_check_blocks_unresolved_blockers(self):
         self.assertIn(
-            "Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.",
+            "Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.",
             TEXT,
         )
         self.assertIn(
@@ -20,7 +20,7 @@ class PromotionCheckTests(unittest.TestCase):
 
     def test_promotion_invariant_exists(self):
         self.assertIn(
-            "Never mark an artifact ready while ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.",
+            "Never mark an artifact ready while any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.",
             TEXT,
         )
 

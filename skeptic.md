@@ -94,7 +94,7 @@ For each Find Loop run:
 - return material findings as scoped suspicions rather than task-level conclusions; preserve direct observations and evidence as such, and state the review scope, assumptions, and unknowns; the receiving Core (the task-level owner) retains responsibility to reevaluate each finding against wider authoritative context before task-level action or artifact promotion
 - reset the consecutive-run count after any new or materially changed finding
 
-Find Loop convergence means detection stabilized; it does not mean the artifact passed or is ready. Report every unresolved ACTION, DECOMPOSE path, CONFLICT, review-required status, and blocking unknown.
+Find Loop convergence means detection stabilized; it does not mean the artifact passed or is ready. Report every unresolved ACTION, DECOMPOSE path, CONFLICT, and blocking unknown, and every applicable required review that has not been completed.
 
 `RunSkeptic Fix Loop` invokes repeated full RunSkeptic review-and-fix cycles. Unless the explicit invocation sets another count, stop successfully only after three consecutive qualifying passes on the same unchanged artifact state.
 
@@ -112,7 +112,7 @@ For each Fix Loop run:
 - verify every change immediately
 - after any change, restart the complete review and reset the consecutive-pass count
 
-A repair run does not count as a qualifying pass. A run qualifies only when no change is made, every material finding is PASS, all required verification passes, and no unresolved ACTION, DECOMPOSE path, CONFLICT, review-required status, or blocking unknown remains.
+A repair run does not count as a qualifying pass. A run qualifies only when no change is made, every material finding is PASS, all required verification passes, no unresolved ACTION, DECOMPOSE path, CONFLICT, or blocking unknown remains, and every applicable required review is completed.
 
 If safe evidence-backed progress cannot continue, stop with CONFLICT rather than loop indefinitely or claim completion.
 
@@ -346,6 +346,11 @@ Before STABILIZE/DECIDE, check:
 - important conclusions have evidence
 - unknowns and skipped areas are listed
 
+Applicability and evidence:
+- For a required check that does not apply, record NOT_APPLICABLE.
+- If a required check applies but cannot be adequately evidenced, record UNKNOWN rather than PASS.
+- A material UNKNOWN blocks any conclusion or promotion that depends on it.
+
 Track unknowns:
 - owner, source of truth, contract, dependency
 - behavior, risk boundary, revert path, test path
@@ -467,7 +472,7 @@ Do not decompose pure conflict to avoid escalation.
 
 ### Promotion Check
 
-Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
+Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.
 
 An unresolved DECOMPOSE path also blocks readiness or promotion until each resulting scope returns through GATE and reaches a valid outcome.
 
@@ -580,7 +585,7 @@ Check:
 - CH: avoidable failure, incentives, misjudgment, safety margin, constraint, effort-value, or scale risk
 - OM: unnecessary structure, false simplicity, speculation, oversized design, avoidable complexity, or an unexplained protected constraint
 - FE: stale claims, weak mechanism or evidence, hidden limits, unclear value, or an unvalidated trust-boundary transition
-- PO: unfalsifiable claims, confirmation-only proof, contradiction, weak refutation, silent invalidity, or overclaim
+- PO: unfalsifiable claims, confirmation-only proof, contradiction, weak refutation, silent invalidity, overclaim, or coverage gaps
 - KT: harmful universalization, special pleading, inconsistent rules, unfair asymmetry, hidden burden, hidden human burden, or ought-implies-can feasibility
 - SH: opposing forces, fake middles, forced balance, needed exceptions, hidden conflict, wrong leverage, or unproven dominance
 - backward dependencies, forward constraints, and staleness
@@ -630,7 +635,7 @@ Aspect tags are defined in §3:
 - CH: `CH:IV`, `CH:IN`, `CH:SO`, `CH:MJ`, `CH:CP`, `CH:SM`, `CH:CR`, `CH:EV`, `CH:SR`
 - OM: `OM:UE`, `OM:FS`, `OM:SS`, `OM:OD`, `OM:AC`, `OM:CF`
 - FE: `FE:SC`, `FE:ME`, `FE:WY`, `FE:HL`, `FE:WE`, `FE:PG`, `FE:PV`, `FE:TB`
-- PO: `PO:UF`, `PO:CO`, `PO:CN`, `PO:WR`, `PO:SI`, `PO:OC`
+- PO: `PO:UF`, `PO:CO`, `PO:CN`, `PO:WR`, `PO:SI`, `PO:OC`, `PO:CG`
 - KT: `KT:HU`, `KT:EX`, `KT:IR`, `KT:UA`, `KT:HB`, `KT:HHB`, `KT:OC`
 - SH: `SH:OF`, `SH:FM`, `SH:FB`, `SH:NE`, `SH:HC`, `SH:WL`, `SH:PF`
 - `SH:PF`: Pareto frontier / proven dominance
@@ -674,7 +679,7 @@ Use the smallest explanatory tag set, normally 1-3 tags. Use aspects when they i
 - Never retry unless safer or better informed.
 - Never treat repeated local fixes as local forever.
 - Every completed task must have an outcome.
-- Never mark an artifact ready while ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
+- Never mark an artifact ready while any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.
 - An unresolved DECOMPOSE path likewise blocks readiness or promotion.
 - Every task ends as HANDLED or CONFLICT.
 - Never modify outside the current task's scope; log adjacent issues separately.
