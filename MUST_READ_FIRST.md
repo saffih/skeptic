@@ -24,13 +24,15 @@ and it contains no workflow's procedure.
 ## Naming
 
 A workflow or role name used by one system does not imply a shared contract
-with a same-named role in another system. Bind every role to the authority file
-that owns it, and never infer one system's contract from another's vocabulary.
+  with a same-named role in another system. Bind every role to the authority file
+  that owns it, and never infer one system's contract from another's vocabulary.
 
 ## Triggers
 
-- `TP:` routes to `workflows/task_prompt.md`, which is the complete authority
-  for the Task Prompt workflow.
+- `TP:` routes to `workflows/task_prompt.md`, which is the canonical source for
+  Task Prompt authority. Before any TP semantic invocation, the host binds the
+  exact authority snapshot required by that workflow; active TP roles use the
+  run's `tp_authority_ref`.
 - `RunSkeptic` routes to `skeptic.md`, which owns Skeptic behavior and
   receipts.
 - STT is a separate system with its own runtime and authorities. It is not
