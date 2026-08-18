@@ -12,11 +12,11 @@ STT design is accepted, and this plan owns bounded construction only, because Go
 
 | Accepted artifact | Exact Git blob |
 | --- | --- |
-| `plans/stt-mvp-governing-inputs.md` | `0533522cb66043d9113e6882b1c72baad6a19adb` |
-| `plans/stt-mvp-architecture-description.md` | `595b00dcaa346122e59c14389194dc44603cdbbc` |
-| `plans/stt-mvp-software-design-description.md` | `464f4bfbf1f3c1d3c51efa56be3699735d091fb4` |
-| `docs/context-rules.md` | `a3b4e664cab4a6edcfe6f8c8af5148cccc58f8a8` |
-| `docs/design-authority-chain.md` | `5b09ae10138901d959432477a4a6169fe2bf3330` |
+| `plans/stt-mvp-governing-inputs.md` | `66e07d85cf5f41158a9b1d1a282330ad6daaae16` |
+| `plans/stt-mvp-architecture-description.md` | `660b9a1c7bfcaa6568c4780475ce5d428d301ffc` |
+| `plans/stt-mvp-software-design-description.md` | `16f65eb7908e1b824ced1e2473687810fef2a7f4` |
+| `docs/context-rules.md` | `ec1f81fc72343554d1b6cdfb03ca84ad941b6297` |
+| `docs/design-authority-chain.md` | `d2e2481afd02f58b4d5d1404351ec1b2dbf9a496` |
 
 An implementation discovery that needs a product objective returns to Governing Inputs, one that needs system-wide meaning returns to Architecture, and one that needs a shared schema, durable algorithm, persistence rule, adapter rule, recovery rule, or qualification strategy returns to the SDD, because this plan may not silently resolve an upstream dependency.
 
