@@ -1,21 +1,21 @@
 # Skeptic - Detect, Reason, Fix, Verify
 
-AI-executable framework for safe system improvement.
+- **Original author:** Saffi Hartal
+
+AI-executable framework for safe review and improvement.
 
 Rules:
 - Correct action over fast action.
-- If detection confidence is insufficient, do not act.
-- Add process only when it prevents a known failure mode.
+- If detection confidence is insufficient, do not fix or promote; gather evidence, decompose, or escalate.
+- Add process only when it addresses a specific credible failure mode.
 
 ## Invocation Contract
 
 `RunSkeptic` is the formal invocation string for this framework.
 
-Aliases:
-- `beskeptic`
-- `apply Skeptic`
-- `Skeptic review`
-- `run skeptic.md`
+Aliases: `beskeptic`, `apply Skeptic`, `Skeptic review`, `run skeptic.md`.
+
+The invocation selects the framework; the request determines permission and stopping conditions. Runs are read-only unless fixing is explicitly authorized; verification emphasis or iterative repetition must also be requested.
 
 When invoked:
 1. Read the actual current `skeptic.md`, or an explicitly supplied candidate Skeptic file, before analysis.
@@ -31,6 +31,32 @@ When invoked:
 11. Verify the recommendation against the framework.
 12. State unresolved conflicts, unknowns, skipped areas, and missing evidence.
 13. If the source under review is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
+
+An explicit invocation may additionally name companion files; they add context but do not replace or override the designated Skeptic source.
+
+Each repeated run is a new invocation for source-freshness purposes: perform Rule 1 again. An earlier read does not satisfy a later run.
+
+For deterministic binding, a formal invocation records:
+
+```text
+INVOCATION_ID: <id>
+INVOCATION_KIND: SINGLE | FIND_LOOP | FIX_LOOP | INNOSKEPTIC | INOSKEPTIC
+PERMISSION_MODE: read-only | patch-local | fix-if-valid
+DONE: <testable statement>
+TARGET_TASK_SHA256: <sha256>
+REVIEWED_ARTIFACT_REFERENCE: <reference>
+REVIEWED_ARTIFACT_SHA256: <sha256>
+SKEPTIC_SOURCE_PATH: skeptic.md
+SKEPTIC_SOURCE_REF: <ref>
+SKEPTIC_SOURCE_BLOB_SHA: <blob sha>
+APPLICABLE_COMPANION_SET_SHA256: <sha256>
+MATERIAL_FINDINGS_SHA256: <sha256>
+PREVIOUS_FINDINGS_REFERENCE: <reference or NONE>
+```
+
+The designated source is freshly read before analysis. These fields bind the
+receipt to that read and to the complete current artifact; they do not prove
+hidden runtime context, model cognition, or actual model/provider routing.
 
 ### RunSkeptic Receipt
 
@@ -49,6 +75,66 @@ Every RunSkeptic report must include a compact receipt:
 
 Do not claim RunSkeptic compliance without this receipt.
 
+A RunSkeptic receipt indexes the review and its evidence; it is not independent proof or authority. A material receipt claim that conflicts with primary evidence must be corrected or left unresolved.
+
+### Loop Invocations
+
+#### Artifact Relay
+
+`artifact-relay` — Before Find/Fix work likely to exhaust context or repeat substantial reads, use bounded delegation only when expected to reduce total context, cost, or failure risk after overhead. Delegate only bounded side work to fresh independent invocations, route each to the least expensive reliable role, and persist only validated, authorized artifacts or receipts with identity/hash.
+
+One loop owner remains responsible for freshly reading the applicable Skeptic source and complete current artifact, executing the full recipe, reevaluating prior findings, preserving unresolved states, and enforcing convergence and reset criteria. Reused artifacts support work but never count as fresh evidence, complete loop coverage, or unchanged-candidate passes. Report unobserved freshness, routing, validity, or coverage as `UNKNOWN`; if complete coverage is infeasible, stop with `CONFLICT`.
+
+`RunSkeptic Find Loop` invokes repeated full read-only RunSkeptic reviews. Unless the explicit invocation sets another count, stop only after three consecutive runs produce no new meaningful finding and no material change to an existing finding.
+
+Find Loop inputs bind the Target Task, complete reviewed artifact, Skeptic source blob, applicable companions, invocation kind, and permission mode. Reset the consecutive count after any change to those bindings or after any new or materially changed finding, because detection stability must describe repeated review of one exact comparison.
+
+For each Find Loop run:
+- freshly read the designated current Skeptic source and execute the complete recipe
+- re-evaluate the complete artifact and all previous findings
+- make no modifications
+- stabilize duplicates and distinguish new findings from restatements
+- record new, changed, resolved, and still-open findings
+- return material findings as scoped suspicions rather than task-level conclusions; preserve direct observations and evidence as such, and state the review scope, assumptions, and unknowns; the receiving Core (the task-level owner) retains responsibility to reevaluate each finding against wider authoritative context before task-level action or artifact promotion
+- reset the consecutive-run count after any new or materially changed finding
+
+Find Loop convergence means detection stabilized; it does not mean the artifact passed or is ready. Report every unresolved ACTION, DECOMPOSE path, CONFLICT, and blocking unknown, and every applicable required review that has not been completed.
+
+`RunSkeptic Fix Loop` invokes repeated full RunSkeptic review-and-fix cycles. Unless the explicit invocation sets another count, stop successfully only after three consecutive qualifying passes on the same unchanged artifact state.
+
+External loop state binds the Target Task, complete reviewed artifact, Skeptic
+source blob, applicable companions, material finding set, invocation kind, and
+permission mode. Reset the qualifying count after any change to one of those
+bindings or to a material finding. A repair run and a delta-only review never
+qualify. Unless explicitly overridden, completion requires three unchanged
+qualifying passes.
+
+For each Fix Loop run:
+- freshly read the designated current Skeptic source and execute the complete recipe
+- re-evaluate the complete artifact, including all previously HANDLED areas
+- fix every authorized material issue that DECIDE validly classifies as FIX
+- verify every change immediately
+- after any change, restart the complete review and reset the consecutive-pass count
+
+A repair run does not count as a qualifying pass. A run qualifies only when no change is made, every material finding is PASS, all required verification passes, no unresolved ACTION, DECOMPOSE path, CONFLICT, or blocking unknown remains, and every applicable required review is completed.
+
+If safe evidence-backed progress cannot continue, stop with CONFLICT rather than loop indefinitely or claim completion.
+
+`InnoSkeptic` (Innovative Skeptic) invokes repeated innovation-selection cycles. Aliases: `Innovative Skeptic`, `INNO Skeptic`, `InoSkeptic` (legacy). Unless the explicit invocation sets another count, stop successfully only after one defensible candidate remains or a complete cycle yields no material improvement or justified narrowing.
+
+Bind one goal and set of constraints.
+
+For each InnoSkeptic run:
+- generate several materially distinct candidates satisfying the bound constraints
+- vary, mutate, recombine, or add candidates based on prior evidence
+- freshly read the designated current Skeptic source and RunSkeptic on the complete candidate set using shared evidence
+- use findings and newly established evidence to improve and narrow the set
+- eliminate only approaches defeated by the bound requirements or demonstrably dominated by others on all material protected dimensions
+- preserve unresolved nondominated candidates
+- if any candidate changed or evidence expanded, restart the complete review
+
+InnoSkeptic convergence means one defensible candidate remains or a complete cycle yields no material improvement or justified narrowing. Do not force one winner when alternatives remain nondominated.
+
 Flow: GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
 
 ## 0. Gate
@@ -64,6 +150,25 @@ If not:
 - too large but clear -> DECOMPOSE
 - multiple valid interpretations -> list them; proceed only if one is evidence-backed, low-risk, and testable
 - unresolved or unsafe ambiguity -> CONFLICT
+
+### Prompt and Task Feasibility
+
+When reviewing an instruction, prompt, plan, or workflow, determine what it claims to own. Apply this core check using the supplied artifact and available evidence; do not assume repository companion files exist.
+
+Classify the completion scope:
+- **Bounded prompt:** owns one role or action, not terminal completion.
+- **End-to-end task:** owns multiple dependent steps, integration, publication, or terminal DONE.
+
+For either scope, check:
+- objective, DONE, authority, source-of-truth order, allowed scope, output, verification, and stop conditions are explicit enough to execute;
+- available context, time, tools, permissions, evidence, and other material resources can realistically support the claimed outcome;
+- dependencies, handoffs, integration, and final verification have clear ownership when applicable;
+- retries and repeated review/fix loops are bounded, with escalation or redesign when repetition stops adding evidence;
+- decision-critical state is persisted only when it must survive a real boundary such as delegation, interruption, context loss, independent review, or cross-session continuation.
+
+A well-written prompt or set of locally valid child steps cannot earn task-level PASS when the overall completion, integration, or verification path is infeasible or unowned. Missing feasibility is ACTION when locally repairable, DECOMPOSE when the objective is clear but too large or coupled, and CONFLICT when authority, design, safety, source of truth, or terminal completion remains unresolved.
+
+No companion file is required for this core review. A supplied companion may add context-specific constraints but cannot override Skeptic.
 
 ## 0.5. Fundamental Scan
 
@@ -116,6 +221,7 @@ For every meaningful entity: file, module, function, config, doc, test, system, 
 - What must always be true?
 - What breaks it?
 - How do we know it works?
+- Does this solve a current verified need, or speculate about a future one?
 
 ## 3. Thinkers
 
@@ -127,23 +233,21 @@ Each thinker is a lens, not a checklist. Inspect through the lens. Report only m
 
 Find avoidable stupidity before approving success.
 
-Look for:
 - `CH:IV` inversion: worst material bad outcome and whether evidence, limits, responsibility, or reversal path block it
 - `CH:IN` incentives that reward noise, shortcuts, fake certainty, gaming, shallow compliance, or skipped verification
 - `CH:SO` second-order damage: downstream harm, hidden cost, brittleness, drift, or confusion
 - `CH:MJ` misjudgment: confidence without evidence, coherent stories without verification, one-lens thinking, assumptions as facts
 - `CH:CP` competence gaps: deciding without enough evidence or domain understanding
 - `CH:SM` weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
-- `CH:CR` constraint risk: effort targets a non-bottleneck while the real system constraint, queue, or blocker remains unchanged
+- `CH:CR` constraint risk: effort targets something other than the system constraint, queue, or blocker currently limiting the outcome
+- `CH:EV` effort-value alignment: effort, cost, rigor, process, or resource use is disproportionate to expected value, material risk reduction, decision importance, available resources, or the probability of reaching a completed useful outcome
 - `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
 
-Report when CH exposes a material failure path, bad incentive, false certainty, competence gap, missing safety margin, wrong constraint, or unsupported scale-up assumption.
 
 ### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
 
 Find unnecessary structure without removing what proves, protects, assigns responsibility for, or makes the required outcome reversible.
 
-Look for:
 - `OM:UE` unnecessary entities: assumptions, steps, abstractions, options, or moving parts with no verified current need
 - `OM:FS` false simplicity: simplification that proves less, protects less, or breaks the required outcome
 - `OM:SS` speculative structure or abstraction before repeated concrete need
@@ -151,65 +255,75 @@ Look for:
 - `OM:AC` avoidable complexity from misplaced boundaries, mixed concerns, or missing small guards
 - `OM:CF` Chesterton fence: removing or replacing structure before understanding what constraint it protected
 
-Report when something can be removed, merged, moved, simplified, or guarded without losing required outcome, evidence, responsibility, reversibility, or safety.
+When structure or process is material, compare it with the smallest credible alternative that could achieve the required outcome. Remove structure that adds no necessary evidence, safety, responsibility, reversibility, or material value.
+
+Do not simplify by deleting protections whose purpose is not understood. When substantial structure remains, state briefly why the smaller alternative is insufficient.
+
 
 ### Richard Feynman (FE) - Reality, Mechanism, Evidence Integrity
 
 Find where explanation outruns reality.
 
-Look for:
-- `FE:SC` stale claims: not true now, undated, or not recently verified
+- `FE:SC` stale claim: a materially time-dependent claim or action is unsupported unless its current state is established by explicit context or sufficiently fresh authoritative evidence; never substitute model knowledge for current state, and use `UNKNOWN` if it cannot be established.
 - `FE:ME` mechanism gap: says what happens but not clearly how or why it works
 - `FE:WY` missing why: a non-obvious choice lacks a clear reason
 - `FE:HL` hidden limits: assumptions, failed cases, edge cases, or contradictory evidence are omitted
 - `FE:WE` weak evidence: proof does not directly exercise or support the claimed outcome
 - `FE:PG` proof gap: confidence, authority, elegance, or coherent story substitutes for observed evidence
 - `FE:PV` purpose/value gap: the artifact is coherent or well-structured, but the useful outcome, user, owner, or value is unclear
+- `FE:TB` trust-boundary transition: untrusted, lower-authority, or unverified content, output, or state is accepted -- or is structurally permitted to flow -- into a higher-trust or control-bearing role without an explicit validation or authorization step proportionate to the consequence
 
-Report when a claim, choice, or conclusion cannot be trusted without clearer mechanism, current evidence, disclosed limits, direct proof, or clear value.
+Higher-trust or control-bearing roles include: instruction, permission, verified evidence, source of truth, executable input, policy, configuration, safety or control signal.
+
+For every `FE:TB` finding, identify the lower-trust source, the promoted role, the boundary crossed, and the missing validation or authorization.
+
 
 ### Karl Popper (PO) - Falsifiability, Refutation, Contradiction
 
 Find claims that can pass while wrong.
 
-Look for:
 - `PO:UF` unfalsifiable claim: no observation, example, check, or condition could show it wrong
 - `PO:CO` confirmation-only proof: supporting evidence exists, but no serious disconfirming case was tried
 - `PO:CN` contradiction: rules, assumptions, examples, outputs, or acceptance criteria conflict
 - `PO:WR` weak refutation path: wrong result is detected too late, only manually, or not at all
 - `PO:SI` silent invalidation: artifact can appear valid while violating the claim
 - `PO:OC` overclaim: current checks are treated as proof, not limited corroboration
+- `PO:CG` coverage gap: when completeness, conformance, readiness, or full implementation is claimed, derive the material obligations independently from the governing authority and ask what required element could be absent while every current check still passes; any material obligation not mapped to the artifact and supporting evidence blocks promotion
 
-Report when a claim, rule, decision, or result cannot be refuted, contradicts another requirement, or can pass while wrong.
 
-### Immanuel Kant (KT) - Universalizability, Consistency, Fair Exceptions
+### Immanuel Kant (KT) - Universalizability, Consistency, Fair Exceptions, Harm Minimization
 
-Find patterns that should not become general rules.
+Find patterns that should not become general rules, and evaluate whether chosen paths unnecessarily harm or create unresolvable moral conflicts.
 
-Look for:
 - `KT:HU` harmful universalization: bad if used everywhere or by every similar actor
 - `KT:EX` special pleading: one case gets an exception similar cases should not get
 - `KT:IR` inconsistent rule: contradicts itself when applied broadly or symmetrically
 - `KT:UA` unfair asymmetry: similar actors, cases, users, files, or decisions are treated differently without justification
 - `KT:HB` hidden burden: works only by shifting ambiguity, cost, or cleanup to someone else
+- `KT:HHB` hidden human burden: appears successful only by shifting avoidable ambiguity, cognitive load, repeated back-and-forth, coordination effort, delay, cost, risk, or cleanup onto another person or group
+- `KT:NH` no harm: chosen action causes avoidable material harm when a feasible less-harmful path meets the same requirements without greater material sacrifice
+- `KT:MC` moral conflict: every feasible path materially harms or sacrifices a protected party, duty, right, or value; surface the competing harms and obligations for explicit accountable judgment
+- `KT:OC` ought implies can: no permitted feasible path lets the responsible actor satisfy all applicable requirements simultaneously under its authority, capabilities, resources, dependencies, and constraints; if feasibility is unestablished, record unknown; preserve protected requirements when restoring feasibility; add `PO:CN` only when conflicting rules cause the impossibility
 
-Report when the pattern should be removed, narrowed, bounded, or made into an explicit rule or exception.
 
 ### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
 
 Find invalid middles and unresolved tradeoffs.
 
-Look for:
 - `SH:OF` opposing forces: what each side protects and what each side costs
 - `SH:FM` fake middle: compromise keeps both costs without resolving the tension
 - `SH:FB` forced balance: the artifact tries to satisfy both sides when one side should dominate
 - `SH:NE` narrow exception needed: one side should be default, but the other side needs a narrow protected exception
 - `SH:HC` hidden conflict: product, architecture, safety, ownership, or priority decision is required
-- `SH:WL` wrong leverage: the chosen side, middle, or exception does not address the constraint limiting the outcome
+- `SH:WL` wrong leverage: within a genuine trade-off, the chosen side, middle, or exception does not materially affect the outcome it is intended to improve
+- `SH:PF` dominance/frontier: a live option is retained even though another feasible option is no worse on every material protected dimension and better on at least one
 
-If no real opposing forces or invalid middle are present, SH = NOT_APPLICABLE.
+Do not eliminate an option when dominance depends on stale or uncertain evidence, unsupported causation, aggregation that hides a subgroup or tail, omitted feasibility, reversibility or information value, mismatched time horizons, or a disputed weighting of consequences. When dominance is not supported, preserve the live trade-off or report the missing evidence.
 
-Report when the middle hides friction, keeps both costs, lacks a dominant default, lacks a narrow exception, requires an explicit tradeoff decision, or misses the real leverage point.
+Distinguish `CH:CR`, `SH:WL`, and `SH:PF` by whether the defect is the limiting constraint, the chosen intervention, or the live option set. Do not duplicate findings; when one explains another, merge them in STABILIZE.
+
+If no real opposing forces, invalid middle, or live option comparison are present, SH = NOT_APPLICABLE.
+
 
 
 ## 4. Structural Checks
@@ -253,6 +367,11 @@ Before STABILIZE/DECIDE, check:
 - important conclusions have evidence
 - unknowns and skipped areas are listed
 
+Applicability and evidence:
+- For a required check that does not apply, record NOT_APPLICABLE.
+- If a required check applies but cannot be adequately evidenced, record UNKNOWN rather than PASS.
+- A material UNKNOWN blocks any conclusion or promotion that depends on it.
+
 Track unknowns:
 - owner, source of truth, contract, dependency
 - behavior, risk boundary, revert path, test path
@@ -284,7 +403,7 @@ Merge findings sharing:
 - data, boundary, responsibility, interface
 - source of truth, failure mode, root cause
 
-Classify root cause:
+Classify the issue and its root cause or detection gap:
 - local bug
 - missing test
 - missing contract
@@ -308,7 +427,7 @@ Raw findings remain PROVISIONAL until stabilized.
 
 ## 8. Evidence Levels
 
-Before DECIDE, classify every finding.
+Before DECIDE, assign every finding its applicable evidence level or levels.
 
 - OBSERVED: directly seen in code, tests, config, docs, or runtime behavior.
 - REPRODUCED: confirmed with failing test, probe, command, or execution.
@@ -325,7 +444,7 @@ Rules:
 
 ## 9. Decide
 
-Choose one path per stabilized issue.
+For each stabilized issue, decide whether it requires FIX, DECOMPOSE, or CONFLICT; otherwise record why no action is required.
 
 ### FIX
 
@@ -374,7 +493,9 @@ Do not decompose pure conflict to avoid escalation.
 
 ### Promotion Check
 
-Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
+Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.
+
+An unresolved DECOMPOSE path also blocks readiness or promotion until each resulting scope returns through GATE and reaches a valid outcome.
 
 If yes, do not promote. Decide FIX, DECOMPOSE, or CONFLICT.
 
@@ -409,7 +530,7 @@ Use evidence, not confidence.
 
 Check:
 - red -> green for bug fixes when possible
-- 3-5 manual spot checks
+- 3-5 targeted spot checks when applicable; scale further checks to risk and evidence
 - end-to-end trace from entry to output
 - constraints: correctness, safety, performance, cost, context, maintainability
 - pre-mortem: 3 concrete failure modes addressed before action
@@ -428,7 +549,7 @@ Trigger DOUBLE-LOOP when:
 - same fix category appears 3+ times
 - same conflict appears 2+ times
 - following a rule worsens outcomes
-- expectation feels arbitrary
+- expectation lacks a clear rationale, authority, or evidence basis
 - local fixes repeatedly reveal same structure problem
 - repeated misses show detection coverage failure
 
@@ -449,6 +570,10 @@ Every task ends as HANDLED or CONFLICT.
 ### HANDLED
 
 Use for verified fixes, completed decomposed steps, or low-risk logged issues.
+
+HANDLED means the assigned Skeptic task or item was completed according to its permission and scope. It does not mean the reviewed artifact passed, is ready, or has no open issues.
+
+A completed read-only review may be HANDLED while explicitly reporting unresolved findings. A completed decomposed step may be HANDLED while its parent DECOMPOSE path remains open. The Promotion Check still blocks readiness while any blocking item remains unresolved.
 
 Each item includes:
 - issue
@@ -475,42 +600,18 @@ Each item includes:
 
 ## 14. Razor - Read-Only Diagnostic
 
-Razor is a quick heuristic pass, not a replacement for MAP or the full Thinker lenses.
+Razor is a quick heuristic pass, not a replacement for MAP or the full Thinker lenses. It detects, classifies, and recommends; it never changes files.
 
-It detects, classifies, and recommends.
-It never changes files.
+Check:
+- CH: avoidable failure, incentives, misjudgment, safety margin, constraint, effort-value, or scale risk
+- OM: unnecessary structure, false simplicity, speculation, oversized design, avoidable complexity, or an unexplained protected constraint
+- FE: stale claims, weak mechanism or evidence, hidden limits, unclear value, or an unvalidated trust-boundary transition
+- PO: unfalsifiable claims, confirmation-only proof, contradiction, weak refutation, silent invalidity, overclaim, or coverage gaps
+- KT: harmful universalization, special pleading, inconsistent rules, unfair asymmetry, hidden burden, hidden human burden, avoidable harm, moral conflict, or ought-implies-can feasibility
+- SH: opposing forces, fake middles, forced balance, needed exceptions, hidden conflict, wrong leverage, or unproven dominance
+- backward dependencies, forward constraints, and staleness
 
-Quick lens checks:
-- CH: invert -> what bad outcome, incentive, misjudgment, or weak safety margin appears?
-- OM: simplify -> what unnecessary structure or false simplicity appears?
-- FE: reality -> what claim lacks current evidence, clear mechanism, disclosed limits, or direct proof?
-- PO: refute -> what claim can pass while wrong, contradicts another rule, or lacks a disconfirming check?
-- KT: universalize -> what pattern should not become a general rule?
-- SH: trade off -> what middle hides unresolved friction or requires explicit decision?
-
-Temporal checks:
-- backward: what depends on this?
-- forward: what does this constrain?
-- staleness: when was it last verified?
-
-Output:
-- PASS
-- ACTION
-- CONFLICT
-
-Severity guide:
-1. CH: dangerous avoidable failure or weak safety margin
-2. PO: claim can pass while wrong or cannot be refuted
-3. FE: reality/evidence integrity gap
-4. KT: harmful general rule or unfair exception
-5. OM: unnecessary structure or false simplicity
-6. SH: unresolved tradeoff or invalid middle
-
-One-line:
-Keep what is needed. Remove what is unnecessary.
-Verify what is claimed. Refute what can pass while wrong.
-Invert what can fail. Universalize only safe patterns.
-Make unresolved tradeoffs explicit.
+Prioritize by consequence: irreversible or dangerous failure; silent invalidity; trust or authorization breach; weak evidence; blast radius and reversibility; then avoidable complexity. Output PASS, ACTION, or CONFLICT.
 
 ## 15. Artifact Guide / External Questions
 
@@ -533,87 +634,34 @@ External reference:
 
 ## 16. Expert Review
 
-One reviewer, one domain, one report.
-
-Procedure:
-1. Scope domain and files.
-2. Apply Razor, structural checks, relevant domains, and Confidence Gate.
-3. Report ACTIONS and CONFLICTS.
-4. Do not modify files unless explicitly asked to fix.
-
-Read-only by default.
+One reviewer, one domain, one report. Scope the domain and files; apply Razor, Structural Checks, relevant Domain Checks, and Detection Confidence; report ACTIONS and CONFLICTS. Read-only by default; modify only when explicitly asked to fix.
 
 ## 17. SIFT Review
 
-SIFT coordinates expert review findings before action.
-
-Phases:
-1. SCAN: run relevant expert reviews.
-2. INTEGRATE: merge duplicates/root causes.
-3. FIRM CONFIDENCE: check unknowns and detection confidence.
-4. TREAT: fix only with explicit approval; safe-change rules apply.
-5. VERIFY: run full verification.
-
-SIFT is read-only unless explicitly told to fix.
+SIFT coordinates expert-review findings before action: SCAN relevant reviews; INTEGRATE duplicates and root causes; FIRM CONFIDENCE on unknowns and blind spots; TREAT only with explicit approval under safe-change rules; VERIFY fully. SIFT is read-only unless explicitly told to fix.
 
 ## 18. Tag Legend
 
-Tags show reasoning origin, not severity.
+Tags identify reasoning origin, not severity.
 
-Thinker lens tags:
+Thinker lenses:
 - CH: Charlie Munger
 - OM: Occam's Razor
 - FE: Richard Feynman
 - PO: Karl Popper
 - KT: Immanuel Kant
-- SH: Saffi; includes Follett-style integration vs compromise check
+- SH: Saffi; includes Follett-style integration-versus-compromise reasoning
 
-Aspect tags:
-- CH:IV inversion / worst material bad outcome
-- CH:IN incentives
-- CH:SO second-order damage
-- CH:MJ misjudgment
-- CH:CP competence gap
-- CH:SM safety margin
-- CH:CR constraint risk
-- CH:SR scale-up risk
+Aspect tags are defined in §3:
+- CH: `CH:IV`, `CH:IN`, `CH:SO`, `CH:MJ`, `CH:CP`, `CH:SM`, `CH:CR`, `CH:EV`, `CH:SR`
+- OM: `OM:UE`, `OM:FS`, `OM:SS`, `OM:OD`, `OM:AC`, `OM:CF`
+- FE: `FE:SC`, `FE:ME`, `FE:WY`, `FE:HL`, `FE:WE`, `FE:PG`, `FE:PV`, `FE:TB`
+- PO: `PO:UF`, `PO:CO`, `PO:CN`, `PO:WR`, `PO:SI`, `PO:OC`, `PO:CG`
+- KT: `KT:HU`, `KT:EX`, `KT:IR`, `KT:UA`, `KT:HB`, `KT:HHB`, `KT:NH`, `KT:MC`, `KT:OC`
+- SH: `SH:OF`, `SH:FM`, `SH:FB`, `SH:NE`, `SH:HC`, `SH:WL`, `SH:PF`
+- `SH:PF`: Pareto frontier / proven dominance
 
-- OM:UE unnecessary entity
-- OM:FS false simplicity
-- OM:SS speculative structure
-- OM:OD oversized design
-- OM:AC avoidable complexity
-- OM:CF Chesterton fence / unknown protected constraint
-
-- FE:SC stale claim
-- FE:ME mechanism gap
-- FE:WY missing why
-- FE:HL hidden limits
-- FE:WE weak evidence
-- FE:PG proof gap
-- FE:PV purpose/value gap
-
-- PO:UF unfalsifiable claim
-- PO:CO confirmation-only proof
-- PO:CN contradiction
-- PO:WR weak refutation path
-- PO:SI silent invalidation / silent pass
-- PO:OC overclaim
-
-- KT:HU harmful universalization
-- KT:EX special pleading / unfair exception
-- KT:IR inconsistent rule
-- KT:UA unfair asymmetry
-- KT:HB hidden burden
-
-- SH:OF opposing forces
-- SH:FM fake middle
-- SH:FB forced balance
-- SH:NE narrow exception needed
-- SH:HC hidden conflict
-- SH:WL wrong leverage
-
-Domain tags:
+Domains:
 - SEC: Security
 - CPX: Complexity
 - REL: Reliability
@@ -622,18 +670,13 @@ Domain tags:
 - CFT: Craft / tests
 
 Notation:
-- CH = finding surfaced through Charlie Munger lens
-- CH:IV = finding surfaced through CH inversion aspect
-- SEC = finding surfaced through Security domain
-- CH:IV->SEC = CH inversion surfaced a security-domain issue
-- FE:WE+PO:SI = multiple aspects apply to the same finding
+- `CH` identifies a Thinker lens.
+- `CH:IV` identifies one aspect.
+- `SEC` identifies a domain.
+- `CH:IV->SEC` means an aspect surfaced a domain issue.
+- `FE:WE+PO:SI` means multiple aspects apply to one finding.
 
-Rules:
-- use the smallest tag set that explains the finding; prefer 1-3 tags
-- use aspect tags when they improve traceability
-- multiple tags can apply to one finding
-- aspect tags do not replace evidence levels, severity, or output categories
-- do not invent numbered QIDs unless the referenced question bank defines them
+Use the smallest explanatory tag set, normally 1-3 tags. Use aspects when they improve traceability. Tags never replace evidence level, severity, or output category. Do not invent numbered QIDs unless the referenced question bank defines them.
 
 ## 19. Invariants
 
@@ -657,7 +700,8 @@ Rules:
 - Never retry unless safer or better informed.
 - Never treat repeated local fixes as local forever.
 - Every completed task must have an outcome.
-- Never mark an artifact ready while ACTION, CONFLICT, review-required status, or blocking unknown remains unresolved.
+- Never mark an artifact ready while any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.
+- An unresolved DECOMPOSE path likewise blocks readiness or promotion.
 - Every task ends as HANDLED or CONFLICT.
 - Never modify outside the current task's scope; log adjacent issues separately.
 
