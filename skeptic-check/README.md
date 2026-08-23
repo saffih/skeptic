@@ -30,6 +30,8 @@ The default promotion evidence level is **semantic**. Escalate to **behavioral**
 
 Behavioral evidence used for promotion must additionally declare side blinding. Unblinded behavioral evidence may inform diagnosis but cannot be promoted by silently treating it as semantic evidence.
 
+For a **promotion** comparison, the baseline Skeptic source supplied to `compare` must be the freshly established authoritative current `skeptic.md`; the candidate source must be the exact candidate under review. SkepticCheck verifies the bytes against the declared hashes. Repository/ref authority is established by the calling workflow and must not be inferred from a self-declared hash alone.
+
 ### Differential result
 
 Each case is classified against the baseline as:
@@ -121,6 +123,8 @@ Changing/removing a stable case requires a documented authority or mechanism rea
 For a semantic or behavioral A/B claim:
 
 - freeze cases and oracles first;
+- freshly establish the authoritative baseline Skeptic source and preserve the exact candidate source;
+- supply both source files to `compare`; declared Skeptic hashes must match those exact bytes;
 - use the same visible model/version, runtime, effort/settings, judge, and execution procedure for baseline and candidate;
 - do not share one side's output with the other;
 - withhold the oracle from the model under test;
@@ -133,7 +137,7 @@ For a **behavioral superiority/promotion** claim, additionally hide baseline/can
 
 Full may additionally use externally supplied protected holdout cases. Their content should remain outside Git until execution and be bound by a cryptographic hash. Protected holdouts add evidence; they are not a second benchmark system.
 
-The hashes establish internal evidence-chain identity and prevent stale/mismatched outputs from being accepted as current. They do not independently prove that a provider actually produced an output or that declared model/runtime metadata is truthful; provider execution remains declared evidence unless independently attested.
+The hashes establish internal evidence-chain identity and prevent stale/mismatched sources or outputs from being accepted as current. They do not independently prove repository authority, that a provider actually produced an output, or that declared model/runtime metadata is truthful; those facts remain established by the calling workflow or independent attestation.
 
 ## Commands
 
@@ -173,6 +177,8 @@ python3 skeptic-check/check.py compare \
   --mode full \
   --baseline /tmp/baseline-judgments.json \
   --candidate /tmp/candidate-judgments.json \
+  --baseline-skeptic /tmp/authoritative-main-skeptic.md \
+  --candidate-skeptic /tmp/candidate-skeptic.md \
   --baseline-responses /tmp/baseline-responses.json \
   --candidate-responses /tmp/candidate-responses.json \
   --output /tmp/skeptic-check-report.json
@@ -184,7 +190,7 @@ When the change warrants behavioral qualification, add:
 --required-evidence behavioral
 ```
 
-The checker is provider-neutral: it validates/selects cases, prepares prompts, verifies evidence bindings, and computes controlled differential reports. It does not silently invoke a model or pretend deterministic text matching can replace semantic judgment.
+The checker is provider-neutral: it validates/selects cases, prepares prompts, verifies source/evidence bindings, and computes controlled differential reports. It does not silently invoke a model or pretend deterministic text matching can replace semantic judgment.
 
 ## Judgment file contract
 
@@ -244,11 +250,11 @@ Semantic and behavioral comparisons also provide the exact outputs being judged:
 }
 ```
 
-A semantic/behavioral comparison is controlled only when both judgment files and both response bundles are bound to the current catalog and selected case set, each side records its exact Skeptic SHA-256, the visible execution/judging profile is symmetric, every selected case has a response and judgment, and each `response_sha256` matches the exact response text. The two Skeptic hashes may differ because that is the A/B variable.
+A semantic/behavioral comparison is controlled only when both judgment files and both response bundles are bound to the current catalog and selected case set, their declared Skeptic hashes match the actual baseline/candidate source files supplied to `compare`, the visible execution/judging profile is symmetric, every selected case has a response and judgment, and each `response_sha256` matches the exact response text. The two Skeptic hashes may differ because that is the A/B variable.
 
 ## Deterministic repository tests
 
-Low-cost structural/runtime-contract tests live under `skeptic-check/tests/`. They protect exact invocation, fail-closed source binding, receipt uniqueness, evidence levels, stabilization/action ordering, promotion, scope, normative warrant, verification reset, governance, and other representation-level invariants. They are useful, fast evidence, but they are not a substitute for semantic cases.
+Low-cost structural/runtime-contract tests live under `skeptic-check/tests/`. They protect exact invocation, fail-closed source binding, receipt uniqueness, evidence levels, stabilization/action ordering, promotion, source identity, scope, normative warrant, verification reset, governance, and other representation-level invariants. They are useful, fast evidence, but they are not a substitute for semantic cases.
 
 Before merging a Skeptic change:
 
