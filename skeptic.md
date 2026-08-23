@@ -538,7 +538,7 @@ Check:
 - checks that directly exercise the intended result and material preserved constraints; scale assurance to consequence, dependency reach, irreversibility, uncertainty, trust elevation, and claim strength
 - end-to-end trace from entry to output
 - constraints: correctness, safety, performance, cost, context, maintainability
-- pre-mortem: 3 concrete failure modes addressed before action
+- pre-mortem: when risk warrants it, address materially plausible failure modes before action
 - regression: previously working behavior still works
 - known-bad/edge case when results are suspiciously clean
 
