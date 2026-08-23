@@ -5,8 +5,8 @@ TEXT = Path("skeptic.md").read_text(encoding="utf-8")
 
 
 class PromotionCheckScenarioTests(unittest.TestCase):
-    def test_ready_but_architecture_review_required_is_blocked(self):
-        self.assertIn("review-required status", TEXT)
+    def test_ready_but_required_review_incomplete_is_blocked(self):
+        self.assertIn("applicable required review has not been completed", TEXT)
         self.assertIn("do not promote", TEXT)
 
     def test_ready_but_action_open_is_blocked(self):
