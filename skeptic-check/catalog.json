@@ -1,0 +1,23 @@
+{
+  "catalog": "skeptic-check-cases-v1",
+  "description": "Canonical curated SkepticCheck cases. Quick and Full select from this one catalog; no separate benchmark fixture authority exists.",
+  "dimensions": [
+    "detection",
+    "precision",
+    "scope",
+    "authority",
+    "verification",
+    "safety",
+    "efficiency"
+  ],
+  "quick_policy": "Run every active case with quick=true; a requested focus additionally includes every active case whose focus_tags intersect that focus.",
+  "full_policy": "Run every active case.",
+  "case_files": [
+    "cases/trust-authority.json",
+    "cases/boundary-focus.json",
+    "cases/norm-verification.json",
+    "cases/safety-process-tradeoff.json",
+    "cases/evidence-human-systems.json",
+    "cases/core-governance.json"
+  ]
+}
