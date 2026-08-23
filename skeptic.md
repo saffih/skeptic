@@ -186,8 +186,6 @@ Rules:
 - detect only; do not fix
 - clean scan is not proof of safety
 - structural issues outrank local fixes
-- positively ground the material review boundary in known purpose, authority, dependencies, interfaces, flows, and risk; do not infer a safe boundary merely because no wider coupling was discovered
-- challenge the assumed boundary with evidence capable of exposing materially plausible invalidating conditions before dependent local findings gain substantive authority
 - downstream findings are PROVISIONAL if fundamentals may invalidate them
 - if no structural issue appears, continue to MAP
 
@@ -532,6 +530,8 @@ Rules:
 ## 11. Verify
 
 Use evidence, not confidence.
+
+Before verification, set an explicit target number of material checks from consequence, dependency reach, irreversibility, uncertainty, trust elevation, claim strength, and materially plausible failure modes; do not use a universal quota. The count is a planning bound, not proof; do not add redundant checks merely to reach it. If verification discovers a new or materially changed finding, dependency, constraint, failure mode, risk, or claim, reset the count to zero, re-derive the target from the new state, and continue against the updated scope; earlier evidence may inform the new plan but does not satisfy the reset count.
 
 Check:
 - red -> green for bug fixes when possible
