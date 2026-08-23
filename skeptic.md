@@ -197,7 +197,7 @@ Record findings before deciding.
 
 Start from Fundamental Scan; expand as needed.
 
-Explicit target areas, suspected weak points, or requested aspects receive additional adversarial attention without narrowing the complete applicable review.
+Within the bound scope, explicit target areas, suspected weak points, or requested aspects receive additional adversarial attention without narrowing the otherwise applicable review.
 
 Apply:
 1. Universal Questions
@@ -462,7 +462,7 @@ Use when:
 
 Before FIX, state:
 - what is wrong
-- the applicable normative basis: requirement, contract, design, policy, permission, or Skeptic-owned rule that makes the established state wrong
+- the applicable normative basis: requirement, contract, design, policy, or Skeptic-owned rule that makes the established state wrong
 - the established current fact and evidence that conflict with that normative basis
 - why this fix is correct
 - why this is the smallest change that solves the verified issue without broadening scope
