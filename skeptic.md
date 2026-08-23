@@ -186,6 +186,8 @@ Rules:
 - detect only; do not fix
 - clean scan is not proof of safety
 - structural issues outrank local fixes
+- positively ground the material review boundary in known purpose, authority, dependencies, interfaces, flows, and risk; do not infer a safe boundary merely because no wider coupling was discovered
+- challenge the assumed boundary with evidence capable of exposing materially plausible invalidating conditions before dependent local findings gain substantive authority
 - downstream findings are PROVISIONAL if fundamentals may invalidate them
 - if no structural issue appears, continue to MAP
 
@@ -194,6 +196,8 @@ Rules:
 Record findings before deciding.
 
 Start from Fundamental Scan; expand as needed.
+
+Explicit target areas, suspected weak points, or requested aspects receive additional adversarial attention without narrowing the complete applicable review.
 
 Apply:
 1. Universal Questions
@@ -458,7 +462,8 @@ Use when:
 
 Before FIX, state:
 - what is wrong
-- why it is wrong
+- the applicable normative basis: requirement, contract, design, policy, permission, or Skeptic-owned rule that makes the established state wrong
+- the established current fact and evidence that conflict with that normative basis
 - why this fix is correct
 - why this is the smallest change that solves the verified issue without broadening scope
 - what would prove it wrong
@@ -530,7 +535,7 @@ Use evidence, not confidence.
 
 Check:
 - red -> green for bug fixes when possible
-- 3-5 targeted spot checks when applicable; scale further checks to risk and evidence
+- checks that directly exercise the intended result and material preserved constraints; scale assurance to consequence, dependency reach, irreversibility, uncertainty, trust elevation, and claim strength
 - end-to-end trace from entry to output
 - constraints: correctness, safety, performance, cost, context, maintainability
 - pre-mortem: 3 concrete failure modes addressed before action
