@@ -33,10 +33,11 @@ class DesignRealizationContractTests(unittest.TestCase):
         self.assertTrue(any(case["kind"] == "clean-control" for case in cases))
         self.assertTrue(any(case["kind"] == "falsifier" for case in cases))
 
-    def test_boundary_is_positively_grounded_and_falsified(self) -> None:
-        self.assertIn("positively ground the material review boundary", SKEPTIC)
-        self.assertIn("do not infer a safe boundary merely because no wider coupling was discovered", SKEPTIC)
-        self.assertIn("challenge the assumed boundary with evidence capable of exposing materially plausible invalidating conditions", SKEPTIC)
+    def test_existing_boundary_safety_protections_remain(self) -> None:
+        self.assertIn("clean scan is not proof of safety", SKEPTIC)
+        self.assertIn("Never treat no findings as proof of safety", SKEPTIC)
+        self.assertIn("Never treat clean top-down scan as proof of safety", SKEPTIC)
+        self.assertIn("What depends on it, and what does it depend on?", SKEPTIC)
 
     def test_additive_focus_preserves_complete_review_inside_bound_scope(self) -> None:
         self.assertIn("Within the bound scope", SKEPTIC)
@@ -58,7 +59,11 @@ class DesignRealizationContractTests(unittest.TestCase):
         self.assertIn("Do not modify files unless DECIDE says FIX and edits are explicitly allowed.", SKEPTIC)
         self.assertIn("Runs are read-only unless fixing is explicitly authorized", SKEPTIC)
 
-    def test_verification_is_claim_driven_not_count_driven(self) -> None:
+    def test_verification_count_is_explicit_risk_derived_and_resettable(self) -> None:
+        self.assertIn("explicit target number of material checks", SKEPTIC)
+        self.assertIn("do not use a universal quota", SKEPTIC)
+        self.assertIn("reset the count to zero", SKEPTIC)
+        self.assertIn("re-derive the target", SKEPTIC)
         self.assertIn("checks that directly exercise the intended result and material preserved constraints", SKEPTIC)
         for dimension in [
             "consequence",
