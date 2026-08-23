@@ -147,3 +147,19 @@ Before merging a Skeptic change:
 4. Show diff.
 5. Report unresolved conflicts and missing evidence.
 
+## 10. Change-Coupled Adversarial Test Rule
+
+Every material semantic change to `skeptic.md` must add or identify tests capable of refuting the proposed change, not only tests that confirm its wording exists.
+
+For each materially affected protected behavior, derive tests from the failure class the change is intended to prevent and include, when applicable:
+
+- a positive case where the protection is required;
+- a falsifier that should expose the old or weakened behavior;
+- a clean control where Skeptic must not manufacture a finding or unnecessary process;
+- an overreach or authority control where the new rule must not broaden scope, authority, or required work beyond its governing purpose.
+
+Freeze the scenario and decisive oracle before using observed candidate behavior to judge the test. Prefer behavior and authority criteria over exact prose matching except where exact vocabulary is itself a contract.
+
+When practical, compare the unchanged baseline and candidate under symmetric conditions. A candidate is not supported merely because it passes its own new cases: the baseline/candidate comparison must show the intended protection without a material regression in clean controls or unrelated existing coverage.
+
+A passing static contract test proves only that required text or structure is represented. Behavioral or semantic claims require scenario execution or other relevant observed evidence. Keep these evidence types separate in the test report.
