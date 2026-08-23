@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+import importlib.util
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 README = (ROOT / "skeptic-check" / "README.md").read_text(encoding="utf-8")
-import importlib.util
 CHECK_PATH = ROOT / "skeptic-check" / "check.py"
 SPEC = importlib.util.spec_from_file_location("skeptic_check", CHECK_PATH)
 check = importlib.util.module_from_spec(SPEC)
@@ -24,6 +24,7 @@ class GovernanceTests(unittest.TestCase):
 
     def test_quick_and_full_are_modes_not_separate_suites(self):
         self.assertIn("Quick and Full never maintain separate scenarios or oracles", README)
+        self.assertIn("Coverage mode and evidence strength are separate", README)
         quick_ids = {c["id"] for c in CASES["cases"] if c["quick"]}
         all_ids = {c["id"] for c in CASES["cases"]}
         self.assertTrue(quick_ids)
@@ -32,7 +33,19 @@ class GovernanceTests(unittest.TestCase):
     def test_boolean_differential_and_degrees_are_separate(self):
         for marker in ["check_pass", "promotion_ready", "WIN", "TIE", "LOSS", "UNKNOWN", "0..3"]:
             self.assertIn(marker, README)
-        self.assertIn("not collapsed into one promotion score", README)
+        self.assertIn("never collapsed into one promotion score", README)
+
+    def test_promotion_evidence_is_risk_scaled_not_behavioral_by_default(self):
+        self.assertIn("default promotion evidence level is **semantic**", README)
+        self.assertIn("Escalate to **behavioral**", README)
+        self.assertIn("Static representation evidence", README)
+        self.assertIn("cannot by itself establish promotion", README)
+
+    def test_semantic_behavioral_evidence_is_bound_to_exact_outputs(self):
+        self.assertIn("bind every judgment to the exact response text", README)
+        self.assertIn("response_sha256", README)
+        self.assertIn("Response bundle contract", README)
+        self.assertIn("do not independently prove that a provider actually produced an output", README)
 
     def test_cases_are_maintainable_not_candidate_tuned(self):
         for case in CASES["cases"]:
@@ -48,7 +61,7 @@ class GovernanceTests(unittest.TestCase):
             "Change acceptance rule",
             "Section Test",
             "Skeptic Self-Review",
-            "Static representation evidence must never be reported as behavioral proof.",
+            "Static representation evidence must never be reported as semantic or behavioral proof.",
             "Learning: how Skeptic improves",
             "Staleness rule",
             "Run targeted deterministic tests",
