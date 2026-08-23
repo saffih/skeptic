@@ -17,24 +17,59 @@ class RuntimeContractTests(unittest.TestCase):
             "Treat the source under review as the runtime source of truth.",
             "Apply the current recipe exactly and in order.",
             "Consider every Thinker required by this file.",
+            "Show which major Skeptic steps were run.",
+            "Show evidence for material findings.",
+            "Use the exact output categories from this file.",
             "Do not modify files unless DECIDE says FIX and edits are explicitly allowed.",
         ]:
             self.assertIn(marker, TEXT)
 
-    def test_receipt_and_output_contract(self):
+    def test_invocation_fails_closed_without_source(self):
+        self.assertIn("If the source under review is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.", TEXT)
+        self.assertIn("Do not claim RunSkeptic/Skeptic compliance if the source under review was unavailable or not applied exactly.", TEXT)
+
+    def test_self_work_source_binding_and_companion_authority(self):
+        self.assertIn(
+            "For Skeptic self-work, read the authoritative current `skeptic.md` when reviewing the repo version. When explicitly reviewing a candidate file, read that candidate file and state that it is not yet authoritative.",
+            TEXT,
+        )
+        self.assertIn("they add context but do not replace or override the designated Skeptic source", TEXT)
+        self.assertIn("Runtime core is authoritative.", TEXT)
+
+    def test_receipt_output_and_marker_uniqueness(self):
         for marker in [
             "### RunSkeptic Receipt",
+            "Every RunSkeptic report must include a compact receipt:",
+            "Source read: path/ref/SHA or explicit unavailable state",
+            "Major steps run",
+            "Thinkers considered",
+            "Evidence used",
+            "Decision path",
+            "Verification performed",
+            "Unresolved conflicts / unknowns",
+            "Final output category",
             "Do not claim RunSkeptic compliance without this receipt.",
             "Every task ends as HANDLED or CONFLICT.",
         ]:
             self.assertIn(marker, TEXT)
+        self.assertEqual(TEXT.count("## Invocation Contract"), 1)
+        self.assertEqual(TEXT.count("### RunSkeptic Receipt"), 1)
+        self.assertEqual(TEXT.count("`RunSkeptic` is the formal invocation string"), 1)
+        self.assertEqual(TEXT.count("Do not claim RunSkeptic compliance without this receipt."), 1)
 
-    def test_decision_and_promotion_contract(self):
+    def test_decision_evidence_and_action_order_contract(self):
         for marker in ["### FIX", "### DECOMPOSE", "### CONFLICT", "### Promotion Check"]:
             self.assertIn(marker, TEXT)
-        self.assertIn("If yes, do not promote. Decide FIX, DECOMPOSE, or CONFLICT.", TEXT)
-        self.assertIn("Act only after DECIDE says FIX.", TEXT)
-        self.assertIn("Do not decide on raw findings.", TEXT)
+        for marker in [
+            "Do not decide on raw findings.",
+            "Do not report INFERRED RISK as confirmed bug.",
+            "Act only after DECIDE says FIX.",
+            "Never act before stabilization.",
+            "If yes, do not promote. Decide FIX, DECOMPOSE, or CONFLICT.",
+        ]:
+            self.assertIn(marker, TEXT)
+        for level in ["OBSERVED", "REPRODUCED", "HISTORICAL", "INFERRED RISK"]:
+            self.assertIn(level, TEXT)
 
     def test_ambiguity_assumption_and_scope_guardrails(self):
         for marker in [
