@@ -41,11 +41,17 @@ class GovernanceTests(unittest.TestCase):
         self.assertIn("Static representation evidence", README)
         self.assertIn("cannot by itself establish promotion", README)
 
+    def test_promotion_requires_authoritative_baseline_and_actual_source_files(self):
+        self.assertIn("baseline Skeptic source supplied to `compare` must be the freshly established authoritative current `skeptic.md`", README)
+        self.assertIn("supply both source files to `compare`", README)
+        self.assertIn("declared Skeptic hashes must match those exact bytes", README)
+        self.assertIn("Repository/ref authority is established by the calling workflow", README)
+
     def test_semantic_behavioral_evidence_is_bound_to_exact_outputs(self):
         self.assertIn("bind every judgment to the exact response text", README)
         self.assertIn("response_sha256", README)
         self.assertIn("Response bundle contract", README)
-        self.assertIn("do not independently prove that a provider actually produced an output", README)
+        self.assertIn("do not independently prove repository authority", README)
 
     def test_cases_are_maintainable_not_candidate_tuned(self):
         for case in CASES["cases"]:
