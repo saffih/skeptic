@@ -14,6 +14,7 @@ DEFAULT_CASES = HERE / "catalog.json"
 DIMENSIONS = ("detection", "precision", "scope", "authority", "verification", "safety", "efficiency")
 CASE_RESULTS = {"PASS", "FAIL", "UNKNOWN"}
 DIFFERENTIALS = {"WIN", "TIE", "LOSS", "UNKNOWN"}
+EVIDENCE_RANK = {"static": 0, "semantic": 1, "behavioral": 2}
 HEX64 = set("0123456789abcdef")
 
 
@@ -23,6 +24,10 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: f.read(65536), b""):
             h.update(chunk)
     return h.hexdigest()
+
+
+def sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def load_json(path: Path) -> Any:
@@ -69,7 +74,6 @@ def validate_catalog(catalog: dict[str, Any]) -> list[str]:
     cases = catalog.get("cases")
     if not isinstance(cases, list) or not cases:
         return errors + ["cases must be a non-empty list"]
-
     required = {
         "id", "title", "category", "kind", "critical", "quick", "focus_tags",
         "dimensions", "scenario", "oracle", "expected_decisions", "must_detect",
@@ -116,21 +120,17 @@ def validate_catalog(catalog: dict[str, Any]) -> list[str]:
 
 
 def selected_cases(catalog: dict[str, Any], mode: str, focuses: list[str]) -> list[dict[str, Any]]:
-    cases = catalog["cases"]
     if mode == "full":
-        return cases
+        return catalog["cases"]
     focus_set = {f.strip().lower() for f in focuses if f.strip()}
-    selected = []
-    for case in cases:
-        tags = {str(x).lower() for x in case["focus_tags"]}
-        if case["quick"] or (focus_set and tags.intersection(focus_set)):
-            selected.append(case)
-    return selected
+    return [
+        case for case in catalog["cases"]
+        if case["quick"] or (focus_set and {str(x).lower() for x in case["focus_tags"]}.intersection(focus_set))
+    ]
 
 
 def case_set_sha256(cases: list[dict[str, Any]]) -> str:
-    ids = [case["id"] for case in cases]
-    payload = json.dumps(ids, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    payload = json.dumps([case["id"] for case in cases], ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(payload).hexdigest()
 
 
@@ -142,6 +142,7 @@ def validate_judgments(doc: dict[str, Any], case_map: dict[str, dict[str, Any]])
     errors: list[str] = []
     metadata = doc.get("metadata")
     judgments = doc.get("judgments")
+    evidence_kind = metadata.get("evidence_kind") if isinstance(metadata, dict) else None
     if not isinstance(metadata, dict):
         errors.append("metadata must be an object")
     else:
@@ -151,13 +152,12 @@ def validate_judgments(doc: dict[str, Any], case_map: dict[str, dict[str, Any]])
         for key in ("skeptic_sha256", "catalog_sha256", "case_set_sha256"):
             if key in metadata and not _is_sha256(metadata[key]):
                 errors.append(f"metadata.{key} must be a 64-character SHA-256")
-        if metadata.get("evidence_kind") not in {"static", "semantic", "behavioral"}:
+        if evidence_kind not in EVIDENCE_RANK:
             errors.append("metadata.evidence_kind must be static, semantic, or behavioral")
         if not isinstance(metadata.get("blinded"), bool):
             errors.append("metadata.blinded must be boolean")
     if not isinstance(judgments, list):
         return errors + ["judgments must be a list"]
-
     seen: set[str] = set()
     for item in judgments:
         cid = item.get("case_id")
@@ -171,6 +171,8 @@ def validate_judgments(doc: dict[str, Any], case_map: dict[str, dict[str, Any]])
             errors.append(f"{cid}: result must be PASS, FAIL, or UNKNOWN")
         if not isinstance(item.get("dangerous_failure"), bool):
             errors.append(f"{cid}: dangerous_failure must be boolean")
+        if evidence_kind in {"semantic", "behavioral"} and not _is_sha256(item.get("response_sha256")):
+            errors.append(f"{cid}: semantic/behavioral judgment requires response_sha256")
         dims = item.get("dimensions")
         if not isinstance(dims, dict):
             errors.append(f"{cid}: dimensions must be an object")
@@ -186,8 +188,36 @@ def validate_judgments(doc: dict[str, Any], case_map: dict[str, dict[str, Any]])
     return errors
 
 
+def validate_responses(doc: dict[str, Any], case_map: dict[str, dict[str, Any]]) -> list[str]:
+    errors: list[str] = []
+    metadata = doc.get("metadata")
+    responses = doc.get("responses")
+    if not isinstance(metadata, dict):
+        errors.append("response metadata must be an object")
+    else:
+        for key in ("model", "runtime", "settings", "skeptic_sha256", "catalog_sha256", "case_set_sha256"):
+            if key not in metadata:
+                errors.append(f"response metadata missing {key}")
+        for key in ("skeptic_sha256", "catalog_sha256", "case_set_sha256"):
+            if key in metadata and not _is_sha256(metadata[key]):
+                errors.append(f"response metadata.{key} must be a 64-character SHA-256")
+    if not isinstance(responses, list):
+        return errors + ["responses must be a list"]
+    seen: set[str] = set()
+    for item in responses:
+        cid = item.get("case_id")
+        if cid not in case_map:
+            errors.append(f"unknown response case_id: {cid}")
+            continue
+        if cid in seen:
+            errors.append(f"duplicate response for {cid}")
+        seen.add(cid)
+        if not isinstance(item.get("response"), str):
+            errors.append(f"{cid}: response must be exact text")
+    return errors
+
+
 def profile_key(metadata: dict[str, Any]) -> dict[str, Any]:
-    # Source identity is intentionally not equal across A/B; execution/judging conditions must be.
     return {key: metadata.get(key) for key in ("model", "runtime", "settings", "judge", "evidence_kind", "blinded")}
 
 
@@ -197,6 +227,34 @@ def bindings_match(metadata: dict[str, Any], catalog_digest: str, case_digest: s
         and metadata.get("case_set_sha256") == case_digest
         and _is_sha256(metadata.get("skeptic_sha256"))
     )
+
+
+def response_bundle_matches(
+    responses: dict[str, Any], judgments: dict[str, Any], expected_ids: set[str],
+    catalog_digest: str, case_digest: str,
+) -> bool:
+    rmeta = responses.get("metadata", {})
+    jmeta = judgments.get("metadata", {})
+    if not bindings_match(rmeta, catalog_digest, case_digest):
+        return False
+    for key in ("model", "runtime", "settings", "skeptic_sha256", "catalog_sha256", "case_set_sha256"):
+        if rmeta.get(key) != jmeta.get(key):
+            return False
+    response_map = {i["case_id"]: i["response"] for i in responses.get("responses", []) if i.get("case_id") in expected_ids}
+    judgment_map = {i["case_id"]: i for i in judgments.get("judgments", []) if i.get("case_id") in expected_ids}
+    if set(response_map) != expected_ids or set(judgment_map) != expected_ids:
+        return False
+    return all(judgment_map[cid].get("response_sha256") == sha256_text(response_map[cid]) for cid in expected_ids)
+
+
+def evidence_satisfies(actual: str | None, required: str, blinded: bool) -> bool:
+    if actual not in EVIDENCE_RANK or required not in {"semantic", "behavioral"}:
+        return False
+    if EVIDENCE_RANK[actual] < EVIDENCE_RANK[required]:
+        return False
+    if actual == "behavioral" and not blinded:
+        return False
+    return True
 
 
 def differential(base: dict[str, Any], cand: dict[str, Any], case: dict[str, Any]) -> str:
@@ -210,8 +268,7 @@ def differential(base: dict[str, Any], cand: dict[str, Any], case: dict[str, Any
         return "WIN"
     if cand["result"] == "FAIL" and base["result"] == "PASS":
         return "LOSS"
-
-    deltas: list[int] = []
+    deltas = []
     for dim in case["dimensions"]:
         bv = base.get("dimensions", {}).get(dim)
         cv = cand.get("dimensions", {}).get(dim)
@@ -223,7 +280,7 @@ def differential(base: dict[str, Any], cand: dict[str, Any], case: dict[str, Any
         return "WIN"
     if all(d <= 0 for d in deltas) and any(d < 0 for d in deltas):
         return "LOSS"
-    return "UNKNOWN"  # nondominated tradeoff; do not collapse mixed dimensions into a score
+    return "UNKNOWN"
 
 
 def cmd_validate(args: argparse.Namespace) -> int:
@@ -243,8 +300,7 @@ def cmd_list(args: argparse.Namespace) -> int:
     errors = validate_catalog(catalog)
     if errors:
         raise SystemExit("invalid catalog: " + "; ".join(errors))
-    chosen = selected_cases(catalog, args.mode, args.focus)
-    for case in chosen:
+    for case in selected_cases(catalog, args.mode, args.focus):
         print(f"{case['id']}\t{case['category']}\t{case['title']}")
     return 0
 
@@ -254,9 +310,9 @@ def cmd_prepare(args: argparse.Namespace) -> int:
     errors = validate_catalog(catalog)
     if errors:
         raise SystemExit("invalid catalog: " + "; ".join(errors))
-    skeptic = args.skeptic.resolve()
     chosen = selected_cases(catalog, args.mode, args.focus)
-    out = {
+    skeptic = args.skeptic.resolve()
+    dump_json({
         "skeptic_check": "v1",
         "mode": args.mode,
         "catalog_sha256": catalog_sha256(args.cases, catalog),
@@ -265,18 +321,11 @@ def cmd_prepare(args: argparse.Namespace) -> int:
         "skeptic_sha256": sha256_file(skeptic),
         "focus": args.focus,
         "case_ids": [c["id"] for c in chosen],
-        "prompts": [
-            {
-                "case_id": c["id"],
-                "prompt": (
-                    "Apply the supplied Skeptic source exactly to this case. Do not assume the case oracle. "
-                    "Return the normal Skeptic result and receipt.\n\nCASE:\n" + c["scenario"]
-                ),
-            }
-            for c in chosen
-        ],
-    }
-    dump_json(out, args.output)
+        "prompts": [{
+            "case_id": c["id"],
+            "prompt": "Apply the supplied Skeptic source exactly to this case. Do not assume the case oracle. Return the normal Skeptic result and receipt.\n\nCASE:\n" + c["scenario"],
+        } for c in chosen],
+    }, args.output)
     return 0
 
 
@@ -297,6 +346,20 @@ def cmd_compare(args: argparse.Namespace) -> int:
         if errs:
             raise SystemExit(label + " invalid: " + "; ".join(errs))
 
+    evidence_kind = cand.get("metadata", {}).get("evidence_kind")
+    response_controlled = True
+    if evidence_kind in {"semantic", "behavioral"}:
+        if args.baseline_responses is None or args.candidate_responses is None:
+            raise SystemExit("semantic/behavioral comparison requires --baseline-responses and --candidate-responses")
+        base_responses = load_json(args.baseline_responses)
+        cand_responses = load_json(args.candidate_responses)
+        for label, doc in (("baseline responses", base_responses), ("candidate responses", cand_responses)):
+            errs = validate_responses(doc, full_map)
+            if errs:
+                raise SystemExit(label + " invalid: " + "; ".join(errs))
+    else:
+        base_responses = cand_responses = None
+
     base_map = {j["case_id"]: j for j in base["judgments"] if j["case_id"] in selected_map}
     cand_map = {j["case_id"]: j for j in cand["judgments"] if j["case_id"] in selected_map}
     expected_ids = set(selected_map)
@@ -304,10 +367,16 @@ def cmd_compare(args: argparse.Namespace) -> int:
         "baseline": sorted(expected_ids - set(base_map)),
         "candidate": sorted(expected_ids - set(cand_map)),
     }
+    if base_responses is not None and cand_responses is not None:
+        response_controlled = (
+            response_bundle_matches(base_responses, base, expected_ids, catalog_digest, case_digest)
+            and response_bundle_matches(cand_responses, cand, expected_ids, catalog_digest, case_digest)
+        )
     controlled = (
         profile_key(base["metadata"]) == profile_key(cand["metadata"])
         and bindings_match(base["metadata"], catalog_digest, case_digest)
         and bindings_match(cand["metadata"], catalog_digest, case_digest)
+        and response_controlled
         and not any(missing.values())
     )
 
@@ -347,19 +416,18 @@ def cmd_compare(args: argparse.Namespace) -> int:
     )
     no_regression = counts["LOSS"] == 0
     no_unresolved = counts["UNKNOWN"] == 0
-    evidence_kind = cand.get("metadata", {}).get("evidence_kind")
     promotion_ready = (
-        args.mode == "full" and controlled and evidence_kind == "behavioral"
-        and cand.get("metadata", {}).get("blinded") is True
+        args.mode == "full" and controlled
+        and evidence_satisfies(evidence_kind, args.required_evidence, cand.get("metadata", {}).get("blinded") is True)
         and candidate_complete_pass and no_regression and no_unresolved
     )
     check_pass = controlled and candidate_complete_pass and no_regression and no_unresolved
-
-    report = {
+    dump_json({
         "skeptic_check": "v1",
         "mode": args.mode,
         "controlled": controlled,
         "profile": profile_key(cand.get("metadata", {})),
+        "required_evidence": args.required_evidence,
         "catalog_sha256": catalog_digest,
         "case_set_sha256": case_digest,
         "baseline_skeptic_sha256": base.get("metadata", {}).get("skeptic_sha256"),
@@ -367,19 +435,18 @@ def cmd_compare(args: argparse.Namespace) -> int:
         "missing": missing,
         "check_pass": check_pass,
         "promotion_ready": promotion_ready,
-        "behavioral_qualification": bool(controlled and evidence_kind == "behavioral"),
+        "behavioral_qualification": bool(controlled and evidence_kind == "behavioral" and cand.get("metadata", {}).get("blinded") is True),
         "differential_counts": counts,
-        "dimension_deltas": {
-            dim: {"observations": len(vals), "sum": sum(vals)} for dim, vals in dimension_deltas.items()
-        },
+        "dimension_deltas": {dim: {"observations": len(vals), "sum": sum(vals)} for dim, vals in dimension_deltas.items()},
         "cases": rows,
         "notes": [
-            "promotion_ready is intentionally stricter than check_pass: it requires Full mode, controlled behavioral evidence, and declared side blinding.",
-            "Dimension deltas are diagnostics only. They are not collapsed into a promotion score.",
+            "Full controls coverage breadth; --required-evidence controls the promotion evidence threshold (semantic by default, behavioral when risk/claim strength warrants it).",
+            "Semantic/behavioral judgments are controlled only when hash-bound to the exact response bundle they evaluate.",
+            "Behavioral promotion requires declared side blinding; unblinded behavioral evidence remains diagnostic only.",
+            "Dimension deltas are diagnostics only and are never collapsed into a promotion score.",
             "A mixed dimension movement becomes UNKNOWN rather than being hidden by arithmetic aggregation.",
         ],
-    }
-    dump_json(report, args.output)
+    }, args.output)
     return 0 if check_pass else 2
 
 
@@ -387,27 +454,26 @@ def parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description="Canonical SkepticCheck")
     p.add_argument("--cases", type=Path, default=DEFAULT_CASES)
     sub = p.add_subparsers(dest="command", required=True)
-
     v = sub.add_parser("validate", help="validate the canonical case catalog")
     v.set_defaults(func=cmd_validate)
-
     l = sub.add_parser("list", help="list cases selected by a mode")
     l.add_argument("--mode", choices=("quick", "full"), required=True)
     l.add_argument("--focus", action="append", default=[])
     l.set_defaults(func=cmd_list)
-
     pr = sub.add_parser("prepare", help="prepare oracle-withheld prompts")
     pr.add_argument("--mode", choices=("quick", "full"), required=True)
     pr.add_argument("--skeptic", type=Path, required=True)
     pr.add_argument("--focus", action="append", default=[])
     pr.add_argument("--output", type=Path)
     pr.set_defaults(func=cmd_prepare)
-
     co = sub.add_parser("compare", help="compare symmetric baseline/candidate judgments")
     co.add_argument("--mode", choices=("quick", "full"), required=True)
     co.add_argument("--focus", action="append", default=[])
     co.add_argument("--baseline", type=Path, required=True)
     co.add_argument("--candidate", type=Path, required=True)
+    co.add_argument("--baseline-responses", type=Path)
+    co.add_argument("--candidate-responses", type=Path)
+    co.add_argument("--required-evidence", choices=("semantic", "behavioral"), default="semantic")
     co.add_argument("--output", type=Path)
     co.set_defaults(func=cmd_compare)
     return p
