@@ -229,6 +229,21 @@ def bindings_match(metadata: dict[str, Any], catalog_digest: str, case_digest: s
     )
 
 
+def source_files_match(
+    baseline_metadata: dict[str, Any], candidate_metadata: dict[str, Any],
+    baseline_skeptic: Path, candidate_skeptic: Path,
+) -> bool:
+    try:
+        baseline_digest = sha256_file(baseline_skeptic)
+        candidate_digest = sha256_file(candidate_skeptic)
+    except OSError:
+        return False
+    return (
+        baseline_metadata.get("skeptic_sha256") == baseline_digest
+        and candidate_metadata.get("skeptic_sha256") == candidate_digest
+    )
+
+
 def response_bundle_matches(
     responses: dict[str, Any], judgments: dict[str, Any], expected_ids: set[str],
     catalog_digest: str, case_digest: str,
@@ -346,6 +361,10 @@ def cmd_compare(args: argparse.Namespace) -> int:
         if errs:
             raise SystemExit(label + " invalid: " + "; ".join(errs))
 
+    source_controlled = source_files_match(
+        base.get("metadata", {}), cand.get("metadata", {}),
+        args.baseline_skeptic, args.candidate_skeptic,
+    )
     evidence_kind = cand.get("metadata", {}).get("evidence_kind")
     response_controlled = True
     if evidence_kind in {"semantic", "behavioral"}:
@@ -376,6 +395,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
         profile_key(base["metadata"]) == profile_key(cand["metadata"])
         and bindings_match(base["metadata"], catalog_digest, case_digest)
         and bindings_match(cand["metadata"], catalog_digest, case_digest)
+        and source_controlled
         and response_controlled
         and not any(missing.values())
     )
@@ -426,12 +446,15 @@ def cmd_compare(args: argparse.Namespace) -> int:
         "skeptic_check": "v1",
         "mode": args.mode,
         "controlled": controlled,
+        "source_controlled": source_controlled,
         "profile": profile_key(cand.get("metadata", {})),
         "required_evidence": args.required_evidence,
         "catalog_sha256": catalog_digest,
         "case_set_sha256": case_digest,
-        "baseline_skeptic_sha256": base.get("metadata", {}).get("skeptic_sha256"),
-        "candidate_skeptic_sha256": cand.get("metadata", {}).get("skeptic_sha256"),
+        "baseline_source_path": str(args.baseline_skeptic.resolve()),
+        "candidate_source_path": str(args.candidate_skeptic.resolve()),
+        "baseline_skeptic_sha256": sha256_file(args.baseline_skeptic),
+        "candidate_skeptic_sha256": sha256_file(args.candidate_skeptic),
         "missing": missing,
         "check_pass": check_pass,
         "promotion_ready": promotion_ready,
@@ -441,6 +464,8 @@ def cmd_compare(args: argparse.Namespace) -> int:
         "cases": rows,
         "notes": [
             "Full controls coverage breadth; --required-evidence controls the promotion evidence threshold (semantic by default, behavioral when risk/claim strength warrants it).",
+            "The declared Skeptic hashes must match the actual baseline/candidate source files supplied to compare.",
+            "For promotion, the supplied baseline source must be the freshly established authoritative current Skeptic; the checker records bytes/path identity but repository authority is established by the calling workflow.",
             "Semantic/behavioral judgments are controlled only when hash-bound to the exact response bundle they evaluate.",
             "Behavioral promotion requires declared side blinding; unblinded behavioral evidence remains diagnostic only.",
             "Dimension deltas are diagnostics only and are never collapsed into a promotion score.",
@@ -471,6 +496,8 @@ def parser() -> argparse.ArgumentParser:
     co.add_argument("--focus", action="append", default=[])
     co.add_argument("--baseline", type=Path, required=True)
     co.add_argument("--candidate", type=Path, required=True)
+    co.add_argument("--baseline-skeptic", type=Path, required=True)
+    co.add_argument("--candidate-skeptic", type=Path, required=True)
     co.add_argument("--baseline-responses", type=Path)
     co.add_argument("--candidate-responses", type=Path)
     co.add_argument("--required-evidence", choices=("semantic", "behavioral"), default="semantic")
