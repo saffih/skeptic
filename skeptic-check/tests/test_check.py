@@ -49,11 +49,11 @@ class SkepticCheckTests(unittest.TestCase):
             "notes": "test",
         }
 
-    def _metadata(self, skeptic="a", evidence="semantic", blinded=False):
+    def _metadata(self, skeptic_hash="a" * 64, evidence="semantic", blinded=False):
         return {
             "model": "m", "runtime": "r", "settings": {"effort": "low"}, "judge": "j",
             "evidence_kind": evidence, "blinded": blinded,
-            "skeptic_sha256": skeptic * 64, "catalog_sha256": "b" * 64,
+            "skeptic_sha256": skeptic_hash, "catalog_sha256": "b" * 64,
             "case_set_sha256": "c" * 64,
         }
 
@@ -70,23 +70,18 @@ class SkepticCheckTests(unittest.TestCase):
     def test_dangerous_new_failure_is_loss(self):
         cid = "SC-TRUST-002"
         case = self.case_map[cid]
-        base = self._judgment(cid)
-        cand = self._judgment(cid, dangerous=True)
-        self.assertEqual(check.differential(base, cand, case), "LOSS")
+        self.assertEqual(check.differential(self._judgment(cid), self._judgment(cid, dangerous=True), case), "LOSS")
 
     def test_pass_over_fail_is_win(self):
         cid = "SC-NORM-001"
         case = self.case_map[cid]
-        base = self._judgment(cid, result="FAIL")
-        cand = self._judgment(cid, result="PASS")
-        self.assertEqual(check.differential(base, cand, case), "WIN")
+        self.assertEqual(check.differential(self._judgment(cid, result="FAIL"), self._judgment(cid), case), "WIN")
 
     def test_semantic_judgment_requires_response_hash(self):
         cid = "SC-NORM-001"
         item = self._judgment(cid)
         item.pop("response_sha256")
-        doc = {"metadata": self._metadata(), "judgments": [item]}
-        errors = check.validate_judgments(doc, self.case_map)
+        errors = check.validate_judgments({"metadata": self._metadata(), "judgments": [item]}, self.case_map)
         self.assertTrue(any("response_sha256" in e for e in errors))
 
     def test_judgment_metadata_requires_exact_bindings(self):
@@ -94,11 +89,23 @@ class SkepticCheckTests(unittest.TestCase):
         metadata = self._metadata()
         for key in ("skeptic_sha256", "catalog_sha256", "case_set_sha256"):
             metadata.pop(key)
-        doc = {"metadata": metadata, "judgments": [self._judgment(cid)]}
-        errors = check.validate_judgments(doc, self.case_map)
+        errors = check.validate_judgments({"metadata": metadata, "judgments": [self._judgment(cid)]}, self.case_map)
         self.assertTrue(any("skeptic_sha256" in e for e in errors))
         self.assertTrue(any("catalog_sha256" in e for e in errors))
         self.assertTrue(any("case_set_sha256" in e for e in errors))
+
+    def test_source_files_must_match_declared_skeptic_hashes(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            baseline = td / "baseline.md"
+            candidate = td / "candidate.md"
+            baseline.write_text("baseline", encoding="utf-8")
+            candidate.write_text("candidate", encoding="utf-8")
+            bmeta = self._metadata(check.sha256_file(baseline))
+            cmeta = self._metadata(check.sha256_file(candidate))
+            self.assertTrue(check.source_files_match(bmeta, cmeta, baseline, candidate))
+            candidate.write_text("changed", encoding="utf-8")
+            self.assertFalse(check.source_files_match(bmeta, cmeta, baseline, candidate))
 
     def test_response_bundle_must_hash_match_judgment(self):
         cid = "SC-NORM-001"
@@ -123,10 +130,18 @@ class SkepticCheckTests(unittest.TestCase):
 
     def test_default_promotion_evidence_is_semantic_not_behavioral(self):
         parser = check.parser()
-        args = parser.parse_args(["compare", "--mode", "full", "--baseline", "a.json", "--candidate", "b.json"])
+        args = parser.parse_args([
+            "compare", "--mode", "full", "--baseline", "a.json", "--candidate", "b.json",
+            "--baseline-skeptic", "main.md", "--candidate-skeptic", "candidate.md",
+        ])
         self.assertEqual(args.required_evidence, "semantic")
         self.assertTrue(check.evidence_satisfies("semantic", "semantic", False))
         self.assertFalse(check.evidence_satisfies("static", "semantic", False))
+
+    def test_compare_requires_both_skeptic_source_files(self):
+        parser = check.parser()
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["compare", "--mode", "full", "--baseline", "a.json", "--candidate", "b.json"])
 
     def test_behavioral_promotion_requires_blinding(self):
         self.assertFalse(check.evidence_satisfies("behavioral", "semantic", False))
@@ -140,21 +155,25 @@ class SkepticCheckTests(unittest.TestCase):
             catalog_digest = check.catalog_sha256(check.DEFAULT_CASES, self.catalog)
             case_digest = check.case_set_sha256(chosen)
             ids = [c["id"] for c in chosen]
-            def doc(s):
+            baseline_source = td / "base.md"
+            candidate_source = td / "candidate.md"
+            baseline_source.write_text("base", encoding="utf-8")
+            candidate_source.write_text("candidate", encoding="utf-8")
+            def doc(source):
                 meta = {
                     "model": "m", "runtime": "r", "settings": {}, "judge": "j",
                     "evidence_kind": "semantic", "blinded": False,
-                    "skeptic_sha256": s * 64,
+                    "skeptic_sha256": check.sha256_file(source),
                     "catalog_sha256": catalog_digest,
                     "case_set_sha256": case_digest,
                 }
                 return {"metadata": meta, "judgments": [self._judgment(cid) for cid in ids]}
-            (td / "a.json").write_text(json.dumps(doc("a")), encoding="utf-8")
-            (td / "b.json").write_text(json.dumps(doc("d")), encoding="utf-8")
+            (td / "a.json").write_text(json.dumps(doc(baseline_source)), encoding="utf-8")
+            (td / "b.json").write_text(json.dumps(doc(candidate_source)), encoding="utf-8")
             args = argparse.Namespace(
                 cases=check.DEFAULT_CASES, mode="full", focus=[], baseline=td / "a.json",
-                candidate=td / "b.json", baseline_responses=None, candidate_responses=None,
-                required_evidence="semantic", output=None,
+                candidate=td / "b.json", baseline_skeptic=baseline_source, candidate_skeptic=candidate_source,
+                baseline_responses=None, candidate_responses=None, required_evidence="semantic", output=None,
             )
             with self.assertRaisesRegex(SystemExit, "requires --baseline-responses"):
                 check.cmd_compare(args)
