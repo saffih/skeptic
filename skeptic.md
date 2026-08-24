@@ -11,13 +11,15 @@ Rules:
 
 ## Invocation Contract
 
-`RunSkeptic` is the formal invocation string for this framework.
+`RunSkeptic` is the formal invocation string for the complete Skeptic framework.
 
 Aliases: `beskeptic`, `apply Skeptic`, `Skeptic review`, `run skeptic.md`.
 
-The invocation selects the framework; the request determines permission and stopping conditions. Runs are read-only unless fixing is explicitly authorized; verification emphasis or iterative repetition must also be requested.
+`Razor` is the formal invocation string for the bounded read-only diagnostic in §14. `Expert Review` is a compatibility phrase for Razor with an explicitly scoped domain; it does not invoke a separate review pipeline.
 
-When invoked:
+The invocation selects the review depth; the request determines permission and stopping conditions. RunSkeptic is read-only unless fixing is explicitly authorized; verification emphasis or iterative repetition must also be requested. Razor is always read-only.
+
+When RunSkeptic is invoked:
 1. Read the actual current `skeptic.md`, or an explicitly supplied candidate Skeptic file, before analysis.
 2. Do not use memory, summaries, previous variants, or generated replacements as substitutes.
 3. Treat the source under review as the runtime source of truth.
@@ -32,11 +34,11 @@ When invoked:
 12. State unresolved conflicts, unknowns, skipped areas, and missing evidence.
 13. If the source under review is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
 
-An explicit invocation may additionally name companion files; they add context but do not replace or override the designated Skeptic source.
+An explicit RunSkeptic invocation may additionally name companion files; they add context but do not replace or override the designated Skeptic source.
 
-Each repeated run is a new invocation for source-freshness purposes: perform Rule 1 again. An earlier read does not satisfy a later run.
+Each repeated RunSkeptic run is a new invocation for source-freshness purposes: perform Rule 1 again. An earlier read does not satisfy a later run.
 
-For deterministic binding, a formal invocation records:
+For deterministic RunSkeptic binding, a formal invocation records:
 
 ```text
 INVOCATION_ID: <id>
@@ -54,9 +56,9 @@ MATERIAL_FINDINGS_SHA256: <sha256>
 PREVIOUS_FINDINGS_REFERENCE: <reference or NONE>
 ```
 
-The designated source is freshly read before analysis. These fields bind the
-receipt to that read and to the complete current artifact; they do not prove
-hidden runtime context, model cognition, or actual model/provider routing.
+The designated source is freshly read before analysis. These fields bind the receipt to that read and to the complete current artifact; they do not prove hidden runtime context, model cognition, or actual model/provider routing.
+
+`patch-local` is a compatibility permission spelling, not a separate action standard. When accepted, it remains bounded by the explicit task scope and the same normative-warrant, confidence, DECIDE=FIX, and verification requirements as `fix-if-valid`.
 
 ### RunSkeptic Receipt
 
@@ -81,9 +83,11 @@ A RunSkeptic receipt indexes the review and its evidence; it is not independent 
 
 #### Artifact Relay
 
-`artifact-relay` — Before Find/Fix work likely to exhaust context or repeat substantial reads, use bounded delegation only when expected to reduce total context, cost, or failure risk after overhead. Delegate only bounded side work to fresh independent invocations, route each to the least expensive reliable role, and persist only validated, authorized artifacts or receipts with identity/hash.
+`artifact-relay` — Before Find/Fix work likely to exhaust context or repeat substantial reads, bounded side-work delegation is optional and should be used only when expected to reduce total context, cost, repetition, or failure risk after overhead.
 
-One loop owner remains responsible for freshly reading the applicable Skeptic source and complete current artifact, executing the full recipe, reevaluating prior findings, preserving unresolved states, and enforcing convergence and reset criteria. Reused artifacts support work but never count as fresh evidence, complete loop coverage, or unchanged-candidate passes. Report unobserved freshness, routing, validity, or coverage as `UNKNOWN`; if complete coverage is infeasible, stop with `CONFLICT`.
+One loop owner remains responsible for freshly reading the applicable Skeptic source and complete current artifact, executing the full recipe, reevaluating prior findings, preserving unresolved states, and enforcing convergence and reset criteria. Delegated findings, reports, receipts, or evidence may support work but never substitute for required fresh coverage or count as unchanged qualifying passes. Report unobserved freshness, validity, or coverage as `UNKNOWN`; if complete coverage is infeasible, stop with `CONFLICT`.
+
+How context is packaged and which execution route is selected belong to the execution environment when it has governing policies; standalone Skeptic does not require such policies to operate.
 
 `RunSkeptic Find Loop` invokes repeated full read-only RunSkeptic reviews. Unless the explicit invocation sets another count, stop only after three consecutive runs produce no new meaningful finding and no material change to an existing finding.
 
@@ -99,19 +103,14 @@ For each Find Loop run:
 - make no modifications
 - stabilize duplicates and distinguish new findings from restatements
 - record new, changed, resolved, and still-open findings
-- return material findings as scoped suspicions rather than task-level conclusions; preserve direct observations and evidence as such, and state the review scope, assumptions, and unknowns; the receiving Core (the task-level owner) retains responsibility to reevaluate each finding against wider authoritative context before task-level action or artifact promotion
+- return material findings as scoped suspicions rather than task-level conclusions; preserve direct observations and evidence as such, and state the review scope, assumptions, and unknowns; the receiving Core retains responsibility to reevaluate each finding against wider authoritative context before task-level action or artifact promotion
 - reset the consecutive-run count after any new or materially changed finding
 
 Find Loop convergence means detection stabilized; it does not mean the artifact passed or is ready. Report every unresolved ACTION, DECOMPOSE path, CONFLICT, and blocking unknown, and every applicable required review that has not been completed.
 
 `RunSkeptic Fix Loop` invokes repeated full RunSkeptic review-and-fix cycles. Unless the explicit invocation sets another count, stop successfully only after three consecutive qualifying passes on the same unchanged artifact state.
 
-External loop state binds the Target Task, complete reviewed artifact, Skeptic
-source blob, applicable companions, material finding set, invocation kind, and
-permission mode. Reset the qualifying count after any change to one of those
-bindings or to a material finding. A repair run and a delta-only review never
-qualify. Unless explicitly overridden, completion requires three unchanged
-qualifying passes.
+External loop state binds the Target Task, complete reviewed artifact, Skeptic source blob, applicable companions, material finding set, invocation kind, and permission mode. Reset the qualifying count after any change to one of those bindings or to a material finding. A repair run and a delta-only review never qualify. Unless explicitly overridden, completion requires three unchanged qualifying passes.
 
 For each Fix Loop run:
 - freshly read the designated current Skeptic source and execute the complete recipe
@@ -150,7 +149,7 @@ Proceed when:
 - intent, assumptions, and chosen approach are explicit enough to test
 
 If not:
-- undefined DONE -> STOP
+- undefined DONE -> CONFLICT; make no action
 - too large but clear -> DECOMPOSE
 - multiple valid interpretations -> list them; proceed only if one is evidence-backed, low-risk, and testable
 - unresolved or unsafe ambiguity -> CONFLICT
@@ -198,6 +197,8 @@ Rules:
 Record findings before deciding.
 
 Start from Fundamental Scan; expand as needed.
+
+Within the bound scope, explicit target areas, suspected weak points, or requested aspects receive additional adversarial attention without narrowing the otherwise applicable review.
 
 Apply:
 1. Universal Questions
@@ -247,7 +248,6 @@ Find avoidable stupidity before approving success.
 - `CH:EV` effort-value alignment: effort, cost, rigor, process, or resource use is disproportionate to expected value, material risk reduction, decision importance, available resources, or the probability of reaching a completed useful outcome
 - `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
 
-
 ### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
 
 Find unnecessary structure without removing what proves, protects, assigns responsibility for, or makes the required outcome reversible.
@@ -262,7 +262,6 @@ Find unnecessary structure without removing what proves, protects, assigns respo
 When structure or process is material, compare it with the smallest credible alternative that could achieve the required outcome. Remove structure that adds no necessary evidence, safety, responsibility, reversibility, or material value.
 
 Do not simplify by deleting protections whose purpose is not understood. When substantial structure remains, state briefly why the smaller alternative is insufficient.
-
 
 ### Richard Feynman (FE) - Reality, Mechanism, Evidence Integrity
 
@@ -281,7 +280,6 @@ Higher-trust or control-bearing roles include: instruction, permission, verified
 
 For every `FE:TB` finding, identify the lower-trust source, the promoted role, the boundary crossed, and the missing validation or authorization.
 
-
 ### Karl Popper (PO) - Falsifiability, Refutation, Contradiction
 
 Find claims that can pass while wrong.
@@ -293,7 +291,6 @@ Find claims that can pass while wrong.
 - `PO:SI` silent invalidation: artifact can appear valid while violating the claim
 - `PO:OC` overclaim: current checks are treated as proof, not limited corroboration
 - `PO:CG` coverage gap: when completeness, conformance, readiness, or full implementation is claimed, derive the material obligations independently from the governing authority and ask what required element could be absent while every current check still passes; any material obligation not mapped to the artifact and supporting evidence blocks promotion
-
 
 ### Immanuel Kant (KT) - Universalizability, Consistency, Fair Exceptions, Harm Minimization
 
@@ -308,7 +305,6 @@ Find patterns that should not become general rules, and evaluate whether chosen 
 - `KT:NH` no harm: chosen action causes avoidable material harm when a feasible less-harmful path meets the same requirements without greater material sacrifice
 - `KT:MC` moral conflict: every feasible path materially harms or sacrifices a protected party, duty, right, or value; surface the competing harms and obligations for explicit accountable judgment
 - `KT:OC` ought implies can: no permitted feasible path lets the responsible actor satisfy all applicable requirements simultaneously under its authority, capabilities, resources, dependencies, and constraints; if feasibility is unestablished, record unknown; preserve protected requirements when restoring feasibility; add `PO:CN` only when conflicting rules cause the impossibility
-
 
 ### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
 
@@ -327,8 +323,6 @@ Do not eliminate an option when dominance depends on stale or uncertain evidence
 Distinguish `CH:CR`, `SH:WL`, and `SH:PF` by whether the defect is the limiting constraint, the chosen intervention, or the live option set. Do not duplicate findings; when one explains another, merge them in STABILIZE.
 
 If no real opposing forces, invalid middle, or live option comparison are present, SH = NOT_APPLICABLE.
-
-
 
 ## 4. Structural Checks
 
@@ -458,6 +452,8 @@ For each stabilized issue, decide whether it requires FIX, DECOMPOSE, or CONFLIC
 ### FIX
 
 Use when:
+- the applicable normative basis: requirement, contract, design, policy, or Skeptic-owned rule
+- the established current fact and evidence that conflict with that normative basis
 - root cause, structure, required connections, and source of truth are clear or irrelevant
 - unknowns are resolved or irrelevant
 - change is reversible, testable, retryable
@@ -537,12 +533,13 @@ Rules:
 
 Use evidence, not confidence.
 
+Before verification, set an explicit target number of material checks that directly exercise the intended result and material preserved constraints. Derive that number from consequence, dependency reach, irreversibility, uncertainty, trust elevation, claim strength, and materially plausible failure modes; do not use a universal quota. The count is a planning bound, not proof, and redundant checks do not satisfy it. If verification discovers a new or materially changed finding, dependency, constraint, failure mode, risk, or claim, reset the count to zero, re-derive the target from the new state, and continue against the updated scope; earlier evidence may inform the new plan but does not satisfy the reset count.
+
 Check:
 - red -> green for bug fixes when possible
-- 3-5 targeted spot checks when applicable; scale further checks to risk and evidence
 - end-to-end trace from entry to output
 - constraints: correctness, safety, performance, cost, context, maintainability
-- pre-mortem: 3 concrete failure modes addressed before action
+- pre-mortem: when risk warrants it, address materially plausible failure modes before action
 - regression: previously working behavior still works
 - known-bad/edge case when results are suspiciously clean
 
@@ -554,7 +551,7 @@ If fail, preserve evidence, revert unsafe partial state, and retry only with a n
 
 ## 12. Learn
 
-Trigger DOUBLE-LOOP when:
+Escalate from local correction to systemic learning when:
 - same fix category appears 3+ times
 - same conflict appears 2+ times
 - following a rule worsens outcomes
@@ -562,11 +559,13 @@ Trigger DOUBLE-LOOP when:
 - local fixes repeatedly reveal same structure problem
 - repeated misses show detection coverage failure
 
-Single-loop:
+Single-loop correction:
 - implementation wrong -> fix and re-verify
 
-Double-loop:
-- rule, expectation, design, or detection method may be wrong -> CONFLICT unless obvious, reversible, and low risk
+Double-loop learning:
+- rule, expectation, design, or detection method may be wrong -> route the question to its accountable owner or design-review method
+- unresolved governing meaning -> CONFLICT
+- do not imply a separate DOUBLE-LOOP procedure unless one is explicitly defined
 
 ## 13. Output
 
@@ -574,7 +573,7 @@ Category layers:
 - Finding/Razor categories: PASS, ACTION, CONFLICT.
 - Final task outcomes: HANDLED, CONFLICT.
 
-Every task ends as HANDLED or CONFLICT.
+Every RunSkeptic task ends as HANDLED or CONFLICT.
 
 ### HANDLED
 
@@ -607,20 +606,42 @@ Each item includes:
 - safe recommendation, if any
 - decision needed
 
-## 14. Razor - Read-Only Diagnostic
+## 14. Razor - Bounded Read-Only Diagnostic
 
-Razor is a quick heuristic pass, not a replacement for MAP or the full Thinker lenses. It detects, classifies, and recommends; it never changes files.
+`Razor` is an alternative lightweight entrypoint, not a RunSkeptic stage and not a replacement for the complete recipe. It detects and classifies bounded concerns; it never changes files and never counts toward Find/Fix Loop convergence.
 
-Check:
-- CH: avoidable failure, incentives, misjudgment, safety margin, constraint, effort-value, or scale risk
-- OM: unnecessary structure, false simplicity, speculation, oversized design, avoidable complexity, or an unexplained protected constraint
-- FE: stale claims, weak mechanism or evidence, hidden limits, unclear value, or an unvalidated trust-boundary transition
-- PO: unfalsifiable claims, confirmation-only proof, contradiction, weak refutation, silent invalidity, overclaim, or coverage gaps
-- KT: harmful universalization, special pleading, inconsistent rules, unfair asymmetry, hidden burden, hidden human burden, avoidable harm, moral conflict, or ought-implies-can feasibility
-- SH: opposing forces, fake middles, forced balance, needed exceptions, hidden conflict, wrong leverage, or unproven dominance
-- backward dependencies, forward constraints, and staleness
+Bind:
+- target and review boundary
+- intended outcome or question
+- available evidence and explicit unknowns
+- explicitly requested or already-established domain lens, if any
 
-Prioritize by consequence: irreversible or dangerous failure; silent invalidity; trust or authorization breach; weak evidence; blast radius and reversibility; then avoidable complexity. Output PASS, ACTION, or CONFLICT.
+Check compactly:
+- avoidable failure, downside, incentives, weak safety margin, and effort-value mismatch
+- unnecessary structure, false simplicity, speculation, and unexplained protected constraints
+- mechanism gaps, stale claims, weak evidence, hidden limits, and trust-boundary transitions
+- contradiction, falsifiability, silent invalidity, weak refutation, and overclaim
+- unfair exceptions, hidden human burden, avoidable harm, moral conflict, and feasibility
+- unresolved tradeoffs, fake middles, wrong leverage, and unproven dominance
+- material dependencies, interfaces, source of truth, forward constraints, and staleness
+
+An explicitly requested or already-established domain may assist Razor when its expected incremental detection value justifies the added cost. Use the domain only as a detection aid. It may contribute findings, unknowns, and evidence, but it does not own independent decisions or action. A material domain finding that could affect action, readiness, promotion, completeness, or a Skeptic-level conclusion returns to complete RunSkeptic. A clean domain-assisted Razor result does not establish full domain coverage or exhaustion. If a requested repository-owned domain lens is unavailable, report that coverage as UNKNOWN rather than treating the domain as clean.
+
+Razor does not run full Detection Confidence or require all full Thinker lenses. Instead report evidence, unknowns, skipped coverage, and whether complete RunSkeptic is required or recommended.
+
+Output:
+- `PASS` — no material issue detected by this bounded diagnostic; never means safe, ready, approved, complete, promotion-ready, domain-complete, or fully reviewed
+- `ACTION` — material concern worth follow-up; never authorizes modification
+- `CONFLICT` — unresolved ambiguity, authority issue, or blocker Razor cannot validly settle
+
+Escalate to complete RunSkeptic or the accountable owner for:
+- any requested modification
+- readiness, promotion, completeness, or full-review claims
+- any material domain finding
+- consequential unresolved issue or significant authority conflict
+- assurance needs beyond Razor's bounded evidence
+
+`Expert Review` is a compatibility phrase for Razor with an explicitly scoped domain. It has no separate convergence, confidence, action, verification, or promotion pipeline.
 
 ## 15. Artifact Guide / External Questions
 
@@ -637,19 +658,12 @@ External reference:
 - Tests: behavior vs implementation, shared state, order/OS dependence, test never red, critical regression gap.
 - Config: dead fields, constants disguised as config, inconsistent names/types/units, stale paths/services, bad defaults, missing validation.
 - Agent instructions: no why, over-broad rule, contradiction, stale tool/model behavior, suppresses errors, skips verification, causes inaction.
+- Frameworks/workflows: for every material named mode, role, stage, procedure, control surface, or state, trace its entrypoint/caller, unique responsibility/current need, dependencies/consumers, and exit/return; flag unreachable or duplicate machinery while preserving any invariant it protects.
 - Human docs: repeats code/help, missing prerequisites, untested steps, hidden assumptions, silent command failure.
 - Design decisions: over-generalization, lock-in, hidden assumptions, unvalidated design, implicit dependency, no observability, single point of failure.
 - Requirements: no user need, untestable, not revalidated, solution without problem, no acceptance criteria.
 
-## 16. Expert Review
-
-One reviewer, one domain, one report. Scope the domain and files; apply Razor, Structural Checks, the explicitly scoped domain lens, and Detection Confidence; report ACTIONS and CONFLICTS. Read-only by default; modify only when explicitly asked to fix.
-
-## 17. SIFT Review
-
-SIFT coordinates expert-review findings before action: SCAN relevant reviews; INTEGRATE duplicates and root causes; FIRM CONFIDENCE on unknowns and blind spots; TREAT only with explicit approval under safe-change rules; VERIFY fully. SIFT is read-only unless explicitly told to fix.
-
-## 18. Tag Legend
+## 16. Tag Legend
 
 Tags identify reasoning origin, not severity.
 
@@ -682,14 +696,14 @@ Notation:
 
 Use the smallest explanatory tag set, normally 1-3 tags. Use aspects when they improve traceability. Tags never replace evidence level, severity, or output category. Do not invent numbered QIDs unless the referenced question bank defines them.
 
-## 19. Invariants
+## 17. Invariants
 
 - Never act without DONE.
 - Never act before stabilization.
 - Never decide on raw findings.
 - For Skeptic self-work, read the authoritative current `skeptic.md` when reviewing the repo version. When explicitly reviewing a candidate file, read that candidate file and state that it is not yet authoritative. Do not use memory, summaries, or generated variants as substitutes for the source under review.
 - Do not claim RunSkeptic/Skeptic compliance if the source under review was unavailable or not applied exactly.
-- Never skip a Thinker; mark NOT_APPLICABLE when it does not fit.
+- Never skip a Thinker in RunSkeptic; mark NOT_APPLICABLE when it does not fit.
 - Never treat no findings as proof of safety.
 - Never treat clean top-down scan as proof of safety.
 - Never FIX with inadequate detection confidence.
@@ -703,12 +717,16 @@ Use the smallest explanatory tag set, normally 1-3 tags. Use aspects when they i
 - Never rely on hidden state.
 - Never retry unless safer or better informed.
 - Never treat repeated local fixes as local forever.
-- Every completed task must have an outcome.
+- Every completed RunSkeptic task must have an outcome.
 - Never mark an artifact ready while any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.
 - An unresolved DECOMPOSE path likewise blocks readiness or promotion.
-- Every task ends as HANDLED or CONFLICT.
+- Every RunSkeptic task ends as HANDLED or CONFLICT.
 - Never modify outside the current task's scope; log adjacent issues separately.
+- Never use Razor PASS as evidence of full review, readiness, approval, completeness, or promotion.
+- Razor never modifies files or supplies qualifying Find/Fix Loop passes.
 
 ## One-Line Summary
 
-Gate -> Fundamental Scan -> Map -> Confidence -> Stabilize -> Evidence -> Decide -> Act Safely -> Verify -> Learn
+RunSkeptic: Gate -> Fundamental Scan -> Map -> Confidence -> Stabilize -> Evidence -> Decide -> Act Safely -> Verify -> Learn
+
+Razor: bounded read-only diagnostic -> PASS / ACTION / CONFLICT -> escalate when full assurance or action is required
