@@ -89,6 +89,10 @@ One loop owner remains responsible for freshly reading the applicable Skeptic so
 
 Find Loop inputs bind the Target Task, complete reviewed artifact, Skeptic source blob, applicable companions, invocation kind, and permission mode. Reset the consecutive count after any change to those bindings or after any new or materially changed finding, because detection stability must describe repeated review of one exact comparison.
 
+In Find Loop, the first unchanged pass with no new substantive core finding triggers one domain-discovery step before core-only stability can count toward final convergence.
+Bind the selected domain set as applicable companions and reset the convergence count when that binding changes.
+Reuse that selected set while the Target Task, reviewed artifact, bound scope, material dependencies, and other domain-relevance inputs remain unchanged; rediscover domains only when a material change could alter relevance.
+
 For each Find Loop run:
 - freshly read the designated current Skeptic source and execute the complete recipe
 - re-evaluate the complete artifact and all previous findings
@@ -195,13 +199,11 @@ Record findings before deciding.
 
 Start from Fundamental Scan; expand as needed.
 
-Within the bound scope, explicit target areas, suspected weak points, or requested aspects receive additional adversarial attention without narrowing the otherwise applicable review.
-
 Apply:
 1. Universal Questions
 2. All Thinkers: CH, OM, FE, PO, KT, SH
 3. Structural Checks
-4. Relevant Domain Checks selectively
+4. Domain Lens Escalation under §5 when applicable
 5. Artifact patterns / external question banks when useful
 
 Output:
@@ -339,22 +341,27 @@ Check meaningful entities for:
 - data/control flow, update timing, consumers
 - reversibility, retry safety, and failure signal
 
-## 5. Domain Checks
+## 5. Domain Lens Escalation
 
-Apply selectively:
-- SEC: security, inputs, auth, secrets, permissions, exposure
-- CPX: complexity, coupling, state, mental load
-- REL: reliability, monitoring, scale, ownership, operations
-- DAT: data, I/O, persistence, consistency, timing
-- ARC: architecture, interfaces, contracts, dependencies
-- CFT: tests, errors, mocks, craft
+Domain lenses add detection; they do not narrow or replace the core review.
+Core-first is the default for domain lenses.
+
+At domain discovery, read `skeptic-questions.md` as the lightweight registry to identify candidate domains and their files.
+Domain identifiers and applicability metadata are defined by the registry; the core does not enumerate the complete domain set.
+After selection, load only the mapped domain files.
+
+Domain lenses produce findings, unknowns, and evidence; STABILIZE, EVIDENCE, and DECIDE remain owned by the core.
 
 Rules:
-- do not apply all domains blindly
-- sample likely domains when unsure
-- expand when findings cross domains or risk is high
-- controlled redundancy is allowed for high risk
-- use `skeptic-questions.md` for expanded SEC/CPX/REL/DAT/ARC/CFT questions when runtime detail is not enough
+- Activate a specifically relevant domain early when the request explicitly names it or material domain relevance is already established; use the registry to resolve repository-owned domain files when needed.
+- Generic risk alone does not justify early domain activation.
+- Otherwise, discover domains only after broad core detection has substantially stabilized and another broad pass has low expected marginal detection value.
+- Treat substantive findings qualitatively: material effect on correctness, safety, architecture, authority, scope, action, verification, or task outcome matters more than finding count.
+- Select all materially useful domains, not one winner, but do not load a lens whose expected detection value is already adequately covered by the core or selected lenses.
+- In an ordinary run, a substantive domain finding may end further domain probing when continuing has low marginal value and broader coverage is not required.
+- Do not treat unexamined selected domains as clean or exhausted.
+- For Find Loop, readiness, completeness, promotion, or explicitly exhaustive review, continue across the selected domain set sufficiently to support the claimed coverage.
+- If a selected domain companion is unavailable, record the missing coverage as skipped/UNKNOWN; continue core review when feasible and do not overclaim domain-aware coverage.
 
 ## 6. Detection Confidence
 
@@ -364,7 +371,7 @@ Before STABILIZE/DECIDE, check:
 - All Thinkers considered: CH, OM, FE, PO, KT, SH
 - SH either produced a finding or returned NOT_APPLICABLE
 - Structural Checks applied
-- Domain Checks applied selectively
+- Domain Lens Escalation handled according to §5 when triggered or explicitly activated
 - artifact patterns applied when useful
 - important conclusions have evidence
 - unknowns and skipped areas are listed
@@ -390,7 +397,7 @@ Blind spots:
 
 If confidence is weak:
 - expand MAP only where evidence requires it
-- sample adjacent domains
+- if the domain stage is active, expand only where evidence establishes additional domain relevance
 - run CH/PO adversarial pass if clean result is suspicious
 - resolve, decompose, or escalate high-risk UNKNOWNs
 - CONFLICT if confidence cannot reasonably improve
@@ -460,8 +467,7 @@ Use when:
 
 Before FIX, state:
 - what is wrong
-- the applicable normative basis: requirement, contract, design, policy, or Skeptic-owned rule that makes the established state wrong
-- the established current fact and evidence that conflict with that normative basis
+- why it is wrong
 - why this fix is correct
 - why this is the smallest change that solves the verified issue without broadening scope
 - what would prove it wrong
@@ -531,14 +537,12 @@ Rules:
 
 Use evidence, not confidence.
 
-Before verification, set an explicit target number of material checks from consequence, dependency reach, irreversibility, uncertainty, trust elevation, claim strength, and materially plausible failure modes; do not use a universal quota. The count is a planning bound, not proof; do not add redundant checks merely to reach it. If verification discovers a new or materially changed finding, dependency, constraint, failure mode, risk, or claim, reset the count to zero, re-derive the target from the new state, and continue against the updated scope; earlier evidence may inform the new plan but does not satisfy the reset count.
-
 Check:
 - red -> green for bug fixes when possible
-- checks that directly exercise the intended result and material preserved constraints; scale assurance to consequence, dependency reach, irreversibility, uncertainty, trust elevation, and claim strength
+- 3-5 targeted spot checks when applicable; scale further checks to risk and evidence
 - end-to-end trace from entry to output
 - constraints: correctness, safety, performance, cost, context, maintainability
-- pre-mortem: when risk warrants it, address materially plausible failure modes before action
+- pre-mortem: 3 concrete failure modes addressed before action
 - regression: previously working behavior still works
 - known-bad/edge case when results are suspiciously clean
 
@@ -625,9 +629,9 @@ Use after Universal Questions and Structural Checks.
 Patterns are detection aids, not exhaustive rules.
 
 External reference:
-- `skeptic-questions.md` contains expanded domain questions.
+- `skeptic-questions.md` is the lightweight domain registry; selected domain files contain expanded questions.
 - Runtime core is authoritative.
-- External questions expand detection only; no mandatory process.
+- Registry and domain files expand detection only; they do not own independent process or decisions.
 
 - Code: dead code, weak abstractions, bare except, magic values, string-built SQL/commands, no coverage, no timeout/retry/cleanup, silent wrong-input success.
 - Tests: behavior vs implementation, shared state, order/OS dependence, test never red, critical regression gap.
@@ -639,7 +643,7 @@ External reference:
 
 ## 16. Expert Review
 
-One reviewer, one domain, one report. Scope the domain and files; apply Razor, Structural Checks, relevant Domain Checks, and Detection Confidence; report ACTIONS and CONFLICTS. Read-only by default; modify only when explicitly asked to fix.
+One reviewer, one domain, one report. Scope the domain and files; apply Razor, Structural Checks, the explicitly scoped domain lens, and Detection Confidence; report ACTIONS and CONFLICTS. Read-only by default; modify only when explicitly asked to fix.
 
 ## 17. SIFT Review
 
@@ -666,13 +670,8 @@ Aspect tags are defined in §3:
 - SH: `SH:OF`, `SH:FM`, `SH:FB`, `SH:NE`, `SH:HC`, `SH:WL`, `SH:PF`
 - `SH:PF`: Pareto frontier / proven dominance
 
-Domains:
-- SEC: Security
-- CPX: Complexity
-- REL: Reliability
-- DAT: Data / I/O
-- ARC: Architecture / interfaces
-- CFT: Craft / tests
+Domain identifiers and applicability metadata are defined by `skeptic-questions.md`.
+`SEC` is the Security domain identifier used in the notation examples below.
 
 Notation:
 - `CH` identifies a Thinker lens.
