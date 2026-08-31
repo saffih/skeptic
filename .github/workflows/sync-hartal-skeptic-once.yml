@@ -1,0 +1,45 @@
+name: Sync Hartal Skeptic one-shot
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/sync-hartal-skeptic-once.yml'
+      - 'skeptic.md'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: sync/hartal-skeptic-20260831
+      - name: Apply exact exported Skeptic change
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('skeptic.md')
+          text = p.read_text(encoding='utf-8')
+          old = "- `PO:CG` coverage gap: when completeness, conformance, readiness, or full implementation is claimed, derive the material obligations independently from the governing authority and ask what required element could be absent while every current check still passes; any material obligation not mapped to the artifact and supporting evidence blocks promotion"
+          new = "- `PO:CG` coverage gap: derive material obligations for the reviewed scope from the bound task and applicable normative basis, and ask what required element could be absent while what is present still appears correct; do not invent obligations the basis does not support. Report supported omissions under normal materiality rules; when completeness, conformance, readiness, or full implementation is claimed, any material obligation not mapped to the artifact and supporting evidence blocks promotion"
+          if text.count(old) != 1:
+              raise SystemExit(f'expected exactly one old PO:CG occurrence, got {text.count(old)}')
+          text = text.replace(old, new, 1)
+          if text.count(new) != 1:
+              raise SystemExit('replacement verification failed')
+          p.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+          git diff -- skeptic.md
+          test "$(git diff --name-only | sort)" = "skeptic.md"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add skeptic.md
+          git commit -m 'Sync public Skeptic from Hartal'
+          git push origin HEAD:sync/hartal-skeptic-20260831
