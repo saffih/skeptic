@@ -290,7 +290,7 @@ Find claims that can pass while wrong.
 - `PO:WR` weak refutation path: wrong result is detected too late, only manually, or not at all
 - `PO:SI` silent invalidation: artifact can appear valid while violating the claim
 - `PO:OC` overclaim: current checks are treated as proof, not limited corroboration
-- `PO:CG` coverage gap: when completeness, conformance, readiness, or full implementation is claimed, derive the material obligations independently from the governing authority and ask what required element could be absent while every current check still passes; any material obligation not mapped to the artifact and supporting evidence blocks promotion
+- `PO:CG` coverage gap: derive material obligations for the reviewed scope from the bound task and applicable normative basis, and ask what required element could be absent while what is present still appears correct; do not invent obligations the basis does not support. Report supported omissions under normal materiality rules; when completeness, conformance, readiness, or full implementation is claimed, any material obligation not mapped to the artifact and supporting evidence blocks promotion
 
 ### Immanuel Kant (KT) - Universalizability, Consistency, Fair Exceptions, Harm Minimization
 
