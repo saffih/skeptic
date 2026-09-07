@@ -202,7 +202,7 @@ Within the bound scope, explicit target areas, suspected weak points, or request
 
 Apply:
 1. Universal Questions
-2. All Thinkers: CH, OM, FE, PO, KT, SH
+2. All Thinkers: CH, OM, FE, PO, KT, AJ, SH
 3. Structural Checks
 4. Domain Lens Escalation under §5 when applicable
 5. Artifact patterns / external question banks when useful
@@ -306,6 +306,20 @@ Find patterns that should not become general rules, and evaluate whether chosen 
 - `KT:MC` moral conflict: every feasible path materially harms or sacrifices a protected party, duty, right, or value; surface the competing harms and obligations for explicit accountable judgment
 - `KT:OC` ought implies can: no permitted feasible path lets the responsible actor satisfy all applicable requirements simultaneously under its authority, capabilities, resources, dependencies, and constraints; if feasibility is unestablished, record unknown; preserve protected requirements when restoring feasibility; add `PO:CN` only when conflicting rules cause the impossibility
 
+### Alicia Juarrero (AJ) - Constraint Architecture, Invariants, Adaptation
+
+Find invariants, degrees of freedom, and boundaries placed in the wrong regions. Constraints should preserve coherence and enable useful capability; flexibility should remain where variation is safe and adaptive.
+
+- `AJ:IN` invariant placement: something essential to purpose, identity, coherence, safety, authority, or required outcome is not made sufficiently invariant, or a claimed invariant lacks a material reason to be fixed
+- `AJ:OC` overconstraint: rules, specifications, plans, or processes remove degrees of freedom that need not be fixed to protect a material invariant and thereby create brittleness, friction, lost adaptation, or unnecessary failure
+- `AJ:UC` underconstraint: discretion or variation remains where changing the thing can materially break purpose, identity, coherence, safety, authority, or the required outcome
+- `AJ:EC` enabling constraint: a well-placed constraint could reduce local freedom while creating greater useful capability, coordination, resilience, or safe freedom elsewhere
+- `AJ:JB` joint/boundary: rigid and flexible regions meet without a clear transition defining what must be preserved, what may vary, and who or what may adapt it
+- `AJ:RL` rigidity leakage: a constraint justified for one protected invariant spreads into neighboring mechanics, evidence methods, procedures, or choices that do not require the same exactness
+- `AJ:FL` flexibility leakage: discretion justified inside an adaptive region spreads across a boundary into an invariant or protected region
+
+For material rules, requirements, plans, processes, or designs, ask: what must remain true; what specifically need not remain the same; and whether the boundary between them is placed and governed correctly. Do not equate stability with inflexible sameness or flexibility with absence of structure.
+
 ### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
 
 Find invalid middles and unresolved tradeoffs.
@@ -362,7 +376,7 @@ Rules:
 Before STABILIZE/DECIDE, check:
 - Fundamental Scan completed
 - Universal Questions applied
-- All Thinkers considered: CH, OM, FE, PO, KT, SH
+- All Thinkers considered: CH, OM, FE, PO, KT, AJ, SH
 - SH either produced a finding or returned NOT_APPLICABLE
 - Structural Checks applied
 - Domain Lens Escalation handled according to §5 when triggered or explicitly activated
@@ -622,6 +636,7 @@ Check compactly:
 - mechanism gaps, stale claims, weak evidence, hidden limits, and trust-boundary transitions
 - contradiction, falsifiability, silent invalidity, weak refutation, and overclaim
 - unfair exceptions, hidden human burden, avoidable harm, moral conflict, and feasibility
+- misplaced invariants, overconstraint, underconstraint, enabling constraints, and leakage across rigid/flexible boundaries
 - unresolved tradeoffs, fake middles, wrong leverage, and unproven dominance
 - material dependencies, interfaces, source of truth, forward constraints, and staleness
 
@@ -673,6 +688,7 @@ Thinker lenses:
 - FE: Richard Feynman
 - PO: Karl Popper
 - KT: Immanuel Kant
+- AJ: Alicia Juarrero; constraint architecture, invariants, and adaptation
 - SH: Saffi; includes Follett-style integration-versus-compromise reasoning
 
 Aspect tags are defined in §3:
@@ -681,6 +697,7 @@ Aspect tags are defined in §3:
 - FE: `FE:SC`, `FE:ME`, `FE:WY`, `FE:HL`, `FE:WE`, `FE:PG`, `FE:PV`, `FE:TB`
 - PO: `PO:UF`, `PO:CO`, `PO:CN`, `PO:WR`, `PO:SI`, `PO:OC`, `PO:CG`
 - KT: `KT:HU`, `KT:EX`, `KT:IR`, `KT:UA`, `KT:HB`, `KT:HHB`, `KT:NH`, `KT:MC`, `KT:OC`
+- AJ: `AJ:IN`, `AJ:OC`, `AJ:UC`, `AJ:EC`, `AJ:JB`, `AJ:RL`, `AJ:FL`
 - SH: `SH:OF`, `SH:FM`, `SH:FB`, `SH:NE`, `SH:HC`, `SH:WL`, `SH:PF`
 - `SH:PF`: Pareto frontier / proven dominance
 
