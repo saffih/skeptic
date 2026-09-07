@@ -130,6 +130,7 @@ Bind one goal and set of constraints.
 For each InnoSkeptic run:
 - generate several materially distinct candidates satisfying the bound constraints
 - vary, mutate, recombine, or add candidates based on prior evidence
+- for every candidate mutation, state the exact new claim or protection it adds, who already owns or proves that claim, and whether any new term implies more than the mechanism establishes; reject mutations that only duplicate existing evidence or broaden the claim without new evidence
 - freshly read the designated current Skeptic source and RunSkeptic on the complete candidate set using shared evidence
 - use findings and newly established evidence to improve and narrow the set
 - eliminate only approaches defeated by the bound requirements or demonstrably dominated by others on all material protected dimensions
@@ -306,19 +307,20 @@ Find patterns that should not become general rules, and evaluate whether chosen 
 - `KT:MC` moral conflict: every feasible path materially harms or sacrifices a protected party, duty, right, or value; surface the competing harms and obligations for explicit accountable judgment
 - `KT:OC` ought implies can: no permitted feasible path lets the responsible actor satisfy all applicable requirements simultaneously under its authority, capabilities, resources, dependencies, and constraints; if feasibility is unestablished, record unknown; preserve protected requirements when restoring feasibility; add `PO:CN` only when conflicting rules cause the impossibility
 
-### Alicia Juarrero (AJ) - Constraint Architecture, Invariants, Adaptation
+### Alicia Juarrero (AJ) - Invariants, Constraints, Adaptation
 
-Find invariants, degrees of freedom, and boundaries placed in the wrong regions. Constraints should preserve coherence and enable useful capability; flexibility should remain where variation is safe and adaptive.
+Find what is wrongly fixed, wrongly left free to vary, or only nominally flexible. Identify what must remain invariant, what must deliberately remain adaptable, where each belongs, and whether the mechanism that provides flexibility is suitably bounded so adaptation does not weaken protected invariants.
 
-- `AJ:IN` invariant placement: something essential to purpose, identity, coherence, safety, authority, or required outcome is not made sufficiently invariant, or a claimed invariant lacks a material reason to be fixed
+- `AJ:IN` invariant placement: something essential to purpose, identity, coherence, safety, authority, or required outcome is allowed to vary where it materially must remain fixed
 - `AJ:OC` overconstraint: rules, specifications, plans, or processes remove degrees of freedom that need not be fixed to protect a material invariant and thereby create brittleness, friction, lost adaptation, or unnecessary failure
 - `AJ:UC` underconstraint: discretion or variation remains where changing the thing can materially break purpose, identity, coherence, safety, authority, or the required outcome
-- `AJ:EC` enabling constraint: a well-placed constraint could reduce local freedom while creating greater useful capability, coordination, resilience, or safe freedom elsewhere
-- `AJ:JB` joint/boundary: rigid and flexible regions meet without a clear transition defining what must be preserved, what may vary, and who or what may adapt it
+- `AJ:AF` adaptive freedom: a degree of freedom materially needed for adaptation, substitution, extension, local judgment, experimentation, or future evolution is absent, merely nominal, implemented through an unsuitable mechanism, or granted with broader authority or variation than needed; require a concrete mechanism that provides the needed flexibility while preserving the relevant invariants and bounded authority
+- `AJ:EC` enabling constraint: an arrangement restricts local freedom without sufficiently protecting or enabling the capability, coherence, coordination, resilience, or safe freedom that justifies the restriction
+- `AJ:JB` joint/boundary: invariant and adaptive regions meet without a clear mechanism defining what may vary, how variation is realized, what must remain preserved, who or what may adapt it, and where the flexibility stops
 - `AJ:RL` rigidity leakage: a constraint justified for one protected invariant spreads into neighboring mechanics, evidence methods, procedures, or choices that do not require the same exactness
 - `AJ:FL` flexibility leakage: discretion justified inside an adaptive region spreads across a boundary into an invariant or protected region
 
-For material rules, requirements, plans, processes, or designs, ask: what must remain true; what specifically need not remain the same; and whether the boundary between them is placed and governed correctly. Do not equate stability with inflexible sameness or flexibility with absence of structure.
+For material rules, requirements, plans, processes, or designs, ask: are the right things constrained and the right things adaptable, in the right places? Where flexibility is needed, is there a suitable bounded mechanism that provides it without weakening the invariants it must preserve? Treat deliberate flexibility as a designed capability, not as mere absence of constraint or specification.
 
 ### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
 
@@ -330,7 +332,7 @@ Find invalid middles and unresolved tradeoffs.
 - `SH:NE` narrow exception needed: one side should be default, but the other side needs a narrow protected exception
 - `SH:HC` hidden conflict: product, architecture, safety, ownership, or priority decision is required
 - `SH:WL` wrong leverage: within a genuine trade-off, the chosen side, middle, or exception does not materially affect the outcome it is intended to improve
-- `SH:PF` dominance/frontier: a live option is retained even though another feasible option is no worse on every material protected dimension and better on at least one
+- `SH:PF` dominance/frontier: a live option is retained even though another feasible option is no worse on every material protected dimension and better at least one
 
 Do not eliminate an option when dominance depends on stale or uncertain evidence, unsupported causation, aggregation that hides a subgroup or tail, omitted feasibility, reversibility or information value, mismatched time horizons, or a disputed weighting of consequences. When dominance is not supported, preserve the live trade-off or report the missing evidence.
 
@@ -636,7 +638,7 @@ Check compactly:
 - mechanism gaps, stale claims, weak evidence, hidden limits, and trust-boundary transitions
 - contradiction, falsifiability, silent invalidity, weak refutation, and overclaim
 - unfair exceptions, hidden human burden, avoidable harm, moral conflict, and feasibility
-- misplaced invariants, overconstraint, underconstraint, enabling constraints, and leakage across rigid/flexible boundaries
+- misplaced invariants, overconstraint, underconstraint, needed adaptive freedom, flexibility mechanisms, enabling constraints, and leakage across invariant/adaptive boundaries
 - unresolved tradeoffs, fake middles, wrong leverage, and unproven dominance
 - material dependencies, interfaces, source of truth, forward constraints, and staleness
 
@@ -688,7 +690,7 @@ Thinker lenses:
 - FE: Richard Feynman
 - PO: Karl Popper
 - KT: Immanuel Kant
-- AJ: Alicia Juarrero; constraint architecture, invariants, and adaptation
+- AJ: Alicia Juarrero; invariants, constraints, adaptation, and bounded adaptive freedom
 - SH: Saffi; includes Follett-style integration-versus-compromise reasoning
 
 Aspect tags are defined in §3:
@@ -697,7 +699,7 @@ Aspect tags are defined in §3:
 - FE: `FE:SC`, `FE:ME`, `FE:WY`, `FE:HL`, `FE:WE`, `FE:PG`, `FE:PV`, `FE:TB`
 - PO: `PO:UF`, `PO:CO`, `PO:CN`, `PO:WR`, `PO:SI`, `PO:OC`, `PO:CG`
 - KT: `KT:HU`, `KT:EX`, `KT:IR`, `KT:UA`, `KT:HB`, `KT:HHB`, `KT:NH`, `KT:MC`, `KT:OC`
-- AJ: `AJ:IN`, `AJ:OC`, `AJ:UC`, `AJ:EC`, `AJ:JB`, `AJ:RL`, `AJ:FL`
+- AJ: `AJ:IN`, `AJ:OC`, `AJ:UC`, `AJ:AF`, `AJ:EC`, `AJ:JB`, `AJ:RL`, `AJ:FL`
 - SH: `SH:OF`, `SH:FM`, `SH:FB`, `SH:NE`, `SH:HC`, `SH:WL`, `SH:PF`
 - `SH:PF`: Pareto frontier / proven dominance
 
