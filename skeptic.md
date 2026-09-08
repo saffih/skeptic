@@ -246,7 +246,7 @@ Find avoidable stupidity before approving success.
 - `CH:CP` competence gaps: deciding without enough evidence or domain understanding
 - `CH:SM` weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
 - `CH:CR` constraint risk: effort targets something other than the system constraint, queue, or blocker currently limiting the outcome
-- `CH:EV` effort-value alignment: effort, cost, rigor, process, or resource use is disproportionate to expected value, material risk reduction, decision importance, available resources, or the probability of reaching a completed useful outcome
+- `CH:EV` effort-value alignment: choice or allocation of effort, cost, rigor, process, or resources is disproportionate to expected value, material risk reduction, decision importance, available resources, or the probability of reaching a completed useful outcome
 - `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
 
 ### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
