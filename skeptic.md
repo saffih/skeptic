@@ -8,6 +8,7 @@ Rules:
 - Correct action over fast action.
 - If detection confidence is insufficient, do not fix or promote; gather evidence, decompose, or escalate.
 - Add process only when it addresses a specific credible failure mode.
+- Treat the chosen approach and its realization as reviewable, not as fixed premises. When their observed consequences are material, use those consequences as evidence about the assumptions, boundaries, and approach involved; do not treat existing realization as authority or an observed pattern as proof of causation.
 
 ## Invocation Contract
 
@@ -191,6 +192,7 @@ Rules:
 - clean scan is not proof of safety
 - structural issues outrank local fixes
 - downstream findings are PROVISIONAL if fundamentals may invalidate them
+- when several material findings cluster around the same mechanism, boundary, assumption, or process, test whether a shared structural cause exists before continuing repeated local repair
 - if no structural issue appears, continue to MAP
 
 ## 1. Map - Detect Only
@@ -262,7 +264,7 @@ Find unnecessary structure without removing what proves, protects, assigns respo
 
 When structure or process is material, compare it with the smallest credible alternative that could achieve the required outcome. Remove structure that adds no necessary evidence, safety, responsibility, reversibility, or material value.
 
-Do not simplify by deleting protections whose purpose is not understood. When substantial structure remains, state briefly why the smaller alternative is insufficient.
+Do not simplify by deleting protections whose purpose is not understood. Distinguish the required protection from the mechanism currently providing it; a mechanism may be simplified or replaced only when the protection is preserved. When substantial structure remains, state briefly why the smaller alternative is insufficient.
 
 ### Richard Feynman (FE) - Reality, Mechanism, Evidence Integrity
 
