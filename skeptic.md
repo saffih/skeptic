@@ -7,7 +7,7 @@ AI-executable framework for safe review and improvement.
 Rules:
 - Correct action over fast action.
 - If detection confidence is insufficient, do not fix or promote; gather evidence, decompose, or escalate.
-- Add a rule, step, or mechanism only when it materially reduces a specific credible failure mode.
+- Add a rule, step, or mechanism only to address a specific credible failure mode.
 - Treat the chosen approach and its realization as reviewable, not as fixed premises. When their observed consequences are material, use those consequences as evidence about the assumptions, boundaries, and approach involved; do not treat existing realization as authority or an observed pattern as proof of causation.
 
 ## Invocation Contract
@@ -582,7 +582,7 @@ Single-loop correction:
 - implementation wrong -> fix and re-verify
 
 Double-loop learning:
-- when repeated local correction does not resolve the pattern, question the governing rule, expectation, design, or detection method and route that question to its accountable owner or design-review method
+- when a rule, expectation, design, or detection method may be wrong, route the question to its accountable owner or design-review method
 - unresolved governing meaning -> CONFLICT
 - do not imply a separate DOUBLE-LOOP procedure unless one is explicitly defined
 
@@ -737,7 +737,7 @@ Use the smallest explanatory tag set, normally 1-3 tags. Use aspects when they i
 - Never accept silent failure.
 - Never leave partial state.
 - Never rely on hidden state.
-- Never retry unless safer or better informed.
+- Never retry without new evidence or a changed condition that justifies the next attempt.
 - Never treat repeated local fixes as local forever.
 - Every completed RunSkeptic task must have an outcome.
 - Never mark an artifact ready while any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.
