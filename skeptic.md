@@ -7,7 +7,7 @@ AI-executable framework for safe review and improvement.
 Rules:
 - Correct action over fast action.
 - If detection confidence is insufficient, do not fix or promote; gather evidence, decompose, or escalate.
-- Add a rule, step, or mechanism only to address a specific credible failure mode.
+- Add process only when it addresses a specific credible failure mode.
 - Treat the chosen approach and its realization as reviewable, not as fixed premises. When their observed consequences are material, use those consequences as evidence about the assumptions, boundaries, and approach involved; do not treat existing realization as authority or an observed pattern as proof of causation.
 
 ## Invocation Contract
@@ -46,18 +46,18 @@ INVOCATION_ID: <id>
 INVOCATION_KIND: SINGLE | FIND_LOOP | FIX_LOOP | INNOSKEPTIC | INOSKEPTIC
 PERMISSION_MODE: read-only | patch-local | fix-if-valid
 DONE: <testable statement>
-TARGET_TASK_SHA256: <sha256>
+TARGET_TASK_REFERENCE: <explicit interpretable task/scope reference>
 REVIEWED_ARTIFACT_REFERENCE: <reference>
-REVIEWED_ARTIFACT_SHA256: <sha256>
+REVIEWED_ARTIFACT_SHA256: <sha256 of exact reviewed artifact bytes>
 SKEPTIC_SOURCE_PATH: skeptic.md
 SKEPTIC_SOURCE_REF: <ref>
 SKEPTIC_SOURCE_BLOB_SHA: <blob sha>
-APPLICABLE_COMPANION_SET_SHA256: <sha256>
-MATERIAL_FINDINGS_SHA256: <sha256>
+APPLICABLE_COMPANIONS: <explicit list of companion/domain references>
+MATERIAL_FINDINGS: <explicit list of material finding identifiers or summaries>
 PREVIOUS_FINDINGS_REFERENCE: <reference or NONE>
 ```
 
-The designated source is freshly read before analysis. These fields bind the receipt to that read and to the complete current artifact; they do not prove hidden runtime context, model cognition, or actual model/provider routing.
+The designated source is freshly read before analysis. The artifact hash and Skeptic blob bind reproducible byte-level objects; semantic bindings remain explicit and interpretable rather than using exact-looking hashes whose input representation is undefined. These fields bind the receipt to that read and to the complete current artifact; they do not prove hidden runtime context, model cognition, or actual model/provider routing.
 
 `patch-local` is a compatibility permission spelling, not a separate action standard. When accepted, it remains bounded by the explicit task scope and the same normative-warrant, confidence, DECIDE=FIX, and verification requirements as `fix-if-valid`.
 
@@ -89,6 +89,8 @@ A RunSkeptic receipt indexes the review and its evidence; it is not independent 
 One loop owner remains responsible for freshly reading the applicable Skeptic source and complete current artifact, executing the full recipe, reevaluating prior findings, preserving unresolved states, and enforcing convergence and reset criteria. Delegated findings, reports, receipts, or evidence may support work but never substitute for required fresh coverage or count as unchanged qualifying passes. Report unobserved freshness, validity, or coverage as `UNKNOWN`; if complete coverage is infeasible, stop with `CONFLICT`.
 
 How context is packaged and which execution route is selected belong to the execution environment when it has governing policies; standalone Skeptic does not require such policies to operate.
+
+Retry and convergence are distinct. Retrying a failed action requires new evidence or a changed relevant condition that justifies another attempt; required convergence may deliberately repeat unchanged complete review because stable repetition is itself assurance evidence.
 
 `RunSkeptic Find Loop` invokes repeated full read-only RunSkeptic reviews. Unless the explicit invocation sets another count, stop only after three consecutive runs produce no new meaningful finding and no material change to an existing finding.
 
@@ -168,7 +170,7 @@ For either scope, check:
 - objective, DONE, authority, source-of-truth order, allowed scope, output, verification, and stop conditions are explicit enough to execute;
 - available context, time, tools, permissions, evidence, and other material resources can realistically support the claimed outcome;
 - dependencies, handoffs, integration, and final verification have clear ownership when applicable;
-- retries and repeated review/fix loops have explicit stopping rules; outside required convergence, when another attempt is unlikely to produce new evidence and no relevant condition has changed, change the method, decompose, or escalate;
+- retries and repeated review/fix loops have explicit stopping rules; outside required convergence, retry only when new evidence or a changed relevant condition justifies another attempt, and change the method, decompose, or escalate when repeated effort produces little decision-relevant evidence;
 - decision-critical state is persisted only when it must survive a real boundary such as delegation, interruption, context loss, independent review, or cross-session continuation.
 
 A well-written prompt or set of locally valid child steps cannot earn task-level PASS when the overall completion, integration, or verification path is infeasible or unowned. Missing feasibility is ACTION when locally repairable, DECOMPOSE when the objective is clear but too large or coupled, and CONFLICT when authority, design, safety, source of truth, or terminal completion remains unresolved.
@@ -192,7 +194,7 @@ Rules:
 - clean scan is not proof of safety
 - structural issues outrank local fixes
 - downstream findings are PROVISIONAL if fundamentals may invalidate them
-- when several material findings share a mechanism, boundary, assumption, or process, test for a shared cause before fixing them separately
+- when several material findings cluster around the same mechanism, boundary, assumption, or process, test whether a shared structural cause exists before continuing repeated local repair
 - if no structural issue appears, continue to MAP
 
 ## 1. Map - Detect Only
@@ -248,7 +250,7 @@ Find avoidable stupidity before approving success.
 - `CH:CP` competence gaps: deciding without enough evidence or domain understanding
 - `CH:SM` weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
 - `CH:CR` constraint risk: effort targets something other than the system constraint, queue, or blocker currently limiting the outcome
-- `CH:EV` effort-value mismatch: effort, cost, rigor, process, or resource use is disproportionate to the decision's importance, expected value or material risk reduction, available resources, or the chance of useful completion
+- `CH:EV` effort-value alignment: choice or allocation of effort, cost, rigor, process, or resources is disproportionate to expected value, material risk reduction, decision importance, available resources, or the probability of reaching a completed useful outcome
 - `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
 
 ### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
@@ -367,11 +369,10 @@ Domain lenses produce findings, unknowns, and evidence; STABILIZE, EVIDENCE, and
 Rules:
 - Activate a specifically relevant domain early when the request explicitly names it or material domain relevance is already established; use the registry to resolve repository-owned domain files when needed.
 - Generic risk alone does not justify early domain activation.
-- Otherwise, discover domains only after broad core detection has substantially stabilized and another broad core pass is unlikely to produce decision-relevant new evidence.
+- Otherwise, discover domains only after broad core detection has substantially stabilized and another broad pass has low expected marginal detection value.
 - Treat substantive findings qualitatively: material effect on correctness, safety, architecture, authority, scope, action, verification, or task outcome matters more than finding count.
-- Select all materially useful domains, but do not load a lens when its likely decision-relevant evidence is already covered by the core or selected lenses.
-- In an ordinary run, stop discretionary domain probing when another lens is unlikely to produce decision-relevant new evidence and broader coverage is not required.
-- This stopping rule does not override required coverage, completeness, readiness, promotion, or Find Loop obligations.
+- Select all materially useful domains, not one winner, but do not load a lens whose expected detection value is already adequately covered by the core or selected lenses.
+- In an ordinary run, a substantive domain finding may end further domain probing when continuing has low marginal value and broader coverage is not required.
 - Do not treat unexamined selected domains as clean or exhausted.
 - For Find Loop, readiness, completeness, promotion, or explicitly exhaustive review, continue across the selected domain set sufficiently to support the claimed coverage.
 - If a selected domain companion is unavailable, record the missing coverage as skipped/UNKNOWN; continue core review when feasible and do not overclaim domain-aware coverage.
@@ -415,7 +416,9 @@ If confidence is weak:
 - resolve, decompose, or escalate high-risk UNKNOWNs
 - CONFLICT if confidence cannot reasonably improve
 
-Extend discretionary investigation only when plausible new evidence could materially change the decision enough to justify its cost. If repeated effort produces little decision-relevant evidence, change the method rather than repeat it.
+Extend discretionary investigation only while plausible new evidence could materially change the decision enough to justify its cost. If repeated effort produces little decision-relevant evidence, change the method, decompose, or escalate rather than repeat the same approach. This stopping rule does not override required coverage, completeness, readiness or promotion obligations, verification, or convergence.
+
+Do not loop indefinitely.
 
 ## 7. Stabilize
 
@@ -532,7 +535,7 @@ Process:
 2. Apply the smallest reversible change.
 3. Verify immediately.
 4. Revert immediately if verification fails.
-5. Retry only when new evidence or a changed condition makes the next attempt safer or more likely to succeed.
+5. Retry only when new evidence or a changed relevant condition makes the next attempt safer or more likely to succeed.
 6. Escalate if safe retry is impossible.
 7. Do not proceed to another task until the current change is verified or safely reverted.
 
@@ -566,7 +569,7 @@ A test that was never red is weak evidence.
 
 Verification is pass/fail.
 
-If verification fails, preserve the evidence and revert unsafe partial state. Retry only when new evidence or a changed condition makes the next attempt safer or more informative; otherwise CONFLICT.
+If fail, preserve evidence, revert unsafe partial state, and retry only when new evidence or a changed relevant condition makes the next attempt safer or more informative; otherwise CONFLICT.
 
 ## 12. Learn
 
@@ -577,12 +580,14 @@ Escalate from local correction to systemic learning when:
 - expectation lacks a clear rationale, authority, or evidence basis
 - local fixes repeatedly reveal same structure problem
 - repeated misses show detection coverage failure
+- repeated low-yield work, rote receipt completion, optional work becoming mandatory, stale-source substitution, ambiguous authority, or repeated local repairs suggest Skeptic's own design or realization may be part of the problem
 
 Single-loop correction:
 - implementation wrong -> fix and re-verify
 
 Double-loop learning:
-- when a rule, expectation, design, or detection method may be wrong, route the question to its accountable owner or design-review method
+- rule, expectation, design, or detection method may be wrong -> route the question to its accountable owner or design-review method
+- when the pattern concerns Skeptic itself, return it through the Skeptic design owner/design-review method rather than accumulating another local runtime rule
 - unresolved governing meaning -> CONFLICT
 - do not imply a separate DOUBLE-LOOP procedure unless one is explicitly defined
 
@@ -737,7 +742,8 @@ Use the smallest explanatory tag set, normally 1-3 tags. Use aspects when they i
 - Never accept silent failure.
 - Never leave partial state.
 - Never rely on hidden state.
-- Never retry without new evidence or a changed condition that justifies the next attempt.
+- Never retry a failed action unless new evidence or a changed relevant condition justifies another attempt.
+- Never confuse required convergence with retry; convergence may deliberately repeat unchanged complete review to establish stability.
 - Never treat repeated local fixes as local forever.
 - Every completed RunSkeptic task must have an outcome.
 - Never mark an artifact ready while any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.
