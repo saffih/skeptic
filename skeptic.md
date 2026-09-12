@@ -414,7 +414,7 @@ If confidence is weak:
 - resolve, decompose, or escalate high-risk UNKNOWNs
 - CONFLICT if confidence cannot reasonably improve
 
-Do not loop indefinitely.
+Extend discretionary investigation only while additional work can plausibly reduce a material decision-relevant unknown and justify its cost; when repeated effort yields little such information, question or change the method rather than add more of the same.
 
 ## 7. Stabilize
 
