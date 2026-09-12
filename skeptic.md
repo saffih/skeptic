@@ -7,7 +7,7 @@ AI-executable framework for safe review and improvement.
 Rules:
 - Correct action over fast action.
 - If detection confidence is insufficient, do not fix or promote; gather evidence, decompose, or escalate.
-- Add process only when it addresses a specific credible failure mode.
+- Add a rule, step, or mechanism only when it materially reduces a specific credible failure mode.
 - Treat the chosen approach and its realization as reviewable, not as fixed premises. When their observed consequences are material, use those consequences as evidence about the assumptions, boundaries, and approach involved; do not treat existing realization as authority or an observed pattern as proof of causation.
 
 ## Invocation Contract
@@ -168,7 +168,7 @@ For either scope, check:
 - objective, DONE, authority, source-of-truth order, allowed scope, output, verification, and stop conditions are explicit enough to execute;
 - available context, time, tools, permissions, evidence, and other material resources can realistically support the claimed outcome;
 - dependencies, handoffs, integration, and final verification have clear ownership when applicable;
-- retries and repeated review/fix loops are bounded, with escalation or redesign when repetition stops adding evidence;
+- retries and repeated review/fix loops have explicit stopping rules; outside required convergence, when another attempt is unlikely to produce new evidence and no relevant condition has changed, change the method, decompose, or escalate;
 - decision-critical state is persisted only when it must survive a real boundary such as delegation, interruption, context loss, independent review, or cross-session continuation.
 
 A well-written prompt or set of locally valid child steps cannot earn task-level PASS when the overall completion, integration, or verification path is infeasible or unowned. Missing feasibility is ACTION when locally repairable, DECOMPOSE when the objective is clear but too large or coupled, and CONFLICT when authority, design, safety, source of truth, or terminal completion remains unresolved.
@@ -192,7 +192,7 @@ Rules:
 - clean scan is not proof of safety
 - structural issues outrank local fixes
 - downstream findings are PROVISIONAL if fundamentals may invalidate them
-- when several material findings cluster around the same mechanism, boundary, assumption, or process, test whether a shared structural cause exists before continuing repeated local repair
+- when several material findings share a mechanism, boundary, assumption, or process, test for a shared cause before fixing them separately
 - if no structural issue appears, continue to MAP
 
 ## 1. Map - Detect Only
@@ -248,7 +248,7 @@ Find avoidable stupidity before approving success.
 - `CH:CP` competence gaps: deciding without enough evidence or domain understanding
 - `CH:SM` weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
 - `CH:CR` constraint risk: effort targets something other than the system constraint, queue, or blocker currently limiting the outcome
-- `CH:EV` effort-value alignment: choice or allocation of effort, cost, rigor, process, or resources is disproportionate to expected value, material risk reduction, decision importance, available resources, or the probability of reaching a completed useful outcome
+- `CH:EV` effort-value mismatch: effort, cost, rigor, process, or resource use is disproportionate to the decision's importance, expected value or material risk reduction, available resources, or the chance of useful completion
 - `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
 
 ### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
@@ -367,10 +367,11 @@ Domain lenses produce findings, unknowns, and evidence; STABILIZE, EVIDENCE, and
 Rules:
 - Activate a specifically relevant domain early when the request explicitly names it or material domain relevance is already established; use the registry to resolve repository-owned domain files when needed.
 - Generic risk alone does not justify early domain activation.
-- Otherwise, discover domains only after broad core detection has substantially stabilized and another broad pass has low expected marginal detection value.
+- Otherwise, discover domains only after broad core detection has substantially stabilized and another broad core pass is unlikely to produce decision-relevant new evidence.
 - Treat substantive findings qualitatively: material effect on correctness, safety, architecture, authority, scope, action, verification, or task outcome matters more than finding count.
-- Select all materially useful domains, not one winner, but do not load a lens whose expected detection value is already adequately covered by the core or selected lenses.
-- In an ordinary run, a substantive domain finding may end further domain probing when continuing has low marginal value and broader coverage is not required.
+- Select all materially useful domains, but do not load a lens when its likely decision-relevant evidence is already covered by the core or selected lenses.
+- In an ordinary run, stop discretionary domain probing when another lens is unlikely to produce decision-relevant new evidence and broader coverage is not required.
+- This stopping rule does not override required coverage, completeness, readiness, promotion, or Find Loop obligations.
 - Do not treat unexamined selected domains as clean or exhausted.
 - For Find Loop, readiness, completeness, promotion, or explicitly exhaustive review, continue across the selected domain set sufficiently to support the claimed coverage.
 - If a selected domain companion is unavailable, record the missing coverage as skipped/UNKNOWN; continue core review when feasible and do not overclaim domain-aware coverage.
@@ -414,7 +415,7 @@ If confidence is weak:
 - resolve, decompose, or escalate high-risk UNKNOWNs
 - CONFLICT if confidence cannot reasonably improve
 
-Extend discretionary investigation only when plausible new evidence could materially change the decision enough to justify its cost; if repeated effort produces little decision-relevant evidence, change the method rather than repeat it.
+Extend discretionary investigation only when plausible new evidence could materially change the decision enough to justify its cost. If repeated effort produces little decision-relevant evidence, change the method rather than repeat it.
 
 ## 7. Stabilize
 
@@ -531,7 +532,7 @@ Process:
 2. Apply the smallest reversible change.
 3. Verify immediately.
 4. Revert immediately if verification fails.
-5. Retry only if safer or better informed.
+5. Retry only when new evidence or a changed condition makes the next attempt safer or more likely to succeed.
 6. Escalate if safe retry is impossible.
 7. Do not proceed to another task until the current change is verified or safely reverted.
 
@@ -565,7 +566,7 @@ A test that was never red is weak evidence.
 
 Verification is pass/fail.
 
-If fail, preserve evidence, revert unsafe partial state, and retry only with a new observed reason that makes retry safer; otherwise CONFLICT.
+If verification fails, preserve the evidence and revert unsafe partial state. Retry only when new evidence or a changed condition makes the next attempt safer or more informative; otherwise CONFLICT.
 
 ## 12. Learn
 
@@ -581,7 +582,7 @@ Single-loop correction:
 - implementation wrong -> fix and re-verify
 
 Double-loop learning:
-- rule, expectation, design, or detection method may be wrong -> route the question to its accountable owner or design-review method
+- when repeated local correction does not resolve the pattern, question the governing rule, expectation, design, or detection method and route that question to its accountable owner or design-review method
 - unresolved governing meaning -> CONFLICT
 - do not imply a separate DOUBLE-LOOP procedure unless one is explicitly defined
 
