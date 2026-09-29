@@ -8,6 +8,8 @@ Skeptic is an AI-executable framework for safe review and improvement: detect, r
 
 The authoritative public framework is [`skeptic.md`](skeptic.md). It defines `RunSkeptic`, the complete Skeptic review, together with its invocation contract, reasoning process, decision rules, verification requirements, and receipt.
 
+To install `RunSkeptic` as a persistent shortcut in an assistant that supports cross-chat memory, use [`run-skeptic-install.md`](run-skeptic-install.md).
+
 For the question registry, see [`skeptic-questions.md`](skeptic-questions.md). Additional review domains are under [`domains/`](domains/).
 
 ## Using Skeptic

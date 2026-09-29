@@ -19,7 +19,7 @@ A bare RunSkeptic is read-only unless I explicitly authorize changes.
 
 If persistent global/cross-chat memory is available, store this binding there now so RunSkeptic works in future sessions without reinstalling it. Store the binding, not a copy of Skeptic.
 
-If persistent memory is unavailable, tell me that this binding cannot be made persistent and do not claim that it was stored globally.
+If persistent memory is unavailable, keep this binding active for the current conversation/session and tell me that it will not persist to future sessions.
 
 If you cannot access and read the current skeptic.md for an invocation, say so and do not claim RunSkeptic compliance.
 ```
