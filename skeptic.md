@@ -1,8 +1,8 @@
-# Skeptic V4 Runtime Candidate R4 — Private / Experimental
+# Skeptic V4-R4 — Public Release
 
 - **Original author:** Saffi Hartal
 - **Architecture basis:** W4-R4
-- **Status:** PRIVATE RUNTIME CANDIDATE / NOT PUBLIC / NO PROMOTION AUTHORITY
+- **Status:** PUBLIC / CANONICAL RUNTIME
 
 Purpose:
 > Provide a self-contained operational RunSkeptic runtime using the W4-R4 state-driven architecture while preserving invocation compatibility, exact lens semantics by authoritative binding, domain routing, action/reality discipline, receipts, and loop entrypoints.
@@ -102,7 +102,7 @@ Only DECIDE=FIX plus valid ACTION CONTRACT plus explicit permission may act.
 
 For every RunSkeptic invocation:
 
-1. freshly read this exact runtime candidate;
+1. freshly read this exact runtime;
 2. bind its path/ref/blob;
 3. freshly bind the reviewed target/artifact/source;
 4. read the exact semantic companion bindings above when their semantics are required;
@@ -1061,7 +1061,7 @@ Useful artifact prompts include:
 - Never manufacture findings to justify process.
 - Never use a fixed replay count as proof of convergence.
 - Every formal task ends HANDLED or CONFLICT.
-- No PUBLIC mutation/promotion authority is carried by this private candidate.
+- No future Skeptic mutation or promotion authority is carried by this runtime.
 
 ---
 
