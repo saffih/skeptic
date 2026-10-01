@@ -18,6 +18,10 @@ Skeptic is released under the [MIT License](LICENSE), so it can be used, modifie
 
 If Skeptic is useful to you or your organization, starring this repository helps others discover it. When writing or speaking about the framework, a reference to **Skeptic by Joseph “Saffi” Hartal** and this canonical repository is appreciated.
 
+## Runtime support bindings
+
+The authoritative runtime remains [`skeptic.md`](skeptic.md). Files under `projects/skeptic/` in this public repository are immutable compatibility/support bindings referenced by that runtime; they do not define a second Skeptic runtime or competing authority.
+
 ## Canonical source
 
 This repository is the canonical public distribution of Skeptic. Development material that is not part of the public framework is not represented here.
