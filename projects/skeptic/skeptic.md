@@ -280,11 +280,11 @@ Find where explanation outruns reality.
 - `FE:WE` weak evidence: proof does not directly exercise or support the claimed outcome
 - `FE:PG` proof gap: confidence, authority, elegance, or coherent story substitutes for observed evidence
 - `FE:PV` purpose/value gap: the artifact is coherent or well-structured, but the useful outcome, user, owner, or value is unclear
-- `FE:TB` trust-boundary transition: untrusted, lower-authority, or unverified content, output, or state is accepted -- or is structurally permitted to flow -- into a higher-trust or control-bearing role without an explicit validation or authorization step proportionate to the consequence; or an actor is granted control-bearing capability, privileged access, broader source access, or external-effect authority that materially widens its established trust/control role without evidence that the capability belongs there and without proportionate authorization and containment
+- `FE:TB` trust-boundary transition: untrusted, lower-authority, or unverified content, output, or state is accepted -- or is structurally permitted to flow -- into a higher-trust or control-bearing role without an explicit validation or authorization step proportionate to the consequence
 
 Higher-trust or control-bearing roles include: instruction, permission, verified evidence, source of truth, executable input, policy, configuration, safety or control signal.
 
-For every `FE:TB` finding, identify the direction of the transition (information/state promoted into a higher-trust role or an actor's privilege/authority materially widened), the source/actor, the promoted role/capability, the boundary crossed, and the missing or insufficient validation, authorization, containment, or placement rationale. If unblocking one capability repeatedly requires materially independent privilege increases, treat that pattern as evidence to test capability placement before further widening; it is not itself proof of misplacement.
+For every `FE:TB` finding, identify the lower-trust source, the promoted role, the boundary crossed, and the missing validation or authorization.
 
 ### Karl Popper (PO) - Falsifiability, Refutation, Contradiction
 
