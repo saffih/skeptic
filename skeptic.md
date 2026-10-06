@@ -32,7 +32,7 @@ This runtime file owns:
 Exact Thinker/aspect meanings are bound to:
 
 - path: `projects/skeptic/skeptic.md`
-- blob: `41354bc7c45c703da3398e6c4dd84e15da02e835`
+- blob: `0689bc1007ac59ae0e295fd990e02bc5733e4781`
 - import only the semantic definitions under **§3 Thinkers**:
   - CH
   - OM
