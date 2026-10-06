@@ -405,6 +405,12 @@ Autonomous future wake-up is not promised unless an external runtime explicitly 
 
 Exact CH/OM/FE/PO/KT/AJ/SH meanings come from the bound semantic source.
 
+## Aspect annotations
+
+Canonical aspect identifiers from the bound semantic source (for example `FE:WE` and `PO:OC`) are the traceability names for material findings.
+
+For every material finding derived from Thinker reasoning, include the applicable canonical aspect tag(s) in the report. Do not invent a Thinker tag for a domain/process finding that does not map to one. Tags annotate findings; they do not create new semantics, findings, or per-lens prose obligations.
+
 ## ALWAYS on every material decision
 
 Apply complete:
@@ -963,6 +969,8 @@ Use when the requested Skeptic task itself cannot be validly completed because u
 ## User-facing result
 
 Give useful result first.
+
+Expose canonical aspect annotations for every material Thinker finding.
 
 Expose only material:
 - scope/assurance limitation;
