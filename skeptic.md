@@ -1,13 +1,14 @@
-# Skeptic V5 Runtime Candidate RC2 — Private / Experimental
+# Skeptic V5 Runtime Candidate RC3 — Private / Experimental
 
 - **Original author:** Saffi Hartal
 - **Predecessor:** frozen V4-R4 runtime blob `87ee055a7e104c30be488deb7719cd00bec814d9`
 - **Predecessor Thinker semantics:** `0689bc1007ac59ae0e295fd990e02bc5733e4781`
-- **Architecture basis:** V4-R4 successor carrying three separately motivated increments: capability-placement trust-boundary semantics, decision-discriminator provenance in STATE, and explicit abductive/inquiry-ordering semantics
+- **Architecture basis:** V4-R4 successor carrying four separately motivated increments: capability-placement trust-boundary semantics, decision-discriminator provenance in STATE, explicit abductive/inquiry-ordering semantics, and probability-aware incremental candidate selection
 - **Status:** PRIVATE RUNTIME CANDIDATE / NOT PUBLIC / NO PROMOTION AUTHORITY
 - **V5 delta 1 — AI Channel lesson:** refine `FE:TB` so trust-boundary analysis covers material privilege/authority widening into an actor, and treat repeated independent privilege widening as a capability-placement reassessment trigger rather than proof of misplacement
 - **V5 delta 2 — Beit-Shemesh lesson:** add Decision-Discriminator Provenance (DDP) in STATE M/C so a relation actually used to change ranking/selection must be directly warranted or represented as M
 - **V5 delta 3 — Abductive inquiry / ordering:** make the already-observed explanatory/discriminating behavior an explicit INQUIRE contract and define "highest-value" inquiry by expected decision value without numeric scoring
+- **V5 delta 4 — Incremental progress selection:** when size, coupling, complexity, unknowns, or prior failures materially lower a candidate's expected probability of reaching a completed useful outcome, require InnoSkeptic to consider an independently verifiable smaller-step alternative that advances the goal or resolves a decision-critical unknown without losing required end-to-end or integration semantics
 - **Why "Decision-Discriminator Provenance":** a discriminator is any property or relation actually used to change relative order or selection; provenance is the warrant that makes that discriminator decision-relevant. The name describes the exact hidden step missed in the Beit-Shemesh case rather than introducing a new lens or framework.
 - **Preserved from V4:** material Thinker aspect annotations and all other V4 runtime/process behavior remain unchanged
 
@@ -271,6 +272,7 @@ Purpose:
 For each cycle:
 - bind one goal + constraints;
 - generate materially distinct candidates;
+- when a candidate's size, coupling, complexity, unknowns, or prior failures materially lower its expected probability of reaching a completed useful outcome, consider a smaller-step alternative whose steps are independently verifiable and each advances the goal or resolves a decision-critical unknown; prefer it only when it improves expected useful progress without losing required end-to-end or integration semantics;
 - for each mutation, state the new claim/protection, existing owner/evidence, and whether the mutation broadens meaning without evidence;
 - run COMPLETE RunSkeptic on the candidate set using shared evidence;
 - eliminate only defeated/dominated candidates;
