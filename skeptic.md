@@ -1,17 +1,18 @@
-# Skeptic V5 Runtime Candidate RC1 — Private / Experimental
+# Skeptic V5 Runtime Candidate RC2 — Private / Experimental
 
 - **Original author:** Saffi Hartal
 - **Predecessor:** frozen V4-R4 runtime blob `87ee055a7e104c30be488deb7719cd00bec814d9`
 - **Predecessor Thinker semantics:** `0689bc1007ac59ae0e295fd990e02bc5733e4781`
-- **Architecture basis:** V4-R4 successor carrying two separately motivated increments: capability-placement trust-boundary semantics and decision-discriminator provenance in STATE
+- **Architecture basis:** V4-R4 successor carrying three separately motivated increments: capability-placement trust-boundary semantics, decision-discriminator provenance in STATE, and explicit abductive/inquiry-ordering semantics
 - **Status:** PRIVATE RUNTIME CANDIDATE / NOT PUBLIC / NO PROMOTION AUTHORITY
 - **V5 delta 1 — AI Channel lesson:** refine `FE:TB` so trust-boundary analysis covers material privilege/authority widening into an actor, and treat repeated independent privilege widening as a capability-placement reassessment trigger rather than proof of misplacement
 - **V5 delta 2 — Beit-Shemesh lesson:** add Decision-Discriminator Provenance (DDP) in STATE M/C so a relation actually used to change ranking/selection must be directly warranted or represented as M
+- **V5 delta 3 — Abductive inquiry / ordering:** make the already-observed explanatory/discriminating behavior an explicit INQUIRE contract and define "highest-value" inquiry by expected decision value without numeric scoring
 - **Why "Decision-Discriminator Provenance":** a discriminator is any property or relation actually used to change relative order or selection; provenance is the warrant that makes that discriminator decision-relevant. The name describes the exact hidden step missed in the Beit-Shemesh case rather than introducing a new lens or framework.
 - **Preserved from V4:** material Thinker aspect annotations and all other V4 runtime/process behavior remain unchanged
 
 Purpose:
-> Provide a self-contained operational RunSkeptic runtime using the W4-R4 state-driven architecture while preserving invocation compatibility, exact lens semantics by authoritative binding, domain routing, action/reality discipline, receipts, and loop entrypoints.
+> Provide a self-contained operational RunSkeptic runtime using the V4-R4 state-driven architecture while preserving invocation compatibility, exact lens semantics by authoritative binding, domain routing, action/reality discipline, receipts, and loop entrypoints.
 
 Visible runtime:
 
@@ -131,7 +132,7 @@ REVIEWED_ARTIFACT_REFERENCE: <reference>
 REVIEWED_ARTIFACT_SHA256: <when byte artifact exists>
 SKEPTIC_RUNTIME_PATH: <this candidate path>
 SKEPTIC_RUNTIME_BLOB_SHA: <blob>
-LENS_SEMANTICS_BLOB_SHA: 0689bc1007ac59ae0e295fd990e02bc5733e4781
+LENS_SEMANTICS_BLOB_SHA: 41354bc7c45c703da3398e6c4dd84e15da02e835
 DOMAIN_REGISTRY_BLOB_SHA: 16bcb90a999c9aec2781256c3cff511aae2fd230
 APPLICABLE_DOMAIN_COMPANIONS: <list or NONE>
 MATERIAL_FINDINGS: <list or NONE>
@@ -164,7 +165,7 @@ Every formal RunSkeptic report includes a compact receipt:
 
 Receipt is an index for challengeability, not independent proof.
 
-Do not claim V4 RunSkeptic compliance without the required source bindings.
+Do not claim V5 RunSkeptic compliance without the required source bindings.
 
 ---
 
@@ -547,7 +548,9 @@ Do not force this checklist on trivial non-structural work.
 
 # 8. INQUIRE
 
-Resolve the highest-value open item.
+Resolve the highest-value open item. For discretionary inquiry, expected decision value means ability to change DECIDE, discriminate materially live M, or resolve shared dependencies relative to cost and risk. Required safety, authority, coverage, evidence, verification, and ATTACK/resample obligations override this ordering; do not invent numerical precision.
+
+When an established F materially conflicts with a decision-relevant M or expectation and explaining why could change DECIDE, open an explanatory O; form plausible competing M as needed and prefer safe, proportionate evidence that discriminates them. Surprise is not proof of a cause. Do not proliferate explanations when authoritative evidence already adequately explains the mismatch or when resolving the cause cannot materially affect DECIDE.
 
 INQUIRE may:
 - orient/reframe;
@@ -1084,5 +1087,5 @@ Useful artifact prompts include:
 
 # One-line summary
 
-RunSkeptic V4-R4:
+RunSkeptic V5 RC2:
 > **Bind -> maintain live truth/model/open-state -> inquire -> attack what represented reasoning may have missed -> decide only from supported state -> act under contract -> observe reality -> reopen only what reality changed.**
