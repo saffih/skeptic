@@ -1,8 +1,14 @@
-# Skeptic V4 Runtime Candidate R4 — Private / Experimental
+# Skeptic V5 Runtime Candidate RC1 — Private / Experimental
 
 - **Original author:** Saffi Hartal
-- **Architecture basis:** W4-R4
+- **Predecessor:** frozen V4-R4 runtime blob `87ee055a7e104c30be488deb7719cd00bec814d9`
+- **Predecessor Thinker semantics:** `0689bc1007ac59ae0e295fd990e02bc5733e4781`
+- **Architecture basis:** V4-R4 successor carrying two separately motivated increments: capability-placement trust-boundary semantics and decision-discriminator provenance in STATE
 - **Status:** PRIVATE RUNTIME CANDIDATE / NOT PUBLIC / NO PROMOTION AUTHORITY
+- **V5 delta 1 — AI Channel lesson:** refine `FE:TB` so trust-boundary analysis covers material privilege/authority widening into an actor, and treat repeated independent privilege widening as a capability-placement reassessment trigger rather than proof of misplacement
+- **V5 delta 2 — Beit-Shemesh lesson:** add Decision-Discriminator Provenance (DDP) in STATE M/C so a relation actually used to change ranking/selection must be directly warranted or represented as M
+- **Why "Decision-Discriminator Provenance":** a discriminator is any property or relation actually used to change relative order or selection; provenance is the warrant that makes that discriminator decision-relevant. The name describes the exact hidden step missed in the Beit-Shemesh case rather than introducing a new lens or framework.
+- **Preserved from V4:** material Thinker aspect annotations and all other V4 runtime/process behavior remain unchanged
 
 Purpose:
 > Provide a self-contained operational RunSkeptic runtime using the W4-R4 state-driven architecture while preserving invocation compatibility, exact lens semantics by authoritative binding, domain routing, action/reality discipline, receipts, and loop entrypoints.
@@ -32,7 +38,7 @@ This runtime file owns:
 Exact Thinker/aspect meanings are bound to:
 
 - path: `projects/skeptic/skeptic.md`
-- blob: `0689bc1007ac59ae0e295fd990e02bc5733e4781`
+- blob: `41354bc7c45c703da3398e6c4dd84e15da02e835`
 - import only the semantic definitions under **§3 Thinkers**:
   - CH
   - OM
@@ -58,7 +64,7 @@ This runtime remains the sole process/decision/action authority.
 
 If a required bound source is unavailable or does not match the bound blob:
 - report the missing binding;
-- do not claim full V4 RunSkeptic compliance;
+- do not claim full V5 RunSkeptic compliance;
 - continue only if the requested bounded conclusion can honestly exclude the missing semantics.
 
 ---
@@ -336,6 +342,8 @@ Provisional:
 - causal structure;
 - competing models.
 
+Decision relevance can itself be inferential. If C uses a premise or observed property to change relative rank/selection among alternatives rather than merely establish qualification/exclusion, the relation that makes it decision-relevant is M unless the bound task/evidence directly supplies that relation.
+
 For every decision-critical M preserve enough evidence semantics to know:
 - what supports it;
 - exact scope/condition support reaches;
@@ -379,6 +387,7 @@ Provisional:
 Track materially:
 - direct support;
 - decision-critical M dependencies;
+- for material comparison/ranking/selection, each discriminator actually capable of changing relative order/selection -- including one implicit in the candidate ordering/rationale -- and its direct support or M dependency;
 - O dependencies;
 - what defeats/narrows it.
 
@@ -404,6 +413,12 @@ Autonomous future wake-up is not promised unless an external runtime explicitly 
 # 6. Reasoning coverage
 
 Exact CH/OM/FE/PO/KT/AJ/SH meanings come from the bound semantic source.
+
+## Aspect annotations
+
+Canonical aspect identifiers from the bound semantic source (for example `FE:WE` and `PO:OC`) are the traceability names for material findings.
+
+For every material finding derived from Thinker reasoning, include the applicable canonical aspect tag(s) in the report. Do not invent a Thinker tag for a domain/process finding that does not map to one. Tags annotate findings; they do not create new semantics, findings, or per-lens prose obligations.
 
 ## ALWAYS on every material decision
 
@@ -963,6 +978,8 @@ Use when the requested Skeptic task itself cannot be validly completed because u
 ## User-facing result
 
 Give useful result first.
+
+Expose canonical aspect annotations for every material Thinker finding.
 
 Expose only material:
 - scope/assurance limitation;
