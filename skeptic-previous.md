@@ -1,5 +1,6 @@
-# Skeptic
+# Skeptic - Detect, Reason, Fix, Verify
 
+- **Original author:** Saffi Hartal
 
 AI-executable framework for safe review and improvement.
 
