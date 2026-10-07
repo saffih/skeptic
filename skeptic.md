@@ -1,19 +1,7 @@
-# Skeptic V5 — Current
-
-- **Original author:** Saffi Hartal
-- **Predecessor:** frozen V4-R4 runtime blob `87ee055a7e104c30be488deb7719cd00bec814d9`
-- **Predecessor Thinker semantics:** `0689bc1007ac59ae0e295fd990e02bc5733e4781`
-- **Architecture basis:** V4-R4 successor carrying four separately motivated increments: capability-placement trust-boundary semantics, decision-discriminator provenance in STATE, explicit abductive/inquiry-ordering semantics, and probability-aware incremental candidate selection
-- **Status:** CURRENT / PUBLIC
-- **V5 delta 1 — AI Channel lesson:** refine `FE:TB` so trust-boundary analysis covers material privilege/authority widening into an actor, and treat repeated independent privilege widening as a capability-placement reassessment trigger rather than proof of misplacement
-- **V5 delta 2 — Beit-Shemesh lesson:** add Decision-Discriminator Provenance (DDP) in STATE M/C so a relation actually used to change ranking/selection must be directly warranted or represented as M
-- **V5 delta 3 — Abductive inquiry / ordering:** make the already-observed explanatory/discriminating behavior an explicit INQUIRE contract and define "highest-value" inquiry by expected decision value without numeric scoring
-- **V5 delta 4 — Incremental progress selection:** when size, coupling, complexity, unknowns, or prior failures materially lower a candidate's expected probability of reaching a completed useful outcome, require InnoSkeptic to consider an independently verifiable smaller-step alternative that advances the goal or resolves a decision-critical unknown without losing required end-to-end or integration semantics
-- **Why "Decision-Discriminator Provenance":** a discriminator is any property or relation actually used to change relative order or selection; provenance is the warrant that makes that discriminator decision-relevant. The name describes the exact hidden step missed in the Beit-Shemesh case rather than introducing a new lens or framework.
-- **Preserved from V4:** material Thinker aspect annotations and all other V4 runtime/process behavior remain unchanged
+# Skeptic
 
 Purpose:
-> Provide a self-contained operational RunSkeptic runtime using the V4-R4 state-driven architecture while preserving invocation compatibility, exact lens semantics by authoritative binding, domain routing, action/reality discipline, receipts, and loop entrypoints.
+> Provide a self-contained operational RunSkeptic runtime with authoritative semantic bindings, domain routing, action/reality discipline, receipts, and loop entrypoints.
 
 Visible runtime:
 
@@ -131,7 +119,7 @@ DONE: <testable statement>
 TARGET_TASK_REFERENCE: <interpretable task/scope>
 REVIEWED_ARTIFACT_REFERENCE: <reference>
 REVIEWED_ARTIFACT_SHA256: <when byte artifact exists>
-SKEPTIC_RUNTIME_PATH: <this candidate path>
+SKEPTIC_RUNTIME_PATH: <this runtime path>
 SKEPTIC_RUNTIME_BLOB_SHA: <blob>
 LENS_SEMANTICS_BLOB_SHA: 41354bc7c45c703da3398e6c4dd84e15da02e835
 DOMAIN_REGISTRY_BLOB_SHA: 16bcb90a999c9aec2781256c3cff511aae2fd230
