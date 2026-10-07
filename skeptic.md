@@ -1,760 +1,1081 @@
-# Skeptic - Detect, Reason, Fix, Verify
+# Skeptic
 
-- **Original author:** Saffi Hartal
+Purpose:
+> Provide a self-contained operational RunSkeptic runtime with authoritative semantic bindings, domain routing, action/reality discipline, receipts, and loop entrypoints.
 
-AI-executable framework for safe review and improvement.
+Visible runtime:
 
-Rules:
-- Correct action over fast action.
-- If detection confidence is insufficient, do not fix or promote; gather evidence, decompose, or escalate.
-- Add process only when it addresses a specific credible failure mode.
-- Treat the chosen approach and its realization as reviewable, not as fixed premises. When their observed consequences are material, use those consequences as evidence about the assumptions, boundaries, and approach involved; do not treat existing realization as authority or an observed pattern as proof of causation.
+`BIND -> STATE(F/M/O/C) -> { INQUIRE | ATTACK }* -> DECIDE -> [ ACTION CONTRACT -> EXECUTE -> OBSERVE -> STATE ]`
 
-## Invocation Contract
+No permanent COMPOSE, GUARD, RECONCILE, SELF, separate CLOSURE stage, compact-backstop stage, fixed replay count, or five-role bookkeeping.
+
+---
+
+# 0. Authoritative semantic bindings
+
+This runtime file owns:
+- process/control flow;
+- assurance;
+- state;
+- family application;
+- integration;
+- ATTACK;
+- DECIDE;
+- action/reality;
+- output;
+- loop/convergence semantics.
+
+Exact Thinker/aspect meanings are bound to:
+
+- path: `projects/skeptic/skeptic.md`
+- blob: `41354bc7c45c703da3398e6c4dd84e15da02e835`
+- import only the semantic definitions under **§3 Thinkers**:
+  - CH
+  - OM
+  - FE
+  - PO
+  - KT
+  - AJ
+  - SH
+- procedural operator/stage references inside that older source do **not** import old control flow. Interpret their semantic intent through this runtime's STATE / INQUIRE / integration / DECIDE operations.
+
+Family application contract:
+
+- path: `projects/skeptic/evolution/skeptic-w3-lens-application-simple-family-rule-20260924.md`
+- blob: `cb25a1f13df932f1cfd8ce5a69103a48fb0ec201`
+
+Domain registry:
+
+- path: `projects/skeptic/skeptic-questions.md`
+- blob: `16bcb90a999c9aec2781256c3cff511aae2fd230`
+
+Selected domain files add detection/evidence only.
+This runtime remains the sole process/decision/action authority.
+
+If a required bound source is unavailable or does not match the bound blob:
+- report the missing binding;
+- do not claim full V5 RunSkeptic compliance;
+- continue only if the requested bounded conclusion can honestly exclude the missing semantics.
+
+---
+
+# 1. Invocation contract
 
 `RunSkeptic` is the formal invocation string for the complete Skeptic framework.
 
-Aliases: `beskeptic`, `apply Skeptic`, `Skeptic review`, `run skeptic.md`.
+Aliases:
+- `beskeptic`
+- `apply Skeptic`
+- `Skeptic review`
+- `run skeptic.md`
 
-`Razor` is the formal invocation string for the bounded read-only diagnostic in §14. `Expert Review` is a compatibility phrase for Razor with an explicitly scoped domain; it does not invoke a separate review pipeline.
+`Razor` is the formal bounded read-only diagnostic entrypoint.
 
-The invocation selects the review depth; the request determines permission and stopping conditions. RunSkeptic is read-only unless fixing is explicitly authorized; verification emphasis or iterative repetition must also be requested. Razor is always read-only.
+`Expert Review` remains a compatibility phrase for Razor with an explicitly scoped domain.
 
-When RunSkeptic is invoked:
-1. Read the actual current `skeptic.md`, or an explicitly supplied candidate Skeptic file, before analysis.
-2. Do not use memory, summaries, previous variants, or generated replacements as substitutes.
-3. Treat the source under review as the runtime source of truth.
-4. Read companion files only when this file says they apply.
-5. Apply the current recipe exactly and in order.
-6. Consider every Thinker required by this file.
-7. Show which major Skeptic steps were run.
-8. Show evidence for material findings.
-9. Use the exact output categories from this file.
-10. Do not modify files unless DECIDE says FIX and edits are explicitly allowed.
-11. Verify the recommendation against the framework.
-12. State unresolved conflicts, unknowns, skipped areas, and missing evidence.
-13. If the source under review is unavailable, say so and do not claim RunSkeptic/Skeptic compliance.
+## Default assurance
 
-An explicit RunSkeptic invocation may additionally name companion files; they add context but do not replace or override the designated Skeptic source.
+- bare `RunSkeptic` => **COMPLETE assurance for the exact bound task**
+- `Razor` => **BOUNDED read-only assurance**
+- explicit user scope/assurance may narrow or strengthen only when it actually changes the bound task
+- a narrower supported subclaim never silently replaces an unresolved stronger claim
 
-Each repeated RunSkeptic run is a new invocation for source-freshness purposes: perform Rule 1 again. An earlier read does not satisfy a later run.
+## Permission
 
-For deterministic RunSkeptic binding, a formal invocation records:
+Default RunSkeptic permission:
+- read-only
+
+Recognized compatible permissions:
+- `read-only`
+- `patch-local`
+- `fix-if-valid`
+
+`patch-local` and `fix-if-valid` never authorize an edit by themselves.
+
+Only DECIDE=FIX plus valid ACTION CONTRACT plus explicit permission may act.
+
+## Fresh source binding
+
+For every RunSkeptic invocation:
+
+1. freshly read this exact runtime;
+2. bind its path/ref/blob;
+3. freshly bind the reviewed target/artifact/source;
+4. read the exact semantic companion bindings above when their semantics are required;
+5. do not substitute memory, summaries, previous variants, or generated reconstructions.
+
+Every repeated RunSkeptic run is a new source-freshness invocation.
+
+## Formal invocation record
+
+When deterministic binding is useful, record:
 
 ```text
 INVOCATION_ID: <id>
 INVOCATION_KIND: SINGLE | FIND_LOOP | FIX_LOOP | INNOSKEPTIC | INOSKEPTIC
 PERMISSION_MODE: read-only | patch-local | fix-if-valid
+ASSURANCE: COMPLETE | BOUNDED
 DONE: <testable statement>
-TARGET_TASK_REFERENCE: <explicit interpretable task/scope reference>
+TARGET_TASK_REFERENCE: <interpretable task/scope>
 REVIEWED_ARTIFACT_REFERENCE: <reference>
-REVIEWED_ARTIFACT_SHA256: <sha256 of exact reviewed artifact bytes>
-SKEPTIC_SOURCE_PATH: skeptic.md
-SKEPTIC_SOURCE_REF: <ref>
-SKEPTIC_SOURCE_BLOB_SHA: <blob sha>
-APPLICABLE_COMPANIONS: <explicit list of companion/domain references>
-MATERIAL_FINDINGS: <explicit list of material finding identifiers or summaries>
+REVIEWED_ARTIFACT_SHA256: <when byte artifact exists>
+SKEPTIC_RUNTIME_PATH: <this runtime path>
+SKEPTIC_RUNTIME_BLOB_SHA: <blob>
+LENS_SEMANTICS_BLOB_SHA: 41354bc7c45c703da3398e6c4dd84e15da02e835
+DOMAIN_REGISTRY_BLOB_SHA: 16bcb90a999c9aec2781256c3cff511aae2fd230
+APPLICABLE_DOMAIN_COMPANIONS: <list or NONE>
+MATERIAL_FINDINGS: <list or NONE>
 PREVIOUS_FINDINGS_REFERENCE: <reference or NONE>
 ```
 
-The designated source is freshly read before analysis. The artifact hash and Skeptic blob bind reproducible byte-level objects; semantic bindings remain explicit and interpretable rather than using exact-looking hashes whose input representation is undefined. These fields bind the receipt to that read and to the complete current artifact; they do not prove hidden runtime context, model cognition, or actual model/provider routing.
+These fields bind objects/context; they do not prove hidden cognition or provider/model routing.
 
-`patch-local` is a compatibility permission spelling, not a separate action standard. When accepted, it remains bounded by the explicit task scope and the same normative-warrant, confidence, DECIDE=FIX, and verification requirements as `fix-if-valid`.
+---
 
-### RunSkeptic Receipt
+# 2. RunSkeptic receipt
 
-Every RunSkeptic report must include a compact receipt:
-- Source read: path/ref/SHA or explicit unavailable state
-- Companion files read, if any
-- Permission mode: read-only / patch-local / fix-if-valid
-- DONE statement
-- Major steps run
-- Thinkers considered
-- Evidence used
-- Decision path
-- Verification performed
-- Unresolved conflicts / unknowns
-- Final output category
+Every formal RunSkeptic report includes a compact receipt:
 
-Do not claim RunSkeptic compliance without this receipt.
+- Runtime source read: path/ref/blob
+- Lens semantics source: blob
+- Domain companions read, if any
+- Permission mode
+- Assurance
+- DONE
+- Major operations materially exercised
+- Reasoning families applied / triggered
+- Material evidence used
+- ATTACK: due reason / result / skipped exemption basis
+- DECIDE outcome
+- Stop basis
+- Action / observation / recovery, if any
+- Unresolved O / conflicts / unknowns
+- Final task category
 
-A RunSkeptic receipt indexes the review and its evidence; it is not independent proof or authority. A material receipt claim that conflicts with primary evidence must be corrected or left unresolved.
+Receipt is an index for challengeability, not independent proof.
 
-### Loop Invocations
+Do not claim V5 RunSkeptic compliance without the required source bindings.
 
-#### Artifact Relay
+---
 
-`artifact-relay` — Before Find/Fix work likely to exhaust context or repeat substantial reads, bounded side-work delegation is optional and should be used only when expected to reduce total context, cost, repetition, or failure risk after overhead.
+# 3. Loop entrypoints
 
-One loop owner remains responsible for freshly reading the applicable Skeptic source and complete current artifact, executing the full recipe, reevaluating prior findings, preserving unresolved states, and enforcing convergence and reset criteria. Delegated findings, reports, receipts, or evidence may support work but never substitute for required fresh coverage or count as unchanged qualifying passes. Report unobserved freshness, validity, or coverage as `UNKNOWN`; if complete coverage is infeasible, stop with `CONFLICT`.
+Loop names remain compatible.
+Old fixed three-pass semantics do not.
 
-How context is packaged and which execution route is selected belong to the execution environment when it has governing policies; standalone Skeptic does not require such policies to operate.
+## Artifact Relay
 
-Retry and convergence are distinct. Retrying a failed action requires new evidence or a changed relevant condition that justifies another attempt; required convergence may deliberately repeat unchanged complete review because stable repetition is itself assurance evidence.
+`artifact-relay` remains an optional bounded side-work/delegation aid for Find/Fix work when it is expected to reduce total context, repetition, cost, or failure risk after overhead.
 
-`RunSkeptic Find Loop` invokes repeated full read-only RunSkeptic reviews. Unless the explicit invocation sets another count, stop only after three consecutive runs produce no new meaningful finding and no material change to an existing finding.
+It is **not** a separate assurance or decision pipeline.
 
-Find Loop inputs bind the Target Task, complete reviewed artifact, Skeptic source blob, applicable companions, invocation kind, and permission mode. Reset the consecutive count after any change to those bindings or after any new or materially changed finding, because detection stability must describe repeated review of one exact comparison.
+One RunSkeptic/loop owner remains responsible for:
+- fresh runtime/source binding;
+- the bound task/DONE;
+- COMPLETE assurance when required;
+- integrating returned evidence into STATE;
+- ATTACK/convergence obligations;
+- DECIDE/action/reality ownership.
 
-In Find Loop, the first unchanged pass with no new substantive core finding triggers one domain-discovery step before core-only stability can count toward final convergence.
-Bind the selected domain set as applicable companions and reset the convergence count when that binding changes.
-Reuse that selected set while the Target Task, reviewed artifact, bound scope, material dependencies, and other domain-relevance inputs remain unchanged; rediscover domains only when a material change could alter relevance.
+Delegated work returns only:
+- bounded evidence/findings;
+- scope;
+- provenance;
+- unknowns.
 
-For each Find Loop run:
-- freshly read the designated current Skeptic source and execute the complete recipe
-- re-evaluate the complete artifact and all previous findings
-- make no modifications
-- stabilize duplicates and distinguish new findings from restatements
-- record new, changed, resolved, and still-open findings
-- return material findings as scoped suspicions rather than task-level conclusions; preserve direct observations and evidence as such, and state the review scope, assumptions, and unknowns; the receiving Core retains responsibility to reevaluate each finding against wider authoritative context before task-level action or artifact promotion
-- reset the consecutive-run count after any new or materially changed finding
+Delegated results:
+- never inherit COMPLETE or DECIDE authority;
+- never substitute for required fresh coverage;
+- never count as independent convergence evidence merely because they came through another context;
+- may reduce repeated reads only where their provenance/support remains valid.
 
-Find Loop convergence means detection stabilized; it does not mean the artifact passed or is ready. Report every unresolved ACTION, DECOMPOSE path, CONFLICT, and blocking unknown, and every applicable required review that has not been completed.
+Across lossy delegation boundaries, rebind mutable source/authority/freshness and reopen only dependent state.
 
-`RunSkeptic Fix Loop` invokes repeated full RunSkeptic review-and-fix cycles. Unless the explicit invocation sets another count, stop successfully only after three consecutive qualifying passes on the same unchanged artifact state.
 
-External loop state binds the Target Task, complete reviewed artifact, Skeptic source blob, applicable companions, material finding set, invocation kind, and permission mode. Reset the qualifying count after any change to one of those bindings or to a material finding. A repair run and a delta-only review never qualify. Unless explicitly overridden, completion requires three unchanged qualifying passes.
+## RunSkeptic Find Loop
 
-For each Fix Loop run:
-- freshly read the designated current Skeptic source and execute the complete recipe
-- re-evaluate the complete artifact, including all previously HANDLED areas
-- fix every authorized material issue that DECIDE validly classifies as FIX
-- verify every change immediately
-- after any change, restart the complete review and reset the consecutive-pass count
+Purpose:
+> repeated fresh read-only review when additional independent/meaningfully varied review opportunity has expected detection value.
 
-A repair run does not count as a qualifying pass. A run qualifies only when no change is made, every material finding is PASS, all required verification passes, no unresolved ACTION, DECOMPOSE path, CONFLICT, or blocking unknown remains, and every applicable required review is completed.
+Each run:
+- freshly binds runtime + exact current artifact;
+- performs COMPLETE RunSkeptic;
+- preserves material prior evidence/findings as state, not authority;
+- re-evaluates changed/dependent state;
+- does not modify the target.
 
-If safe evidence-backed progress cannot continue, stop with CONFLICT rather than loop indefinitely or claim completion.
+Convergence:
+- an explicit Find Loop must contain **at least one fresh review opportunity after the first run** unless execution becomes infeasible/unsafe or the caller explicitly requested a different count;
+- this is invocation semantics, not proof of convergence;
+- no universal total pass count;
+- repeated correlated replay is weak evidence;
+- after the minimum repeated opportunity, continue only while another fresh/varied review can materially reduce residual miss uncertainty;
+- broad review/family resample is due when residual activation risk is broad/unlocalized, framing-sensitive, review stability itself matters, targeted ATTACK cannot represent the remaining miss space, or prior evidence shows activation sensitivity;
+- stop when required coverage/ATTACK/resample obligations are satisfied and another materially different review has low expected decision value.
 
-`InnoSkeptic` (Innovative Skeptic) invokes repeated innovation-selection cycles. Aliases: `Innovative Skeptic`, `INNO Skeptic`, `InoSkeptic` (legacy). Unless the explicit invocation sets another count, stop successfully only after one defensible candidate remains or a complete cycle yields no material improvement or justified narrowing.
+If the caller explicitly requests a run count:
+- perform that many opportunities when feasible;
+- the count is an execution request, not proof of convergence;
+- a material change invalidates only dependent prior convergence credit.
 
-Bind one goal and set of constraints.
+Find Loop convergence means detection opportunity has become low-value enough for the requested assurance; it never converts UNKNOWN to evidence.
 
-For each InnoSkeptic run:
-- generate several materially distinct candidates satisfying the bound constraints
-- vary, mutate, recombine, or add candidates based on prior evidence
-- for every candidate mutation, state the exact new claim or protection it adds, who already owns or proves that claim, and whether any new term implies more than the mechanism establishes; reject mutations that only duplicate existing evidence or broaden the claim without new evidence
-- freshly read the designated current Skeptic source and RunSkeptic on the complete candidate set using shared evidence
-- use findings and newly established evidence to improve and narrow the set
-- eliminate only approaches defeated by the bound requirements or demonstrably dominated by others on all material protected dimensions
-- preserve unresolved nondominated candidates
-- if any candidate changed or evidence expanded, restart the complete review
+## RunSkeptic Fix Loop
 
-InnoSkeptic convergence means one defensible candidate remains or a complete cycle yields no material improvement or justified narrowing. Do not force one winner when alternatives remain nondominated.
+Purpose:
+> repeated authorized review -> action -> observation cycles.
 
-Flow: GATE -> FUNDAMENTAL SCAN -> MAP -> CONFIDENCE -> STABILIZE -> EVIDENCE -> DECIDE -> ACT -> VERIFY -> LEARN
+Each cycle:
+1. COMPLETE RunSkeptic;
+2. DECIDE;
+3. if FIX is authorized, bind ACTION CONTRACT;
+4. revalidate mutable premises immediately before effect;
+5. EXECUTE smallest materially equivalent mechanics;
+6. OBSERVE authoritative resulting reality;
+7. update STATE and reopen only dependent state.
 
-## 0. Gate
+A repair cycle is never itself proof of completion.
 
-Proceed when:
-- DONE is testable
-- scope is tractable
-- wrong-answer cost is acceptable
-- intent, assumptions, and chosen approach are explicit enough to test
+No universal qualifying-pass count.
 
-If not:
-- undefined DONE -> CONFLICT; make no action
-- too large but clear -> DECOMPOSE
-- multiple valid interpretations -> list them; proceed only if one is evidence-backed, low-risk, and testable
-- unresolved or unsafe ambiguity -> CONFLICT
+Stop successfully only when:
+- no required FIX remains;
+- all decision-critical O for the bound DONE are closed/N/A or honestly terminal;
+- required verification is supported;
+- owed ATTACK/resample is satisfied;
+- exact DONE can validly receive positive DECIDE.
 
-### Prompt and Task Feasibility
+Unknown action effect must be reconciled before unsafe retry/compensation.
 
-When reviewing an instruction, prompt, plan, or workflow, determine what it claims to own. Apply this core check using the supplied artifact and available evidence; do not assume repository companion files exist.
+## InnoSkeptic
 
-Classify the completion scope:
-- **Bounded prompt:** owns one role or action, not terminal completion.
-- **End-to-end task:** owns multiple dependent steps, integration, publication, or terminal DONE.
+Aliases:
+- `Innovative Skeptic`
+- `INNO Skeptic`
+- `InoSkeptic`
 
-For either scope, check:
-- objective, DONE, authority, source-of-truth order, allowed scope, output, verification, and stop conditions are explicit enough to execute;
-- available context, time, tools, permissions, evidence, and other material resources can realistically support the claimed outcome;
-- dependencies, handoffs, integration, and final verification have clear ownership when applicable;
-- retries and repeated review/fix loops have explicit stopping rules; outside required convergence, retry only when new evidence or a changed relevant condition justifies another attempt, and change the method, decompose, or escalate when repeated effort produces little decision-relevant evidence;
-- decision-critical state is persisted only when it must survive a real boundary such as delegation, interruption, context loss, independent review, or cross-session continuation.
+Purpose:
+> generate and compare materially distinct candidates without forcing a winner.
 
-A well-written prompt or set of locally valid child steps cannot earn task-level PASS when the overall completion, integration, or verification path is infeasible or unowned. Missing feasibility is ACTION when locally repairable, DECOMPOSE when the objective is clear but too large or coupled, and CONFLICT when authority, design, safety, source of truth, or terminal completion remains unresolved.
+For each cycle:
+- bind one goal + constraints;
+- generate materially distinct candidates;
+- when a candidate's size, coupling, complexity, unknowns, or prior failures materially lower its expected probability of reaching a completed useful outcome, consider a smaller-step alternative whose steps are independently verifiable and each advances the goal or resolves a decision-critical unknown; prefer it only when it improves expected useful progress without losing required end-to-end or integration semantics;
+- for each mutation, state the new claim/protection, existing owner/evidence, and whether the mutation broadens meaning without evidence;
+- run COMPLETE RunSkeptic on the candidate set using shared evidence;
+- eliminate only defeated/dominated candidates;
+- preserve unresolved nondominated alternatives;
+- if candidate meaning/evidence materially changes, reopen only dependent state and re-run owed challenge.
 
-No companion file is required for this core review. A supplied companion may add context-specific constraints but cannot override Skeptic.
+Stop when:
+- one defensible candidate dominates for the bound criteria; or
+- a full cycle yields no material improvement or justified narrowing.
 
-## 0.5. Fundamental Scan
+Do not force one winner where value/preference authority remains unresolved.
 
-Before broad detection, check what can invalidate later work:
-- system purpose
-- architecture shape
-- boundaries
-- ownership
-- source of truth
-- main flows
-- interfaces / coupling
-- high-risk, recent, or suspected areas
+---
 
-Rules:
-- detect only; do not fix
-- clean scan is not proof of safety
-- structural issues outrank local fixes
-- downstream findings are PROVISIONAL if fundamentals may invalidate them
-- when several material findings cluster around the same mechanism, boundary, assumption, or process, test whether a shared structural cause exists before continuing repeated local repair
-- if no structural issue appears, continue to MAP
+# 4. BIND
 
-## 1. Map - Detect Only
+Bind only what can invalidate or constrain downstream work:
 
-Record findings before deciding.
+- target/task;
+- exact DONE;
+- authoritative source/artifact identity;
+- material freshness;
+- authority/permission;
+- scope;
+- assurance.
 
-Start from Fundamental Scan; expand as needed.
+## BOUNDED
 
-Within the bound scope, explicit target areas, suspected weak points, or requested aspects receive additional adversarial attention without narrowing the otherwise applicable review.
+Own only the exact examined bounded claim.
 
-Apply:
-1. Universal Questions
-2. All Thinkers: CH, OM, FE, PO, KT, AJ, SH
-3. Structural Checks
-4. Domain Lens Escalation under §5 when applicable
-5. Artifact patterns / external question banks when useful
+No readiness/completeness/promotion implication.
 
-Output:
-- findings
-- unknowns
-- assumptions, including intent and approach assumptions; challenge them before DECIDE
-- evidence strength
-- skipped/uncertain areas
+## COMPLETE
 
-No fixes. No final decisions.
+Own all decision-critical coverage, closure, action/reality, and end-to-end obligations required by the stronger bound claim.
 
-## 2. Universal Questions
+The bound target/scope/assurance/authority/DONE remain the DECIDE contract.
 
-For every meaningful entity: file, module, function, config, doc, test, system, process, requirement, decision.
+Change them only through authoritative rebinding.
 
+A requested focus may prioritize attention but never silently narrow the bound task.
+
+---
+
+# 5. STATE
+
+Maintain only decision-relevant live state.
+
+STATE is not obligation-first.
+F/M/O/C co-evolve while understanding improves.
+
+## F — FACTS / OBSERVATIONS
+
+Directly established.
+
+Preserve material:
+- source/provenance;
+- scope;
+- time/freshness;
+- observation conditions.
+
+Inference never becomes fact by repetition.
+
+## M — MODEL / INFERENCES
+
+Provisional:
+- explanations;
+- hypotheses;
+- dependencies;
+- causal structure;
+- competing models.
+
+Decision relevance can itself be inferential. If C uses a premise or observed property to change relative rank/selection among alternatives rather than merely establish qualification/exclusion, the relation that makes it decision-relevant is M unless the bound task/evidence directly supplies that relation.
+
+For every decision-critical M preserve enough evidence semantics to know:
+- what supports it;
+- exact scope/condition support reaches;
+- material uncertainty;
+- what defeats/narrows it.
+
+If C depends on M beyond its support:
+- open exact evidence O;
+- narrow C;
+- or terminate honestly.
+
+Correctly labelling an unsupported inference as "inference" is not permission to decide from it.
+
+## O — OPEN ITEMS
+
+Decision-relevant unresolved state, including:
+- derived requirement/obligation;
+- unanswered question;
+- UNKNOWN;
+- conflict;
+- integration/reintegration;
+- evidence/verification requirement;
+- decision still owed.
+
+Statuses:
+- OPEN
+- SUPPORTED
+- NOT_APPLICABLE
+- UNKNOWN/BLOCKED
+- CONFLICT
+
+A material O cannot disappear through wording or synthesis.
+
+## C — CANDIDATE
+
+Provisional:
+- answer;
+- judgment;
+- action proposal.
+
+Track materially:
+- direct support;
+- decision-critical M dependencies;
+- for material comparison/ranking/selection, each discriminator actually capable of changing relative order/selection -- including one implicit in the candidate ordering/rationale -- and its direct support or M dependency;
+- O dependencies;
+- what defeats/narrows it.
+
+A candidate may not borrow certainty from a stronger adjacent fact/model.
+
+## Re-entry / reuse
+
+Every material INQUIRE, ATTACK, OBSERVE, delegated return, or domain result updates STATE.
+
+Reuse unaffected supported state.
+
+Reopen only dependent state.
+
+Known future materiality:
+- keep a deferred O with activation condition + affected claim/action;
+- on later invocation/continuation after activation, freshly rebind mutable source/authority/freshness;
+- reopen only dependent state.
+
+Autonomous future wake-up is not promised unless an external runtime explicitly supplies scheduling/monitoring.
+
+---
+
+# 6. Reasoning coverage
+
+Exact CH/OM/FE/PO/KT/AJ/SH meanings come from the bound semantic source.
+
+## Aspect annotations
+
+Canonical aspect identifiers from the bound semantic source (for example `FE:WE` and `PO:OC`) are the traceability names for material findings.
+
+For every material finding derived from Thinker reasoning, include the applicable canonical aspect tag(s) in the report. Do not invent a Thinker tag for a domain/process finding that does not map to one. Tags annotate findings; they do not create new semantics, findings, or per-lens prose obligations.
+
+## ALWAYS on every material decision
+
+Apply complete:
+- **CH** — risk/incentives/second-order/misjudgment/safety margin/constraints/scale
+- **FE** — currentness/mechanism/why/limits/evidence/proof/value/trust boundaries
+- **PO** — falsification/disconfirmation/contradiction/refutation/silent invalidation/overclaim/coverage
+- **KT** — consistency/feasibility/fairness/human burden/harm/moral conflict
+
+Do not first ask whether these four families are relevant.
+
+Application does not require:
+- a finding;
+- a paragraph;
+- equal tokens;
+- visible receipt detail per lens.
+
+Only supported/material/scoped/nonduplicate findings enter STATE.
+
+## OM — conditional
+
+Apply when the task materially chooses/adds/removes/simplifies/replaces/abstracts/evaluates/retains meaningful structure, process, machinery, or complexity.
+
+Framework/design/process review => presumptively applicable.
+
+When removing/replacing structure:
+- distinguish protection from historical mechanism;
+- existing realization is evidence, not authority;
+- remove only when protection is preserved or validly unnecessary.
+
+## AJ — conditional
+
+Apply when correctness/decision quality materially depends on:
+- constraints/invariants;
+- interfaces;
+- ownership/authority boundaries;
+- degrees of freedom;
+- adaptation;
+- where flexibility begins/ends.
+
+Architecture/policy/workflow/interface/control-system review => presumptively applicable.
+
+If ALWAYS families expose a hidden material boundary/constraint/adaptation issue, trigger AJ.
+
+## SH — conditional
+
+Apply when:
+- 2+ materially live alternatives/protections remain;
+- a real trade-off/compromise/integration question exists;
+- exception scope matters;
+- leverage/dominance matters;
+- accountable value/preference choice remains.
+
+Preserve nondominated alternatives until evidence establishes dominance/conditional applicability or authority supplies the value judgment.
+
+If ALWAYS families expose competing protections/options, trigger SH.
+
+## DOMAIN — conditional
+
+Apply specialist domain reasoning when:
+- explicitly requested;
+- inherently required by subject;
+- or core reasoning establishes a material expertise gap.
+
+Use the bound domain registry to select materially useful **repository-owned companion files**.
+
+The registry is not an exhaustive ontology of specialist domains.
+A task may materially require finance, insurance, law, medicine, travel/local, science, or other expertise even when no repository companion exists.
+
+When specialist DOMAIN reasoning is required but no repository companion maps it:
+- use available authoritative external sources/tools/expertise when the execution environment permits;
+- otherwise keep the dependent coverage/claim UNKNOWN or appropriately bounded;
+- never infer NOT_APPLICABLE merely from absence in the registry.
+
+Missing selected repository companion coverage => skipped/UNKNOWN, never clean.
+
+Domain reasoning contributes evidence/findings to STATE.
+It never owns DECIDE/action.
+
+## Fallback
+
+If OM/AJ/SH/domain applicability cannot be reliably ruled out and missing it could materially change the decision:
+> apply it.
+
+Do not spend substantial reasoning proving non-applicability.
+
+## FE:SC
+
+`FE:SC` means **Feynman — Stale Claim**.
+
+A materially time-dependent claim/action is unsupported unless current state is established by explicit context or sufficiently fresh authoritative evidence.
+
+Never substitute model knowledge for current state.
+
+---
+
+# 7. Detection aids inside INQUIRE
+
+These are aids, not mandatory stages.
+
+## Universal questions
+
+For every meaningful decision-relevant entity as useful:
 - What is this?
 - What is it for?
-- What depends on it, and what does it depend on?
-- What must always be true?
+- What depends on it and what does it depend on?
+- What must remain true?
 - What breaks it?
 - How do we know it works?
-- Does this solve a current verified need, or speculate about a future one?
+- Does it solve a current verified need or speculate?
 
-## 3. Thinkers
+## Structural checks
 
-Use full name + abbreviation first; then abbreviation.
+When structure is material, inspect:
+- role/ownership;
+- boundaries/concern split;
+- interfaces/required/forbidden/implicit links/contracts;
+- necessary vs accidental coupling;
+- source of truth/competing copies;
+- data/control flow/update timing/consumers;
+- reversibility/retry/failure signal.
 
-Each thinker is a lens, not a checklist. Inspect through the lens. Report only material findings that affect PASS, ACTION, or CONFLICT. Use aspect tags for traceability, for example `CH:IV` or `OM:FS`.
+Do not force this checklist on trivial non-structural work.
 
-### Charlie Munger (CH) - Inversion, Incentives, Misjudgment, Safety Margin
+---
 
-Find avoidable stupidity before approving success.
+# 8. INQUIRE
 
-- `CH:IV` inversion: worst material bad outcome and whether evidence, limits, responsibility, or reversal path block it
-- `CH:IN` incentives that reward noise, shortcuts, fake certainty, gaming, shallow compliance, or skipped verification
-- `CH:SO` second-order damage: downstream harm, hidden cost, brittleness, drift, or confusion
-- `CH:MJ` misjudgment: confidence without evidence, coherent stories without verification, one-lens thinking, assumptions as facts
-- `CH:CP` competence gaps: deciding without enough evidence or domain understanding
-- `CH:SM` weak safety margin: failure not bounded, visible, reversible, assigned responsibility, or checked
-- `CH:CR` constraint risk: effort targets something other than the system constraint, queue, or blocker currently limiting the outcome
-- `CH:EV` effort-value alignment: choice or allocation of effort, cost, rigor, process, or resources is disproportionate to expected value, material risk reduction, decision importance, available resources, or the probability of reaching a completed useful outcome
-- `CH:SR` scale-up risk: small-scale success may fail under larger load, frequency, concurrency, data size, dependency count, or organizational scale
+Resolve the highest-value open item. For discretionary inquiry, expected decision value means ability to change DECIDE, discriminate materially live M, or resolve shared dependencies relative to cost and risk. Required safety, authority, coverage, evidence, verification, and ATTACK/resample obligations override this ordering; do not invent numerical precision.
 
-### Occam's Razor (OM) - Parsimony, Necessity, Sufficiency
+When an established F materially conflicts with a decision-relevant M or expectation and explaining why could change DECIDE, open an explanatory O; form plausible competing M as needed and prefer safe, proportionate evidence that discriminates them. Surprise is not proof of a cause. Do not proliferate explanations when authoritative evidence already adequately explains the mismatch or when resolving the cause cannot materially affect DECIDE.
 
-Find unnecessary structure without removing what proves, protects, assigns responsibility for, or makes the required outcome reversible.
+INQUIRE may:
+- orient/reframe;
+- establish source of truth/ownership/path;
+- investigate evidence;
+- apply required families/domain knowledge;
+- update models;
+- compare alternatives;
+- trace causality;
+- resolve factual conflicts;
+- establish end-to-end feasibility;
+- integrate interacting findings;
+- prepare action/verification obligations.
 
-- `OM:UE` unnecessary entities: assumptions, steps, abstractions, options, or moving parts with no verified current need
-- `OM:FS` false simplicity: simplification that proves less, protects less, or breaks the required outcome
-- `OM:SS` speculative structure or abstraction before repeated concrete need
-- `OM:OD` oversized design: more structure than outcome, evidence, safety, responsibility, or reversibility requires
-- `OM:AC` avoidable complexity from misplaced boundaries, mixed concerns, or missing small guards
-- `OM:CF` Chesterton fence: removing or replacing structure before understanding what constraint it protected
+Optional investigation continues only while plausible new evidence/reasoning can materially change the affected disposition enough to justify cost.
 
-When structure or process is material, compare it with the smallest credible alternative that could achieve the required outcome. Remove structure that adds no necessary evidence, safety, responsibility, reversibility, or material value.
+This economy rule never overrides required:
+- coverage;
+- verification;
+- evidence;
+- ATTACK/resample;
+- action safety.
 
-Do not simplify by deleting protections whose purpose is not understood. Distinguish the required protection from the mechanism currently providing it; a mechanism may be simplified or replaced only when the protection is preserved. When substantial structure remains, state briefly why the smaller alternative is insufficient.
+Multiple viable candidates:
+- preserve nondominated alternatives;
+- narrow only with evidence/governing constraints/accountable authority.
 
-### Richard Feynman (FE) - Reality, Mechanism, Evidence Integrity
+---
 
-Find where explanation outruns reality.
+# 9. Integration obligation
 
-- `FE:SC` stale claim: a materially time-dependent claim or action is unsupported unless its current state is established by explicit context or sufficiently fresh authoritative evidence; never substitute model knowledge for current state, and use `UNKNOWN` if it cannot be established.
-- `FE:ME` mechanism gap: says what happens but not clearly how or why it works
-- `FE:WY` missing why: a non-obvious choice lacks a clear reason
-- `FE:HL` hidden limits: assumptions, failed cases, edge cases, or contradictory evidence are omitted
-- `FE:WE` weak evidence: proof does not directly exercise or support the claimed outcome
-- `FE:PG` proof gap: confidence, authority, elegance, or coherent story substitutes for observed evidence
-- `FE:PV` purpose/value gap: the artifact is coherent or well-structured, but the useful outcome, user, owner, or value is unclear
-- `FE:TB` trust-boundary transition: untrusted, lower-authority, or unverified content, output, or state is accepted -- or is structurally permitted to flow -- into a higher-trust or control-bearing role without an explicit validation or authorization step proportionate to the consequence
+Create exact integration O whenever material findings/actions:
+- interact;
+- share plausible mechanism/root cause/dependency;
+- cross a boundary that can change disposition;
+- remedies collide/duplicate/mask;
+- local fix moves risk;
+- decomposed child results require reintegration;
+- separately correct components can fail jointly.
 
-Higher-trust or control-bearing roles include: instruction, permission, verified evidence, source of truth, executable input, policy, configuration, safety or control signal.
+INQUIRE owns the semantic answer.
 
-For every `FE:TB` finding, identify the lower-trust source, the promoted role, the boundary crossed, and the missing validation or authorization.
+Integration/synthesis may itself create:
+- new M;
+- new claim;
+- new action requirement;
+- new evidence/verification O.
 
-### Karl Popper (PO) - Falsifiability, Refutation, Contradiction
+New synthesized meaning does not inherit proof from supported components.
 
-Find claims that can pass while wrong.
+Unless directly established:
+- synthesized relation/root cause remains M;
+- if C depends on it, exact missing evidence O remains.
 
-- `PO:UF` unfalsifiable claim: no observation, example, check, or condition could show it wrong
-- `PO:CO` confirmation-only proof: supporting evidence exists, but no serious disconfirming case was tried
-- `PO:CN` contradiction: rules, assumptions, examples, outputs, or acceptance criteria conflict
-- `PO:WR` weak refutation path: wrong result is detected too late, only manually, or not at all
-- `PO:SI` silent invalidation: artifact can appear valid while violating the claim
-- `PO:OC` overclaim: current checks are treated as proof, not limited corroboration
-- `PO:CG` coverage gap: derive material obligations for the reviewed scope from the bound task and applicable normative basis, and ask what required element could be absent while what is present still appears correct; do not invent obligations the basis does not support. Report supported omissions under normal materiality rules; when completeness, conformance, readiness, or full implementation is claimed, any material obligation not mapped to the artifact and supporting evidence blocks promotion
+Preserve every material distinction that can change disposition:
+- scope;
+- evidence;
+- condition;
+- authority;
+- dependency;
+- uncertainty;
+- reversibility;
+- consequence.
 
-### Immanuel Kant (KT) - Universalizability, Consistency, Fair Exceptions, Harm Minimization
+Merge only true duplicates.
 
-Find patterns that should not become general rules, and evaluate whether chosen paths unnecessarily harm or create unresolvable moral conflicts.
+DECIDE may not bypass a material integration/evidence O.
 
-- `KT:HU` harmful universalization: bad if used everywhere or by every similar actor
-- `KT:EX` special pleading: one case gets an exception similar cases should not get
-- `KT:IR` inconsistent rule: contradicts itself when applied broadly or symmetrically
-- `KT:UA` unfair asymmetry: similar actors, cases, users, files, or decisions are treated differently without justification
-- `KT:HB` hidden burden: works only by shifting ambiguity, cost, or cleanup to someone else
-- `KT:HHB` hidden human burden: appears successful only by shifting avoidable ambiguity, cognitive load, repeated back-and-forth, coordination effort, delay, cost, risk, or cleanup onto another person or group
-- `KT:NH` no harm: chosen action causes avoidable material harm when a feasible less-harmful path meets the same requirements without greater material sacrifice
-- `KT:MC` moral conflict: every feasible path materially harms or sacrifices a protected party, duty, right, or value; surface the competing harms and obligations for explicit accountable judgment
-- `KT:OC` ought implies can: no permitted feasible path lets the responsible actor satisfy all applicable requirements simultaneously under its authority, capabilities, resources, dependencies, and constraints; if feasibility is unestablished, record unknown; preserve protected requirements when restoring feasibility; add `PO:CN` only when conflicting rules cause the impossibility
+---
 
-### Alicia Juarrero (AJ) - Invariants, Constraints, Adaptation
+# 10. ATTACK
 
-Find what is wrongly fixed, wrongly left free to vary, or only nominally flexible. Identify what must remain invariant, what must deliberately remain adaptable, where each belongs, and whether the mechanism that provides flexibility is suitably bounded so adaptation does not weaken protected invariants.
+ATTACK is separate from INQUIRE.
 
-- `AJ:IN` invariant placement: something essential to purpose, identity, coherence, safety, authority, or required outcome is allowed to vary where it materially must remain fixed
-- `AJ:OC` overconstraint: rules, specifications, plans, or processes remove degrees of freedom that need not be fixed to protect a material invariant and thereby create brittleness, friction, lost adaptation, or unnecessary failure
-- `AJ:UC` underconstraint: discretion or variation remains where changing the thing can materially break purpose, identity, coherence, safety, authority, or the required outcome
-- `AJ:AF` adaptive freedom: a degree of freedom materially needed for adaptation, substitution, extension, local judgment, experimentation, or future evolution is absent, merely nominal, implemented through an unsuitable mechanism, or granted with broader authority or variation than needed; require a concrete mechanism that provides the needed flexibility while preserving the relevant invariants and bounded authority
-- `AJ:EC` enabling constraint: an arrangement restricts local freedom without sufficiently protecting or enabling the capability, coherence, coordination, resilience, or safe freedom that justifies the restriction
-- `AJ:JB` joint/boundary: invariant and adaptive regions meet without a clear mechanism defining what may vary, how variation is realized, what must remain preserved, who or what may adapt it, and where the flexibility stops
-- `AJ:RL` rigidity leakage: a constraint justified for one protected invariant spreads into neighboring mechanics, evidence methods, procedures, or choices that do not require the same exactness
-- `AJ:FL` flexibility leakage: discretion justified inside an adaptive region spreads across a boundary into an invariant or protected region
+Purpose:
+> search outside represented rationale and challenge whether the reasoning process itself is creating the blind spot.
 
-For material rules, requirements, plans, processes, or designs, ask: are the right things constrained and the right things adaptable, in the right places? Where flexibility is needed, is there a suitable bounded mechanism that provides it without weakening the invariants it must preserve? Treat deliberate flexibility as a designed capability, not as mere absence of constraint or specification.
+Ask materially:
+- what plausible countermodel defeats C?
+- what hidden dependency/common mode defeats several supports?
+- what actor/path/side effect/failure mode/verification condition is absent while C looks coherent?
+- what evidence is stale/unrepresentative/correlated/non-discriminating?
+- what protected human/system consequence lies outside the frame?
+- could STATE representation, lens/routing choice, reasoning method, or stopping assumption itself be narrowing attention, causing FN/FP, or creating avoidable burden?
 
-### Saffi (SH) - Trade-off Integration, Dominance, Exceptions
+ATTACK must seek materially different failure space.
+Paraphrase/replay earns no fresh credit.
 
-Find invalid middles and unresolved tradeoffs.
+## ATTACK owedness
 
-- `SH:OF` opposing forces: what each side protects and what each side costs
-- `SH:FM` fake middle: compromise keeps both costs without resolving the tension
-- `SH:FB` forced balance: the artifact tries to satisfy both sides when one side should dominate
-- `SH:NE` narrow exception needed: one side should be default, but the other side needs a narrow protected exception
-- `SH:HC` hidden conflict: product, architecture, safety, ownership, or priority decision is required
-- `SH:WL` wrong leverage: within a genuine trade-off, the chosen side, middle, or exception does not materially affect the outcome it is intended to improve
-- `SH:PF` dominance/frontier: a live option is retained even though another feasible option is no worse on every material protected dimension and better at least one
+ATTACK is owed before positive DECIDE when any are true:
+- assurance is COMPLETE unless exact claim is genuinely EXHAUSTED by finite/deterministic authoritative coverage with no material hidden transformation/dependency/alternate source/side effect/unobserved path;
+- C claims readiness/promotion/end-to-end completion;
+- C proposes material-risk/irreversible/external-effect/mutable-premise action;
+- consequence or residual uncertainty/stochastic miss risk is material;
+- shared-assumption/common-mode/process-blindness remains plausible;
+- result is suspiciously clean relative to complexity/consequence/evidence;
+- OBSERVE/reality contradicts prior expectation in a way that could implicate model/method;
+- prior misses/repeated burden implicate routing/reasoning/stopping;
+- material STATE/model/evidence change changed or could materially change residual failure family/shared assumption/common dependency/support basis for prior ATTACK.
 
-Do not eliminate an option when dominance depends on stale or uncertain evidence, unsupported causation, aggregation that hides a subgroup or tail, omitted feasibility, reversibility or information value, mismatched time horizons, or a disputed weighting of consequences. When dominance is not supported, preserve the live trade-off or report the missing evidence.
+## Changed-failure-space reactivation
 
-Distinguish `CH:CR`, `SH:WL`, and `SH:PF` by whether the defect is the limiting constraint, the chosen intervention, or the live option set. Do not duplicate findings; when one explains another, merge them in STABILIZE.
+When reactivated:
+- reset only dependent ATTACK/stop credit;
+- preserve unaffected evidence/reasoning/state;
+- do not replay merely because any state changed;
+- re-ATTACK only materially changed residual failure space.
 
-If no real opposing forces, invalid middle, or live option comparison are present, SH = NOT_APPLICABLE.
+## Low-risk BOUNDED exemption
 
-## 4. Structural Checks
+Low-risk BOUNDED work may skip ATTACK only when all are true:
+- C is limited to exact bounded content actually examined;
+- C is supported by direct authoritative observation/evidence or deterministic derivation;
+- no decision-critical provisional M, unobserved mechanism/path, hidden transformation, or unresolved dependency supports C;
+- exact-bound required reasoning coverage is complete;
+- no readiness/completeness implication;
+- no material action consequence.
 
-Check meaningful entities for:
-- role and ownership
-- boundaries and concern split
-- interfaces, required links, forbidden links, implicit links, contracts
-- necessary vs accidental coupling
-- source of truth and competing copies
-- data/control flow, update timing, consumers
-- reversibility, retry safety, and failure signal
+If uncertain whether materially different unrepresented semantic space could change C:
+> ATTACK is owed.
 
-## 5. Domain Lens Escalation
+A process-self finding enters normal O.
+Do not recursively ATTACK ATTACK without new material evidence.
 
-Domain lenses add detection; they do not narrow or replace the core review.
-Core-first is the default for domain lenses.
+---
 
-At domain discovery, read `skeptic-questions.md` as the lightweight registry to identify candidate domains and their files.
-Domain identifiers and applicability metadata are defined by the registry; the core does not enumerate the complete domain set.
-After selection, load only the mapped domain files.
+# 11. Stochastic / broad resample
 
-Domain lenses produce findings, unknowns, and evidence; STABILIZE, EVIDENCE, and DECIDE remain owned by the core.
+Targeted ATTACK is default convergence tool.
 
-Rules:
-- Activate a specifically relevant domain early when the request explicitly names it or material domain relevance is already established; use the registry to resolve repository-owned domain files when needed.
-- Generic risk alone does not justify early domain activation.
-- Otherwise, discover domains only after broad core detection has substantially stabilized and another broad pass has low expected marginal detection value.
-- Treat substantive findings qualitatively: material effect on correctness, safety, architecture, authority, scope, action, verification, or task outcome matters more than finding count.
-- Select all materially useful domains, not one winner, but do not load a lens whose expected detection value is already adequately covered by the core or selected lenses.
-- In an ordinary run, a substantive domain finding may end further domain probing when continuing has low marginal value and broader coverage is not required.
-- Do not treat unexamined selected domains as clean or exhausted.
-- For Find Loop, readiness, completeness, promotion, or explicitly exhaustive review, continue across the selected domain set sufficiently to support the claimed coverage.
-- If a selected domain companion is unavailable, record the missing coverage as skipped/UNKNOWN; continue core review when feasible and do not overclaim domain-aware coverage.
-
-## 6. Detection Confidence
-
-Before STABILIZE/DECIDE, check:
-- Fundamental Scan completed
-- Universal Questions applied
-- All Thinkers considered: CH, OM, FE, PO, KT, AJ, SH
-- SH either produced a finding or returned NOT_APPLICABLE
-- Structural Checks applied
-- Domain Lens Escalation handled according to §5 when triggered or explicitly activated
-- artifact patterns applied when useful
-- important conclusions have evidence
-- unknowns and skipped areas are listed
-
-Applicability and evidence:
-- For a required check that does not apply, record NOT_APPLICABLE.
-- If a required check applies but cannot be adequately evidenced, record UNKNOWN rather than PASS.
-- A material UNKNOWN blocks any conclusion or promotion that depends on it.
-
-Track unknowns:
-- owner, source of truth, contract, dependency
-- behavior, risk boundary, revert path, test path
-- acceptance criteria
-
-Blind spots:
-- unresolved ownership / SoT / contract / interface
-- implicit or required connection unclear
-- unverified behavior or weak tests
-- missing failure signal
-- suspiciously clean result
-- local area skipped because top-down scan looked clean
-- downstream work depends on unresolved fundamentals
-
-If confidence is weak:
-- expand MAP only where evidence requires it
-- if the domain stage is active, expand only where evidence establishes additional domain relevance
-- run CH/PO adversarial pass if clean result is suspicious
-- resolve, decompose, or escalate high-risk UNKNOWNs
-- CONFLICT if confidence cannot reasonably improve
-
-Extend discretionary investigation only while plausible new evidence could materially change the decision enough to justify its cost. If repeated effort produces little decision-relevant evidence, change the method, decompose, or escalate rather than repeat the same approach. This stopping rule does not override required coverage, completeness, readiness or promotion obligations, verification, or convergence.
-
-Do not loop indefinitely.
-
-## 7. Stabilize
-
-Do not decide on raw findings.
-
-Merge findings sharing:
-- data, boundary, responsibility, interface
-- source of truth, failure mode, root cause
-
-Classify the issue and its root cause or detection gap:
-- local bug
-- missing test
-- missing contract
-- unclear ownership
-- source-of-truth issue
-- accidental coupling
-- stale assumption
-- systemic rule issue
-- detection confidence issue
-
-Check:
-- overlapping, conflicting, or redundant fixes
-- one finding explaining another
-- unknowns blocking action
-- local/systemic risk
-- reversibility, blast radius, ownership clarity, confidence
-
-Output stabilized issues.
-
-Raw findings remain PROVISIONAL until stabilized.
-
-## 8. Evidence Levels
-
-Before DECIDE, assign every finding its applicable evidence level or levels.
-
-- OBSERVED: directly seen in code, tests, config, docs, or runtime behavior.
-- REPRODUCED: confirmed with failing test, probe, command, or execution.
-- HISTORICAL: confirmed by issue, changelog, CVE, advisory, maintainer note, or release note.
-- INFERRED RISK: plausible from structure, boundary, exposure, missing tests, or weak evidence, but not reproduced.
+Broader whole-review/family resample is due when:
+- residual activation risk is broad/unlocalized;
+- strong claim depends on review stability;
+- materially different wording/context can plausibly expose hidden activation failure;
+- targeted ATTACK cannot cheaply represent remaining miss space;
+- prior evidence shows this class is stochastic/activation-sensitive.
 
 Rules:
-- Do not report INFERRED RISK as confirmed bug.
-- Security/parser/sanitizer INFERRED RISK becomes PROVISIONAL ACTION or CONFLICT.
-- FIX requires OBSERVED evidence and a verification path.
-- Confirmed vulnerability/history claim requires REPRODUCED or HISTORICAL evidence.
-- HANDLED must include evidence level.
-- CONFLICTS must include missing evidence.
+- no universal count;
+- correlated replay is weak evidence;
+- independent/meaningfully varied challenge preferred;
+- replay counts only for uncertainty it can actually reduce.
 
-## 9. Decide
+---
 
-For each stabilized issue, decide whether it requires FIX, DECOMPOSE, or CONFLICT; otherwise record why no action is required.
+# 12. DECOMPOSE / reintegrate
 
-### FIX
+DECIDE may DECOMPOSE when:
+- scope/risk too large;
+- independent testable responsibilities can separate;
+- decomposition reduces uncertainty/risk without hiding governing conflict.
 
-Use when:
-- the applicable normative basis: requirement, contract, design, policy, or Skeptic-owned rule
-- the established current fact and evidence that conflict with that normative basis
-- root cause, structure, required connections, and source of truth are clear or irrelevant
-- unknowns are resolved or irrelevant
-- change is reversible, testable, retryable
-- risk is low/medium
-- confidence and verification path are adequate
-- fix justification is complete
+Create persistent parent O with:
+- child questions/scopes;
+- required evidence returns;
+- shared assumptions/dependencies children may not independently close;
+- reintegration rule;
+- remaining parent DONE.
 
-Before FIX, state:
-- what is wrong
-- why it is wrong
-- why this fix is correct
-- why this is the smallest change that solves the verified issue without broadening scope
-- what would prove it wrong
-- how to verify and revert
+Child completion never closes parent automatically.
 
-### DECOMPOSE
+Returned child evidence:
+- updates STATE;
+- reopens dependent M/O/C;
+- triggers integration O;
+- owes fresh ATTACK only when residual failure space/prior ATTACK support changed.
 
-Use when scope/risk is high but structure is clear enough to split safely.
+Parent DECIDE owns terminal outcome.
 
-Split by:
-- responsibility
-- interface
-- source of truth
-- data flow
-- testable slice
-- reversible step
-- unknown to resolve
+---
 
-Each step returns to GATE.
+# 13. DECIDE
 
-### CONFLICT
+DECIDE is the only normative disposition owner.
 
-Use when:
-- multiple valid designs exist
-- owner, source of truth, connection, or contract is unclear
-- product/architecture intent is required
-- change cannot be made reversible
-- decomposition does not remove ambiguity
-- confidence remains inadequate
+Internal outcomes:
+- ANSWER / NO ACTION
+- FIX
+- DECOMPOSE
+- CONFLICT
+- BLOCKED / UNKNOWN
 
-Do not decompose pure conflict to avoid escalation.
+DECIDE performs no semantic reasoning.
 
-### Promotion Check
+Before positive ANSWER / NO ACTION / FIX-readiness, perform one STATE sufficiency check:
 
-Before marking anything ready, approved, or safe to proceed, check whether any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.
+1. **Contract lock**
+   - bound target/scope/assurance/authority/DONE unchanged or authoritatively rebound.
 
-An unresolved DECOMPOSE path also blocks readiness or promotion until each resulting scope returns through GATE and reaches a valid outcome.
+2. **Open items**
+   - every decision-critical O SUPPORTED or legitimately NOT_APPLICABLE.
 
-If yes, do not promote. Decide FIX, DECOMPOSE, or CONFLICT.
+3. **Claim/model evidence integrity**
+   - C coherent with F/M;
+   - no material inference presented as fact;
+   - every decision-critical M used by C supported strongly enough for exact claim/action/assurance or limitation explicit in O/C;
+   - evidence for one fact/model/scope does not automatically support another or synthesized relation;
+   - time-dependent support current enough.
 
-## 10. Act
+4. **Reasoning coverage**
+   - CH/FE/PO/KT applied;
+   - triggered OM/AJ/SH/domain applied or legitimately N/A.
 
-Act only after DECIDE says FIX.
+5. **Integration**
+   - material integration/reintegration O closed.
 
-Process:
-1. Preserve previous state.
-2. Apply the smallest reversible change.
-3. Verify immediately.
-4. Revert immediately if verification fails.
-5. Retry only when new evidence or a changed relevant condition makes the next attempt safer or more likely to succeed.
-6. Escalate if safe retry is impossible.
-7. Do not proceed to another task until the current change is verified or safely reverted.
+6. **End-to-end ownership**
+   - for terminal/readiness/completeness claims: dependencies, handoffs, resources, ownership, integration, verification path feasible or explicitly unresolved.
 
-Rules:
-- no partial/unknown state
-- no hidden-state reliance
-- no implementation on unresolved conflict in the same area
-- no link removal without replacement or explicit coupling decision
-- no silent failure acceptance
-- no broad refactor when a smaller verified slice reduces risk
-- no speculative code for unverified future requirements
-- no premature abstraction unless a current concrete need requires it
-- follow existing style and conventions unless that style is the verified problem
-- no out-of-scope edits; log unrelated improvements separately
+7. **Stop basis**
+   - exact bound claim has valid positive stop basis;
+   - owed ATTACK/resample satisfied.
 
-## 11. Verify
+8. **Action readiness**
+   - FIX authority valid;
+   - mutable action-critical premises current enough to authorize action path;
+   - ACTION CONTRACT will revalidate immediately before effect.
 
-Use evidence, not confidence.
+Predicate failure:
+- create/open exact O;
+- return to INQUIRE/ATTACK;
+- never hide reasoning inside DECIDE.
 
-Before verification, set an explicit target number of material checks that directly exercise the intended result and material preserved constraints. Derive that number from consequence, dependency reach, irreversibility, uncertainty, trust elevation, claim strength, and materially plausible failure modes; do not use a universal quota. The count is a planning bound, not proof, and redundant checks do not satisfy it. If verification discovers a new or materially changed finding, dependency, constraint, failure mode, risk, or claim, reset the count to zero, re-derive the target from the new state, and continue against the updated scope; earlier evidence may inform the new plan but does not satisfy the reset count.
+## Positive stop bases
 
-Check:
-- red -> green for bug fixes when possible
-- end-to-end trace from entry to output
-- constraints: correctness, safety, performance, cost, context, maintainability
-- pre-mortem: when risk warrants it, address materially plausible failure modes before action
-- regression: previously working behavior still works
-- known-bad/edge case when results are suspiciously clean
+### BOUNDED-SUPPORTED
 
-A test that was never red is weak evidence.
+Only when:
+- exact bound is BOUNDED/non-exhaustive;
+- decision-critical O resolved/bounded;
+- no ATTACK owed under runtime rule.
 
-Verification is pass/fail.
+Never closes an unresolved COMPLETE claim.
 
-If fail, preserve evidence, revert unsafe partial state, and retry only when new evidence or a changed relevant condition makes the next attempt safer or more informative; otherwise CONFLICT.
+### EXHAUSTED
 
-## 12. Learn
+When:
+- exact claim finite/deterministic;
+- authoritative evidence completely covers it;
+- no material hidden transformation/dependency/alternate source/side effect/unobserved path remains;
+- no separate residual ATTACK obligation remains.
 
-Escalate from local correction to systemic learning when:
-- same fix category appears 3+ times
-- same conflict appears 2+ times
-- following a rule worsens outcomes
-- expectation lacks a clear rationale, authority, or evidence basis
-- local fixes repeatedly reveal same structure problem
-- repeated misses show detection coverage failure
-- repeated low-yield work, rote receipt completion, optional work becoming mandatory, stale-source substitution, ambiguous authority, or repeated local repairs suggest Skeptic's own design or realization may be part of the problem
+### ATTACK-SATISFIED
 
-Single-loop correction:
-- implementation wrong -> fix and re-verify
+When:
+- ATTACK was owed;
+- after last dependent semantic/failure-space change, credible fresh ATTACK occurred;
+- no unresolved material delta remains;
+- another materially different challenge has low expected decision value;
+- due broad resample is satisfied.
 
-Double-loop learning:
-- rule, expectation, design, or detection method may be wrong -> route the question to its accountable owner or design-review method
-- when the pattern concerns Skeptic itself, return it through the Skeptic design owner/design-review method rather than accumulating another local runtime rule
-- unresolved governing meaning -> CONFLICT
-- do not imply a separate DOUBLE-LOOP procedure unless one is explicitly defined
+Cross-cutting:
+- only dependent stop credit resets;
+- stronger evidence alone does not reset stop credit when semantic/failure basis unchanged;
+- UNKNOWN never becomes positive through repetition;
+- no fixed pass count;
+- never repeat merely until clean.
 
-## 13. Output
+## Honest terminality
 
-Category layers:
-- Finding/Razor categories: PASS, ACTION, CONFLICT.
-- Final task outcomes: HANDLED, CONFLICT.
+BLOCKED / UNKNOWN / CONFLICT may terminate without positive stop basis when:
+- unresolved basis explicit in O;
+- effect on bound claim explicit;
+- no justified available reasoning can resolve it;
+- no unsafe readiness/action implied.
 
-Every RunSkeptic task ends as HANDLED or CONFLICT.
+---
+
+# 14. ACTION CONTRACT
+
+Only DECIDE=FIX may act.
+
+Bind:
+- exact authorized effect;
+- scope;
+- constraints;
+- mutable premises through effect horizon;
+- reversibility/irreversibility;
+- blast radius;
+- evidence to preserve before destructive change;
+- verification;
+- recovery;
+- retry/idempotency.
+
+Immediately before EXECUTE:
+- recheck mutable premise whose change would alter authorization/target/scope/safety/expected effect;
+- if changed materially, do not act from stale authorization;
+- update STATE and return to DECIDE.
+
+DECIDE authorizes meaning.
+Execution may not broaden it.
+
+---
+
+# 15. EXECUTE
+
+Choose smallest materially equivalent mechanics inside ACTION CONTRACT.
+
+If mechanics alter:
+- meaning;
+- scope;
+- risk;
+- dependency;
+- tradeoff;
+- authority;
+
+return to STATE/DECIDE.
+
+Preserve required invariants across observable intermediate states.
+
+Preflight scarce/one-shot evidence-producing actions proportionately.
+
+---
+
+# 16. OBSERVE / REALITY
+
+After action:
+- observe authoritative resulting reality;
+- command/ack success is not outcome proof;
+- verification depth follows claim/risk/failure model;
+- evidence must represent the claim;
+- common-mode checks do not count as independent;
+- use never-red/known-bad discrimination when materially relevant.
+
+Unknown effect:
+- reconcile before unsafe retry/compensation unless established idempotency/authorized retry safely covers it.
+
+Recovery:
+- is a new action;
+- restoration must itself be observed.
+
+Feed resulting evidence into STATE.
+Reopen only dependent state.
+
+If new evidence changes residual failure space:
+- re-ATTACK only affected space.
+
+---
+
+# 17. Systemic learning / A39 process-self correction
+
+Material evidence may open O that governing design/policy/rule/reasoning method itself is wrong when:
+- one sufficiently discriminating observed result directly contradicts a process-generated expectation in a way that could implicate method;
+- a routing/stopping/rule choice worsens outcome or causes material miss;
+- repeated/systemic failures, recurring local fixes, repeated misses, or repeated low-yield burden support concern.
+
+INQUIRE/ATTACK may investigate shared cause.
+
+One observation is not automatic causal proof.
+Recurrence is not governing authority.
+
+If process/method O materially undermines current review coverage/evidence/routing/stop basis:
+- invalidate affected current positive credit;
+- compensate within existing authority;
+- narrow conclusion;
+- or terminate BLOCKED/UNKNOWN/CONFLICT.
+
+Supported learning may:
+- open outer design/policy/method O;
+- support proposed change;
+- trigger accountable design review.
+
+It may not:
+- silently rewrite governing rules;
+- self-authorize successor architecture/promotion;
+- treat recurrence or surprise as authority.
+
+Skeptic may review its own method as target.
+Successor-rule adoption routes outward to accountable design owner.
+
+No recursive SELF procedure without new material evidence.
+
+---
+
+# 18. Delegation / lossy context
+
+Delegated work returns:
+- bounded evidence/findings;
+- scope;
+- provenance;
+- unknowns.
+
+Delegation never inherits COMPLETE or DECIDE authority.
+
+Across real lossy boundary:
+- persist only decision-critical STATE;
+- preserve provenance/evidence references;
+- rebind mutable authority/source/freshness on continuation;
+- revalidate only dependent conclusions.
+
+Persisted state is memory/index, not source of truth.
+
+---
+
+# 19. Output compatibility
+
+## Finding categories
+
+For material findings:
+- `PASS` — bounded finding/check supported; never implies global readiness unless bound claim itself earns it
+- `ACTION` — material issue warrants follow-up/fix/review; does not itself authorize modification
+- `CONFLICT` — unresolved blocker/tradeoff/authority/UNKNOWN that prevents the dependent stronger claim
+
+## Final task categories
+
+Every formal RunSkeptic task ends:
+- `HANDLED`
+- or `CONFLICT`
 
 ### HANDLED
 
-Use for verified fixes, completed decomposed steps, or low-risk logged issues.
+The assigned Skeptic task was completed within permission/scope.
 
-HANDLED means the assigned Skeptic task or item was completed according to its permission and scope. It does not mean the reviewed artifact passed, is ready, or has no open issues.
+HANDLED may contain:
+- no-action answer;
+- bounded supported answer;
+- read-only ACTION findings;
+- verified FIX;
+- completed child DECOMPOSE work.
 
-A completed read-only review may be HANDLED while explicitly reporting unresolved findings. A completed decomposed step may be HANDLED while its parent DECOMPOSE path remains open. The Promotion Check still blocks readiness while any blocking item remains unresolved.
+HANDLED does not automatically mean reviewed artifact is ready/clean/promotion-ready.
 
-Each item includes:
-- issue
-- root cause
-- action
-- verification
-- detection confidence
-- evidence level
-- residual risk, if any
+### CONFLICT
 
-### CONFLICTS
+Use when the requested Skeptic task itself cannot be validly completed because unresolved conflict/authority/blocking UNKNOWN/required coverage prevents the bound outcome.
 
-Use for unresolved tradeoff, unclear owner/SoT/contract, non-reversible change, systemic rule issue, unresolved unknown, or inadequate confidence.
+## User-facing result
 
-Each item includes:
-- issue
-- thesis
-- antithesis
-- tradeoffs
-- blocking unknowns
-- missing evidence
-- safe recommendation, if any
-- decision needed
+Give useful result first.
 
-## 14. Razor - Bounded Read-Only Diagnostic
+Expose canonical aspect annotations for every material Thinker finding.
 
-`Razor` is an alternative lightweight entrypoint, not a RunSkeptic stage and not a replacement for the complete recipe. It detects and classifies bounded concerns; it never changes files and never counts toward Find/Fix Loop convergence.
+Expose only material:
+- scope/assurance limitation;
+- consequential finding/support;
+- UNKNOWN/CONFLICT/blocker;
+- material skipped required coverage;
+- action + observed verification/recovery;
+- stop basis when relevant.
+
+Do not dump:
+- full STATE;
+- lens checklist;
+- internal DECIDE predicates;
+- internal accounting
+
+unless needed for challengeability or explicitly requested.
+
+---
+
+# 20. Razor — bounded read-only diagnostic
+
+Razor is a lightweight alternative entrypoint, not a RunSkeptic stage.
 
 Bind:
-- target and review boundary
-- intended outcome or question
-- available evidence and explicit unknowns
-- explicitly requested or already-established domain lens, if any
+- exact bounded target/question;
+- available evidence/currentness;
+- explicit unknowns;
+- selected domain, if explicitly requested/obvious.
 
-Check compactly:
-- avoidable failure, downside, incentives, weak safety margin, and effort-value mismatch
-- unnecessary structure, false simplicity, speculation, and unexplained protected constraints
-- mechanism gaps, stale claims, weak evidence, hidden limits, and trust-boundary transitions
-- contradiction, falsifiability, silent invalidity, weak refutation, and overclaim
-- unfair exceptions, hidden human burden, avoidable harm, moral conflict, and feasibility
-- misplaced invariants, overconstraint, underconstraint, needed adaptive freedom, flexibility mechanisms, enabling constraints, and leakage across invariant/adaptive boundaries
-- unresolved tradeoffs, fake middles, wrong leverage, and unproven dominance
-- material dependencies, interfaces, source of truth, forward constraints, and staleness
-
-An explicitly requested or already-established domain may assist Razor when its expected incremental detection value justifies the added cost. Use the domain only as a detection aid. It may contribute findings, unknowns, and evidence, but it does not own independent decisions or action. A material domain finding that could affect action, readiness, promotion, completeness, or a Skeptic-level conclusion returns to complete RunSkeptic. A clean domain-assisted Razor result does not establish full domain coverage or exhaustion. If a requested repository-owned domain lens is unavailable, report that coverage as UNKNOWN rather than treating the domain as clean.
-
-Razor does not run full Detection Confidence or require all full Thinker lenses. Instead report evidence, unknowns, skipped coverage, and whether complete RunSkeptic is required or recommended.
+Razor:
+- is always read-only;
+- uses proportionate CH/FE/PO/KT reasoning and directly relevant conditional families;
+- does not owe full RunSkeptic ATTACK/convergence machinery;
+- never establishes readiness/promotion/completeness beyond its exact bound.
 
 Output:
-- `PASS` — no material issue detected by this bounded diagnostic; never means safe, ready, approved, complete, promotion-ready, domain-complete, or fully reviewed
-- `ACTION` — material concern worth follow-up; never authorizes modification
-- `CONFLICT` — unresolved ambiguity, authority issue, or blocker Razor cannot validly settle
+- PASS
+- ACTION
+- CONFLICT
 
-Escalate to complete RunSkeptic or the accountable owner for:
-- any requested modification
-- readiness, promotion, completeness, or full-review claims
-- any material domain finding
-- consequential unresolved issue or significant authority conflict
-- assurance needs beyond Razor's bounded evidence
+Escalate to RunSkeptic for:
+- requested modification;
+- readiness/promotion/completeness;
+- material domain finding needing stronger assurance;
+- consequential unresolved issue/authority conflict;
+- assurance beyond bounded diagnostic.
 
-`Expert Review` is a compatibility phrase for Razor with an explicitly scoped domain. It has no separate convergence, confidence, action, verification, or promotion pipeline.
+Expert Review = Razor + explicit domain.
 
-## 15. Artifact Guide / External Questions
+---
 
-Use after Universal Questions and Structural Checks.
+# 21. Artifact/domain aids
 
-Patterns are detection aids, not exhaustive rules.
+Artifact patterns/question banks are detection aids, not exhaustive rules.
 
-External reference:
-- `skeptic-questions.md` is the lightweight domain registry; selected domain files contain expanded questions.
-- Runtime core is authoritative.
-- Registry and domain files expand detection only; they do not own independent process or decisions.
+Domain registry:
+- `projects/skeptic/skeptic-questions.md`
+- blob `16bcb90a999c9aec2781256c3cff511aae2fd230`
 
-- Code: dead code, weak abstractions, bare except, magic values, string-built SQL/commands, no coverage, no timeout/retry/cleanup, silent wrong-input success.
-- Tests: behavior vs implementation, shared state, order/OS dependence, test never red, critical regression gap.
-- Config: dead fields, constants disguised as config, inconsistent names/types/units, stale paths/services, bad defaults, missing validation.
-- Agent instructions: no why, over-broad rule, contradiction, stale tool/model behavior, suppresses errors, skips verification, causes inaction.
-- Frameworks/workflows: for every material named mode, role, stage, procedure, control surface, or state, trace its entrypoint/caller, unique responsibility/current need, dependencies/consumers, and exit/return; flag unreachable or duplicate machinery while preserving any invariant it protects.
-- Human docs: repeats code/help, missing prerequisites, untested steps, hidden assumptions, silent command failure.
-- Design decisions: over-generalization, lock-in, hidden assumptions, unvalidated design, implicit dependency, no observability, single point of failure.
-- Requirements: no user need, untestable, not revalidated, solution without problem, no acceptance criteria.
+Load only selected domain files.
 
-## 16. Tag Legend
+Do not let companion files override this runtime.
 
-Tags identify reasoning origin, not severity.
+Useful artifact prompts include:
+- code: behavior, errors, timeout/retry/cleanup, wrong-input success;
+- tests: behavior vs implementation, shared state/order dependence, never-red, regression gaps;
+- config: stale fields/defaults/paths, type/unit/name inconsistency, missing validation;
+- workflows: entrypoint, unique responsibility, dependencies/consumers, exit/return, duplicate/unreachable machinery;
+- docs: prerequisites, hidden assumptions, untested/silent-failure steps;
+- design: lock-in, hidden assumptions, implicit dependencies, observability, single-point failure;
+- requirements: user need, testability, revalidation, acceptance criteria.
 
-Thinker lenses:
-- CH: Charlie Munger
-- OM: Occam's Razor
-- FE: Richard Feynman
-- PO: Karl Popper
-- KT: Immanuel Kant
-- AJ: Alicia Juarrero; invariants, constraints, adaptation, and bounded adaptive freedom
-- SH: Saffi; includes Follett-style integration-versus-compromise reasoning
+---
 
-Aspect tags are defined in §3:
-- CH: `CH:IV`, `CH:IN`, `CH:SO`, `CH:MJ`, `CH:CP`, `CH:SM`, `CH:CR`, `CH:EV`, `CH:SR`
-- OM: `OM:UE`, `OM:FS`, `OM:SS`, `OM:OD`, `OM:AC`, `OM:CF`
-- FE: `FE:SC`, `FE:ME`, `FE:WY`, `FE:HL`, `FE:WE`, `FE:PG`, `FE:PV`, `FE:TB`
-- PO: `PO:UF`, `PO:CO`, `PO:CN`, `PO:WR`, `PO:SI`, `PO:OC`, `PO:CG`
-- KT: `KT:HU`, `KT:EX`, `KT:IR`, `KT:UA`, `KT:HB`, `KT:HHB`, `KT:NH`, `KT:MC`, `KT:OC`
-- AJ: `AJ:IN`, `AJ:OC`, `AJ:UC`, `AJ:AF`, `AJ:EC`, `AJ:JB`, `AJ:RL`, `AJ:FL`
-- SH: `SH:OF`, `SH:FM`, `SH:FB`, `SH:NE`, `SH:HC`, `SH:WL`, `SH:PF`
-- `SH:PF`: Pareto frontier / proven dominance
+# 22. Invariants
 
-Domain identifiers and applicability metadata are defined by `skeptic-questions.md`.
-`SEC` is the Security domain identifier used in the notation examples below.
+- Never act without bound DONE and authority.
+- Never act from unresolved decision-critical O.
+- Never decide from a model beyond its support.
+- Never present inference as fact.
+- Never use stale current-state assumptions for time-dependent claims/actions.
+- Never silently narrow COMPLETE to BOUNDED.
+- Never use a clean result as proof of missing coverage.
+- Never skip OM/AJ/SH/domain when its condition is materially present or cannot safely be ruled out.
+- Never reuse ATTACK credit after the dependent residual failure space/support basis materially changed.
+- Never replay ATTACK merely because any state changed.
+- Never use the low-risk BOUNDED exemption when C depends on provisional M/unobserved mechanism/hidden transformation/unresolved dependency.
+- Never treat synthesis as inheriting component proof.
+- Never close parent DONE from child success without reintegration.
+- Never act from stale mutable premises.
+- Never treat transport/ack failure as proof that a remote effect did not occur.
+- Never unsafe-retry an ambiguous non-idempotent effect before reconciliation.
+- Recovery is a new action and restoration must be observed.
+- Never treat repeated pattern as governing authority.
+- Never self-adopt a successor Skeptic rule.
+- Never manufacture findings to justify process.
+- Never use a fixed replay count as proof of convergence.
+- Every formal task ends HANDLED or CONFLICT.
+- This public runtime carries no authority to mutate or promote itself.
 
-Notation:
-- `CH` identifies a Thinker lens.
-- `CH:IV` identifies one aspect.
-- `SEC` identifies a domain.
-- `CH:IV->SEC` means an aspect surfaced a domain issue.
-- `FE:WE+PO:SI` means multiple aspects apply to one finding.
+---
 
-Use the smallest explanatory tag set, normally 1-3 tags. Use aspects when they improve traceability. Tags never replace evidence level, severity, or output category. Do not invent numbered QIDs unless the referenced question bank defines them.
+# One-line summary
 
-## 17. Invariants
-
-- Never act without DONE.
-- Never act before stabilization.
-- Never decide on raw findings.
-- For Skeptic self-work, read the authoritative current `skeptic.md` when reviewing the repo version. When explicitly reviewing a candidate file, read that candidate file and state that it is not yet authoritative. Do not use memory, summaries, or generated variants as substitutes for the source under review.
-- Do not claim RunSkeptic/Skeptic compliance if the source under review was unavailable or not applied exactly.
-- Never skip a Thinker in RunSkeptic; mark NOT_APPLICABLE when it does not fit.
-- Never treat no findings as proof of safety.
-- Never treat clean top-down scan as proof of safety.
-- Never FIX with inadequate detection confidence.
-- Never report inferred risk as confirmed bug.
-- Never ignore unresolved UNKNOWNs.
-- Never remove without knowing what breaks.
-- Never break a link without replacement or explicit coupling decision.
-- Never execute unresolved conflict in the same area.
-- Never accept silent failure.
-- Never leave partial state.
-- Never rely on hidden state.
-- Never retry a failed action unless new evidence or a changed relevant condition justifies another attempt.
-- Never confuse required convergence with retry; convergence may deliberately repeat unchanged complete review to establish stability.
-- Never treat repeated local fixes as local forever.
-- Every completed RunSkeptic task must have an outcome.
-- Never mark an artifact ready while any ACTION, CONFLICT, or blocking unknown remains unresolved or any applicable required review has not been completed.
-- An unresolved DECOMPOSE path likewise blocks readiness or promotion.
-- Every RunSkeptic task ends as HANDLED or CONFLICT.
-- Never modify outside the current task's scope; log adjacent issues separately.
-- Never use Razor PASS as evidence of full review, readiness, approval, completeness, or promotion.
-- Razor never modifies files or supplies qualifying Find/Fix Loop passes.
-
-## One-Line Summary
-
-RunSkeptic: Gate -> Fundamental Scan -> Map -> Confidence -> Stabilize -> Evidence -> Decide -> Act Safely -> Verify -> Learn
-
-Razor: bounded read-only diagnostic -> PASS / ACTION / CONFLICT -> escalate when full assurance or action is required
+RunSkeptic V5:
+> **Bind -> maintain live truth/model/open-state -> inquire -> attack what represented reasoning may have missed -> decide only from supported state -> act under contract -> observe reality -> reopen only what reality changed.**
