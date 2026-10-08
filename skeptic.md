@@ -25,10 +25,10 @@ This runtime file owns:
 - output;
 - loop/convergence semantics.
 
-Exact Thinker/aspect meanings are bound to:
+Exact Thinker/aspect meanings are bound to (paths relative to the Skeptic project root in Hartal or the exported Skeptic repository root):
 
-- path: `projects/skeptic/skeptic.md`
-- blob: `41354bc7c45c703da3398e6c4dd84e15da02e835`
+- path: `thinkers.md`
+- blob: `12c6c6fc1fb86a98285e3631eb408abd44e9b4ab`
 - import only the semantic definitions under **§3 Thinkers**:
   - CH
   - OM
@@ -41,12 +41,12 @@ Exact Thinker/aspect meanings are bound to:
 
 Family application contract:
 
-- path: `projects/skeptic/evolution/skeptic-w3-lens-application-simple-family-rule-20260924.md`
+- path: `evolution/skeptic-w3-lens-application-simple-family-rule-20260924.md`
 - blob: `cb25a1f13df932f1cfd8ce5a69103a48fb0ec201`
 
 Domain registry:
 
-- path: `projects/skeptic/skeptic-questions.md`
+- path: `skeptic-questions.md`
 - blob: `16bcb90a999c9aec2781256c3cff511aae2fd230`
 
 Selected domain files add detection/evidence only.
