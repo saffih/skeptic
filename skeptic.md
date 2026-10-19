@@ -222,6 +222,7 @@ For each cycle:
 - when a candidate's size, coupling, complexity, unknowns, or prior failures materially lower its expected probability of reaching a completed useful outcome, consider a smaller-step alternative whose steps are independently verifiable and each advances the goal or resolves a decision-critical unknown; prefer it only when it improves expected useful progress without losing required end-to-end or integration semantics;
 - for each mutation, state the new claim/protection, existing owner/evidence, and whether the mutation broadens meaning without evidence;
 - run COMPLETE RunSkeptic on the candidate set using shared evidence;
+- when material evidence suggests repeated low-yield candidate work or a shared potentially invalid problem/route assumption, evaluate the dormant Deep Meta-Review activation question below before another costly candidate cycle;
 - eliminate only defeated/dominated candidates;
 - preserve unresolved nondominated alternatives;
 - if candidate meaning/evidence materially changes, reopen only dependent state and re-run owed challenge.
@@ -698,6 +699,25 @@ Ask materially:
 
 ATTACK must seek materially different failure space.
 Paraphrase/replay earns no fresh credit.
+
+## Deep Meta-Review (DMR) — dormant conditional challenge
+
+At a material decision or observation boundary, only when facts show surprising failure, repeated low-yield workarounds, shared candidate dependence, escalating permissions or process burden, or consequential unsupported confidence, consider one activation question:
+
+> Is there credible evidence that our understanding of the actual goal/problem, or the reasoning route we are following, may itself be materially misframed or incomplete?
+
+- **NO:** continue ordinary reasoning without a review or visible non-activation receipt.
+- **UNCLEAR:** preserve the affected claim and exact uncertainty as O; use one bounded discriminating Probe only if resolving activation would materially change DECIDE. Do not turn mere complexity into a blocker.
+- **YES:** open a process/model O and perform a one-time **deep review of the work's reasoning**, not another ordinary candidate critique:
+  1. Reconstruct Root/DONE, governing authority, required protection and exact current decision *without assuming the present implementation or workflow is necessary*.
+  2. Audit the actual sequence of attempts, expectations, observations, failed predictions, evidence omissions and prior rationale. Separate F from M and distinguish a single defect from a repeated faulty strategy.
+  3. Challenge problem boundaries, missing actors/interfaces, constraints, authority, evidence and acceptance criteria; expose both known unknowns and credible uncertainty about model coverage, without inventing missing obligations.
+  4. Attack common assumptions shared across proposed fixes and ask why the present dependency, tool, candidate family, investigation method or stop criterion is necessary. Consider a serious countermodel, including that the existing framing is valid.
+  5. Compare materially different **authorized** directions, including continuing, narrowing scope, changing candidate family, one discriminating observation, stopping or accountable owner escalation. Preserve genuinely mandatory rules even if their realization seems inefficient.
+  6. Decide which materially supported next move follows, which dependent work stays blocked, and what independent work can continue. If no authorized useful path is known, explicitly escalate the exact decision/unknown instead of repeating workarounds.
+- Report **DMR ACTIVATED** only after YES, with trigger evidence, material reframing/UNKNOWN, changed-or-preserved route, owner escalation if owed, and deactivation/reactivation condition. A substantive justified NO-change conclusion is allowed.
+- Integrate only changed decision-critical F/M/O/C into normal STATE, and return to existing SFR focus/Root when SFR is active; do not give SFR Skeptic's reasoning authority.
+- No recursive DMR or repeat for unchanged evidence. DMR never independently approves a runtime, policy, external action, or stronger claim; existing DECIDE and action gates remain authoritative.
 
 ## ATTACK owedness
 
