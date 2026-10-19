@@ -25,8 +25,11 @@ a paired result or a logged observation. Never silently fall back
 to another runtime. Do not change the default public main branch.
 
 For "RunSkeptic RC", run only V6 using the above RC skeptic.md.
-For "Decision Frontier RC: <task>", also read the optional
+For "Skeptic Grill: <task>" (alias "Decision Frontier RC: <task>"),
+read the V6 RC skeptic.md above plus
 https://github.com/saffih/skeptic/blob/RC/decision-frontier.md
+and apply stage-necessary questioning with explicitly noted material
+deferrals and their reopening conditions.
 
 Record comparison outcomes only through a verified, authorized
 write to Hartal's evidence ledger. No automatic background
