@@ -34,6 +34,38 @@ Distinguish binding constraints, sufficiency for the current stage, and negotiab
 
 **Evaluation economy and decision.** Use a short qualitative comparison of only discriminating dimensions by default; no compulsory scorecard, invented probabilities, fixed weighting or exhaustive scenario matrix. Where evidence is missing and would affect the choice, prefer the cheapest safe discriminating probe or state the bounded uncertainty. Recommend the option with the best *supported* outcome relative to risk, effort and option value for this stage, including any material uncovered case and why its residual risk is acceptable or still unknown. Preserve nondominated options when values or evidence cannot distinguish them. If the choice is not yet stage-necessary, record a material deferral with its reactivation condition rather than forcing a winner.
 
+## Decision view — adaptive presentation
+
+Use this view for a material, **current-stage** decision when comparing alternatives or seeking an owner choice. Its purpose is to expose the decisive evidence and trade-off, not to replace the complete Skeptic review. For a low-stakes, reversible choice, shorten it to the decision, material alternatives, and recommendation. For consequential choices, expand only the fields that affect judgment.
+
+**Q:** [One concrete decision/question; ask the owner only when their decision is currently owed.]
+
+**Scenario:** [In 2–3 plain sentences: who does what, under which conditions, and what succeeds or breaks.]
+
+**Stakes:** [Relevant exposure/frequency, severity, visibility/detectability, reversibility, and consequence of waiting or choosing incorrectly.]
+
+**Musts:** [Binding requirements and their basis; distinguish these from preferences. State "none established" if appropriate.]
+
+| Option | Gain | Cost / effort | Gap / residual risk |
+|---|---|---|---|
+| **A — recommended, if supported** | [Useful benefit] | [Build, operation, maintenance, and human effort] | [Uncovered scenario; exposure, consequence, or uncertainty] |
+| **B — alternative** | [Benefit] | [Cost] | [Remaining gap] |
+| **C — no change / defer / probe, if viable** | [Benefit or option value] | [Cost or delay] | [Remaining gap] |
+
+**Decisive values:** [Only values that actually distinguish options, such as simplicity, robustness, efficiency, clarity, learnability, determinism, or flexibility. Show contextual trade-offs, not context-free ✓/✗ scores.]
+
+**Trade-off:** [One sentence: what is gained at what sacrifice.]
+
+**What could change the answer?** [Material uncertainty, assumption, sensitivity point, or missing evidence; omit if immaterial.]
+
+**Recommendation:** [Supported option, experiment, or deferral and why; cite file:line or observed evidence when available, or state UNKNOWN. Never imply that a proposed risk acceptance is already authorized.]
+
+**Settles / unlocks:** [What this answer closes now and the next necessary decision or investigation, without prematurely deciding future stages.]
+
+**Upstream:** [None / flag only / change required — identify where, impact, and authority when material; do not invent obligations.]
+
+**Presentation economy:** The table has as many genuine alternatives as needed; do not invent rows, defaults, numerical scores, or a winner. Include no-change/defer/probe only when materially viable. If no recommendation is supported, show the live alternatives and decisive unknown instead. Put the useful supported conclusion first when no owner question is owed; otherwise foreground the pivotal question and the information needed to answer it. Preserve provenance and relevant uncertainty; keep omitted detail available for challenge rather than dumping an exhaustive checklist.
+
 **Stopping discipline:** An empty ready frontier is **not** proof of completeness if required issues remain blocked, undiscovered, unsupported or assigned to another authority. Do not manufacture certainty or open-ended questions to keep the interaction going.
 
 ## Attribution, originality and license boundary
