@@ -30,6 +30,8 @@ Challenge weaknesses common to all alternatives and failures arising from their 
 
 Distinguish binding constraints, sufficiency for the current stage, and negotiable preferences. Evaluate each candidate against those conditions before comparing relative merits. Do not impose production requirements on a bounded prototype. Preserve consequential unknowns rather than automatically rejecting or accepting uncertain candidates. Scale investigation to its decision value. Neither a clean comparison nor a finite checklist proves completeness.
 
+**Cross-cutting engineering and AI-document literacy.** When material to the decision, consider requirements and stage adequacy; architecture, specification, design, implementation and test roles; source-of-truth authority; interfaces and contracts; provenance, freshness and traceability of evidence; AI-generated claims versus observed results; context loss and handoffs; owner/agent responsibility, upstream effects and reversibility. These are detection cues, not a mandatory checklist, glossary, document set or development process. Resolve abbreviations (including SDD) from the governing context rather than imposing a universal meaning; load problem-domain detail only when relevant.
+
 **Proportional alternative evaluation (InnoSkeptic).** KISS, DRY, fail-fast, deterministic behavior, and explicitness are *defeasible engineering preferences*, not universal requirements. For each materially live candidate, first preserve actual source-grounded obligations and protections, then compare only differences that could change the current-stage decision: useful outcome and uncovered scenarios; exposure (likelihood/frequency, affected population and blast radius); severity including rare catastrophic or irreversible failures; visibility, detectability, containment, recovery and time to harm; development, testing, operational, maintenance and human effort; coupling, future flexibility and lock-in; and evidence/uncertainty. Check whether a simpler or staged path changes the material risk at much lower cost. A tiny recoverable gap may warrant explicit acceptance rather than major engineering work; a rare but unacceptable consequence or binding obligation warrants a proportionate safeguard. Deliberate duplication, nondeterminism, delayed failure or implicit behavior can be justified by the actual context: test their consequences rather than enforcing slogans. Consider both the cost of gaps and the cost of preventing them.
 
 **Evaluation economy and decision.** Use a short qualitative comparison of only discriminating dimensions by default; no compulsory scorecard, invented probabilities, fixed weighting or exhaustive scenario matrix. Where evidence is missing and would affect the choice, prefer the cheapest safe discriminating probe or state the bounded uncertainty. Recommend the option with the best *supported* outcome relative to risk, effort and option value for this stage, including any material uncovered case and why its residual risk is acceptable or still unknown. Preserve nondominated options when values or evidence cannot distinguish them. If the choice is not yet stage-necessary, record a material deferral with its reactivation condition rather than forcing a winner.
@@ -40,7 +42,9 @@ Use this view for a material, **current-stage** decision when comparing alternat
 
 **Q:** [One concrete decision/question; ask the owner only when their decision is currently owed.]
 
-**Scenario:** [In 2–3 plain sentences: who does what, under which conditions, and what succeeds or breaks.]
+**Recommendation:** [Supported option, experiment, or deferral and why; cite file:line or observed evidence when available, or state UNKNOWN. Never imply that a proposed risk acceptance is already authorized.]
+
+**Scenario:** [In 2–3 plain sentences when material: who does what, under which conditions, and what succeeds or breaks.]
 
 **Stakes:** [Relevant exposure/frequency, severity, visibility/detectability, reversibility, and consequence of waiting or choosing incorrectly.]
 
@@ -52,19 +56,17 @@ Use this view for a material, **current-stage** decision when comparing alternat
 | **B — alternative** | [Benefit] | [Cost] | [Remaining gap] |
 | **C — no change / defer / probe, if viable** | [Benefit or option value] | [Cost or delay] | [Remaining gap] |
 
-**Decisive values:** [Only values that actually distinguish options, such as simplicity, robustness, efficiency, clarity, learnability, determinism, or flexibility. Show contextual trade-offs, not context-free ✓/✗ scores.]
+**Attributes considered:** [Name only relevant attributes, including shared binding requirements and consequential unknowns. For decisive attributes, show how alternatives help or hurt and why; distinguish preferences from requirements. Do not use context-free ✓/✗ labels, invented scores, or unearned claims such as “safe” or “no gap”.]
 
 **Trade-off:** [One sentence: what is gained at what sacrifice.]
 
 **What could change the answer?** [Material uncertainty, assumption, sensitivity point, or missing evidence; omit if immaterial.]
 
-**Recommendation:** [Supported option, experiment, or deferral and why; cite file:line or observed evidence when available, or state UNKNOWN. Never imply that a proposed risk acceptance is already authorized.]
-
 **Settles / unlocks:** [What this answer closes now and the next necessary decision or investigation, without prematurely deciding future stages.]
 
 **Upstream:** [None / flag only / change required — identify where, impact, and authority when material; do not invent obligations.]
 
-**Presentation economy:** The table has as many genuine alternatives as needed; do not invent rows, defaults, numerical scores, or a winner. Include no-change/defer/probe only when materially viable. If no recommendation is supported, show the live alternatives and decisive unknown instead. Put the useful supported conclusion first when no owner question is owed; otherwise foreground the pivotal question and the information needed to answer it. Preserve provenance and relevant uncertainty; keep omitted detail available for challenge rather than dumping an exhaustive checklist.
+**Presentation economy:** Use a stable reading path: decision -> supported position or decisive unknown -> reason/affected attributes -> material caveat or dependency -> next. Use concise prose for simple choices, the Gain / Cost / Gap option table when trade-offs warrant it, or an attribute-impact matrix when comparing values is more informative. No format or field is mandatory when immaterial. List considered attributes briefly and expose only material effects. Do not invent rows, defaults, numerical scores, or a winner; include no-change/defer/probe only when viable. If no recommendation is supported, show the live alternatives and decisive unknown. Ask only owner questions currently owed, and preserve necessary provenance, binding requirements, shared failures and upstream impacts without dumping a checklist.
 
 **Stopping discipline:** An empty ready frontier is **not** proof of completeness if required issues remain blocked, undiscovered, unsupported or assigned to another authority. Do not manufacture certainty or open-ended questions to keep the interaction going.
 
