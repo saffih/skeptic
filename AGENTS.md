@@ -1,6 +1,8 @@
 # Skeptic RC — Agent entry map
 
-This is the RC-only agent-navigation source for `saffih/skeptic@RC:AGENTS.md`, owned by Hartal `projects/skeptic/public-agents-rc.md`. It identifies terms and routes; it does not install a method, override permission, or adopt RC as stable. Relative links below resolve in public `saffih/skeptic@RC`.
+This `AGENTS.md` originates in Hartal at `projects/skeptic/AGENTS.md` and is published to `saffih/skeptic@RC:AGENTS.md`. It is navigation only: it does not install a method, override permission, or adopt RC as stable.
+
+**Path context:** Within Hartal, follow root `MUST_READ_FIRST.md` and `AGENTS.md`: V5 lives in `skeptic.md`, V6 in `skeptic-rc.md`, and Grill in `decision-frontier-rc.md`. Relative links below are the **public RC** counterparts, not Hartal-local paths; `projects/skeptic/export.yaml` owns the full mapping.
 
 ## Terminology and entrypoints
 
