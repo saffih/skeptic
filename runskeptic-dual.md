@@ -1,34 +1,32 @@
-# RunSkeptic Dual — controlled V5 / V6 RC comparison
+# RunSkeptic Dual - frozen V6 versus active V7
 
-**Status:** Owner-authorized experimental comparison entrypoint in Hartal main. V5 remains stable and V6 remains RC; this is not a new Skeptic assurance depth, release, or replacement for either independently usable runtime.
+**Status:** Optional experimental comparison of the frozen V6 predecessor with V7, the active canonical Hartal Skeptic. This is not a second runtime authority, a new assurance level, or evidence that an experiment occurred.
 
-**Invoke:** `RunSkeptic Dual: <task>`. The default repository `RunSkeptic` binding remains the stable `skeptic.md` unless an environment explicitly installs a different selection rule. `RunSkeptic RC` selects only the candidate. `Decision Frontier RC: <task>` selects the optional decision-interview profile.
+**Invoke:** `RunSkeptic Dual: <task>` explicitly. Ordinary `RunSkeptic` and compatibility `RunSkeptic RC` bind the single current `skeptic.md` only.
 
-## Bind and execute
+## Source binding
 
-1. **Lock the case:** Specify exact task, DONE, authority, permission, relevant current source/evidence, and intended assurance. Freeze one identical substantive input for both arms. Bind exact Git blob identities by fresh read. In **Hartal**, stable `skeptic.md` is V5 and experimental `skeptic-rc.md` is V6. In **public `saffih/skeptic@RC`**, `skeptic-v5.md` is V5 and `skeptic.md` is V6. Never silently substitute one for the other.
-2. **Independent arms:** Use two *separately initialized semantic invocations*, each reading its own entire runtime and identical case/evidence under comparable model, thinking effort and tool access. Each arm is unaware of the other's response and follows its own full runtime, including normal receipt and ATTACK duties. Parallel execution is optional; isolation matters more than simultaneity. Preserve actual separate participant sources and outputs. Two role-played voices or repeated answers in the same context are **not** an independently controlled comparison. If isolated invocations cannot be performed, run at most one transparently labeled normal review, mark the comparative test `NOT_RUN`, and never fabricate the other arm.
-3. **Action containment:** Both experimental arms are read-only by default. The two arms do not independently execute, publish, merge, send, or otherwise perform consequential effects. If the user separately authorizes an action, the coordinator evaluates the evidence and obtains the normal single-action authority/verification; dual review itself grants no permission and never performs an effect twice.
-4. **Independent comparison:** Compare the concrete decisions and next authorized actions, including missed essential obligations/false negatives, invented constraints or blockers/false positives, unsupported closure, decision-relevant UNKNOWN, DMR activation quality, user burden, and work cost. Establish ground truth from governing authority and observed evidence, not the candidate's own rhetoric. Do not award V6 credit merely for named DMR, longer explanations, or agreement with an unverified oracle. If a finding's truth is unverified, mark it `UNKNOWN`, not a verified FP/FN.
-5. **Record the result:** Append an evidence entry to Hartal `projects/skeptic/evidence/v5-v6-dual-ledger.md` *only when a durable authorized write is available*, and include the two complete receipts (or stable references), source identities, exact case, comparison conditions, outcome and limitations. Link noteworthy evidence to Hartal issue #91. No background or automatic logging is implied without a real installed executor with that capability.
-6. **Use results responsibly:** The review coordinator can report the strongest warranted answer, along with material disagreement or blockers, but only the appropriate governing owner decides normative choices and actions. Neither a clean pair nor repeated runs automatically adopts V6. Semantic runtime promotion still requires approved diff, measured benefit/harm, rollback and separate authorization.
+- **Hartal V7:** `projects/skeptic/skeptic.md`, read freshly from the selected commit/ref.
+- **Hartal V6 control:** `projects/skeptic/releases/skeptic-v6-previous.md`, immutable predecessor blob `548869b5dc71f94ba8a0d6b7cfcecc147ac6214e`.
+- **Public V7:** `saffih/skeptic@RC:skeptic.md`, when explicitly synchronized and read back.
+- **Public V6 control:** `saffih/skeptic@RC:skeptic-v6.md`, expected to match the frozen predecessor blob.
+- Historical V5 remains in `releases/skeptic-v5-previous.md` (public `RC/skeptic-v5.md`) but is not a control in this V6/V7 experiment. Earlier V5/V6 comparison evidence remains historical.
 
-## Qualifying evidence
+Do not assume that matching labels imply matching bytes, nor that a public branch is current merely because a corresponding Hartal source changed.
 
-`PAIRED_VERIFIED`: two independently sourced arms with equivalent case/conditions and sufficient provenance and a grounded adjudication.
-`PAIRED_LIMITED`: separate real arms, but a material variable/source/outcome cannot be verified; interpret narrowly.
-`UNPAIRED`: one arm or only ordinary dogfooding; useful observation but not a V5/V6 comparison.
-`NOT_RUN`: no separate arm execution.
-`CONFLICT`: required provenance/authority/permissions are contradictory or cannot be established.
+## Controlled comparison
 
-For a focused initial benchmark, use the pre-registered H2 repeated-sandbox-failure case and N1 authorized-simple-sync negative control from `evolution/experiments/v6-dmr-isolated/comparison-contract-20261010.md` on the research branch. Additional uncontrolled repetitions do not substitute for an actual result.
+1. **Lock case and oracle:** Establish exact task, DONE, governing authority, permission, relevant evidence, and decision criteria. Freeze the same substantive case for both arms; withhold oracle material from both responding arms. Prefer the existing SkepticCheck catalog, including the paired goal-condition detection/restraint cases, plus independent holdouts where available.
+2. **Run independent arms:** Launch separately initialized semantic invocations, each freshly reading its own full runtime and the same case/evidence with comparable settings, tool access and effort. Each follows its own complete Skeptic contract, including receipt and ATTACK obligations. Neither arm sees the other's output or the oracle. Same-context role play, mirrored text or sequential restatement is **not** independent execution.
+3. **Contain effects:** Both experimental arms are read-only; none may publish, mutate, send, or perform other consequential actions. Normal single-owner authority governs any separately approved effect.
+4. **Evaluate symmetrically:** Compare material missed requirements/false negatives, invented requirements/false positives, unsupported closure, unknowns, DMR activation where materially relevant, effort and user burden. Ground judgments in evidence and the bound task, not in labels, verbosity or agreement with an unverified oracle. For a behavioral promotion claim, blind the judge to arm identity.
+5. **Classify honestly:** `PAIRED_VERIFIED`, `PAIRED_LIMITED`, `UNPAIRED`, `NOT_RUN` or `CONFLICT`, with exact source identities and the actual observations. A synthetic prompt-generation self-test or in-context semantic emulation is `NOT_RUN` for independent A/B, though it can be useful as a separately labeled source-level check.
+6. **Record results only after execution:** Persist genuine findings and references in Hartal `projects/skeptic/evidence/v6-v7rc-dual-ledger.md` when an authorized write is available. Do not fabricate runs, receipt hashes, model isolation or promotion quality. Use the existing SkepticCheck governance for decisions based on comparative cases.
 
-## Relation to Decision Frontier
+## Optional Decision Frontier
 
-Hartal `decision-frontier-rc.md` / public RC `decision-frontier.md` is an **optional** V6 RC invocation profile informed by the concept (not implementation) of Matt Pocock's Grilling. It is a separate experimental variable. Do not introduce it into a V5-versus-V6-only comparison unless both arms have an intentionally matched profile or the experiment explicitly isolates profile effects.
+The separately invoked Decision Frontier/Grill profile is not part of the V6/V7 comparison unless deliberately matched in both arms. Its public RC source is `decision-frontier.md` and it does not modify Skeptic's assurance or permissions.
 
-## Evidence and ownership
+## Limits
 
-Tracking: `projects/skeptic/evidence/v5-v6-dual-ledger.md` (Hartal main, not part of the public runtime distribution). Prior research and V6 dogfooding: https://github.com/saffih/hartal/issues/91 .
-
-No claim that this Markdown contract automatically dispatches isolated models or writes evidence. Actual tool, runtime, and permission capabilities must be verified for each invocation.
+Actual runner/model/tool capabilities determine whether independent arms can execute. Without two real isolated runs, report `NOT_RUN` or `UNPAIRED`, not behavioral superiority. Owner-authorized experimental RC deployment remains distinct from eventual stable public-main promotion.
