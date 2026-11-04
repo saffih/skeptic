@@ -11,7 +11,7 @@
 
 **Public RC view:** [`saffih/skeptic@RC`](https://github.com/saffih/skeptic/tree/RC) carries the current canonical Hartal runtime as `skeptic.md` (when explicitly synchronized from `export.yaml`), historical V5 as `skeptic-v5.md`, the optional dual-run protocol, Decision Frontier profile and installer. Public `main` remains independently published; Hartal commits do not automatically synchronize it. The 2026-11-04 goal-condition change is published only to public `RC`, not public `main`.
 
-**Invocation:** `RunSkeptic Dual: <task>` for an explicit comparison; `RunSkeptic RC` for candidate only; `Decision Frontier RC: <task>` for the optional interactive profile. The installer describes how to request dual behavior when calling ordinary `RunSkeptic` in a supporting assistant. Mere repository presence cannot activate a remote user preference or create an isolated runner.
+**Invocation:** `RunSkeptic Dual: <task>` for an explicit comparison; `RunSkeptic RC` for candidate only; `Decision Frontier RC: <task>` for the optional interactive profile. The installer binds ordinary `RunSkeptic` to the single current public RC runtime; `RunSkeptic Dual` remains a separate explicitly requested experiment. Mere repository presence cannot activate a remote user preference or create an isolated runner.
 
 **Evidence:** [Hartal issue #91](https://github.com/saffih/hartal/issues/91). At entrypoint creation, no controlled V5/V6 pairs have been completed and no verified performance gain has been established. V6 observation is not proof of comparative superiority.
 
