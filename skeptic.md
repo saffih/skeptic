@@ -692,7 +692,7 @@ Purpose:
 Ask materially:
 - what plausible countermodel defeats C?
 - what hidden dependency/common mode defeats several supports?
-- what actor/path/side effect/failure mode/verification condition is absent while C looks coherent?
+- what actor/path/side effect/failure mode/verification condition is absent while C looks coherent? From the bound goal, what material condition might C have overlooked or assumed to hold?
 - what evidence is stale/unrepresentative/correlated/non-discriminating?
 - what protected human/system consequence lies outside the frame?
 - could STATE representation, lens/routing choice, reasoning method, or stopping assumption itself be narrowing attention, causing FN/FP, or creating avoidable burden?
