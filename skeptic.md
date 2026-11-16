@@ -1,4 +1,4 @@
-# Skeptic
+# Skeptic — V7
 
 Purpose:
 > Provide a self-contained operational RunSkeptic runtime with core Thinker semantics, optional domain detection, action/reality discipline, receipts, and loop entrypoints.
@@ -113,7 +113,7 @@ Every formal RunSkeptic report includes a compact receipt:
 
 Receipt is an index for challengeability, not independent proof.
 
-Do not claim V5 RunSkeptic compliance without the current runtime and the evidence necessary for the exact claimed coverage.
+Do not claim V7 RunSkeptic compliance without the current runtime and the evidence necessary for the exact claimed coverage.
 
 ---
 
@@ -692,7 +692,7 @@ Purpose:
 Ask materially:
 - what plausible countermodel defeats C?
 - what hidden dependency/common mode defeats several supports?
-- what actor/path/side effect/failure mode/verification condition is absent while C looks coherent?
+- what actor/path/side effect/failure mode/verification condition is absent while C looks coherent? From the bound goal, what material condition might C have overlooked or assumed to hold?
 - what evidence is stale/unrepresentative/correlated/non-discriminating?
 - what protected human/system consequence lies outside the frame?
 - could STATE representation, lens/routing choice, reasoning method, or stopping assumption itself be narrowing attention, causing FN/FP, or creating avoidable burden?
@@ -1165,5 +1165,5 @@ Useful artifact prompts include:
 
 # One-line summary
 
-RunSkeptic V5:
+RunSkeptic V7:
 > **Bind -> maintain live truth/model/open-state -> inquire -> attack what represented reasoning may have missed -> decide only from supported state -> act under contract -> observe reality -> reopen only what reality changed.**
