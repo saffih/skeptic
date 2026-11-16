@@ -1,6 +1,6 @@
 # Skeptic V7 - public experimental RC
 
-**Status (2026-11-04):** V7 is the active experimental Skeptic in the single canonical Hartal `projects/skeptic/skeptic.md` on Hartal `main`. There is **no separate Hartal V7 development branch**. The external `saffih/skeptic@RC` is an explicitly synchronized publication/distribution branch; stable public `main` is unchanged.
+**Status (2026-11-16):** V7 is the active Skeptic in the canonical Hartal `projects/skeptic/skeptic.md` and is now published on public stable `main` (commit `7d14f5e7e687ef4b4353f8db59fbf71cfea34e6f`). There is **no separate Hartal V7 development branch**. The external `saffih/skeptic@RC` remains a comparison/experimental publication branch with identical V7 runtime bytes.
 
 ## Source and preserved controls
 
@@ -21,7 +21,7 @@ The branch alone does not install a user preference, select a model, grant permi
 
 ## Evidence, risks, and limits
 
-Hartal's canonical SkepticCheck catalog includes 53 Full cases and 22 default Quick cases, including four newly added goal-condition falsifiers and four paired clean controls. Local static/source checks, catalog validation, and synthetic request-pipeline tests supported this change. **Independent oracle-withheld V6/V7 model comparisons have not run.** No behavioral superiority or absence of false positives has been established. Watch for speculative obligations, redundant verification, scope expansion and unnecessary delays. The user authorized limited active RC use despite this evidence gap; do not silently upgrade it into stable publication qualification.
+Hartal's canonical SkepticCheck catalog includes 53 Full cases and 22 default Quick cases, including four newly added goal-condition falsifiers and four paired clean controls. Local static/source checks, catalog validation, and synthetic request-pipeline tests supported this change. **Independent oracle-withheld V6/V7 model comparisons have not run.** No behavioral superiority or absence of false positives has been established. Watch for speculative obligations, redundant verification, scope expansion and unnecessary delays. The owner explicitly authorized public stable V7 promotion on 2026-11-16 despite this evidence gap. Publication does not establish behavioral superiority.
 
 The version change only labels the prior applied runtime: it does not introduce a new reasoning stage, lens, permission, comparison owner, or stronger completeness claim.
 
@@ -29,4 +29,4 @@ The version change only labels the prior applied runtime: it does not introduce 
 
 Decision Frontier acknowledges the ideas (not implementation or skill text) of [Matt Pocock's Grilling](https://github.com/mattpocock/skills/blob/main/skills/productivity/grilling/SKILL.md), under the referenced upstream [MIT License](https://github.com/mattpocock/skills/blob/main/LICENSE).
 
-Hartal `main` owns canonical source; public `RC` is a generated distribution. `repo/publication-rules.md` governs sync. Public `main` promotion is a separate authorized distribution decision.
+Hartal `main` owns canonical source; public `RC` is a generated distribution. `repo/publication-rules.md` governs sync. Public `main` V7 promotion was expressly authorized and verified on 2026-11-16; it was a targeted runtime sync, not a wholesale merge of diverged RC branch history.
