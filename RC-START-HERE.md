@@ -4,7 +4,7 @@
 
 ## Source and preserved controls
 
-- **V8 RC runtime:** `skeptic.md`, retaining V7's existing ATTACK/DMR controls and adding one conditional recurrence-sufficiency question inside activated DMR. No change to activation, permission, assurance, action or receipt semantics.
+- **V8 RC runtime:** `skeptic.md`, retaining V7's existing ATTACK/DMR controls and adding one conditional recurrence-sufficiency question inside activated DMR. The exercised case is visibly labeled **`DMR Reccuring`** in the DMR report, including when the decision is to preserve the route. The user-selected spelling is intentional; it is a case label, not a separate trigger, review mode or assurance level.
 - **Frozen stable V7 control:** `releases/skeptic-v7-previous.md` on the Hartal candidate branch, exported as `RC/skeptic-v7.md`, exact V7 blob `3021be4622a3edef42fc22593a099ba35eb42191`.
 - **Frozen V6 control:** `releases/skeptic-v6-previous.md` in Hartal, exported as public `RC/skeptic-v6.md`. The exact predecessor Git blob is `548869b5dc71f94ba8a0d6b7cfcecc147ac6214e`.
 - **Historical V5:** `releases/skeptic-v5-previous.md` in Hartal, exported as public `RC/skeptic-v5.md`; it remains historical, not the default V7 comparison arm.
