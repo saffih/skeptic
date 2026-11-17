@@ -1,4 +1,4 @@
-# Skeptic — V7
+# Skeptic — V8
 
 Purpose:
 > Provide a self-contained operational RunSkeptic runtime with core Thinker semantics, optional domain detection, action/reality discipline, receipts, and loop entrypoints.
@@ -113,7 +113,7 @@ Every formal RunSkeptic report includes a compact receipt:
 
 Receipt is an index for challengeability, not independent proof.
 
-Do not claim V7 RunSkeptic compliance without the current runtime and the evidence necessary for the exact claimed coverage.
+Do not claim V8 RunSkeptic compliance without the current runtime and the evidence necessary for the exact claimed coverage.
 
 ---
 
@@ -711,6 +711,7 @@ At a material decision or observation boundary, only when facts show surprising 
 - **YES:** open a process/model O and perform a one-time **deep review of the work's reasoning**, not another ordinary candidate critique:
   1. Reconstruct Root/DONE, governing authority, required protection and exact current decision *without assuming the present implementation or workflow is necessary*.
   2. Audit the actual sequence of attempts, expectations, observations, failed predictions, evidence omissions and prior rationale. Separate F from M and distinguish a single defect from a repeated faulty strategy.
+     When evidence suggests a material recurring pattern of failures or workarounds, test whether addressing the apparent cause would reduce recurrence or its consequences rather than only resolve the latest instance; investigate enabling conditions only if they could change DECIDE.
   3. Challenge problem boundaries, missing actors/interfaces, constraints, authority, evidence and acceptance criteria; expose both known unknowns and credible uncertainty about model coverage, without inventing missing obligations.
   4. Attack common assumptions shared across proposed fixes and ask why the present dependency, tool, candidate family, investigation method or stop criterion is necessary. Consider a serious countermodel, including that the existing framing is valid.
   5. Compare materially different **authorized** directions, including continuing, narrowing scope, changing candidate family, one discriminating observation, stopping or accountable owner escalation. Preserve genuinely mandatory rules even if their realization seems inefficient.
@@ -1165,5 +1166,5 @@ Useful artifact prompts include:
 
 # One-line summary
 
-RunSkeptic V7:
+RunSkeptic V8:
 > **Bind -> maintain live truth/model/open-state -> inquire -> attack what represented reasoning may have missed -> decide only from supported state -> act under contract -> observe reality -> reopen only what reality changed.**
