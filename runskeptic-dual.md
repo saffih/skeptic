@@ -1,16 +1,16 @@
-# RunSkeptic Dual - frozen V6 versus active V7
+# RunSkeptic Dual - stable V7 versus experimental V8 RC
 
-**Status:** Optional experimental comparison of the frozen V6 predecessor with V7, the active canonical Hartal Skeptic. This is not a second runtime authority, a new assurance level, or evidence that an experiment occurred.
+**Status:** Optional experimental comparison of frozen stable V7 against candidate V8 on public `RC`. Hartal and public `main` continue to own stable V7; the Hartal V8 work branch owns this candidate source. This contract is not a second runtime authority, a new assurance level, or evidence of an executed comparison.
 
 **Invoke:** `RunSkeptic Dual: <task>` explicitly. Ordinary `RunSkeptic` and compatibility `RunSkeptic RC` bind the single current `skeptic.md` only.
 
 ## Source binding
 
-- **Hartal V7:** `projects/skeptic/skeptic.md`, read freshly from the selected commit/ref.
-- **Hartal V6 control:** `projects/skeptic/releases/skeptic-v6-previous.md`, immutable predecessor blob `548869b5dc71f94ba8a0d6b7cfcecc147ac6214e`.
-- **Public V7:** `saffih/skeptic@RC:skeptic.md`, when explicitly synchronized and read back.
-- **Public V6 control:** `saffih/skeptic@RC:skeptic-v6.md`, expected to match the frozen predecessor blob.
-- Historical V5 remains in `releases/skeptic-v5-previous.md` (public `RC/skeptic-v5.md`) but is not a control in this V6/V7 experiment. Earlier V5/V6 comparison evidence remains historical.
+- **Hartal candidate V8:** `projects/skeptic/skeptic.md` on `work/skeptic-v8-dmr-rc-20261117`, exact candidate blob must be rebound at use.
+- **Hartal frozen V7 control:** `projects/skeptic/releases/skeptic-v7-previous.md` on that same work branch, immutable V7 blob `3021be4622a3edef42fc22593a099ba35eb42191`.
+- **Public V8 RC:** `saffih/skeptic@RC:skeptic.md`, after explicit synchronization and readback.
+- **Public V7 control:** `saffih/skeptic@RC:skeptic-v7.md`, expected to equal the frozen V7 blob.
+- V6 (`RC/skeptic-v6.md`) and V5 (`RC/skeptic-v5.md`) remain historical, not arms of this V7/V8 experiment. Earlier V5/V6 and V6/V7 evidence remains historical.
 
 Do not assume that matching labels imply matching bytes, nor that a public branch is current merely because a corresponding Hartal source changed.
 
@@ -21,7 +21,7 @@ Do not assume that matching labels imply matching bytes, nor that a public branc
 3. **Contain effects:** Both experimental arms are read-only; none may publish, mutate, send, or perform other consequential actions. Normal single-owner authority governs any separately approved effect.
 4. **Evaluate symmetrically:** Compare material missed requirements/false negatives, invented requirements/false positives, unsupported closure, unknowns, DMR activation where materially relevant, effort and user burden. Ground judgments in evidence and the bound task, not in labels, verbosity or agreement with an unverified oracle. For a behavioral promotion claim, blind the judge to arm identity.
 5. **Classify honestly:** `PAIRED_VERIFIED`, `PAIRED_LIMITED`, `UNPAIRED`, `NOT_RUN` or `CONFLICT`, with exact source identities and the actual observations. A synthetic prompt-generation self-test or in-context semantic emulation is `NOT_RUN` for independent A/B, though it can be useful as a separately labeled source-level check.
-6. **Record results only after execution:** Persist genuine findings and references in Hartal `projects/skeptic/evidence/v6-v7rc-dual-ledger.md` when an authorized write is available. Do not fabricate runs, receipt hashes, model isolation or promotion quality. Use the existing SkepticCheck governance for decisions based on comparative cases.
+6. **Record results only after execution:** Persist genuine findings and references in Hartal `projects/skeptic/evidence/v7-v8rc-dual-ledger.md` when an authorized write is available. Do not fabricate runs, receipt hashes, model isolation or promotion quality. Use the existing SkepticCheck governance for decisions based on comparative cases.
 
 ## Optional Decision Frontier
 
