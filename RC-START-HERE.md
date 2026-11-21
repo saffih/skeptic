@@ -4,7 +4,7 @@
 
 ## Source and preserved controls
 
-- **V8 RC runtime:** `skeptic.md`, retaining V7's existing ATTACK/DMR controls and adding one conditional recurrence-sufficiency question inside activated DMR. The exercised case is visibly labeled **`DMR Reccuring`** in the DMR report, including when the decision is to preserve the route. The user-selected spelling is intentional; it is a case label, not a separate trigger, review mode or assurance level.
+- **V8 RC runtime:** `skeptic.md`, retaining V7's existing ATTACK/DMR controls and adding one conditional recurrence-sufficiency question inside activated DMR. The exercised case is visibly labeled **RSC (Recurrence Sufficiency Check)** in the activated DMR report, with its evidence and decision impact (including justified no-change). The prior `DMR Reccuring` label is a historical search alias; RSC is not a separate DMR trigger, review mode or assurance level.
 - **Frozen stable V7 control:** `releases/skeptic-v7-previous.md` on the Hartal candidate branch, exported as `RC/skeptic-v7.md`, exact V7 blob `3021be4622a3edef42fc22593a099ba35eb42191`.
 - **Frozen V6 control:** `releases/skeptic-v6-previous.md` in Hartal, exported as public `RC/skeptic-v6.md`. The exact predecessor Git blob is `548869b5dc71f94ba8a0d6b7cfcecc147ac6214e`.
 - **Historical V5:** `releases/skeptic-v5-previous.md` in Hartal, exported as public `RC/skeptic-v5.md`; it remains historical, not the default V7 comparison arm.
@@ -18,7 +18,7 @@
 
 For ordinary `RunSkeptic`, use exactly the current `RC/skeptic.md` if this branch has been selected. `RunSkeptic RC` is a compatibility alias for that same runtime. `RunSkeptic Dual` must be explicitly invoked and compares V8 RC against frozen V7, without claiming independent runs by default.
 
-The branch alone does not install a user preference, select a model, grant permissions, schedule runs, or log experimental outcomes. Git refs move; bind the actual commit and blob at use.
+After completing work, ask **`Skeptic Trace`** to inspect actual RunSkeptic receipts, DMR/RSC trigger evidence and decision impact. Missing receipts mean UNKNOWN/NOT_REPORTED, not proof that a feature did or did not trigger; the question does not retroactively run Skeptic. The branch alone does not install a user preference, select a model, grant permissions, schedule runs, or log experimental outcomes. Git refs move; bind the actual commit and blob at use.
 
 ## Evidence, risks, and limits
 
