@@ -103,6 +103,7 @@ Every formal RunSkeptic report includes a compact receipt:
 - DONE
 - Major operations materially exercised
 - Reasoning families applied / triggered
+- If DMR was activated: the material trigger and outcome, plus **RSC TRIGGERED** with evidence and impact when the conditional recurrence check was actually exercised
 - Material evidence used
 - ATTACK: due reason / result / skipped exemption basis
 - DECIDE outcome
@@ -111,7 +112,9 @@ Every formal RunSkeptic report includes a compact receipt:
 - Unresolved O / conflicts / unknowns
 - Final task category
 
-Receipt is an index for challengeability, not independent proof.
+Receipt is an index for challengeability, not independent proof. Show the compact receipt to the user with the formal result; a private/internal tool call alone is not evidence the user saw the invocation. No visible DMR non-activation entry is required when DMR's activation answer is NO.
+
+**After-work query - `Skeptic Trace`:** Inspect available bound invocation receipts and source/output evidence for the specified work and report (1) which Skeptic runtime/ref/blob was actually invoked, or UNKNOWN if no receipt; (2) whether DMR or RSC was actually reported as triggered, with evidence; and (3) how the triggered reasoning materially changed, preserved or constrained the conclusion. Distinguish `NOT_REPORTED` from demonstrated nonactivation. This is an audit of existing traces, **not** a new RunSkeptic invocation, a guarantee of hidden cognition, retroactive instrumentation, or automatic monitoring. If no trace exists, report that limitation rather than inventing use or benefit.
 
 Do not claim V8 RunSkeptic compliance without the current runtime and the evidence necessary for the exact claimed coverage.
 
@@ -711,7 +714,7 @@ At a material decision or observation boundary, only when facts show surprising 
 - **YES:** open a process/model O and perform a one-time **deep review of the work's reasoning**, not another ordinary candidate critique:
   1. Reconstruct Root/DONE, governing authority, required protection and exact current decision *without assuming the present implementation or workflow is necessary*.
   2. Audit the actual sequence of attempts, expectations, observations, failed predictions, evidence omissions and prior rationale. Separate F from M and distinguish a single defect from a repeated faulty strategy.
-     **DMR Reccuring:** When evidence suggests a material recurring pattern of failures or workarounds, test whether addressing the apparent cause would reduce recurrence or its consequences rather than only resolve the latest instance; investigate enabling conditions only if they could change DECIDE. When this challenge is performed, identify it as **DMR Reccuring** in the DMR report, including a justified no-change conclusion; the label is not another activation mode.
+     **RSC (Recurrence Sufficiency Check; formerly `DMR Reccuring`):** When evidence suggests a material recurring pattern of failures or workarounds, test whether addressing the apparent cause would reduce recurrence or its consequences rather than only resolve the latest instance; investigate enabling conditions only if they could change DECIDE. When this challenge is actually performed, report **RSC TRIGGERED** inside the activated DMR result, naming the recurrence evidence, what the check established, and its effect on the decision or a justified no-change conclusion. RSC is not a separate DMR activation mode, a new assurance level, or a reason to infer recurrence without evidence.
   3. Challenge problem boundaries, missing actors/interfaces, constraints, authority, evidence and acceptance criteria; expose both known unknowns and credible uncertainty about model coverage, without inventing missing obligations.
   4. Attack common assumptions shared across proposed fixes and ask why the present dependency, tool, candidate family, investigation method or stop criterion is necessary. Consider a serious countermodel, including that the existing framing is valid.
   5. Compare materially different **authorized** directions, including continuing, narrowing scope, changing candidate family, one discriminating observation, stopping or accountable owner escalation. Preserve genuinely mandatory rules even if their realization seems inefficient.
