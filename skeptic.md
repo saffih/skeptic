@@ -103,6 +103,7 @@ Every formal RunSkeptic report includes a compact receipt:
 - DONE
 - Major operations materially exercised
 - Reasoning families applied / triggered
+- If the goal-derived discovery in INQUIRE was actually exercised: **ADVERSARIAL INQUIRY TRIGGERED** — trigger, most consequential previously unexamined question, condition or alternative (or NONE), its evidence or uncertainty, and the supported effect on the decision or assurance (including no change or UNKNOWN).
 - If DMR was activated: the material trigger and outcome, plus **RSC TRIGGERED** with evidence and impact when the conditional recurrence check was actually exercised
 - Material evidence used
 - ATTACK: due reason / result / skipped exemption basis
@@ -114,7 +115,7 @@ Every formal RunSkeptic report includes a compact receipt:
 
 Receipt is an index for challengeability, not independent proof. Show the compact receipt to the user with the formal result; a private/internal tool call alone is not evidence the user saw the invocation. No visible DMR non-activation entry is required when DMR's activation answer is NO.
 
-**After-work query - `Skeptic Trace`:** Inspect available bound invocation receipts and source/output evidence for the specified work and report (1) which Skeptic runtime/ref/blob was actually invoked, or UNKNOWN if no receipt; (2) whether DMR or RSC was actually reported as triggered, with evidence; and (3) how the triggered reasoning materially changed, preserved or constrained the conclusion. Distinguish `NOT_REPORTED` from demonstrated nonactivation. This is an audit of existing traces, **not** a new RunSkeptic invocation, a guarantee of hidden cognition, retroactive instrumentation, or automatic monitoring. If no trace exists, report that limitation rather than inventing use or benefit.
+**After-work query - `Skeptic Trace`:** Inspect available bound invocation receipts and source/output evidence for the specified work and report (1) which Skeptic runtime/ref/blob was actually invoked, or UNKNOWN if no receipt; (2) whether Adversarial Inquiry, DMR or RSC was actually reported as triggered, with evidence; (3) how the triggered reasoning materially changed, preserved or constrained the conclusion; and (4) any earlier material omission revealed by later available evidence, without crediting later discoveries to earlier invocations. Distinguish `NOT_REPORTED` from demonstrated nonactivation. This is an audit of existing traces, **not** a new RunSkeptic invocation, a guarantee of hidden cognition, retroactive instrumentation, or automatic monitoring. If no trace exists, report that limitation rather than inventing use or benefit.
 
 Do not claim V8 RunSkeptic compliance without the current runtime and the evidence necessary for the exact claimed coverage.
 
@@ -611,6 +612,8 @@ Do not force this checklist on trivial non-structural work.
 ---
 
 # 8. INQUIRE
+
+When framing a material decision or when its basis materially changes, derive from the bound goal and applicable obligations, not just the stated question or current C, what unexamined questions, conditions or alternatives could materially affect the decision or whether required assurance is met. Integrate material findings into STATE; open O for unresolved decision-critical matters.
 
 Resolve the highest-value open item. For discretionary inquiry, expected decision value means ability to change DECIDE, discriminate materially live M, or resolve shared dependencies relative to cost and risk. Required safety, authority, coverage, evidence, verification, and ATTACK/resample obligations override this ordering; do not invent numerical precision.
 
