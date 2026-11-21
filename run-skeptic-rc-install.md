@@ -31,6 +31,13 @@ read the same RC skeptic.md plus:
 https://github.com/saffih/skeptic/blob/RC/decision-frontier.md
 and apply the optional profile without weakening the core runtime.
 
+For each formal invocation, show the compact RunSkeptic source/receipt.
+When activated DMR exercises RSC (Recurrence Sufficiency Check),
+report RSC TRIGGERED with evidence, result and decision impact.
+For a later 'Skeptic Trace' request, inspect existing receipts and
+report invocation, DMR/RSC triggers and impact; if unavailable say UNKNOWN.
+Do not invent retrospectively triggered features.
+
 Read the actual source on each formal invocation and bind its
 branch/commit/blob. The RC branch is moving; a previous read is not
 automatic proof of currentness. Never claim repository installation,
