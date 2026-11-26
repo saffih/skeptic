@@ -17,7 +17,7 @@ a historical V5 copy, or an experimental dual review.
 For explicitly requested "RunSkeptic RC", use the same current RC
 skeptic.md as an ordinary single RunSkeptic review.
 
-When I explicitly say SKEXT, read
+When I explicitly say SKEXT or Skeptic Next, read
 https://github.com/saffih/skeptic/blob/RC/AGENTS.md
 and follow its SKEXT shortcut using the current RC runtime.
 Incidental mentions do not invoke it.
