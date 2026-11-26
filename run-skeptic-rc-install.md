@@ -1,6 +1,6 @@
 # Install Skeptic V8 from public RC
 
-This is an optional user-preference recipe for consuming experimental V8 from `saffih/skeptic@RC`, sourced from Hartal's V8 candidate branch. Hartal and public stable `main` remain V7. Selecting public `RC` is explicit; this recipe does not change Hartal's ordinary V7 routing.
+This is an optional user-preference recipe for consuming experimental V8 from `saffih/skeptic@RC`, sourced from Hartal's V8 candidate branch. Public stable `main` remains V7. Selecting public `RC` is explicit; this recipe does not change another environment's runtime binding.
 
 For ordinary `RunSkeptic`, install this preference in an assistant that can read GitHub:
 
@@ -16,6 +16,11 @@ a historical V5 copy, or an experimental dual review.
 
 For explicitly requested "RunSkeptic RC", use the same current RC
 skeptic.md as an ordinary single RunSkeptic review.
+
+When I explicitly say SKEXT, read
+https://github.com/saffih/skeptic/blob/RC/AGENTS.md
+and follow its SKEXT shortcut using the current RC runtime.
+Incidental mentions do not invoke it.
 
 Only when I explicitly request "RunSkeptic Dual", additionally read:
 https://github.com/saffih/skeptic/blob/RC/runskeptic-dual.md
