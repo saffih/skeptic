@@ -5,6 +5,7 @@ This file is an entrypoint map for users and agents consuming this repository. I
 ## Which file to read
 
 - **`RunSkeptic`**, including ordinary Skeptic review: read the current [`skeptic.md`](skeptic.md) from this branch. The runtime alone owns its invocation contract, completeness, evidence, Thinker lenses, decisions, permissions, verification and receipts. Bare `RunSkeptic` defaults to COMPLETE assurance and read-only permission.
+- **`SKEXT`** (explicit composition shortcut; independent qualification pending): RunSkeptic on current work and consequential continuation decisions. Integrate material findings, perform owed revalidation, and take the most useful authorized next step, if any, toward the original objective.
 - **`Skeptic Grill: <goal>`** or **`Decision Frontier: <goal>`**: read **both** [`decision-frontier.md`](decision-frontier.md) and [`skeptic.md`](skeptic.md) from this same branch. Grill is an optional, explicitly invoked dependency-aware decision and questioning profile, not a change to the core runtime. Default permission is read-only. A question *about* Grill does not invoke it.
 - **`InnoSkeptic` / Innovative Skeptic**: use the current `skeptic.md` to develop and compare materially different candidates. Grill may use this method as its current contract requires.
 - **`Razor`**: use the current `skeptic.md` for its bounded, read-only entrypoint.
