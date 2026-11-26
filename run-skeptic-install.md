@@ -17,7 +17,7 @@ The current skeptic.md always overrides this stored instruction.
 
 A bare RunSkeptic is read-only unless I explicitly authorize changes.
 
-When I explicitly say SKEXT, read https://github.com/saffih/skeptic/blob/main/AGENTS.md and follow its SKEXT shortcut using the current public stable runtime. Incidental mentions do not invoke it.
+When I explicitly say SKEXT or Skeptic Next, read https://github.com/saffih/skeptic/blob/main/AGENTS.md and follow its SKEXT shortcut using the current public stable runtime. Incidental mentions do not invoke it.
 
 If persistent global/cross-chat memory is available, store this binding there now so RunSkeptic works in future sessions without reinstalling it. Store the binding, not a copy of Skeptic.
 
